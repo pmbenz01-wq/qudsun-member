@@ -924,15 +924,15 @@ function CustomerDetailView({ phone, history, verified, supervisors, onGoBack, o
 }
 
 // ─── SellerModal ──────────────────────────────────────────────────────────────
-function SellerModal({ name, phone, supervisor, onNameChange, onPhoneChange, onSupervisorChange, onSave, onCancel, history, verified }) {
+function SellerModal({ name, phone, supervisor, nameLocked, onNameChange, onPhoneChange, onSupervisorChange, onSave, onCancel, history, verified }) {
   const stat = phone ? customerStat(phone, history, verified) : null;
   const tier = stat ? stat.effectiveTier : null;
   return (
     <div className="no-print" style={{ position: 'fixed', inset: 0, zIndex: 55, background: 'rgba(42,33,24,.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 18, animation: 'fadeIn .2s' }}>
       <div style={{ background: '#FFFDF8', borderRadius: 20, padding: 22, width: '100%', maxWidth: 360, animation: 'popIn .25s' }}>
         <h3 style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 18, margin: '0 0 14px', color: '#4A3526' }}>ข้อมูลผู้ขาย</h3>
-        <label style={{ display: 'block', fontSize: 12, color: '#A6925E', marginBottom: 5 }}>ชื่อผู้ขาย / สวน</label>
-        <input value={name} onChange={e => onNameChange(e.target.value)} placeholder="เช่น สวนลุงสมชาย" style={{ width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 12, padding: 14, fontSize: 16, color: '#3F2D1E', outline: 'none', marginBottom: 12 }} />
+        <label style={{ display: 'block', fontSize: 12, color: '#A6925E', marginBottom: 5 }}>ชื่อผู้ขาย / สวน {nameLocked && <span style={{ color: '#C9A24B' }}>🔒 ล็อคจากประวัติ</span>}</label>
+        <input value={name} onChange={e => !nameLocked && onNameChange(e.target.value)} readOnly={nameLocked} placeholder="เช่น สวนลุงสมชาย" style={{ width: '100%', border: nameLocked ? '1.5px solid #E4D7BC' : '1.5px solid #E4D7BC', borderRadius: 12, padding: 14, fontSize: 16, color: nameLocked ? '#9A8662' : '#3F2D1E', outline: 'none', marginBottom: 12, background: nameLocked ? '#F5F0E8' : '#fff' }} />
         <label style={{ display: 'block', fontSize: 12, color: '#A6925E', marginBottom: 5 }}>เบอร์โทรผู้ขาย</label>
         <input value={phone} onChange={e => onPhoneChange(e.target.value)} inputMode="tel" placeholder="เช่น 081-234-5678" style={{ width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 12, padding: 14, fontSize: 16, color: '#3F2D1E', outline: 'none', marginBottom: 12 }} />
         <label style={{ display: 'block', fontSize: 12, color: '#A6925E', marginBottom: 5 }}>ผู้ดูแล (ผูกกับลูกค้าคนนี้ตลอด)</label>
@@ -1015,6 +1015,7 @@ export default function App() {
   const [numpad, setNumpad] = useState(null);
   const [sellerOpen, setSellerOpen] = useState(false);
   const [sellerDraft, setSellerDraft] = useState('');
+  const [sellerNameLocked, setSellerNameLocked] = useState(false);
   const [sellerPhoneDraft, setSellerPhoneDraft] = useState('');
   const [supervisorDraft, setSupervisorDraft] = useState('');
   const [verifyPrompt, setVerifyPrompt] = useState(null);
@@ -1342,7 +1343,15 @@ export default function App() {
       {screen === 'record' && session && (
         <RecordView session={session} activeCat={activeCat} input={input} onInput={setInput} onCommit={commitEntry}
           onPickCat={setActiveCat} onGoHome={() => setScreen('home')} onGoSummary={() => setScreen('summary')}
-          onEditSeller={() => { setSellerDraft(session.seller || ''); setSellerPhoneDraft(session.sellerPhone || ''); setSupervisorDraft(session.supervisor || supervisors[session.sellerPhone] || ''); setSellerOpen(true); }}
+          onEditSeller={() => {
+            const ph = session.sellerPhone || '';
+            const knownName = loadCustomers(history)[ph]?.name || verified[ph] || '';
+            setSellerDraft(session.seller || '');
+            setSellerPhoneDraft(ph);
+            setSupervisorDraft(session.supervisor || supervisors[ph] || '');
+            setSellerNameLocked(!!knownName);
+            setSellerOpen(true);
+          }}
           onEditEntry={openEditEntry} verified={verified} history={history}
           customLabel={session.customLabel || ''}
           onCustomLabelChange={label => updateSession(prev => ({ ...prev, customLabel: label }))} />
@@ -1390,14 +1399,15 @@ export default function App() {
       {pinPrompt && <PinModal title={pinPrompt.title} error={pinError} value={pinValue} onKey={handlePinKey} onCancel={() => { setPinPrompt(null); setPinValue(''); setPinError(''); }} />}
       {numpad && <NumModal title={numpad.title} unit={numpad.unit} value={numpad.value || ''} onChange={v => setNumpad(n => ({ ...n, value: v }))} onSave={numSave} onCancel={() => setNumpad(null)} onDelete={numDelete} saveLabel={numpad.saveLabel} canDelete={numpad.canDelete} />}
       {sellerOpen && <SellerModal
-        name={sellerDraft} phone={sellerPhoneDraft} supervisor={supervisorDraft}
+        name={sellerDraft} phone={sellerPhoneDraft} supervisor={supervisorDraft} nameLocked={sellerNameLocked}
         onNameChange={setSellerDraft}
         onPhoneChange={val => {
           setSellerPhoneDraft(val);
           const phone = val.trim();
           setSupervisorDraft(supervisors[phone] || supervisorDraft);
           const knownName = loadCustomers(history)[phone]?.name || verified[phone] || '';
-          if (knownName) setSellerDraft(knownName);
+          if (knownName) { setSellerDraft(knownName); setSellerNameLocked(true); }
+          else setSellerNameLocked(false);
         }}
         onSupervisorChange={setSupervisorDraft}
         onSave={() => {
