@@ -127,8 +127,9 @@ function tierTextColor(t) {
 }
 
 // ─── HomeView ─────────────────────────────────────────────────────────────────
-function HomeView({ session, history, sheetUrl, syncStatus, syncing, onNew, onResume, onGoCustomers, onOpenSheet, onSyncNow, onChangePin, onOpenHistory, verified }) {
+function HomeView({ session, history, sheetUrl, syncStatus, syncing, onNew, onResume, onGoCustomers, onGoSupervisors, onOpenSheet, onSyncNow, onChangePin, onOpenHistory, verified, supervisors }) {
   const customerCount = Object.keys(loadCustomers(history)).length;
+  const supervisorCount = Object.values(supervisors || {}).filter(Boolean).reduce((set, n) => (set.add(n), set), new Set()).size;
   return (
     <div style={{ flex: 1, maxWidth: 720, width: '100%', margin: '0 auto', padding: '16px 14px 40px' }}>
       <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
@@ -146,14 +147,24 @@ function HomeView({ session, history, sheetUrl, syncStatus, syncing, onNew, onRe
         )}
       </div>
 
-      <button onClick={onGoCustomers} style={{ width: '100%', border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 14, padding: '15px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-        <span style={{ fontSize: 22 }}>👥</span>
-        <div style={{ textAlign: 'left' }}>
-          <div style={{ fontWeight: 600, fontSize: 15, color: '#4A3526' }}>ทะเบียนลูกค้า</div>
-          <div style={{ fontSize: 12, color: '#9A8662' }}>{customerCount} ราย</div>
-        </div>
-        <span style={{ marginLeft: 'auto', color: '#C9A24B', fontSize: 18 }}>›</span>
-      </button>
+      <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
+        <button onClick={onGoCustomers} style={{ flex: 1, border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 14, padding: '15px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
+          <span style={{ fontSize: 22 }}>👥</span>
+          <div style={{ textAlign: 'left' }}>
+            <div style={{ fontWeight: 600, fontSize: 15, color: '#4A3526' }}>ทะเบียนลูกค้า</div>
+            <div style={{ fontSize: 12, color: '#9A8662' }}>{customerCount} ราย</div>
+          </div>
+          <span style={{ marginLeft: 'auto', color: '#C9A24B', fontSize: 18 }}>›</span>
+        </button>
+        <button onClick={onGoSupervisors} style={{ flex: 1, border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 14, padding: '15px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
+          <span style={{ fontSize: 22 }}>🧑‍💼</span>
+          <div style={{ textAlign: 'left' }}>
+            <div style={{ fontWeight: 600, fontSize: 15, color: '#4A3526' }}>ผู้ดูแล</div>
+            <div style={{ fontSize: 12, color: '#9A8662' }}>{supervisorCount} คน</div>
+          </div>
+          <span style={{ marginLeft: 'auto', color: '#C9A24B', fontSize: 18 }}>›</span>
+        </button>
+      </div>
 
       {history.length > 0 && (
         <>
@@ -666,6 +677,82 @@ function CustomersView({ history, verified, onGoHome, onOpenCustomer }) {
   );
 }
 
+// ─── SupervisorsView ──────────────────────────────────────────────────────────
+function SupervisorsView({ supervisors, history, onGoHome, onOpenSupervisor }) {
+  const supMap = {};
+  Object.entries(supervisors || {}).forEach(([phone, name]) => {
+    if (!name) return;
+    if (!supMap[name]) supMap[name] = [];
+    supMap[name].push(phone);
+  });
+  const list = Object.entries(supMap).sort((a, b) => b[1].length - a[1].length);
+  const customers = loadCustomers(history);
+
+  return (
+    <div style={{ flex: 1, maxWidth: 720, width: '100%', margin: '0 auto', padding: '14px 14px 40px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+        <button onClick={onGoHome} style={{ border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 10, padding: '8px 12px', fontSize: 13, color: '#7A6450', cursor: 'pointer' }}>‹ หน้าหลัก</button>
+        <h2 style={{ fontFamily: 'Prompt', fontWeight: 400, fontSize: 20, color: '#4A3526', margin: 0 }}>รายชื่อผู้ดูแล</h2>
+      </div>
+
+      {list.length === 0 && <div style={{ textAlign: 'center', color: '#B7A684', fontSize: 14, marginTop: 40 }}>ยังไม่มีผู้ดูแล — กำหนดผู้ดูแลได้ในหน้าข้อมูลผู้ขาย</div>}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {list.map(([name, phones]) => {
+          const totalKg = phones.reduce((s, p) => s + (customers[p]?.totalKg || 0), 0);
+          return (
+            <button key={name} onClick={() => onOpenSupervisor(name)} style={{ textAlign: 'left', border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 14, padding: '14px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ width: 44, height: 44, borderRadius: 12, background: 'linear-gradient(135deg,#5C4326,#3F2D1E)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>🧑‍💼</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 600, fontSize: 15, color: '#4A3526' }}>{name}</div>
+                <div style={{ fontSize: 12, color: '#9A8662', marginTop: 2 }}>{phones.length} ลูกค้า · รวม {fmtKg(totalKg)} กก.</div>
+              </div>
+              <span style={{ color: '#C9A24B', fontSize: 18 }}>›</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ─── SupervisorDetailView ─────────────────────────────────────────────────────
+function SupervisorDetailView({ supervisorName, supervisors, history, verified, onGoBack, onOpenCustomer }) {
+  const phones = Object.entries(supervisors || {}).filter(([, n]) => n === supervisorName).map(([p]) => p);
+  const customers = loadCustomers(history);
+
+  return (
+    <div style={{ flex: 1, maxWidth: 720, width: '100%', margin: '0 auto', padding: '14px 14px 40px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+        <button onClick={onGoBack} style={{ border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 10, padding: '8px 12px', fontSize: 13, color: '#7A6450', cursor: 'pointer' }}>‹ ผู้ดูแล</button>
+        <div>
+          <div style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 18, color: '#4A3526' }}>🧑‍💼 {supervisorName}</div>
+          <div style={{ fontSize: 12, color: '#9A8662' }}>{phones.length} ลูกค้าในความดูแล</div>
+        </div>
+      </div>
+
+      {phones.length === 0 && <div style={{ textAlign: 'center', color: '#B7A684', fontSize: 14, marginTop: 40 }}>ไม่มีลูกค้า</div>}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {phones.map(phone => {
+          const c = customers[phone];
+          const stat = customerStat(phone, history, verified);
+          const tier = stat ? stat.effectiveTier : null;
+          return (
+            <button key={phone} onClick={() => onOpenCustomer(phone)} style={{ textAlign: 'left', border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 14, padding: '14px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ width: 40, height: 40, borderRadius: 10, background: '#F0E4C8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>👤</div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontWeight: 600, fontSize: 15, color: '#4A3526' }}>{c?.name || '—'}</div>
+                <div style={{ fontSize: 12, color: '#9A8662' }}>{phone} · {c ? fmtKg(c.totalKg) + ' กก.' : '0 กก.'}</div>
+                {tier && tier.key !== 'new' && <TierBadge tier={tier} />}
+              </div>
+              <span style={{ color: '#C9A24B', fontSize: 18 }}>›</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ─── CustomerDetailView ───────────────────────────────────────────────────────
 function CustomerDetailView({ phone, history, verified, supervisors, onGoBack, onOpenHistory, onOpenVerify, onSaveSupervisor }) {
   const [editSupervisor, setEditSupervisor] = useState(false);
@@ -849,6 +936,7 @@ export default function App() {
   const [verified, setVerified] = useState({});
 
   const [supervisors, setSupervisors] = useState({});
+  const [activeSupervisor, setActiveSupervisor] = useState(null);
   const [pinPrompt, setPinPrompt] = useState(null);
   const [pinValue, setPinValue] = useState('');
   const [pinError, setPinError] = useState('');
@@ -1137,8 +1225,9 @@ export default function App() {
       <Header />
 
       {screen === 'home' && (
-        <HomeView session={session} history={history} verified={verified} sheetUrl={sheetUrl} syncStatus={syncStatus} syncing={syncing}
+        <HomeView session={session} history={history} verified={verified} supervisors={supervisors} sheetUrl={sheetUrl} syncStatus={syncStatus} syncing={syncing}
           onNew={startNew} onResume={() => setScreen('record')} onGoCustomers={() => setScreen('customers')}
+          onGoSupervisors={() => setScreen('supervisors')}
           onOpenSheet={() => { setSheetModal(true); setSheetModalUrl(sheetUrl); }}
           onSyncNow={() => syncNow(false)} onChangePin={changePin} onOpenHistory={openHistory} />
       )}
@@ -1168,6 +1257,16 @@ export default function App() {
       )}
       {screen === 'customers' && (
         <CustomersView history={history} verified={verified} onGoHome={() => setScreen('home')}
+          onOpenCustomer={phone => { setCustPhone(phone); setScreen('customerDetail'); }} />
+      )}
+      {screen === 'supervisors' && (
+        <SupervisorsView supervisors={supervisors} history={history}
+          onGoHome={() => setScreen('home')}
+          onOpenSupervisor={name => { setActiveSupervisor(name); setScreen('supervisorDetail'); }} />
+      )}
+      {screen === 'supervisorDetail' && activeSupervisor && (
+        <SupervisorDetailView supervisorName={activeSupervisor} supervisors={supervisors} history={history} verified={verified}
+          onGoBack={() => setScreen('supervisors')}
           onOpenCustomer={phone => { setCustPhone(phone); setScreen('customerDetail'); }} />
       )}
       {screen === 'customerDetail' && custPhone && (
