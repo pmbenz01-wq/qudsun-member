@@ -219,6 +219,7 @@ function RecordView({ session, activeCat, input, onInput, onCommit, onPickCat, o
   const stat = sellerPhone ? customerStat(sellerPhone, history, verified) : null;
   const tier = stat ? stat.effectiveTier : null;
   const sellerText = (session?.seller || session?.sellerPhone) ? `${session.seller || ''}${session.sellerPhone ? (session.seller ? ' · ' : '') + session.sellerPhone : ''}` : 'ผู้ขาย —';
+  const supervisorText = session?.supervisor ? `👤 ผู้ดูแล: ${session.supervisor}` : '';
   const mainCats = CATS.filter(c => c.key !== 'custom');
   const customCat = CATS.find(c => c.key === 'custom');
 
@@ -232,9 +233,12 @@ function RecordView({ session, activeCat, input, onInput, onCommit, onPickCat, o
         </div>
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
           {tier && tier.key !== 'new' && <TierBadge tier={tier} />}
-          <button onClick={onEditSeller} style={{ border: '1px dashed #D8C8A8', background: '#FBF6EC', borderRadius: 10, padding: '8px 12px', fontSize: 13, color: '#7A5A22', cursor: 'pointer', maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            👤 {sellerText}
-          </button>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+            <button onClick={onEditSeller} style={{ border: '1px dashed #D8C8A8', background: '#FBF6EC', borderRadius: 10, padding: '8px 12px', fontSize: 13, color: '#7A5A22', cursor: 'pointer', maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              👤 {sellerText}
+            </button>
+            {supervisorText && <span style={{ fontSize: 11, color: '#A6925E', paddingRight: 4 }}>{supervisorText}</span>}
+          </div>
         </div>
       </div>
 
@@ -559,7 +563,7 @@ function PrintView({ session, readonly, isHandoff, verified, history, onGoSummar
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', margin: '12px 0', fontSize: 11.5 }}>
           <span>วันที่: <b>{session ? dateStr(session.date) : ''}</b></span>
-          <span>ผู้ขาย: <b>{session?.seller || '—'}</b>{session?.sellerPhone ? ` · ${session.sellerPhone}` : ''}</span>
+          <span>ผู้ขาย: <b>{session?.seller || '—'}</b>{session?.sellerPhone ? ` · ${session.sellerPhone}` : ''}{session?.supervisor ? ` · ผู้ดูแล: ${session.supervisor}` : ''}</span>
         </div>
         {tier && tier.key !== 'new' && (
           <div style={{ margin: '-4px 0 10px', fontSize: 11, color: '#8A6A2E' }}>สมาชิกระดับ {tier.label} · ยอดสะสม {fmtKg(stat?.total || 0)} กก.</div>
@@ -663,13 +667,16 @@ function CustomersView({ history, verified, onGoHome, onOpenCustomer }) {
 }
 
 // ─── CustomerDetailView ───────────────────────────────────────────────────────
-function CustomerDetailView({ phone, history, verified, onGoBack, onOpenHistory, onOpenVerify }) {
+function CustomerDetailView({ phone, history, verified, supervisors, onGoBack, onOpenHistory, onOpenVerify, onSaveSupervisor }) {
+  const [editSupervisor, setEditSupervisor] = useState(false);
+  const [supDraft, setSupDraft] = useState('');
   const stat = customerStat(phone, history, verified);
   if (!stat) return null;
   const tier = stat.effectiveTier;
   const rawTier = stat.tier;
   const needName = REQUIRE_NAME[rawTier.key] && !stat.verified;
   const verifiedName = verified[phone];
+  const currentSupervisor = supervisors?.[phone] || '';
   const pct = stat.next ? Math.min(100, (stat.total / stat.next.min) * 100) : 100;
   const bills = history.filter(h => String(h.phone || '').trim() === phone);
 
@@ -719,6 +726,26 @@ function CustomerDetailView({ phone, history, verified, onGoBack, onOpenHistory,
         </div>
       )}
 
+      <div style={{ background: '#FBF6EC', border: '1px solid #E4D7BC', borderRadius: 14, padding: '14px 16px', marginBottom: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: editSupervisor ? 10 : 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 16 }}>👤</span>
+            <span style={{ fontSize: 13, color: '#4A3526' }}>
+              ผู้ดูแล: <b>{currentSupervisor || <span style={{ color: '#B7A684', fontWeight: 400 }}>ยังไม่มี</span>}</b>
+            </span>
+          </div>
+          <button onClick={() => { setEditSupervisor(v => !v); setSupDraft(currentSupervisor); }} style={{ border: '1px solid #D8C8A8', background: '#F3E9D2', borderRadius: 9, padding: '5px 10px', fontSize: 12, color: '#7A5A22', cursor: 'pointer' }}>
+            {editSupervisor ? 'ยกเลิก' : 'แก้ไข'}
+          </button>
+        </div>
+        {editSupervisor && (
+          <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+            <input value={supDraft} onChange={e => setSupDraft(e.target.value)} placeholder="ชื่อผู้ดูแล" style={{ flex: 1, border: '1.5px solid #E4D7BC', borderRadius: 10, padding: '10px 12px', fontSize: 14, color: '#3F2D1E', outline: 'none' }} />
+            <button onClick={() => { onSaveSupervisor(phone, supDraft.trim()); setEditSupervisor(false); }} style={{ border: 'none', background: '#3F2D1E', color: '#F6EEDD', borderRadius: 10, padding: '10px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>บันทึก</button>
+          </div>
+        )}
+      </div>
+
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '22px 0 12px' }}>
         <span style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 13, letterSpacing: '.14em', color: '#A6925E' }}>บิลของลูกค้ารายนี้</span>
         <div style={{ flex: 1, height: 1, background: '#E4D7BC' }} />
@@ -741,7 +768,7 @@ function CustomerDetailView({ phone, history, verified, onGoBack, onOpenHistory,
 }
 
 // ─── SellerModal ──────────────────────────────────────────────────────────────
-function SellerModal({ name, phone, onNameChange, onPhoneChange, onSave, onCancel, history, verified }) {
+function SellerModal({ name, phone, supervisor, onNameChange, onPhoneChange, onSupervisorChange, onSave, onCancel, history, verified }) {
   const stat = phone ? customerStat(phone, history, verified) : null;
   const tier = stat ? stat.effectiveTier : null;
   return (
@@ -751,7 +778,9 @@ function SellerModal({ name, phone, onNameChange, onPhoneChange, onSave, onCance
         <label style={{ display: 'block', fontSize: 12, color: '#A6925E', marginBottom: 5 }}>ชื่อผู้ขาย / สวน</label>
         <input value={name} onChange={e => onNameChange(e.target.value)} placeholder="เช่น สวนลุงสมชาย" style={{ width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 12, padding: 14, fontSize: 16, color: '#3F2D1E', outline: 'none', marginBottom: 12 }} />
         <label style={{ display: 'block', fontSize: 12, color: '#A6925E', marginBottom: 5 }}>เบอร์โทรผู้ขาย</label>
-        <input value={phone} onChange={e => onPhoneChange(e.target.value)} inputMode="tel" placeholder="เช่น 081-234-5678" style={{ width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 12, padding: 14, fontSize: 16, color: '#3F2D1E', outline: 'none' }} />
+        <input value={phone} onChange={e => onPhoneChange(e.target.value)} inputMode="tel" placeholder="เช่น 081-234-5678" style={{ width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 12, padding: 14, fontSize: 16, color: '#3F2D1E', outline: 'none', marginBottom: 12 }} />
+        <label style={{ display: 'block', fontSize: 12, color: '#A6925E', marginBottom: 5 }}>ผู้ดูแล (ผูกกับลูกค้าคนนี้ตลอด)</label>
+        <input value={supervisor} onChange={e => onSupervisorChange(e.target.value)} placeholder="เช่น พี่โอ๋" style={{ width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 12, padding: 14, fontSize: 16, color: '#3F2D1E', outline: 'none' }} />
         {tier && tier.key !== 'new' && stat && (
           <div style={{ marginTop: 14, background: '#FBF6EC', border: '1px solid #E4D7BC', borderRadius: 14, padding: '13px 14px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
@@ -819,6 +848,7 @@ export default function App() {
   const [pin, setPin] = useState('1234');
   const [verified, setVerified] = useState({});
 
+  const [supervisors, setSupervisors] = useState({});
   const [pinPrompt, setPinPrompt] = useState(null);
   const [pinValue, setPinValue] = useState('');
   const [pinError, setPinError] = useState('');
@@ -826,6 +856,7 @@ export default function App() {
   const [sellerOpen, setSellerOpen] = useState(false);
   const [sellerDraft, setSellerDraft] = useState('');
   const [sellerPhoneDraft, setSellerPhoneDraft] = useState('');
+  const [supervisorDraft, setSupervisorDraft] = useState('');
   const [verifyPrompt, setVerifyPrompt] = useState(null);
   const [custPhone, setCustPhone] = useState(null);
   const [readonly, setReadonly] = useState(false);
@@ -861,7 +892,8 @@ export default function App() {
     const p = storage.loadPin();
     const v = storage.loadVerified();
     const su = storage.loadSheet();
-    setHistory(h); setPin(p); setVerified(v);
+    const sv = storage.loadSupervisors();
+    setHistory(h); setPin(p); setVerified(v); setSupervisors(sv);
     if (s) setSession(s);
     if (su) setSheetUrl(su);
     const m = (location.hash || '').match(/bill=([^&]+)/);
@@ -1113,7 +1145,7 @@ export default function App() {
       {screen === 'record' && session && (
         <RecordView session={session} activeCat={activeCat} input={input} onInput={setInput} onCommit={commitEntry}
           onPickCat={setActiveCat} onGoHome={() => setScreen('home')} onGoSummary={() => setScreen('summary')}
-          onEditSeller={() => { setSellerDraft(session.seller || ''); setSellerPhoneDraft(session.sellerPhone || ''); setSellerOpen(true); }}
+          onEditSeller={() => { setSellerDraft(session.seller || ''); setSellerPhoneDraft(session.sellerPhone || ''); setSupervisorDraft(session.supervisor || supervisors[session.sellerPhone] || ''); setSellerOpen(true); }}
           onEditEntry={openEditEntry} verified={verified} history={history}
           customLabel={session.customLabel || ''}
           onCustomLabelChange={label => updateSession(prev => ({ ...prev, customLabel: label }))} />
@@ -1139,8 +1171,9 @@ export default function App() {
           onOpenCustomer={phone => { setCustPhone(phone); setScreen('customerDetail'); }} />
       )}
       {screen === 'customerDetail' && custPhone && (
-        <CustomerDetailView phone={custPhone} history={history} verified={verified}
+        <CustomerDetailView phone={custPhone} history={history} verified={verified} supervisors={supervisors}
           onGoBack={() => setScreen('customers')} onOpenHistory={card => openHistory(card, true)}
+          onSaveSupervisor={(phone, name) => { const ns = { ...supervisors, [phone]: name }; storage.saveSupervisors(ns); setSupervisors(ns); }}
           onOpenVerify={phone => {
             const stat = customerStat(phone, history, verified);
             setVerifyPrompt({ phone, tier: tierOf(stat.total), draft: stat.name || '', newTotal: stat.total, mode: 'manage' });
@@ -1149,8 +1182,16 @@ export default function App() {
 
       {pinPrompt && <PinModal title={pinPrompt.title} error={pinError} value={pinValue} onKey={handlePinKey} onCancel={() => { setPinPrompt(null); setPinValue(''); setPinError(''); }} />}
       {numpad && <NumModal title={numpad.title} unit={numpad.unit} value={numpad.value || ''} onChange={v => setNumpad(n => ({ ...n, value: v }))} onSave={numSave} onCancel={() => setNumpad(null)} onDelete={numDelete} saveLabel={numpad.saveLabel} canDelete={numpad.canDelete} />}
-      {sellerOpen && <SellerModal name={sellerDraft} phone={sellerPhoneDraft} onNameChange={setSellerDraft} onPhoneChange={setSellerPhoneDraft}
-        onSave={() => { updateSession(prev => ({ ...prev, seller: sellerDraft.trim(), sellerPhone: sellerPhoneDraft.trim() })); setSellerOpen(false); }}
+      {sellerOpen && <SellerModal name={sellerDraft} phone={sellerPhoneDraft} supervisor={supervisorDraft}
+        onNameChange={setSellerDraft} onPhoneChange={val => { setSellerPhoneDraft(val); setSupervisorDraft(supervisors[val.trim()] || supervisorDraft); }}
+        onSupervisorChange={setSupervisorDraft}
+        onSave={() => {
+          const phone = sellerPhoneDraft.trim();
+          const sup = supervisorDraft.trim();
+          updateSession(prev => ({ ...prev, seller: sellerDraft.trim(), sellerPhone: phone, supervisor: sup }));
+          if (phone && sup) { const ns = { ...supervisors, [phone]: sup }; storage.saveSupervisors(ns); setSupervisors(ns); }
+          setSellerOpen(false);
+        }}
         onCancel={() => setSellerOpen(false)} history={history} verified={verified} />}
       {verifyPrompt && <VerifyModal tier={verifyPrompt.tier} phone={verifyPrompt.phone} draft={verifyPrompt.draft} total={verifyPrompt.newTotal}
         canSkip={verifyPrompt.mode === 'bill'} isManage={verifyPrompt.mode === 'manage'}

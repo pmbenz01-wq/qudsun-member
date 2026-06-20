@@ -1,9 +1,10 @@
 const KEYS = {
-  session:  'qudsun_session',
-  history:  'qudsun_history',
-  pin:      'qudsun_pin',
-  sheet:    'qudsun_sheet_url',
-  verified: 'qudsun_verified',
+  session:     'qudsun_session',
+  history:     'qudsun_history',
+  pin:         'qudsun_pin',
+  sheet:       'qudsun_sheet_url',
+  verified:    'qudsun_verified',
+  supervisors: 'qudsun_supervisors',
 };
 
 export const storage = {
@@ -15,6 +16,8 @@ export const storage = {
   savePin:      p  => { try { localStorage.setItem(KEYS.pin, p); } catch {} },
   loadSheet:    () => localStorage.getItem(KEYS.sheet) || '',
   saveSheet:    u  => { try { localStorage.setItem(KEYS.sheet, u); } catch {} },
-  loadVerified: () => { try { return JSON.parse(localStorage.getItem(KEYS.verified) || '{}'); } catch { return {}; } },
-  saveVerified: m  => { try { localStorage.setItem(KEYS.verified, JSON.stringify(m)); } catch {} },
+  loadVerified:     () => { try { return JSON.parse(localStorage.getItem(KEYS.verified) || '{}'); } catch { return {}; } },
+  saveVerified:     m  => { try { localStorage.setItem(KEYS.verified, JSON.stringify(m)); } catch {} },
+  loadSupervisors:  () => { try { return JSON.parse(localStorage.getItem(KEYS.supervisors) || '{}'); } catch { return {}; } },
+  saveSupervisors:  m  => { try { localStorage.setItem(KEYS.supervisors, JSON.stringify(m)); } catch {} },
 };
