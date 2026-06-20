@@ -513,7 +513,7 @@ function ConfirmView({ session, verified, history, onConfirm, onGoSummary, custo
                 <span style={{ width: 10, height: 10, borderRadius: '50%', background: c.accent, display: 'inline-block', flexShrink: 0 }} />
                 <span style={{ fontWeight: 600, color: '#4A3526', flex: 1 }}>{c.key === 'custom' ? (customLabel || 'หมวดพิเศษ') : c.label}</span>
                 <span style={{ fontFamily: 'Prompt', color: '#9A8662', fontSize: 14 }}>{fmtKg(d.kg)} กก. × {fmtPrice(price)}</span>
-                <span style={{ fontFamily: 'Prompt', fontWeight: 600, color: '#3F2D1E', minWidth: 84, textAlign: 'right' }}>฿{fmtBaht(d.kg * price)}</span>
+                <span style={{ fontFamily: 'Prompt', fontWeight: 600, color: '#3F2D1E', minWidth: 84, textAlign: 'right' }}>฿{fmtBaht(d.kg * price)} <span style={{ fontSize: 12, fontWeight: 400, color: '#9A8662' }}>บาท</span></span>
               </div>
             );
           })}
@@ -523,7 +523,7 @@ function ConfirmView({ session, verified, history, onConfirm, onGoSummary, custo
             <div style={{ fontSize: 12, opacity: .7 }}>รวม {fmtKg(totalKg)} กก.</div>
             <div style={{ fontSize: 13, opacity: .7 }}>ยอดสุทธิที่ต้องชำระ</div>
           </div>
-          <span style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 30 }}>฿{fmtBaht(totalBaht)}</span>
+          <span style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 30 }}>฿{fmtBaht(totalBaht)} <span style={{ fontSize: 16, fontWeight: 400, opacity: .75 }}>บาท</span></span>
         </div>
         <div style={{ padding: 18, display: 'flex', flexDirection: 'column', gap: 10 }}>
           <button onClick={onConfirm} style={{ width: '100%', border: 'none', borderRadius: 14, padding: 18, background: 'linear-gradient(135deg,#3E8E5A,#2E7048)', color: '#fff', fontWeight: 700, fontSize: 18, cursor: 'pointer', boxShadow: '0 8px 18px rgba(46,112,72,.3)' }}>✓ ยืนยัน — ตัวเลขถูกต้อง</button>
