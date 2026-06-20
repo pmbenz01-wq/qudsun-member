@@ -21,6 +21,6 @@ export const storage = {
   saveVerified:     m  => { try { localStorage.setItem(KEYS.verified, JSON.stringify(m)); } catch {} },
   loadSupervisors:  () => { try { return JSON.parse(localStorage.getItem(KEYS.supervisors) || '{}'); } catch { return {}; } },
   saveSupervisors:  m  => { try { localStorage.setItem(KEYS.supervisors, JSON.stringify(m)); } catch {} },
-  loadEmployeePin:  () => localStorage.getItem(KEYS.employeePin) || '',
+  loadEmployeePin:  () => localStorage.getItem(KEYS.employeePin) || '2525',
   saveEmployeePin:  p  => { try { localStorage.setItem(KEYS.employeePin, p); } catch {} },
 };
