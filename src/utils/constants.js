@@ -8,7 +8,8 @@ export const CATS = [
   { key: 'bo',      label: 'โบ้',      accent: '#5E7C6E' },
   { key: 'kao',     label: 'เข้',      accent: '#94794A' },
   { key: 'hongyen', label: 'ห้องเย็น', accent: '#5B7E8C' },
-  { key: 'etc',     label: 'อื่น ๆ',   accent: '#8A7C8C' },
+  { key: 'etc',     label: 'รวม',      accent: '#8A7C8C' },
+  { key: 'custom',  label: '',         accent: '#7C8C9A' },
 ];
 
 export const TIERS = [

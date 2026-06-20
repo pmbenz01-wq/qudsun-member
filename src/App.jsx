@@ -210,7 +210,7 @@ function HomeView({ session, history, sheetUrl, syncStatus, syncing, onNew, onRe
 }
 
 // ─── RecordView ───────────────────────────────────────────────────────────────
-function RecordView({ session, activeCat, input, onInput, onCommit, onPickCat, onGoHome, onGoSummary, onEditSeller, onEditEntry, verified, history }) {
+function RecordView({ session, activeCat, input, onInput, onCommit, onPickCat, onGoHome, onGoSummary, onEditSeller, onEditEntry, verified, history, customLabel, onCustomLabelChange }) {
   const aggData = agg(session);
   const totalKg = grandKg(session);
   const totalCount = (session?.entries || []).length;
@@ -219,6 +219,8 @@ function RecordView({ session, activeCat, input, onInput, onCommit, onPickCat, o
   const stat = sellerPhone ? customerStat(sellerPhone, history, verified) : null;
   const tier = stat ? stat.effectiveTier : null;
   const sellerText = (session?.seller || session?.sellerPhone) ? `${session.seller || ''}${session.sellerPhone ? (session.seller ? ' · ' : '') + session.sellerPhone : ''}` : 'ผู้ขาย —';
+  const mainCats = CATS.filter(c => c.key !== 'custom');
+  const customCat = CATS.find(c => c.key === 'custom');
 
   return (
     <div style={{ flex: 1, maxWidth: 880, width: '100%', margin: '0 auto', padding: '14px 14px 130px' }}>
@@ -247,8 +249,8 @@ function RecordView({ session, activeCat, input, onInput, onCommit, onPickCat, o
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 8, marginBottom: 16 }}>
-        {CATS.map(c => {
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 8, marginBottom: 8 }}>
+        {mainCats.map(c => {
           const d = aggData[c.key];
           const active = activeCat === c.key;
           return (
@@ -263,12 +265,33 @@ function RecordView({ session, activeCat, input, onInput, onCommit, onPickCat, o
           );
         })}
       </div>
+      {(() => {
+        const d = aggData['custom'];
+        const active = activeCat === 'custom';
+        return (
+          <button onClick={() => onPickCat('custom')} style={{ width: '100%', border: active ? `2px solid ${customCat.accent}` : '1px solid #E4D7BC', background: active ? '#FFFDF8' : '#FBF6EC', borderRadius: 12, padding: '10px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, boxShadow: active ? `0 4px 12px ${customCat.accent}40` : 'none' }}>
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: customCat.accent, display: 'inline-block', flexShrink: 0 }} />
+            <input
+              value={customLabel}
+              onChange={e => onCustomLabelChange(e.target.value)}
+              onFocus={() => onPickCat('custom')}
+              onClick={e => e.stopPropagation()}
+              placeholder="พิมชื่อหมวดเอง…"
+              style={{ flex: 1, border: 'none', background: 'transparent', fontSize: 13, fontWeight: 600, color: '#4A3526', outline: 'none', cursor: 'text', fontFamily: 'inherit', minWidth: 0 }}
+            />
+            <div style={{ textAlign: 'right', flexShrink: 0 }}>
+              <div style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 16 }}>{fmtKg(d.kg)}</div>
+              <div style={{ fontSize: 10, opacity: .7 }}>{d.count} เข่ง</div>
+            </div>
+          </button>
+        );
+      })()}
 
       <div style={{ background: '#FFFDF8', border: '1px solid #E4D7BC', borderRadius: 18, padding: 16, boxShadow: '0 4px 14px rgba(95,70,40,.06)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: 7, fontWeight: 600, color: '#4A3526' }}>
             <span style={{ width: 11, height: 11, borderRadius: '50%', background: catAccent(activeCat), display: 'inline-block' }} />
-            กำลังจด: {catLabel(activeCat)}
+            กำลังจด: {activeCat === 'custom' ? (customLabel || 'หมวดพิเศษ') : catLabel(activeCat)}
           </span>
           <span style={{ fontSize: 12, color: '#9A8662' }}>เคาะตัวเลข แล้วกด "บันทึกเข่ง"</span>
         </div>
@@ -281,7 +304,7 @@ function RecordView({ session, activeCat, input, onInput, onCommit, onPickCat, o
 
       {recent.length > 0 && (
         <div style={{ marginTop: 16 }}>
-          <span style={{ fontSize: 12, color: '#A6925E', letterSpacing: '.08em' }}>เข่งล่าสุด ({catLabel(activeCat)}) — แตะเพื่อแก้/ลบ</span>
+          <span style={{ fontSize: 12, color: '#A6925E', letterSpacing: '.08em' }}>เข่งล่าสุด ({activeCat === 'custom' ? (customLabel || 'หมวดพิเศษ') : catLabel(activeCat)}) — แตะเพื่อแก้/ลบ</span>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
             {recent.map(e => (
               <button key={e.id} onClick={() => onEditEntry(e)} style={{ border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 10, padding: '8px 12px', fontSize: 14, color: '#4A3526', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -301,7 +324,7 @@ function RecordView({ session, activeCat, input, onInput, onCommit, onPickCat, o
 }
 
 // ─── SummaryView ──────────────────────────────────────────────────────────────
-function SummaryView({ session, onGoRecord, onGoConfirm, onSetPrice, logOpen, onToggleLog }) {
+function SummaryView({ session, onGoRecord, onGoConfirm, onSetPrice, logOpen, onToggleLog, customLabel }) {
   const aggData = agg(session);
   const rows = CATS.filter(c => aggData[c.key].count > 0);
   const totalKg = grandKg(session);
@@ -327,7 +350,7 @@ function SummaryView({ session, onGoRecord, onGoConfirm, onSetPrice, logOpen, on
           return (
             <div key={c.key} style={{ display: 'grid', gridTemplateColumns: '1.3fr .7fr 1fr 1.1fr 1.2fr', alignItems: 'center', padding: '12px 14px', borderTop: '1px solid #EFE4CD' }}>
               <span style={{ display: 'flex', alignItems: 'center', gap: 7, fontWeight: 600, fontSize: 14, color: '#4A3526' }}>
-                <span style={{ width: 9, height: 9, borderRadius: '50%', background: c.accent, display: 'inline-block', flexShrink: 0 }} />{c.label}
+                <span style={{ width: 9, height: 9, borderRadius: '50%', background: c.accent, display: 'inline-block', flexShrink: 0 }} />{c.key === 'custom' ? (customLabel || 'หมวดพิเศษ') : c.label}
               </span>
               <span style={{ textAlign: 'center', fontSize: 13, color: '#9A8662' }}>{d.count}</span>
               <span style={{ textAlign: 'right', fontFamily: 'Prompt', fontSize: 14 }}>{fmtKg(d.kg)}</span>
@@ -377,7 +400,7 @@ function SummaryView({ session, onGoRecord, onGoConfirm, onSetPrice, logOpen, on
 }
 
 // ─── ConfirmView ──────────────────────────────────────────────────────────────
-function ConfirmView({ session, verified, history, onConfirm, onGoSummary }) {
+function ConfirmView({ session, verified, history, onConfirm, onGoSummary, customLabel }) {
   const aggData = agg(session);
   const rows = CATS.filter(c => aggData[c.key].count > 0);
   const totalKg = grandKg(session);
@@ -404,7 +427,7 @@ function ConfirmView({ session, verified, history, onConfirm, onGoSummary }) {
             return (
               <div key={c.key} style={{ display: 'flex', alignItems: 'center', padding: '13px 0', borderBottom: '1px solid #EFE4CD', gap: 10 }}>
                 <span style={{ width: 10, height: 10, borderRadius: '50%', background: c.accent, display: 'inline-block', flexShrink: 0 }} />
-                <span style={{ fontWeight: 600, color: '#4A3526', flex: 1 }}>{c.label}</span>
+                <span style={{ fontWeight: 600, color: '#4A3526', flex: 1 }}>{c.key === 'custom' ? (customLabel || 'หมวดพิเศษ') : c.label}</span>
                 <span style={{ fontFamily: 'Prompt', color: '#9A8662', fontSize: 14 }}>{fmtKg(d.kg)} กก. × {fmtPrice(price)}</span>
                 <span style={{ fontFamily: 'Prompt', fontWeight: 600, color: '#3F2D1E', minWidth: 84, textAlign: 'right' }}>฿{fmtBaht(d.kg * price)}</span>
               </div>
@@ -428,7 +451,7 @@ function ConfirmView({ session, verified, history, onConfirm, onGoSummary }) {
 }
 
 // ─── PrintView ────────────────────────────────────────────────────────────────
-function PrintView({ session, readonly, isHandoff, verified, history, onGoSummary, onGoBack, onFinish }) {
+function PrintView({ session, readonly, isHandoff, verified, history, onGoSummary, onGoBack, onFinish, customLabel }) {
   const [qrDataUrl, setQrDataUrl] = useState('');
   const [copied, setCopied] = useState(false);
   const link = session ? billLink(session) : '';
@@ -557,7 +580,7 @@ function PrintView({ session, readonly, isHandoff, verified, history, onGoSummar
               const price = session?.prices[c.key] || 0;
               return (
                 <tr key={c.key}>
-                  <td style={{ padding: '6px 8px', border: '1px solid #C9BBA0' }}>{c.label}</td>
+                  <td style={{ padding: '6px 8px', border: '1px solid #C9BBA0' }}>{c.key === 'custom' ? (customLabel || 'หมวดพิเศษ') : c.label}</td>
                   <td style={{ padding: '6px 6px', border: '1px solid #C9BBA0', textAlign: 'center' }}>{d.count}</td>
                   <td style={{ padding: '6px 8px', border: '1px solid #C9BBA0', textAlign: 'right' }}>{fmtKg(d.kg)}</td>
                   <td style={{ padding: '6px 8px', border: '1px solid #C9BBA0', textAlign: 'right' }}>{fmtPrice(price)}</td>
@@ -928,7 +951,7 @@ export default function App() {
   // Session
   const startNew = useCallback(() => {
     const t = Date.now();
-    const sess = { id: t, billNo: newBillNo(), createdAt: t, date: t, seller: '', sellerPhone: '', prices: Object.fromEntries(CATS.map(c => [c.key, 0])), entries: [], log: [{ t, kind: 'open', text: 'เปิดใบรับซื้อใหม่' }], confirmed: false, confirmedAt: null };
+    const sess = { id: t, billNo: newBillNo(), createdAt: t, date: t, seller: '', sellerPhone: '', prices: Object.fromEntries(CATS.map(c => [c.key, 0])), entries: [], log: [{ t, kind: 'open', text: 'เปิดใบรับซื้อใหม่' }], confirmed: false, confirmedAt: null, customLabel: '' };
     setSession(sess); persistSession(sess); setScreen('record'); setActiveCat('AB'); setInput('');
   }, [persistSession]);
 
@@ -1091,20 +1114,25 @@ export default function App() {
         <RecordView session={session} activeCat={activeCat} input={input} onInput={setInput} onCommit={commitEntry}
           onPickCat={setActiveCat} onGoHome={() => setScreen('home')} onGoSummary={() => setScreen('summary')}
           onEditSeller={() => { setSellerDraft(session.seller || ''); setSellerPhoneDraft(session.sellerPhone || ''); setSellerOpen(true); }}
-          onEditEntry={openEditEntry} verified={verified} history={history} />
+          onEditEntry={openEditEntry} verified={verified} history={history}
+          customLabel={session.customLabel || ''}
+          onCustomLabelChange={label => updateSession(prev => ({ ...prev, customLabel: label }))} />
       )}
       {screen === 'summary' && session && (
         <SummaryView session={session} logOpen={logOpen}
           onGoRecord={() => setScreen('record')} onGoConfirm={() => setScreen('confirm')}
-          onSetPrice={openSetPrice} onToggleLog={() => setLogOpen(v => !v)} />
+          onSetPrice={openSetPrice} onToggleLog={() => setLogOpen(v => !v)}
+          customLabel={session.customLabel || ''} />
       )}
       {screen === 'confirm' && session && (
         <ConfirmView session={session} verified={verified} history={history}
-          onConfirm={doConfirm} onGoSummary={() => setScreen('summary')} />
+          onConfirm={doConfirm} onGoSummary={() => setScreen('summary')}
+          customLabel={session.customLabel || ''} />
       )}
       {screen === 'print' && session && (
         <PrintView session={session} readonly={readonly} isHandoff={isHandoff} verified={verified} history={history}
-          onGoSummary={() => setScreen('summary')} onGoBack={goBackFromBill} onFinish={finishBill} />
+          onGoSummary={() => setScreen('summary')} onGoBack={goBackFromBill} onFinish={finishBill}
+          customLabel={session.customLabel || ''} />
       )}
       {screen === 'customers' && (
         <CustomersView history={history} verified={verified} onGoHome={() => setScreen('home')}
