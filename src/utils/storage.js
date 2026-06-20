@@ -4,7 +4,8 @@ const KEYS = {
   pin:         'qudsun_pin',
   sheet:       'qudsun_sheet_url',
   verified:    'qudsun_verified',
-  supervisors: 'qudsun_supervisors',
+  supervisors:   'qudsun_supervisors',
+  employeePin:   'qudsun_employee_pin',
 };
 
 export const storage = {
@@ -20,4 +21,6 @@ export const storage = {
   saveVerified:     m  => { try { localStorage.setItem(KEYS.verified, JSON.stringify(m)); } catch {} },
   loadSupervisors:  () => { try { return JSON.parse(localStorage.getItem(KEYS.supervisors) || '{}'); } catch { return {}; } },
   saveSupervisors:  m  => { try { localStorage.setItem(KEYS.supervisors, JSON.stringify(m)); } catch {} },
+  loadEmployeePin:  () => localStorage.getItem(KEYS.employeePin) || '',
+  saveEmployeePin:  p  => { try { localStorage.setItem(KEYS.employeePin, p); } catch {} },
 };

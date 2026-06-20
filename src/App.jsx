@@ -126,10 +126,75 @@ function tierTextColor(t) {
   const m = t.badge.match(/color:([^;]+)/); return m ? m[1].trim() : '#A6925E';
 }
 
+// ─── LoginScreen ──────────────────────────────────────────────────────────────
+function LoginScreen({ onLogin, error, onErrorClear }) {
+  const [value, setValue] = useState('');
+  const D = { border: '1px solid #E4D7BC', background: '#FBF6EC', borderRadius: 13, padding: '18px 0', fontFamily: 'Prompt', fontWeight: 500, fontSize: 22, color: '#3F2D1E', cursor: 'pointer' };
+  const F = { border: '1px solid #E0D2B4', background: '#F3E9D2', borderRadius: 13, padding: '18px 0', fontSize: 20, color: '#7A5A22', cursor: 'pointer' };
+  const keys = ['1','2','3','4','5','6','7','8','9','⌫','0','✓'];
+
+  const handleKey = k => {
+    onErrorClear();
+    if (k === '⌫') { setValue(v => v.slice(0, -1)); return; }
+    if (k === '✓') { if (value.length >= 4) onLogin(value); return; }
+    setValue(v => {
+      if (v.length >= 4) return v;
+      const next = v + k;
+      if (next.length === 4) setTimeout(() => { onLogin(next); setValue(''); }, 120);
+      return next;
+    });
+  };
+
+  return (
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#EFE6D4', padding: 24 }}>
+      <img src="/logo.jpg" alt="Qudsun" style={{ width: 80, borderRadius: 16, marginBottom: 14 }} />
+      <div style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 22, color: '#4A3526', marginBottom: 2 }}>QUDSUN</div>
+      <div style={{ fontSize: 13, color: '#A6925E', marginBottom: 28, letterSpacing: '.08em' }}>ระบบรับซื้อทุเรียน</div>
+      <div style={{ background: '#FFFDF8', borderRadius: 20, padding: '22px 20px', width: '100%', maxWidth: 320, boxShadow: '0 12px 32px rgba(95,70,40,.12)' }}>
+        <h3 style={{ textAlign: 'center', fontFamily: 'Prompt', fontWeight: 500, fontSize: 17, margin: '0 0 16px', color: '#4A3526' }}>ใส่รหัสเข้าใช้งาน</h3>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 12, marginBottom: 6 }}>
+          {[0,1,2,3].map(i => <span key={i} style={{ width: 14, height: 14, borderRadius: '50%', background: i < value.length ? '#C9A24B' : '#E4D7BC', border: '1.5px solid #C9A24B', display: 'inline-block', transition: 'background .15s' }} />)}
+        </div>
+        <p style={{ textAlign: 'center', fontSize: 12, color: '#C0392B', minHeight: 18, margin: '0 0 12px' }}>{error}</p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8 }}>
+          {keys.map(k => <button key={k} onClick={() => handleKey(k)} style={k === '⌫' || k === '✓' ? F : D}>{k}</button>)}
+        </div>
+      </div>
+      <p style={{ marginTop: 20, fontSize: 11, color: '#B7A684' }}>ผู้ดูแลระบบ: ใส่รหัส Admin · พนักงาน: ใส่รหัส Employee</p>
+    </div>
+  );
+}
+
 // ─── HomeView ─────────────────────────────────────────────────────────────────
-function HomeView({ session, history, sheetUrl, syncStatus, syncing, onNew, onResume, onGoCustomers, onGoSupervisors, onOpenSheet, onSyncNow, onChangePin, onOpenHistory, verified, supervisors }) {
+function HomeView({ session, history, sheetUrl, syncStatus, syncing, onNew, onResume, onGoCustomers, onGoSupervisors, onOpenSheet, onSyncNow, onChangePin, onSetEmployeePin, onOpenHistory, verified, supervisors, isEmployee, onLogout }) {
   const customerCount = Object.keys(loadCustomers(history)).length;
   const supervisorCount = Object.values(supervisors || {}).filter(Boolean).reduce((set, n) => (set.add(n), set), new Set()).size;
+  if (isEmployee) {
+    return (
+      <div style={{ flex: 1, maxWidth: 480, width: '100%', margin: '0 auto', padding: '32px 14px 40px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ textAlign: 'center', marginBottom: 8 }}>
+          <div style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 16, color: '#4A3526' }}>โหมดพนักงาน</div>
+          <div style={{ fontSize: 12, color: '#9A8662' }}>เปิดบิล → จดกิโล → ปริ้น เท่านั้น</div>
+        </div>
+        <button onClick={onNew} style={{ border: 'none', borderRadius: 16, padding: '22px 14px', background: 'linear-gradient(135deg,#5C4326,#3F2D1E)', color: '#F6EEDD', cursor: 'pointer', textAlign: 'left' }}>
+          <div style={{ fontSize: 24, marginBottom: 6 }}>＋</div>
+          <div style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 18 }}>เปิดบิลใหม่</div>
+          <div style={{ fontSize: 12, opacity: .7, marginTop: 2 }}>ต้องใส่เบอร์ผู้ขายก่อน</div>
+        </button>
+        {session && (
+          <button onClick={onResume} style={{ border: '2px solid #C9A24B', borderRadius: 16, padding: '20px 14px', background: '#FFFDF8', color: '#4A3526', cursor: 'pointer', textAlign: 'left' }}>
+            <div style={{ fontSize: 24, marginBottom: 6 }}>↩</div>
+            <div style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 18 }}>ทำบิลต่อ</div>
+            <div style={{ fontSize: 12, color: '#A6925E', marginTop: 2 }}>{session.billNo}</div>
+          </button>
+        )}
+        <button onClick={onLogout} style={{ border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 13, padding: '12px 16px', cursor: 'pointer', fontSize: 14, color: '#9A8662', marginTop: 8 }}>
+          ออกจากระบบ
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div style={{ flex: 1, maxWidth: 720, width: '100%', margin: '0 auto', padding: '16px 14px 40px' }}>
       <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
@@ -201,7 +266,11 @@ function HomeView({ session, history, sheetUrl, syncStatus, syncing, onNew, onRe
         </div>
         <button onClick={onChangePin} style={{ border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 13, padding: '13px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10 }}>
           <span style={{ fontSize: 18 }}>🔒</span>
-          <span style={{ fontSize: 14, color: '#4A3526', fontWeight: 500 }}>เปลี่ยนรหัส PIN</span>
+          <span style={{ fontSize: 14, color: '#4A3526', fontWeight: 500 }}>เปลี่ยนรหัส Admin PIN</span>
+        </button>
+        <button onClick={onSetEmployeePin} style={{ border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 13, padding: '13px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ fontSize: 18 }}>🧑‍💼</span>
+          <span style={{ fontSize: 14, color: '#4A3526', fontWeight: 500 }}>ตั้งรหัส Employee PIN</span>
         </button>
         <button onClick={onOpenSheet} style={{ border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 13, padding: '13px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10 }}>
           <span style={{ fontSize: 18 }}>📊</span>
@@ -937,6 +1006,10 @@ export default function App() {
 
   const [supervisors, setSupervisors] = useState({});
   const [activeSupervisor, setActiveSupervisor] = useState(null);
+  const [authRole, setAuthRole] = useState(null);
+  const [employeePin, setEmployeePin] = useState('');
+  const [loginError, setLoginError] = useState('');
+  const [pendingPhoneEntry, setPendingPhoneEntry] = useState(false);
   const [pinPrompt, setPinPrompt] = useState(null);
   const [pinValue, setPinValue] = useState('');
   const [pinError, setPinError] = useState('');
@@ -981,7 +1054,10 @@ export default function App() {
     const v = storage.loadVerified();
     const su = storage.loadSheet();
     const sv = storage.loadSupervisors();
-    setHistory(h); setPin(p); setVerified(v); setSupervisors(sv);
+    const ep = storage.loadEmployeePin();
+    const savedRole = sessionStorage.getItem('qudsun_role');
+    setHistory(h); setPin(p); setVerified(v); setSupervisors(sv); setEmployeePin(ep);
+    if (savedRole) setAuthRole(savedRole);
     if (s) setSession(s);
     if (su) setSheetUrl(su);
     const m = (location.hash || '').match(/bill=([^&]+)/);
@@ -1069,11 +1145,20 @@ export default function App() {
   }, [pin, pinPrompt]);
 
   // Session
-  const startNew = useCallback(() => {
+  const createSession = useCallback((seller = '', sellerPhone = '', supervisor = '') => {
     const t = Date.now();
-    const sess = { id: t, billNo: newBillNo(), createdAt: t, date: t, seller: '', sellerPhone: '', prices: Object.fromEntries(CATS.map(c => [c.key, 0])), entries: [], log: [{ t, kind: 'open', text: 'เปิดใบรับซื้อใหม่' }], confirmed: false, confirmedAt: null, customLabel: '' };
+    const sess = { id: t, billNo: newBillNo(), createdAt: t, date: t, seller, sellerPhone, supervisor, prices: Object.fromEntries(CATS.map(c => [c.key, 0])), entries: [], log: [{ t, kind: 'open', text: 'เปิดใบรับซื้อใหม่' }], confirmed: false, confirmedAt: null, customLabel: '' };
     setSession(sess); persistSession(sess); setScreen('record'); setActiveCat('AB'); setInput('');
   }, [persistSession]);
+
+  const startNew = useCallback(() => {
+    if (authRole === 'employee') {
+      setSellerDraft(''); setSellerPhoneDraft(''); setSupervisorDraft('');
+      setPendingPhoneEntry(true);
+      return;
+    }
+    createSession();
+  }, [authRole, createSession]);
 
   const addLog = (sess, kind, text) => { sess.log = [{ t: Date.now(), kind, text }, ...(sess.log || [])]; };
 
@@ -1103,7 +1188,11 @@ export default function App() {
     const val = parseFloat(numpad.value);
     if (numpad.mode === 'setpin') {
       if (!/^\d{4}$/.test(numpad.value || '')) { toast('ใส่รหัสเป็นตัวเลข 4 หลัก'); return; }
-      storage.savePin(numpad.value); setPin(numpad.value); setNumpad(null); toast('เปลี่ยนรหัสแล้ว'); return;
+      storage.savePin(numpad.value); setPin(numpad.value); setNumpad(null); toast('เปลี่ยนรหัส Admin แล้ว'); return;
+    }
+    if (numpad.mode === 'setemployeepin') {
+      if (!/^\d{4}$/.test(numpad.value || '')) { toast('ใส่รหัสเป็นตัวเลข 4 หลัก'); return; }
+      storage.saveEmployeePin(numpad.value); setEmployeePin(numpad.value); setNumpad(null); toast('ตั้งรหัส Employee แล้ว'); return;
     }
     if (numpad.mode === 'editWeight') {
       if (!val || val <= 0) { toast('ใส่น้ำหนักก่อน'); return; }
@@ -1208,9 +1297,29 @@ export default function App() {
 
   const changePin = useCallback(() => {
     requirePin('ยืนยันรหัสเดิมก่อนเปลี่ยน', () => {
-      setNumpad({ mode: 'setpin', title: 'ตั้งรหัสใหม่ (4 หลัก)', unit: '', value: '', original: '', canDelete: false, saveLabel: 'บันทึกรหัสใหม่' });
+      setNumpad({ mode: 'setpin', title: 'ตั้งรหัส Admin ใหม่ (4 หลัก)', unit: '', value: '', original: '', canDelete: false, saveLabel: 'บันทึกรหัสใหม่' });
     });
   }, [requirePin]);
+
+  const setEmployeePinAction = useCallback(() => {
+    requirePin('ยืนยัน Admin PIN ก่อนตั้งรหัสพนักงาน', () => {
+      setNumpad({ mode: 'setemployeepin', title: 'ตั้งรหัส Employee (4 หลัก)', unit: '', value: '', original: '', canDelete: false, saveLabel: 'บันทึกรหัส Employee' });
+    });
+  }, [requirePin]);
+
+  const handleLogin = useCallback((entered) => {
+    if (entered === pin) {
+      setAuthRole('admin'); sessionStorage.setItem('qudsun_role', 'admin'); setLoginError('');
+    } else if (employeePin && entered === employeePin) {
+      setAuthRole('employee'); sessionStorage.setItem('qudsun_role', 'employee'); setLoginError('');
+    } else {
+      setLoginError('รหัสไม่ถูกต้อง ลองใหม่');
+    }
+  }, [pin, employeePin]);
+
+  const handleLogout = useCallback(() => {
+    setAuthRole(null); sessionStorage.removeItem('qudsun_role');
+  }, []);
 
   const sheetSave = () => {
     const url = String(sheetModalUrl || '').trim();
@@ -1219,6 +1328,10 @@ export default function App() {
     if (url) { toast('เชื่อมต่อแล้ว · กำลังซิงก์ข้อมูล'); setTimeout(() => syncNow(), 60); }
     else toast('ยกเลิกการเชื่อมต่อแล้ว');
   };
+
+  if (!authRole) {
+    return <LoginScreen onLogin={handleLogin} error={loginError} onErrorClear={() => setLoginError('')} />;
+  }
 
   return (
     <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: '#EFE6D4' }}>
@@ -1229,7 +1342,8 @@ export default function App() {
           onNew={startNew} onResume={() => setScreen('record')} onGoCustomers={() => setScreen('customers')}
           onGoSupervisors={() => setScreen('supervisors')}
           onOpenSheet={() => { setSheetModal(true); setSheetModalUrl(sheetUrl); }}
-          onSyncNow={() => syncNow(false)} onChangePin={changePin} onOpenHistory={openHistory} />
+          onSyncNow={() => syncNow(false)} onChangePin={changePin} onSetEmployeePin={setEmployeePinAction}
+          onOpenHistory={openHistory} isEmployee={authRole === 'employee'} onLogout={handleLogout} />
       )}
       {screen === 'record' && session && (
         <RecordView session={session} activeCat={activeCat} input={input} onInput={setInput} onCommit={commitEntry}
@@ -1281,17 +1395,25 @@ export default function App() {
 
       {pinPrompt && <PinModal title={pinPrompt.title} error={pinError} value={pinValue} onKey={handlePinKey} onCancel={() => { setPinPrompt(null); setPinValue(''); setPinError(''); }} />}
       {numpad && <NumModal title={numpad.title} unit={numpad.unit} value={numpad.value || ''} onChange={v => setNumpad(n => ({ ...n, value: v }))} onSave={numSave} onCancel={() => setNumpad(null)} onDelete={numDelete} saveLabel={numpad.saveLabel} canDelete={numpad.canDelete} />}
-      {sellerOpen && <SellerModal name={sellerDraft} phone={sellerPhoneDraft} supervisor={supervisorDraft}
-        onNameChange={setSellerDraft} onPhoneChange={val => { setSellerPhoneDraft(val); setSupervisorDraft(supervisors[val.trim()] || supervisorDraft); }}
+      {(sellerOpen || pendingPhoneEntry) && <SellerModal
+        name={sellerDraft} phone={sellerPhoneDraft} supervisor={supervisorDraft}
+        onNameChange={setSellerDraft}
+        onPhoneChange={val => { setSellerPhoneDraft(val); setSupervisorDraft(supervisors[val.trim()] || supervisorDraft); }}
         onSupervisorChange={setSupervisorDraft}
         onSave={() => {
           const phone = sellerPhoneDraft.trim();
           const sup = supervisorDraft.trim();
-          updateSession(prev => ({ ...prev, seller: sellerDraft.trim(), sellerPhone: phone, supervisor: sup }));
           if (phone && sup) { const ns = { ...supervisors, [phone]: sup }; storage.saveSupervisors(ns); setSupervisors(ns); }
-          setSellerOpen(false);
+          if (pendingPhoneEntry) {
+            createSession(sellerDraft.trim(), phone, sup || supervisors[phone] || '');
+            setPendingPhoneEntry(false);
+          } else {
+            updateSession(prev => ({ ...prev, seller: sellerDraft.trim(), sellerPhone: phone, supervisor: sup }));
+            setSellerOpen(false);
+          }
         }}
-        onCancel={() => setSellerOpen(false)} history={history} verified={verified} />}
+        onCancel={() => { setSellerOpen(false); setPendingPhoneEntry(false); }}
+        history={history} verified={verified} />}
       {verifyPrompt && <VerifyModal tier={verifyPrompt.tier} phone={verifyPrompt.phone} draft={verifyPrompt.draft} total={verifyPrompt.newTotal}
         canSkip={verifyPrompt.mode === 'bill'} isManage={verifyPrompt.mode === 'manage'}
         onDraftChange={v => setVerifyPrompt(p => ({ ...p, draft: v }))}
