@@ -13,7 +13,7 @@ export const storage = {
   saveSession:  s  => { try { if (s) localStorage.setItem(KEYS.session, JSON.stringify(s)); else localStorage.removeItem(KEYS.session); } catch {} },
   loadHistory:  () => { try { const h = JSON.parse(localStorage.getItem(KEYS.history) || '[]'); return Array.isArray(h) ? h : []; } catch { return []; } },
   saveHistory:  h  => { try { localStorage.setItem(KEYS.history, JSON.stringify(h)); } catch {} },
-  loadPin:      () => localStorage.getItem(KEYS.pin) || '1234',
+  loadPin:      () => localStorage.getItem(KEYS.pin) || '7594',
   savePin:      p  => { try { localStorage.setItem(KEYS.pin, p); } catch {} },
   loadSheet:    () => localStorage.getItem(KEYS.sheet) || '',
   saveSheet:    u  => { try { localStorage.setItem(KEYS.sheet, u); } catch {} },
