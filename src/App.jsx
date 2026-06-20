@@ -1392,7 +1392,13 @@ export default function App() {
       {sellerOpen && <SellerModal
         name={sellerDraft} phone={sellerPhoneDraft} supervisor={supervisorDraft}
         onNameChange={setSellerDraft}
-        onPhoneChange={val => { setSellerPhoneDraft(val); setSupervisorDraft(supervisors[val.trim()] || supervisorDraft); }}
+        onPhoneChange={val => {
+          setSellerPhoneDraft(val);
+          const phone = val.trim();
+          setSupervisorDraft(supervisors[phone] || supervisorDraft);
+          const knownName = loadCustomers(history)[phone]?.name || verified[phone] || '';
+          if (knownName) setSellerDraft(knownName);
+        }}
         onSupervisorChange={setSupervisorDraft}
         onSave={() => {
           const phone = sellerPhoneDraft.trim();
