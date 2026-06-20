@@ -179,7 +179,7 @@ function HomeView({ session, history, sheetUrl, syncStatus, syncing, onNew, onRe
         <button onClick={onNew} style={{ border: 'none', borderRadius: 16, padding: '22px 14px', background: 'linear-gradient(135deg,#5C4326,#3F2D1E)', color: '#F6EEDD', cursor: 'pointer', textAlign: 'left' }}>
           <div style={{ fontSize: 24, marginBottom: 6 }}>＋</div>
           <div style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 18 }}>เปิดบิลใหม่</div>
-          <div style={{ fontSize: 12, opacity: .7, marginTop: 2 }}>ต้องใส่เบอร์ผู้ขายก่อน</div>
+          <div style={{ fontSize: 12, opacity: .7, marginTop: 2 }}>บันทึกรับซื้อทุเรียน</div>
         </button>
         {session && (
           <button onClick={onResume} style={{ border: '2px solid #C9A24B', borderRadius: 16, padding: '20px 14px', background: '#FFFDF8', color: '#4A3526', cursor: 'pointer', textAlign: 'left' }}>
@@ -1009,7 +1009,6 @@ export default function App() {
   const [authRole, setAuthRole] = useState(null);
   const [employeePin, setEmployeePin] = useState('');
   const [loginError, setLoginError] = useState('');
-  const [pendingPhoneEntry, setPendingPhoneEntry] = useState(false);
   const [pinPrompt, setPinPrompt] = useState(null);
   const [pinValue, setPinValue] = useState('');
   const [pinError, setPinError] = useState('');
@@ -1152,13 +1151,8 @@ export default function App() {
   }, [persistSession]);
 
   const startNew = useCallback(() => {
-    if (authRole === 'employee') {
-      setSellerDraft(''); setSellerPhoneDraft(''); setSupervisorDraft('');
-      setPendingPhoneEntry(true);
-      return;
-    }
     createSession();
-  }, [authRole, createSession]);
+  }, [createSession]);
 
   const addLog = (sess, kind, text) => { sess.log = [{ t: Date.now(), kind, text }, ...(sess.log || [])]; };
 
@@ -1395,7 +1389,7 @@ export default function App() {
 
       {pinPrompt && <PinModal title={pinPrompt.title} error={pinError} value={pinValue} onKey={handlePinKey} onCancel={() => { setPinPrompt(null); setPinValue(''); setPinError(''); }} />}
       {numpad && <NumModal title={numpad.title} unit={numpad.unit} value={numpad.value || ''} onChange={v => setNumpad(n => ({ ...n, value: v }))} onSave={numSave} onCancel={() => setNumpad(null)} onDelete={numDelete} saveLabel={numpad.saveLabel} canDelete={numpad.canDelete} />}
-      {(sellerOpen || pendingPhoneEntry) && <SellerModal
+      {sellerOpen && <SellerModal
         name={sellerDraft} phone={sellerPhoneDraft} supervisor={supervisorDraft}
         onNameChange={setSellerDraft}
         onPhoneChange={val => { setSellerPhoneDraft(val); setSupervisorDraft(supervisors[val.trim()] || supervisorDraft); }}
@@ -1404,15 +1398,10 @@ export default function App() {
           const phone = sellerPhoneDraft.trim();
           const sup = supervisorDraft.trim();
           if (phone && sup) { const ns = { ...supervisors, [phone]: sup }; storage.saveSupervisors(ns); setSupervisors(ns); }
-          if (pendingPhoneEntry) {
-            createSession(sellerDraft.trim(), phone, sup || supervisors[phone] || '');
-            setPendingPhoneEntry(false);
-          } else {
-            updateSession(prev => ({ ...prev, seller: sellerDraft.trim(), sellerPhone: phone, supervisor: sup }));
-            setSellerOpen(false);
-          }
+          updateSession(prev => ({ ...prev, seller: sellerDraft.trim(), sellerPhone: phone, supervisor: sup }));
+          setSellerOpen(false);
         }}
-        onCancel={() => { setSellerOpen(false); setPendingPhoneEntry(false); }}
+        onCancel={() => setSellerOpen(false)}
         history={history} verified={verified} />}
       {verifyPrompt && <VerifyModal tier={verifyPrompt.tier} phone={verifyPrompt.phone} draft={verifyPrompt.draft} total={verifyPrompt.newTotal}
         canSkip={verifyPrompt.mode === 'bill'} isManage={verifyPrompt.mode === 'manage'}
