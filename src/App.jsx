@@ -1593,7 +1593,17 @@ export default function App() {
     setHistory(h); setPin(p); setVerified(v); setSupervisors(sv); setEmployeePin(ep); setPinnedCats(pc); setEmployees(emps); setVehiclePlates(vp); setPayments(pm);
     if (savedRole) { setAuthRole(savedRole); setRecorderName(savedRecorder); }
     if (s) { setSession(s); if (s.vehiclePhotoKey) loadPhoto(s.vehiclePhotoKey).then(u => { if (u) setVehiclePhotoUrl(u); }); }
-    if (su) { setSheetUrl(su); setTimeout(() => syncNow(true), 1500); }
+    if (su) {
+      setSheetUrl(su);
+      setTimeout(() => syncNow(true), 1500);
+      fetch(`${su}?action=getPayments`).then(r => r.json()).then(data => {
+        if (data.ok && data.payments) {
+          const merged = { ...storage.loadPayments(), ...data.payments };
+          storage.savePayments(merged);
+          setPayments(merged);
+        }
+      }).catch(() => {});
+    }
     const m = (location.hash || '').match(/bill=([^&]+)/);
     if (m) {
       try {
@@ -1775,13 +1785,15 @@ export default function App() {
   }, [numpad, requirePin, updateSession, toast]);
 
   const handlePayment = useCallback((billNo, status, slipPhotoUrl) => {
-    const next = { ...storage.loadPayments(), [billNo]: { status, paidAt: Date.now(), ...(slipPhotoUrl ? { slipUrl: slipPhotoUrl } : {}) } };
+    const paidAt = Date.now();
+    const next = { ...storage.loadPayments(), [billNo]: { status, paidAt, ...(slipPhotoUrl ? { slipUrl: slipPhotoUrl } : {}) } };
     if (status === 'unpaid') delete next[billNo];
     storage.savePayments(next);
     setPayments(next);
-    if (status === 'transferred' && slipPhotoUrl) {
-      const url = storage.loadSheet();
-      if (url) {
+    const url = storage.loadSheet();
+    if (url) {
+      fetch(url, { method: 'POST', body: JSON.stringify({ action: 'updatePayment', billNo, status, paidAt }) }).catch(() => {});
+      if (status === 'transferred' && slipPhotoUrl) {
         const bill = history.find(h => h.billNo === billNo);
         const now = new Date();
         const datePart = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
