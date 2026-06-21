@@ -1530,6 +1530,8 @@ export default function App() {
       const next = { ...storage.loadVehiclePlates(), [session.sellerPhone]: plate };
       storage.saveVehiclePlates(next);
       setVehiclePlates(next);
+      const url = storage.loadSheet();
+      if (url) fetch(url, { method: 'POST', body: JSON.stringify({ action: 'updatePlates', plates: next }) }).catch(() => {});
     }
     // Drive upload now happens here so we have the plate in the filename
     const dataUrl = pendingPhotoDataUrl.current;
@@ -1601,6 +1603,13 @@ export default function App() {
           const merged = { ...storage.loadPayments(), ...data.payments };
           storage.savePayments(merged);
           setPayments(merged);
+        }
+      }).catch(() => {});
+      fetch(`${su}?action=getPlates`).then(r => r.json()).then(data => {
+        if (data.ok && data.plates) {
+          const merged = { ...storage.loadVehiclePlates(), ...data.plates };
+          storage.saveVehiclePlates(merged);
+          setVehiclePlates(merged);
         }
       }).catch(() => {});
     }
