@@ -1355,10 +1355,15 @@ export default function App() {
       toast('บันทึกภาพ — กำลัง upload Drive…');
       const url = storage.loadSheet();
       if (url) {
-        const billNo = session.billNo || key;
+        const now = new Date();
+        const datePart = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+        const timePart = `${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
+        const namePart = (session.seller || 'ไม่ระบุ').replace(/[^ก-๙a-zA-Z0-9]/g, '_');
+        const phonePart = session.sellerPhone || 'nophone';
+        const filename = `${namePart}_${phonePart}_${datePart}_${timePart}.jpg`;
         fetch(url, {
           method: 'POST',
-          body: JSON.stringify({ action: 'uploadPhoto', base64: dataUrl, filename: `${billNo}_plate.jpg` }),
+          body: JSON.stringify({ action: 'uploadPhoto', base64: dataUrl, filename }),
         })
           .then(r => r.json())
           .then(res => {
