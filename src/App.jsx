@@ -1353,6 +1353,7 @@ export default function App() {
   const [vehiclePlates, setVehiclePlates] = useState({});
   const [vehiclePhotoUrl, setVehiclePhotoUrl] = useState(null);
   const savedSession = useRef(null);
+  const pendingPhotoDataUrl = useRef(null);
 
   const toast = useCallback((msg) => {
     setToastMsg(msg);
@@ -1377,25 +1378,19 @@ export default function App() {
       storage.saveVehiclePlates(next);
       setVehiclePlates(next);
     }
-  }, [session, updateSession]);
-
-  const handleVehiclePhoto = useCallback(async (file) => {
-    if (!session) return;
-    try {
-      const dataUrl = await resizeImage(file);
-      const key = `vp_${session.id}`;
-      await savePhoto(key, dataUrl);
-      setVehiclePhotoUrl(dataUrl);
-      updateSession(prev => ({ ...prev, vehiclePhotoKey: key }));
-      toast('บันทึกภาพ — กำลัง upload Drive…');
+    // Drive upload now happens here so we have the plate in the filename
+    const dataUrl = pendingPhotoDataUrl.current;
+    if (dataUrl) {
       const url = storage.loadSheet();
       if (url) {
         const now = new Date();
         const datePart = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
         const timePart = `${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
-        const namePart = (session.seller || 'ไม่ระบุ').replace(/[^ก-๙a-zA-Z0-9]/g, '_');
-        const phonePart = session.sellerPhone || 'nophone';
-        const filename = `${namePart}_${phonePart}_${datePart}_${timePart}.jpg`;
+        const namePart = (session?.seller || 'ไม่ระบุ').replace(/[^ก-๙a-zA-Z0-9]/g, '_');
+        const phonePart = session?.sellerPhone || 'nophone';
+        const platePart = plate.replace(/\s+/g, '') || 'noplate';
+        const filename = `${namePart}_${phonePart}_${platePart}_${datePart}_${timePart}.jpg`;
+        toast('กำลัง upload Drive…');
         fetch(url, {
           method: 'POST',
           body: JSON.stringify({ action: 'uploadPhoto', base64: dataUrl, filename }),
@@ -1409,7 +1404,21 @@ export default function App() {
             }
           })
           .catch(() => toast('บันทึกรูปในเครื่องแล้ว (Drive ไม่สำเร็จ)'));
+        pendingPhotoDataUrl.current = null;
       }
+    }
+  }, [session, updateSession, toast]);
+
+  const handleVehiclePhoto = useCallback(async (file) => {
+    if (!session) return;
+    try {
+      const dataUrl = await resizeImage(file);
+      const key = `vp_${session.id}`;
+      await savePhoto(key, dataUrl);
+      setVehiclePhotoUrl(dataUrl);
+      pendingPhotoDataUrl.current = dataUrl;
+      updateSession(prev => ({ ...prev, vehiclePhotoKey: key }));
+      toast('บันทึกภาพแล้ว');
     } catch { toast('ถ่ายภาพไม่สำเร็จ'); }
   }, [session, updateSession, toast]);
 
