@@ -907,14 +907,17 @@ function PrintView({ session, readonly, isHandoff, verified, history, onGoSummar
             <div style={{ fontSize: 11, color: '#5A4A38', marginTop: 2 }}>Premium Durian Selection</div>
             <div style={{ fontSize: 11, color: '#5A4A38', marginTop: 2 }}>โทร. 082-691-4414</div>
           </div>
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontWeight: 700, fontSize: 14 }}>ใบรับซื้อทุเรียน</div>
-            <div style={{ fontSize: 11, color: '#5A4A38' }}>เลขที่ {session?.billNo}</div>
+          <div style={{ textAlign: 'right', minWidth: 130 }}>
+            <div style={{ fontWeight: 700, fontSize: 13 }}>ใบรับซื้อทุเรียน</div>
+            <div style={{ fontSize: 10.5, color: '#5A4A38', marginBottom: 6 }}>เลขที่ {session?.billNo}</div>
+            <div style={{ fontSize: 10.5, color: '#3A2A18', lineHeight: 1.7 }}>
+              <div>📅 {session ? dateStr(session.date) : ''}</div>
+              <div>🧺 <b>{session?.seller || '—'}</b>{session?.sellerPhone ? ` · ${session.sellerPhone}` : ''}</div>
+              {session?.vehiclePlate && <div>🚗 {session.vehiclePlate}</div>}
+              {session?.supervisor && <div>👤 {session.supervisor}</div>}
+              {session?.recorder && <div>✍️ {session.recorder}</div>}
+            </div>
           </div>
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', margin: '12px 0', fontSize: 11.5 }}>
-          <span>วันที่: <b>{session ? dateStr(session.date) : ''}</b></span>
-          <span>ผู้ขาย: <b>{session?.seller || '—'}</b>{session?.sellerPhone ? ` · ${session.sellerPhone}` : ''}{session?.vehiclePlate ? ` · ทะเบียน: ${session.vehiclePlate}` : ''}{session?.supervisor ? ` · ผู้ดูแล: ${session.supervisor}` : ''}{session?.recorder ? ` · ผู้บันทึก: ${session.recorder}` : ''}</span>
         </div>
         {tier && tier.key !== 'new' && (
           <div style={{ margin: '-4px 0 10px', fontSize: 11, color: '#8A6A2E' }}>สมาชิกระดับ {tier.label} · ยอดสะสม {fmtKg(stat?.total || 0)} กก.</div>
