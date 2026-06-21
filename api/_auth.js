@@ -1,9 +1,9 @@
 import { createSign } from 'crypto';
 
 export async function getToken(scopes) {
-  const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
-  const rawKey = process.env.GOOGLE_PRIVATE_KEY || '';
-  // handle both: stored with literal \n or with actual newlines
+  // strip BOM and whitespace that PowerShell sometimes injects
+  const email = (process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || '').replace(/^﻿/, '').trim();
+  const rawKey = (process.env.GOOGLE_PRIVATE_KEY || '').replace(/^﻿/, '');
   const key = rawKey.includes('\\n') ? rawKey.replace(/\\n/g, '\n') : rawKey;
   if (!email || !key) throw new Error('Google credentials not configured (GOOGLE_SERVICE_ACCOUNT_EMAIL / GOOGLE_PRIVATE_KEY)');
 
