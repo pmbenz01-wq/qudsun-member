@@ -1779,7 +1779,20 @@ export default function App() {
     if (status === 'unpaid') delete next[billNo];
     storage.savePayments(next);
     setPayments(next);
-  }, []);
+    if (status === 'transferred' && slipPhotoUrl) {
+      const url = storage.loadSheet();
+      if (url) {
+        const bill = history.find(h => h.billNo === billNo);
+        const now = new Date();
+        const datePart = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+        const timePart = `${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
+        const namePart = (bill?.seller || 'ไม่ระบุ').replace(/[^ก-๙a-zA-Z0-9]/g, '_');
+        const phonePart = bill?.sellerPhone || 'nophone';
+        const filename = `transfer_${namePart}_${phonePart}_${datePart}_${timePart}.jpg`;
+        fetch(url, { method: 'POST', body: JSON.stringify({ action: 'uploadPhoto', base64: slipPhotoUrl, filename, folder: 'QudsunTransfers' }) }).catch(() => {});
+      }
+    }
+  }, [history]);
 
   const handleSaveSlip = useCallback((dataUrl) => {
     const url = storage.loadSheet();
