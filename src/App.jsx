@@ -494,12 +494,12 @@ function RecordView({ session, activeCat, input, onInput, onCommit, onPickCat, o
             <span style={{ fontSize: 13, fontWeight: 600, color: '#7A5A22' }}>{session.supervisor}</span>
           </div>
         )}
-        {(session?.seller || session?.sellerPhone) && (
-          <div onClick={onEditSeller} style={{ display: 'flex', alignItems: 'center', gap: 5, background: '#F0EAFA', border: '1px solid #C9B8E8', borderRadius: 20, padding: '5px 12px', cursor: 'pointer' }}>
-            <span style={{ fontSize: 13 }}>🧺</span>
-            <span style={{ fontSize: 13, fontWeight: 600, color: '#5A3E8A' }}>{session.seller || session.sellerPhone}</span>
-          </div>
-        )}
+        <div onClick={onEditSeller} style={{ display: 'flex', alignItems: 'center', gap: 5, background: (session?.seller || session?.sellerPhone) ? '#F0EAFA' : '#F5F5F5', border: `1px solid ${(session?.seller || session?.sellerPhone) ? '#C9B8E8' : '#D0C8C0'}`, borderRadius: 20, padding: '5px 12px', cursor: 'pointer' }}>
+          <span style={{ fontSize: 13 }}>🧺</span>
+          <span style={{ fontSize: 13, fontWeight: 600, color: (session?.seller || session?.sellerPhone) ? '#5A3E8A' : '#9A8878' }}>
+            {session?.seller || session?.sellerPhone || '+ เพิ่มลูกค้า'}
+          </span>
+        </div>
       </div>
 
       <div style={{ background: 'linear-gradient(135deg,#5C4326,#3F2D1E)', color: '#F6EEDD', borderRadius: 16, padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, boxShadow: '0 8px 20px rgba(63,45,30,.22)' }}>
