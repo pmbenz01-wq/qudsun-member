@@ -764,6 +764,12 @@ function PrintView({ session, readonly, isHandoff, verified, history, onGoSummar
       .then(setQrDataUrl).catch(() => {});
   }, [link]);
 
+  useEffect(() => {
+    if (readonly || isHandoff) return;
+    const t = setTimeout(() => window.print(), 800);
+    return () => clearTimeout(t);
+  }, []);
+
   const doCopy = () => {
     try { navigator.clipboard.writeText(link); } catch {}
     setCopied(true);
