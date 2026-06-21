@@ -9,7 +9,6 @@ import {
 } from './utils/helpers.js';
 import { storage } from './utils/storage.js';
 import { savePhoto, loadPhoto, resizeImage } from './utils/photoDB.js';
-import { createWorker } from 'tesseract.js';
 
 // ─── Keypad ───────────────────────────────────────────────────────────────────
 function Keypad({ value, onChange, onConfirm, confirmLabel }) {
@@ -461,35 +460,17 @@ function VehicleModal({ plate, photoUrl, onSave, onPhoto, onClose }) {
   const fileRef = useRef();
 
   async function runOcr(file) {
+    const sheetUrl = storage.loadSheet();
+    if (!sheetUrl) { setOcrStatus('fail'); return; }
     setOcrStatus('reading');
     try {
-      const worker = await createWorker('tha+eng');
-      await worker.setParameters({
-        tessedit_pageseg_mode: '6',   // uniform block of text
-        preserve_interword_spaces: '1',
+      const dataUrl = await resizeImage(file, 800);
+      const res = await fetch(sheetUrl, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'readPlate', base64: dataUrl }),
       });
-      const url = URL.createObjectURL(file);
-      const { data } = await worker.recognize(url);
-      URL.revokeObjectURL(url);
-      await worker.terminate();
-
-      const raw = data.text || '';
-      // split lines, keep Thai consonants + digits + spaces
-      const lines = raw.split('\n')
-        .map(l => l.replace(/[^ก-ฮ0-9\s]/g, ' ').replace(/\s+/g, ' ').trim())
-        .filter(l => l.length >= 2);
-
-      // prefer a line that has both Thai and digits (= plate line)
-      const plateLine = lines.find(l => /[ก-ฮ]/.test(l) && /[0-9]/.test(l))
-        || lines.find(l => /[0-9]{3,}/.test(l))
-        || lines[0]
-        || '';
-
-      // also collect province if present (line with Thai only, 3+ chars)
-      const provinceLine = lines.find(l => /^[ก-๙\s]{3,}$/.test(l) && l !== plateLine) || '';
-
-      const result = [plateLine, provinceLine].filter(Boolean).join(' ').trim();
-      if (result) { setText(result); setOcrStatus('done'); }
+      const data = await res.json();
+      if (data.ok && data.plate) { setText(data.plate.trim()); setOcrStatus('done'); }
       else setOcrStatus('fail');
     } catch { setOcrStatus('fail'); }
   }
