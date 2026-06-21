@@ -924,19 +924,23 @@ function CustomerDetailView({ phone, history, verified, supervisors, onGoBack, o
 }
 
 // ─── SellerModal ──────────────────────────────────────────────────────────────
-function SellerModal({ name, phone, supervisor, nameLocked, onNameChange, onPhoneChange, onSupervisorChange, onSave, onCancel, history, verified }) {
+function SellerModal({ name, phone, supervisor, nameLocked, supervisorLocked, onNameChange, onPhoneChange, onSupervisorChange, onUnlock, onSave, onCancel, history, verified }) {
   const stat = phone ? customerStat(phone, history, verified) : null;
   const tier = stat ? stat.effectiveTier : null;
+  const locked = nameLocked || supervisorLocked;
   return (
     <div className="no-print" style={{ position: 'fixed', inset: 0, zIndex: 55, background: 'rgba(42,33,24,.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 18, animation: 'fadeIn .2s' }}>
       <div style={{ background: '#FFFDF8', borderRadius: 20, padding: 22, width: '100%', maxWidth: 360, animation: 'popIn .25s' }}>
         <h3 style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 18, margin: '0 0 14px', color: '#4A3526' }}>ข้อมูลผู้ขาย</h3>
-        <label style={{ display: 'block', fontSize: 12, color: '#A6925E', marginBottom: 5 }}>ชื่อผู้ขาย / สวน {nameLocked && <span style={{ color: '#C9A24B' }}>🔒 ล็อคจากประวัติ</span>}</label>
-        <input value={name} onChange={e => !nameLocked && onNameChange(e.target.value)} readOnly={nameLocked} placeholder="เช่น สวนลุงสมชาย" style={{ width: '100%', border: nameLocked ? '1.5px solid #E4D7BC' : '1.5px solid #E4D7BC', borderRadius: 12, padding: 14, fontSize: 16, color: nameLocked ? '#9A8662' : '#3F2D1E', outline: 'none', marginBottom: 12, background: nameLocked ? '#F5F0E8' : '#fff' }} />
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
+          <label style={{ fontSize: 12, color: '#A6925E' }}>ชื่อผู้ขาย / สวน {nameLocked && <span style={{ color: '#C9A24B' }}>🔒 จากประวัติ</span>}</label>
+          {locked && <button onClick={onUnlock} style={{ border: '1px solid #D8C8A8', background: '#F3E9D2', borderRadius: 8, padding: '3px 9px', fontSize: 11, color: '#7A5A22', cursor: 'pointer' }}>🔑 แก้ไข (Admin)</button>}
+        </div>
+        <input value={name} onChange={e => !nameLocked && onNameChange(e.target.value)} readOnly={nameLocked} placeholder="เช่น สวนลุงสมชาย" style={{ width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 12, padding: 14, fontSize: 16, color: nameLocked ? '#9A8662' : '#3F2D1E', outline: 'none', marginBottom: 12, background: nameLocked ? '#F5F0E8' : '#fff' }} />
         <label style={{ display: 'block', fontSize: 12, color: '#A6925E', marginBottom: 5 }}>เบอร์โทรผู้ขาย</label>
         <input value={phone} onChange={e => onPhoneChange(e.target.value)} inputMode="tel" placeholder="เช่น 081-234-5678" style={{ width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 12, padding: 14, fontSize: 16, color: '#3F2D1E', outline: 'none', marginBottom: 12 }} />
-        <label style={{ display: 'block', fontSize: 12, color: '#A6925E', marginBottom: 5 }}>ผู้ดูแล (ผูกกับลูกค้าคนนี้ตลอด)</label>
-        <input value={supervisor} onChange={e => onSupervisorChange(e.target.value)} placeholder="เช่น พี่โอ๋" style={{ width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 12, padding: 14, fontSize: 16, color: '#3F2D1E', outline: 'none' }} />
+        <label style={{ display: 'block', fontSize: 12, color: '#A6925E', marginBottom: 5 }}>ผู้ดูแล {supervisorLocked && <span style={{ color: '#C9A24B' }}>🔒 จากประวัติ</span>}</label>
+        <input value={supervisor} onChange={e => !supervisorLocked && onSupervisorChange(e.target.value)} readOnly={supervisorLocked} placeholder="เช่น พี่โอ๋" style={{ width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 12, padding: 14, fontSize: 16, color: supervisorLocked ? '#9A8662' : '#3F2D1E', outline: 'none', background: supervisorLocked ? '#F5F0E8' : '#fff' }} />
         {tier && tier.key !== 'new' && stat && (
           <div style={{ marginTop: 14, background: '#FBF6EC', border: '1px solid #E4D7BC', borderRadius: 14, padding: '13px 14px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
@@ -1016,6 +1020,7 @@ export default function App() {
   const [sellerOpen, setSellerOpen] = useState(false);
   const [sellerDraft, setSellerDraft] = useState('');
   const [sellerNameLocked, setSellerNameLocked] = useState(false);
+  const [sellerSupervisorLocked, setSellerSupervisorLocked] = useState(false);
   const [sellerPhoneDraft, setSellerPhoneDraft] = useState('');
   const [supervisorDraft, setSupervisorDraft] = useState('');
   const [verifyPrompt, setVerifyPrompt] = useState(null);
@@ -1346,10 +1351,12 @@ export default function App() {
           onEditSeller={() => {
             const ph = session.sellerPhone || '';
             const knownName = loadCustomers(history)[ph]?.name || verified[ph] || '';
+            const knownSup = supervisors[ph] || '';
             setSellerDraft(session.seller || '');
             setSellerPhoneDraft(ph);
-            setSupervisorDraft(session.supervisor || supervisors[ph] || '');
+            setSupervisorDraft(session.supervisor || knownSup);
             setSellerNameLocked(!!knownName);
+            setSellerSupervisorLocked(!!knownSup);
             setSellerOpen(true);
           }}
           onEditEntry={openEditEntry} verified={verified} history={history}
@@ -1399,12 +1406,16 @@ export default function App() {
       {pinPrompt && <PinModal title={pinPrompt.title} error={pinError} value={pinValue} onKey={handlePinKey} onCancel={() => { setPinPrompt(null); setPinValue(''); setPinError(''); }} />}
       {numpad && <NumModal title={numpad.title} unit={numpad.unit} value={numpad.value || ''} onChange={v => setNumpad(n => ({ ...n, value: v }))} onSave={numSave} onCancel={() => setNumpad(null)} onDelete={numDelete} saveLabel={numpad.saveLabel} canDelete={numpad.canDelete} />}
       {sellerOpen && <SellerModal
-        name={sellerDraft} phone={sellerPhoneDraft} supervisor={supervisorDraft} nameLocked={sellerNameLocked}
+        name={sellerDraft} phone={sellerPhoneDraft} supervisor={supervisorDraft}
+        nameLocked={sellerNameLocked} supervisorLocked={sellerSupervisorLocked}
+        onUnlock={() => requirePin('ปลดล็อคชื่อ/ผู้ดูแล (Admin เท่านั้น)', () => { setSellerNameLocked(false); setSellerSupervisorLocked(false); })}
         onNameChange={setSellerDraft}
         onPhoneChange={val => {
           setSellerPhoneDraft(val);
           const phone = val.trim();
-          setSupervisorDraft(supervisors[phone] || supervisorDraft);
+          const knownSup = supervisors[phone] || '';
+          if (knownSup) { setSupervisorDraft(knownSup); setSellerSupervisorLocked(true); }
+          else setSellerSupervisorLocked(false);
           const knownName = loadCustomers(history)[phone]?.name || verified[phone] || '';
           if (knownName) { setSellerDraft(knownName); setSellerNameLocked(true); }
           else setSellerNameLocked(false);
