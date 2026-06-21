@@ -271,7 +271,7 @@ function EmployeeManager({ employees, onSave, onCancel }) {
 }
 
 // ─── HomeView ─────────────────────────────────────────────────────────────────
-function HomeView({ session, history, sheetUrl, syncStatus, syncing, onNew, onResume, onGoCustomers, onGoDashboard, onGoSupervisors, onOpenSheet, onSyncNow, onChangePin, onSetEmployeePin, onOpenHistory, verified, supervisors, isEmployee, onLogout, onExport, onImport }) {
+function HomeView({ session, history, syncStatus, syncing, onNew, onResume, onGoCustomers, onGoDashboard, onGoSupervisors, onOpenSheet, onSyncNow, onChangePin, onSetEmployeePin, onOpenHistory, verified, supervisors, isEmployee, onLogout, onExport, onImport }) {
   const customerCount = Object.keys(loadCustomers(history)).length;
   const supervisorCount = Object.values(supervisors || {}).filter(Boolean).reduce((set, n) => (set.add(n), set), new Set()).size;
   if (isEmployee) {
@@ -389,14 +389,12 @@ function HomeView({ session, history, sheetUrl, syncStatus, syncing, onNew, onRe
         <button onClick={onOpenSheet} style={{ border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 13, padding: '13px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10 }}>
           <span style={{ fontSize: 18 }}>📊</span>
           <div style={{ flex: 1, textAlign: 'left' }}>
-            <div style={{ fontSize: 14, color: '#4A3526', fontWeight: 500 }}>Google Sheet {sheetUrl ? '· เชื่อมต่อแล้ว' : ''}</div>
+            <div style={{ fontSize: 14, color: '#4A3526', fontWeight: 500 }}>Google Sheet · ซิงก์อัตโนมัติ</div>
             {syncStatus && <div style={{ fontSize: 12, color: '#9A8662', marginTop: 2 }}>{syncStatus}</div>}
           </div>
-          {sheetUrl && (
-            <button onClick={e => { e.stopPropagation(); onSyncNow(); }} style={{ border: '1px solid #D8C8A8', background: '#F3E9D2', borderRadius: 9, padding: '6px 10px', fontSize: 12, color: '#7A5A22', cursor: 'pointer' }}>
-              {syncing ? '…' : '↺ ซิงก์'}
-            </button>
-          )}
+          <button onClick={e => { e.stopPropagation(); onSyncNow(); }} style={{ border: '1px solid #D8C8A8', background: '#F3E9D2', borderRadius: 9, padding: '6px 10px', fontSize: 12, color: '#7A5A22', cursor: 'pointer' }}>
+            {syncing ? '…' : '↺ ซิงก์'}
+          </button>
         </button>
       </div>
     </div>
@@ -1463,18 +1461,17 @@ function VerifyModal({ tier, phone, draft, total, canSkip, isManage, onDraftChan
 }
 
 // ─── SheetModal ───────────────────────────────────────────────────────────────
-function SheetModal({ url, onUrlChange, onSave, onCancel }) {
+function SheetModal({ onSyncNow, syncStatus, onCancel }) {
   return (
     <div className="no-print" style={{ position: 'fixed', inset: 0, zIndex: 62, background: 'rgba(42,33,24,.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 18, animation: 'fadeIn .2s' }}>
       <div style={{ background: '#FFFDF8', borderRadius: 20, padding: 24, width: '100%', maxWidth: 430, animation: 'popIn .25s' }}>
-        <div style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 18, color: '#4A3526', marginBottom: 10 }}>เชื่อมต่อ Google Sheet</div>
-        <p style={{ fontSize: 12.5, color: '#9A8662', lineHeight: 1.7, margin: '0 0 6px' }}>วางลิงก์ Web App (ลงท้ายด้วย <b style={{ color: '#7A5A22' }}>/exec</b>) ที่ได้จากการ Deploy สคริปต์ใน Google Sheet ของคุณ</p>
-        <input value={url} onChange={e => onUrlChange(e.target.value)} placeholder="https://script.google.com/macros/s/.../exec" inputMode="url" style={{ width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 12, padding: '12px 13px', fontSize: 13, color: '#4A3526', outline: 'none', boxSizing: 'border-box' }} />
+        <div style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 18, color: '#4A3526', marginBottom: 10 }}>📊 Google Sheet</div>
+        <p style={{ fontSize: 13.5, color: '#7A6450', lineHeight: 1.8, margin: '0 0 6px' }}>ซิงก์อัตโนมัติผ่านเซิร์ฟเวอร์ — ไม่ต้องตั้งค่า URL</p>
+        {syncStatus && <p style={{ fontSize: 13, color: '#5A7A5A', margin: '0 0 14px' }}>{syncStatus}</p>}
         <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
-          <button onClick={onCancel} style={{ flex: 1, border: '1px solid #E4D7BC', background: '#fff', borderRadius: 12, padding: 13, color: '#7A6450', fontSize: 14, cursor: 'pointer' }}>ยกเลิก</button>
-          <button onClick={onSave} style={{ flex: 1.4, border: 'none', borderRadius: 12, padding: 13, background: 'linear-gradient(135deg,#C9A24B,#A8763E)', color: '#fff', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>บันทึก & ซิงก์</button>
+          <button onClick={onCancel} style={{ flex: 1, border: '1px solid #E4D7BC', background: '#fff', borderRadius: 12, padding: 13, color: '#7A6450', fontSize: 14, cursor: 'pointer' }}>ปิด</button>
+          <button onClick={() => { onSyncNow(); onCancel(); }} style={{ flex: 1.4, border: 'none', borderRadius: 12, padding: 13, background: 'linear-gradient(135deg,#C9A24B,#A8763E)', color: '#fff', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>↺ ซิงก์ตอนนี้</button>
         </div>
-        <p style={{ fontSize: 11, color: '#C8B998', margin: '12px 0 0', lineHeight: 1.6 }}>เว้นว่างแล้วกดบันทึก = เลิกเชื่อมต่อ (ข้อมูลยังอยู่ในเครื่อง)</p>
       </div>
     </div>
   );
@@ -1550,37 +1547,34 @@ export default function App() {
       const next = { ...storage.loadVehiclePlates(), [session.sellerPhone]: plate };
       storage.saveVehiclePlates(next);
       setVehiclePlates(next);
-      const url = storage.loadSheet();
-      if (url) fetch(url, { method: 'POST', body: JSON.stringify({ action: 'updatePlates', plates: next }) }).catch(() => {});
+      fetch('/api/sheets', { method: 'POST', body: JSON.stringify({ action: 'updatePlates', plates: next }) }).catch(() => {});
     }
     // Drive upload now happens here so we have the plate in the filename
     const dataUrl = pendingPhotoDataUrl.current;
     if (dataUrl) {
-      const url = storage.loadSheet();
-      if (url) {
-        const now = new Date();
-        const datePart = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
-        const timePart = `${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
-        const namePart = (session?.seller || 'ไม่ระบุ').replace(/[^ก-๙a-zA-Z0-9]/g, '_');
-        const phonePart = session?.sellerPhone || 'nophone';
-        const platePart = plate.replace(/\s+/g, '') || 'noplate';
-        const filename = `${namePart}_${phonePart}_${platePart}_${datePart}_${timePart}.jpg`;
-        toast('กำลัง upload Drive…');
-        fetch(url, {
-          method: 'POST',
-          body: JSON.stringify({ action: 'uploadPhoto', base64: dataUrl, filename }),
+      const now = new Date();
+      const datePart = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+      const timePart = `${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
+      const namePart = (session?.seller || 'ไม่ระบุ').replace(/[^ก-๙a-zA-Z0-9]/g, '_');
+      const phonePart = session?.sellerPhone || 'nophone';
+      const platePart = plate.replace(/\s+/g, '') || 'noplate';
+      const filename = `${namePart}_${phonePart}_${platePart}_${datePart}_${timePart}.jpg`;
+      toast('กำลัง upload Drive…');
+      fetch('/api/drive', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ base64: dataUrl, filename }),
+      })
+        .then(r => r.json())
+        .then(res => {
+          if (res.ok && res.fileId) {
+            const driveUrl = `https://drive.google.com/uc?id=${res.fileId}`;
+            updateSession(prev => ({ ...prev, vehicleDriveUrl: driveUrl }));
+            toast('อัปโหลดรูปขึ้น Drive แล้ว ✓');
+          }
         })
-          .then(r => r.json())
-          .then(res => {
-            if (res.ok && res.fileId) {
-              const driveUrl = `https://drive.google.com/uc?id=${res.fileId}`;
-              updateSession(prev => ({ ...prev, vehicleDriveUrl: driveUrl }));
-              toast('อัปโหลดรูปขึ้น Drive แล้ว ✓');
-            }
-          })
-          .catch(() => toast('บันทึกรูปในเครื่องแล้ว (Drive ไม่สำเร็จ)'));
-        pendingPhotoDataUrl.current = null;
-      }
+        .catch(() => toast('บันทึกรูปในเครื่องแล้ว (Drive ไม่สำเร็จ)'));
+      pendingPhotoDataUrl.current = null;
     }
   }, [session, updateSession, toast]);
 
@@ -1615,24 +1609,22 @@ export default function App() {
     setHistory(h); setPin(p); setVerified(v); setSupervisors(sv); setEmployeePin(ep); setPinnedCats(pc); setEmployees(emps); setVehiclePlates(vp); setPayments(pm);
     if (savedRole) { setAuthRole(savedRole); setRecorderName(savedRecorder); }
     if (s) { setSession(s); if (s.vehiclePhotoKey) loadPhoto(s.vehiclePhotoKey).then(u => { if (u) setVehiclePhotoUrl(u); }); }
-    if (su) {
-      setSheetUrl(su);
-      setTimeout(() => syncNow(true), 1500);
-      fetch(`${su}?action=getPayments`).then(r => r.json()).then(data => {
-        if (data.ok && data.payments) {
-          const merged = { ...storage.loadPayments(), ...data.payments };
-          storage.savePayments(merged);
-          setPayments(merged);
-        }
-      }).catch(() => {});
-      fetch(`${su}?action=getPlates`).then(r => r.json()).then(data => {
-        if (data.ok && data.plates) {
-          const merged = { ...storage.loadVehiclePlates(), ...data.plates };
-          storage.saveVehiclePlates(merged);
-          setVehiclePlates(merged);
-        }
-      }).catch(() => {});
-    }
+    if (su) setSheetUrl(su);
+    setTimeout(() => syncNow(true), 1500);
+    fetch('/api/sheets?action=getPayments').then(r => r.json()).then(data => {
+      if (data.ok && data.payments) {
+        const merged = { ...storage.loadPayments(), ...data.payments };
+        storage.savePayments(merged);
+        setPayments(merged);
+      }
+    }).catch(() => {});
+    fetch('/api/sheets?action=getPlates').then(r => r.json()).then(data => {
+      if (data.ok && data.plates) {
+        const merged = { ...storage.loadVehiclePlates(), ...data.plates };
+        storage.saveVehiclePlates(merged);
+        setVehiclePlates(merged);
+      }
+    }).catch(() => {});
     const m = (location.hash || '').match(/bill=([^&]+)/);
     if (m) {
       try {
@@ -1644,11 +1636,9 @@ export default function App() {
 
   // Google Sheet
   const syncNow = useCallback(async (silent) => {
-    const url = storage.loadSheet();
-    if (!url) { if (!silent) toast('ยังไม่ได้เชื่อมต่อ Google Sheet'); return; }
     setSyncing(true); setSyncStatus('กำลังซิงก์…');
     try {
-      const res = await fetch(url, { method: 'GET' });
+      const res = await fetch('/api/sheets', { method: 'GET' });
       const data = await res.json();
       if (!data?.ok) throw new Error('bad');
       const remote = (data.bills || []).map(b => { try { return JSON.parse(b.json); } catch { return null; } }).filter(Boolean);
@@ -1660,31 +1650,32 @@ export default function App() {
       current.forEach(c => { if (c?.billNo) byNo[c.billNo] = c; });
       const merged = Object.values(byNo).sort((a, b) => (b.date || 0) - (a.date || 0)).slice(0, 300);
       if (data.verified) { const nv = { ...storage.loadVerified(), ...data.verified }; storage.saveVerified(nv); setVerified(nv); }
-      // rebuild supervisors from synced bill data
       const svFromSync = {};
       merged.forEach(c => { const ph = c.phone || c.sellerPhone || ''; const sup = (c.data && c.data.supervisor) || c.supervisor || ''; if (ph && sup) svFromSync[ph] = sup; });
       if (Object.keys(svFromSync).length) { const nSv = { ...storage.loadSupervisors(), ...svFromSync }; storage.saveSupervisors(nSv); setSupervisors(nSv); }
       storage.saveHistory(merged); setHistory(merged);
       setSyncStatus('✓ ซิงก์แล้ว ' + new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }));
-      localOnly.forEach(c => pushBill(c, true, url));
+      localOnly.forEach(c => pushBill(c, true));
     } catch {
       setSyncStatus('⚠ ซิงก์ไม่สำเร็จ');
     }
     setSyncing(false);
   }, [toast]); // eslint-disable-line
 
-  const pushBill = useCallback(async (card, quiet, urlOverride) => {
-    const url = urlOverride || storage.loadSheet();
-    if (!url || !card) return;
+  const pushBill = useCallback(async (card, quiet) => {
+    if (!card) return;
     try {
-      await fetch(url, { method: 'POST', body: JSON.stringify({ action: 'bill', bill: { billNo: card.billNo, date: card.date, dateText: card.dateText, seller: card.seller, phone: card.phone, kg: card.kg, baht: card.baht, json: JSON.stringify(card) } }) });
+      await fetch('/api/sheets', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ action: 'bill', bill: { billNo: card.billNo, date: card.date, dateText: card.dateText, seller: card.seller, phone: card.phone, kg: card.kg, baht: card.baht, json: JSON.stringify(card) } }),
+      });
       if (!quiet) setSyncStatus('✓ บันทึกขึ้นชีตแล้ว ' + new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }));
     } catch { if (!quiet) setSyncStatus('⚠ อัปโหลดไม่สำเร็จ'); }
   }, []);
 
   const pushVerify = useCallback(async (phone, name) => {
-    const url = storage.loadSheet(); if (!url) return;
-    try { await fetch(url, { method: 'POST', body: JSON.stringify({ action: 'verify', phone, name }) }); } catch {}
+    try { await fetch('/api/sheets', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'verify', phone, name }) }); } catch {}
   }, []);
 
   // PIN
@@ -1819,32 +1810,28 @@ export default function App() {
     if (status === 'unpaid') delete next[billNo];
     storage.savePayments(next);
     setPayments(next);
-    const url = storage.loadSheet();
-    if (url) {
-      fetch(url, { method: 'POST', body: JSON.stringify({ action: 'updatePayment', billNo, status, paidAt }) }).catch(() => {});
-      if (status === 'transferred' && slipPhotoUrl) {
-        const bill = history.find(h => h.billNo === billNo);
-        const now = new Date();
-        const datePart = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
-        const timePart = `${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
-        const namePart = (bill?.seller || 'ไม่ระบุ').replace(/[^ก-๙a-zA-Z0-9]/g, '_');
-        const phonePart = bill?.sellerPhone || 'nophone';
-        const filename = `transfer_${namePart}_${phonePart}_${datePart}_${timePart}.jpg`;
-        fetch(url, { method: 'POST', body: JSON.stringify({ action: 'uploadPhoto', base64: slipPhotoUrl, filename, folder: 'QudsunTransfers' }) }).catch(() => {});
-      }
+    fetch('/api/sheets', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'updatePayment', billNo, status, paidAt }) }).catch(() => {});
+    if (status === 'transferred' && slipPhotoUrl) {
+      const bill = history.find(h => h.billNo === billNo);
+      const now = new Date();
+      const datePart = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+      const timePart = `${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
+      const namePart = (bill?.seller || 'ไม่ระบุ').replace(/[^ก-๙a-zA-Z0-9]/g, '_');
+      const phonePart = bill?.sellerPhone || 'nophone';
+      const filename = `transfer_${namePart}_${phonePart}_${datePart}_${timePart}.jpg`;
+      fetch('/api/drive', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ base64: slipPhotoUrl, filename, folder: 'QudsunTransfers' }) }).catch(() => {});
     }
   }, [history]);
 
   const handleSaveSlip = useCallback((dataUrl) => {
-    const url = storage.loadSheet();
-    if (!url || !session) return;
+    if (!session) return;
     const now = new Date();
     const datePart = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
     const timePart = `${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
     const namePart = (session.seller || 'ไม่ระบุ').replace(/[^ก-๙a-zA-Z0-9]/g, '_');
     const phonePart = session.sellerPhone || 'nophone';
     const filename = `slip_${namePart}_${phonePart}_${datePart}_${timePart}.jpg`;
-    fetch(url, { method: 'POST', body: JSON.stringify({ action: 'uploadPhoto', base64: dataUrl, filename, folder: 'QudsunSlips' }) }).catch(() => {});
+    fetch('/api/drive', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ base64: dataUrl, filename, folder: 'QudsunSlips' }) }).catch(() => {});
   }, [session]);
 
   const doConfirm = useCallback(() => {
@@ -1984,11 +1971,8 @@ export default function App() {
   }, []);
 
   const sheetSave = () => {
-    const url = String(sheetModalUrl || '').trim();
-    if (url && !/^https:\/\/script\.google\.com\/.+\/exec/.test(url)) { toast('ลิงก์ไม่ถูกต้อง — ต้องลงท้ายด้วย /exec'); return; }
-    storage.saveSheet(url); setSheetUrl(url); setSheetModal(false); setSyncStatus('');
-    if (url) { toast('เชื่อมต่อแล้ว · กำลังซิงก์ข้อมูล'); setTimeout(() => syncNow(), 60); }
-    else toast('ยกเลิกการเชื่อมต่อแล้ว');
+    setSheetModal(false);
+    syncNow(false);
   };
 
   if (!authRole) {
@@ -2000,7 +1984,7 @@ export default function App() {
       <Header />
 
       {screen === 'home' && (
-        <HomeView session={session} history={history} verified={verified} supervisors={supervisors} sheetUrl={sheetUrl} syncStatus={syncStatus} syncing={syncing}
+        <HomeView session={session} history={history} verified={verified} supervisors={supervisors} syncStatus={syncStatus} syncing={syncing}
           onNew={startNew} onResume={() => setScreen('record')} onGoCustomers={() => setScreen('customers')}
           onGoDashboard={() => setScreen('dashboard')}
           onGoSupervisors={() => setScreen('supervisors')}
@@ -2104,7 +2088,7 @@ export default function App() {
         canSkip={verifyPrompt.mode === 'bill'} isManage={verifyPrompt.mode === 'manage'}
         onDraftChange={v => setVerifyPrompt(p => ({ ...p, draft: v }))}
         onConfirm={handleVerifyConfirm} onSkip={() => commitFinish()} onCancel={() => setVerifyPrompt(null)} />}
-      {sheetModal && <SheetModal url={sheetModalUrl} onUrlChange={setSheetModalUrl} onSave={sheetSave} onCancel={() => setSheetModal(false)} />}
+      {sheetModal && <SheetModal onSyncNow={() => syncNow(false)} syncStatus={syncStatus} onCancel={() => setSheetModal(false)} />}
       {pinEditorOpen && <PinEditor pinnedCats={pinnedCats} onSave={pins => { storage.savePinnedCats(pins); setPinnedCats(pins); setPinEditorOpen(false); toast('บันทึกหมวดปักหมุดแล้ว'); }} onCancel={() => setPinEditorOpen(false)} />}
       {employeeManagerOpen && <EmployeeManager employees={employees} onSave={list => { storage.saveEmployees(list); setEmployees(list); setEmployeeManagerOpen(false); toast('บันทึกรายชื่อพนักงานแล้ว'); }} onCancel={() => setEmployeeManagerOpen(false)} />}
 
