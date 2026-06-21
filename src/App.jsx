@@ -470,14 +470,13 @@ function VehicleModal({ plate, photoUrl, onSave, onPhoto, onClose }) {
   const fileRef = useRef();
 
   async function runOcr(file) {
-    const sheetUrl = storage.loadSheet();
-    if (!sheetUrl) { setOcrStatus('fail'); return; }
     setOcrStatus('reading');
     try {
       const dataUrl = await resizeImage(file, 800);
-      const res = await fetch(sheetUrl, {
+      const res = await fetch('/api/ocr', {
         method: 'POST',
-        body: JSON.stringify({ action: 'readPlate', base64: dataUrl }),
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ base64: dataUrl, mode: 'plate' }),
       });
       const data = await res.json();
       if (data.ok && data.plate) { setText(data.plate.trim()); setOcrStatus('done'); }
@@ -1036,15 +1035,16 @@ function TransferSlipModal({ bill, onConfirm, onClose }) {
     const r = new FileReader(); r.onload = async ev => {
       const dataUrl = ev.target.result;
       setPhotoUrl(dataUrl); setSlipInfo(null);
-      const url = storage.loadSheet();
-      if (url) {
-        setReading(true);
-        try {
-          const res = await fetch(url, { method: 'POST', body: JSON.stringify({ action: 'readSlip', base64: dataUrl }) });
-          const data = await res.json();
-          if (data.ok && data.info) setSlipInfo(data.info);
-        } catch {} finally { setReading(false); }
-      }
+      setReading(true);
+      try {
+        const res = await fetch('/api/ocr', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ base64: dataUrl, mode: 'slip' }),
+        });
+        const data = await res.json();
+        if (data.ok && data.info) setSlipInfo(data.info);
+      } catch {} finally { setReading(false); }
     }; r.readAsDataURL(f); e.target.value = '';
   };
   return (
