@@ -6,7 +6,10 @@ const KEYS = {
   verified:    'qudsun_verified',
   supervisors:   'qudsun_supervisors',
   employeePin:   'qudsun_employee_pin',
+  pinnedCats:    'qudsun_pinned_cats',
 };
+
+const DEFAULT_PINS = ['AB', 'etc', 'taksai', 'hongyen', 'sutthai'];
 
 export const storage = {
   loadSession:  () => { try { return JSON.parse(localStorage.getItem(KEYS.session) || 'null'); } catch { return null; } },
@@ -23,4 +26,6 @@ export const storage = {
   saveSupervisors:  m  => { try { localStorage.setItem(KEYS.supervisors, JSON.stringify(m)); } catch {} },
   loadEmployeePin:  () => localStorage.getItem(KEYS.employeePin) || '2525',
   saveEmployeePin:  p  => { try { localStorage.setItem(KEYS.employeePin, p); } catch {} },
+  loadPinnedCats:   () => { try { const v = JSON.parse(localStorage.getItem(KEYS.pinnedCats) || 'null'); return Array.isArray(v) ? v : DEFAULT_PINS; } catch { return DEFAULT_PINS; } },
+  savePinnedCats:   v  => { try { localStorage.setItem(KEYS.pinnedCats, JSON.stringify(v)); } catch {} },
 };

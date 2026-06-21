@@ -289,8 +289,67 @@ function HomeView({ session, history, sheetUrl, syncStatus, syncing, onNew, onRe
   );
 }
 
+// ─── PinEditor ────────────────────────────────────────────────────────────────
+function PinEditor({ pinnedCats, onSave, onCancel }) {
+  const [pins, setPins] = useState([...pinnedCats]);
+  const available = CATS.filter(c => c.key !== 'custom' && !pins.includes(c.key));
+
+  const move = (i, dir) => {
+    const next = [...pins];
+    const j = i + dir;
+    if (j < 0 || j >= next.length) return;
+    [next[i], next[j]] = [next[j], next[i]];
+    setPins(next);
+  };
+
+  return (
+    <div className="no-print" style={{ position: 'fixed', inset: 0, zIndex: 65, background: 'rgba(42,33,24,.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 18, animation: 'fadeIn .2s' }}>
+      <div style={{ background: '#FFFDF8', borderRadius: 20, padding: 22, width: '100%', maxWidth: 360, maxHeight: '85dvh', overflowY: 'auto', animation: 'popIn .25s' }}>
+        <h3 style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 17, margin: '0 0 4px', color: '#4A3526' }}>⭐ จัดหมวดปักหมุด</h3>
+        <p style={{ fontSize: 12, color: '#9A8662', margin: '0 0 14px' }}>เลือกหมวดที่ใช้บ่อย แล้วจัดลำดับตามต้องการ</p>
+
+        <div style={{ marginBottom: 14 }}>
+          {pins.map((key, i) => {
+            const cat = CATS.find(c => c.key === key);
+            if (!cat) return null;
+            return (
+              <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 10px', background: '#FBF6EC', borderRadius: 10, marginBottom: 6, border: '1px solid #E4D7BC' }}>
+                <span style={{ width: 9, height: 9, borderRadius: '50%', background: cat.accent, flexShrink: 0 }} />
+                <span style={{ flex: 1, fontSize: 14, fontWeight: 600, color: '#4A3526' }}>{cat.label || cat.key}</span>
+                <button onClick={() => move(i, -1)} disabled={i === 0} style={{ border: '1px solid #E4D7BC', background: '#fff', borderRadius: 7, padding: '4px 8px', fontSize: 13, cursor: i === 0 ? 'default' : 'pointer', opacity: i === 0 ? .3 : 1 }}>↑</button>
+                <button onClick={() => move(i, 1)} disabled={i === pins.length - 1} style={{ border: '1px solid #E4D7BC', background: '#fff', borderRadius: 7, padding: '4px 8px', fontSize: 13, cursor: i === pins.length - 1 ? 'default' : 'pointer', opacity: i === pins.length - 1 ? .3 : 1 }}>↓</button>
+                <button onClick={() => setPins(p => p.filter((_, j) => j !== i))} style={{ border: '1px solid #E0B4A2', background: '#FBEEE8', borderRadius: 7, padding: '4px 8px', fontSize: 13, color: '#B5503A', cursor: 'pointer' }}>✕</button>
+              </div>
+            );
+          })}
+          {pins.length === 0 && <div style={{ textAlign: 'center', fontSize: 13, color: '#B7A684', padding: '12px 0' }}>ยังไม่มีหมวดปักหมุด</div>}
+        </div>
+
+        {available.length > 0 && (
+          <>
+            <div style={{ fontSize: 11, color: '#A6925E', fontWeight: 600, letterSpacing: '.1em', marginBottom: 8 }}>เพิ่มหมวด</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginBottom: 16 }}>
+              {available.map(cat => (
+                <button key={cat.key} onClick={() => setPins(p => [...p, cat.key])} style={{ border: '1px dashed #C9A24B', background: '#FBF6EC', borderRadius: 9, padding: '6px 12px', fontSize: 13, color: '#7A5A22', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ width: 7, height: 7, borderRadius: '50%', background: cat.accent }} />
+                  {cat.label || cat.key} <span style={{ fontSize: 14 }}>＋</span>
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button onClick={onCancel} style={{ flex: 1, border: '1px solid #E4D7BC', background: '#fff', borderRadius: 12, padding: 13, color: '#7A6450', cursor: 'pointer' }}>ยกเลิก</button>
+          <button onClick={() => onSave(pins)} style={{ flex: 1, border: 'none', background: '#3F2D1E', color: '#F6EEDD', borderRadius: 12, padding: 13, fontWeight: 600, cursor: 'pointer' }}>บันทึก</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── RecordView ───────────────────────────────────────────────────────────────
-function RecordView({ session, activeCat, input, onInput, onCommit, onPickCat, onGoHome, onGoSummary, onEditSeller, onEditEntry, verified, history, customLabel, onCustomLabelChange }) {
+function RecordView({ session, activeCat, input, onInput, onCommit, onPickCat, onGoHome, onGoSummary, onEditSeller, onEditEntry, verified, history, customLabel, onCustomLabelChange, pinnedCats, onOpenPinEditor }) {
   const aggData = agg(session);
   const totalKg = grandKg(session);
   const totalCount = (session?.entries || []).length;
@@ -332,6 +391,34 @@ function RecordView({ session, activeCat, input, onInput, onCommit, onPickCat, o
           <span style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 22 }}>{totalCount}</span>
         </div>
       </div>
+
+      {pinnedCats && pinnedCats.length > 0 && (
+        <div style={{ marginBottom: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+            <span style={{ fontSize: 11, color: '#A6925E', fontWeight: 600, letterSpacing: '.1em' }}>⭐ ปักหมุด</span>
+            <div style={{ flex: 1, height: 1, background: '#E4D7BC' }} />
+            <button onClick={onOpenPinEditor} style={{ border: '1px solid #E4D7BC', background: '#FBF6EC', borderRadius: 8, padding: '3px 8px', fontSize: 11, color: '#9A8662', cursor: 'pointer' }}>จัดการ</button>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(pinnedCats.length, 5)},1fr)`, gap: 7 }}>
+            {pinnedCats.map(key => {
+              const cat = CATS.find(c => c.key === key);
+              if (!cat) return null;
+              const d = aggData[key] || { kg: 0, count: 0 };
+              const active = activeCat === key;
+              return (
+                <button key={key} onClick={() => onPickCat(key)} style={{ border: active ? `2px solid ${cat.accent}` : '1.5px solid #D8C8A8', background: active ? '#FFFDF8' : '#F6F0E4', borderRadius: 12, padding: '10px 4px', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: active ? `0 4px 12px ${cat.accent}40` : 'none' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: cat.accent, display: 'inline-block', flexShrink: 0 }} />
+                    <span style={{ fontWeight: 700, fontSize: 13, color: '#4A3526' }}>{cat.label || cat.key}</span>
+                  </span>
+                  <span style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 16, marginTop: 3 }}>{fmtKg(d.kg)}</span>
+                  <span style={{ fontSize: 10, opacity: .7 }}>{d.count} เข่ง</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 8, marginBottom: 8 }}>
         {mainCats.map(c => {
@@ -1010,6 +1097,8 @@ export default function App() {
 
   const [supervisors, setSupervisors] = useState({});
   const [activeSupervisor, setActiveSupervisor] = useState(null);
+  const [pinnedCats, setPinnedCats] = useState([]);
+  const [pinEditorOpen, setPinEditorOpen] = useState(false);
   const [authRole, setAuthRole] = useState(null);
   const [employeePin, setEmployeePin] = useState('');
   const [loginError, setLoginError] = useState('');
@@ -1061,7 +1150,8 @@ export default function App() {
     const sv = storage.loadSupervisors();
     const ep = storage.loadEmployeePin();
     const savedRole = sessionStorage.getItem('qudsun_role');
-    setHistory(h); setPin(p); setVerified(v); setSupervisors(sv); setEmployeePin(ep);
+    const pc = storage.loadPinnedCats();
+    setHistory(h); setPin(p); setVerified(v); setSupervisors(sv); setEmployeePin(ep); setPinnedCats(pc);
     if (savedRole) setAuthRole(savedRole);
     if (s) setSession(s);
     if (su) setSheetUrl(su);
@@ -1361,7 +1451,8 @@ export default function App() {
           }}
           onEditEntry={openEditEntry} verified={verified} history={history}
           customLabel={session.customLabel || ''}
-          onCustomLabelChange={label => updateSession(prev => ({ ...prev, customLabel: label }))} />
+          onCustomLabelChange={label => updateSession(prev => ({ ...prev, customLabel: label }))}
+          pinnedCats={pinnedCats} onOpenPinEditor={() => setPinEditorOpen(true)} />
       )}
       {screen === 'summary' && session && (
         <SummaryView session={session} logOpen={logOpen}
@@ -1435,6 +1526,7 @@ export default function App() {
         onDraftChange={v => setVerifyPrompt(p => ({ ...p, draft: v }))}
         onConfirm={handleVerifyConfirm} onSkip={() => commitFinish()} onCancel={() => setVerifyPrompt(null)} />}
       {sheetModal && <SheetModal url={sheetModalUrl} onUrlChange={setSheetModalUrl} onSave={sheetSave} onCancel={() => setSheetModal(false)} />}
+      {pinEditorOpen && <PinEditor pinnedCats={pinnedCats} onSave={pins => { storage.savePinnedCats(pins); setPinnedCats(pins); setPinEditorOpen(false); toast('บันทึกหมวดปักหมุดแล้ว'); }} onCancel={() => setPinEditorOpen(false)} />}
 
       <Toast msg={toastMsg} />
     </div>
