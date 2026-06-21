@@ -269,7 +269,7 @@ function EmployeeManager({ employees, onSave, onCancel }) {
 }
 
 // ─── HomeView ─────────────────────────────────────────────────────────────────
-function HomeView({ session, history, sheetUrl, syncStatus, syncing, onNew, onResume, onGoCustomers, onGoSupervisors, onOpenSheet, onSyncNow, onChangePin, onSetEmployeePin, onOpenHistory, verified, supervisors, isEmployee, onLogout }) {
+function HomeView({ session, history, sheetUrl, syncStatus, syncing, onNew, onResume, onGoCustomers, onGoSupervisors, onOpenSheet, onSyncNow, onChangePin, onSetEmployeePin, onOpenHistory, verified, supervisors, isEmployee, onLogout, onExport, onImport }) {
   const customerCount = Object.keys(loadCustomers(history)).length;
   const supervisorCount = Object.values(supervisors || {}).filter(Boolean).reduce((set, n) => (set.add(n), set), new Set()).size;
   if (isEmployee) {
@@ -387,6 +387,23 @@ function HomeView({ session, history, sheetUrl, syncStatus, syncing, onNew, onRe
             </button>
           )}
         </button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button onClick={onExport} style={{ flex: 1, border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 13, padding: '13px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 17 }}>📤</span>
+            <div style={{ textAlign: 'left' }}>
+              <div style={{ fontSize: 13, color: '#4A3526', fontWeight: 500 }}>ส่งออกข้อมูล</div>
+              <div style={{ fontSize: 11, color: '#9A8662' }}>สำรอง / ย้ายเครื่อง</div>
+            </div>
+          </button>
+          <label style={{ flex: 1, border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 13, padding: '13px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 17 }}>📥</span>
+            <div style={{ textAlign: 'left' }}>
+              <div style={{ fontSize: 13, color: '#4A3526', fontWeight: 500 }}>นำเข้าข้อมูล</div>
+              <div style={{ fontSize: 11, color: '#9A8662' }}>เปิดไฟล์สำรอง</div>
+            </div>
+            <input type="file" accept=".json" onChange={onImport} style={{ display: 'none' }} />
+          </label>
+        </div>
       </div>
     </div>
   );
@@ -1515,6 +1532,48 @@ export default function App() {
     setReadonly(false); setScreen(back);
   }, [custPhone]);
 
+  const handleExport = useCallback(() => {
+    const data = { history: storage.loadHistory(), verified: storage.loadVerified(), supervisors: storage.loadSupervisors(), exportedAt: new Date().toISOString(), version: 1 };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `qudsun-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    toast('ส่งออกสำเร็จ');
+  }, [toast]);
+
+  const handleImport = useCallback((e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        if (!data.version) throw new Error('ไม่ใช่ไฟล์สำรองของ Qudsun');
+        if (data.history && Array.isArray(data.history)) {
+          const existing = storage.loadHistory();
+          const ids = new Set(existing.map(h => h.id));
+          const merged = [...existing, ...data.history.filter(h => !ids.has(h.id))];
+          storage.saveHistory(merged); setHistory(merged);
+        }
+        if (data.verified && typeof data.verified === 'object') {
+          const nv = { ...storage.loadVerified(), ...data.verified };
+          storage.saveVerified(nv); setVerified(nv);
+        }
+        if (data.supervisors && typeof data.supervisors === 'object') {
+          const ns = { ...storage.loadSupervisors(), ...data.supervisors };
+          storage.saveSupervisors(ns); setSupervisors(ns);
+        }
+        e.target.value = '';
+        toast('นำเข้าสำเร็จ ✓');
+      } catch (err) {
+        toast('ไฟล์ไม่ถูกต้อง: ' + err.message);
+      }
+    };
+    reader.readAsText(file);
+  }, [toast]);
+
   const changePin = useCallback(() => {
     requirePin('ยืนยันรหัสเดิมก่อนเปลี่ยน', () => {
       setNumpad({ mode: 'setpin', title: 'ตั้งรหัส Admin ใหม่ (4 หลัก)', unit: '', value: '', original: '', canDelete: false, saveLabel: 'บันทึกรหัสใหม่' });
@@ -1573,7 +1632,8 @@ export default function App() {
           onGoSupervisors={() => setScreen('supervisors')}
           onOpenSheet={() => { setSheetModal(true); setSheetModalUrl(sheetUrl); }}
           onSyncNow={() => syncNow(false)} onChangePin={changePin} onSetEmployeePin={setEmployeePinAction}
-          onOpenHistory={openHistory} isEmployee={authRole === 'employee'} onLogout={handleLogout} />
+          onOpenHistory={openHistory} isEmployee={authRole === 'employee'} onLogout={handleLogout}
+          onExport={handleExport} onImport={handleImport} />
       )}
       {screen === 'record' && session && (
         <RecordView session={session} activeCat={activeCat} input={input} onInput={setInput} onCommit={commitEntry}
