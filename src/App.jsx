@@ -8,6 +8,7 @@ import {
   loadCustomers, customerStat, decodeBill
 } from './utils/helpers.js';
 import { storage } from './utils/storage.js';
+import { savePhoto, loadPhoto, resizeImage } from './utils/photoDB.js';
 
 // ─── Keypad ───────────────────────────────────────────────────────────────────
 function Keypad({ value, onChange, onConfirm, confirmLabel }) {
@@ -452,8 +453,43 @@ function PinEditor({ pinnedCats, onSave, onCancel }) {
 }
 
 // ─── RecordView ───────────────────────────────────────────────────────────────
-function RecordView({ session, activeCat, input, onInput, onCommit, onPickCat, onGoHome, onGoSummary, onEditSeller, onEditEntry, verified, history, customLabel, onCustomLabelChange, pinnedCats, onOpenPinEditor }) {
+// ─── VehicleModal ─────────────────────────────────────────────────────────────
+function VehicleModal({ plate, photoUrl, onSave, onPhoto, onClose }) {
+  const [text, setText] = useState(plate || '');
+  const fileRef = useRef();
+  return (
+    <div className="no-print" style={{ position: 'fixed', inset: 0, zIndex: 70, background: 'rgba(42,33,24,.55)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', padding: '0 0 env(safe-area-inset-bottom)', animation: 'fadeIn .2s' }}>
+      <div style={{ background: '#FFFDF8', borderRadius: '20px 20px 0 0', padding: '20px 18px 28px', width: '100%', maxWidth: 480, boxShadow: '0 -8px 30px rgba(42,33,24,.18)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+          <span style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 17, color: '#3F2D1E' }}>🚗 ทะเบียนรถ</span>
+          <button onClick={onClose} style={{ border: 'none', background: 'none', fontSize: 20, cursor: 'pointer', color: '#9A8662' }}>✕</button>
+        </div>
+        <input
+          value={text}
+          onChange={e => setText(e.target.value.toUpperCase())}
+          placeholder="เช่น กข 1234 กทม"
+          style={{ width: '100%', boxSizing: 'border-box', border: '1.5px solid #D8C8A8', borderRadius: 12, padding: '13px 14px', fontSize: 18, fontFamily: 'Prompt', fontWeight: 600, letterSpacing: '.1em', color: '#2A2118', background: '#FBF6EC', marginBottom: 12 }}
+          autoFocus
+        />
+        <input ref={fileRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }}
+          onChange={e => { if (e.target.files[0]) onPhoto(e.target.files[0]); }} />
+        <button onClick={() => fileRef.current?.click()} style={{ width: '100%', border: '1.5px dashed #C9A24B', background: '#FBF3E2', borderRadius: 12, padding: '13px 0', fontSize: 15, fontWeight: 600, color: '#7A5A22', cursor: 'pointer', marginBottom: photoUrl ? 10 : 14 }}>
+          📷 {photoUrl ? 'ถ่ายภาพใหม่' : 'ถ่ายภาพทะเบียน'}
+        </button>
+        {photoUrl && (
+          <img src={photoUrl} alt="ทะเบียนรถ" style={{ width: '100%', maxHeight: 160, objectFit: 'cover', borderRadius: 10, border: '1px solid #E4D7BC', marginBottom: 14, display: 'block' }} />
+        )}
+        <button onClick={() => { onSave(text); onClose(); }} style={{ width: '100%', border: 'none', borderRadius: 13, padding: 15, background: 'linear-gradient(135deg,#C9A24B,#A8763E)', color: '#fff', fontWeight: 700, fontSize: 16, cursor: 'pointer', boxShadow: '0 6px 16px rgba(168,118,62,.28)' }}>
+          บันทึกทะเบียน
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function RecordView({ session, activeCat, input, onInput, onCommit, onPickCat, onGoHome, onGoSummary, onEditSeller, onEditEntry, verified, history, customLabel, onCustomLabelChange, pinnedCats, onOpenPinEditor, vehiclePhotoUrl, onVehiclePlate, onVehiclePhoto }) {
   const aggData = agg(session);
+  const [vehicleModalOpen, setVehicleModalOpen] = useState(false);
   const totalKg = grandKg(session);
   const totalCount = (session?.entries || []).length;
   const recent = (session?.entries || []).filter(e => e.cat === activeCat).slice(-5).reverse();
@@ -465,6 +501,7 @@ function RecordView({ session, activeCat, input, onInput, onCommit, onPickCat, o
   const recorderText = session?.recorder ? `✍️ ผู้บันทึก: ${session.recorder}` : '';
   const mainCats = CATS.filter(c => c.key !== 'custom');
   const customCat = CATS.find(c => c.key === 'custom');
+  const vehiclePlate = session?.vehiclePlate || '';
 
   return (
     <div style={{ flex: 1, maxWidth: 880, width: '100%', margin: '0 auto', padding: '14px 14px 130px' }}>
@@ -500,7 +537,25 @@ function RecordView({ session, activeCat, input, onInput, onCommit, onPickCat, o
             {session?.seller || session?.sellerPhone || '+ เพิ่มลูกค้า'}
           </span>
         </div>
+        <div onClick={() => setVehicleModalOpen(true)} style={{ display: 'flex', alignItems: 'center', gap: 5, background: vehiclePlate ? '#FFF3E0' : '#F5F5F5', border: `1px solid ${vehiclePlate ? '#FFB74D' : '#D0C8C0'}`, borderRadius: 20, padding: '5px 12px', cursor: 'pointer' }}>
+          {vehiclePhotoUrl
+            ? <img src={vehiclePhotoUrl} style={{ width: 22, height: 22, borderRadius: 4, objectFit: 'cover', flexShrink: 0 }} alt="" />
+            : <span style={{ fontSize: 13 }}>🚗</span>
+          }
+          <span style={{ fontSize: 13, fontWeight: 600, color: vehiclePlate ? '#BF360C' : '#9A8878' }}>
+            {vehiclePlate || '+ ทะเบียนรถ'}
+          </span>
+        </div>
       </div>
+      {vehicleModalOpen && (
+        <VehicleModal
+          plate={vehiclePlate}
+          photoUrl={vehiclePhotoUrl}
+          onSave={onVehiclePlate}
+          onPhoto={file => { onVehiclePhoto(file); }}
+          onClose={() => setVehicleModalOpen(false)}
+        />
+      )}
 
       <div style={{ background: 'linear-gradient(135deg,#5C4326,#3F2D1E)', color: '#F6EEDD', borderRadius: 16, padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, boxShadow: '0 8px 20px rgba(63,45,30,.22)' }}>
         <div>
@@ -745,7 +800,7 @@ function ConfirmView({ session, verified, history, onConfirm, onGoSummary, custo
 }
 
 // ─── PrintView ────────────────────────────────────────────────────────────────
-function PrintView({ session, readonly, isHandoff, verified, history, onGoSummary, onGoBack, onFinish, customLabel }) {
+function PrintView({ session, readonly, isHandoff, verified, history, onGoSummary, onGoBack, onFinish, customLabel, vehiclePhotoUrl }) {
   const [qrDataUrl, setQrDataUrl] = useState('');
   const [copied, setCopied] = useState(false);
   const link = session ? billLink(session) : '';
@@ -859,7 +914,7 @@ function PrintView({ session, readonly, isHandoff, verified, history, onGoSummar
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', margin: '12px 0', fontSize: 11.5 }}>
           <span>วันที่: <b>{session ? dateStr(session.date) : ''}</b></span>
-          <span>ผู้ขาย: <b>{session?.seller || '—'}</b>{session?.sellerPhone ? ` · ${session.sellerPhone}` : ''}{session?.supervisor ? ` · ผู้ดูแล: ${session.supervisor}` : ''}{session?.recorder ? ` · ผู้บันทึก: ${session.recorder}` : ''}</span>
+          <span>ผู้ขาย: <b>{session?.seller || '—'}</b>{session?.sellerPhone ? ` · ${session.sellerPhone}` : ''}{session?.vehiclePlate ? ` · ทะเบียน: ${session.vehiclePlate}` : ''}{session?.supervisor ? ` · ผู้ดูแล: ${session.supervisor}` : ''}{session?.recorder ? ` · ผู้บันทึก: ${session.recorder}` : ''}</span>
         </div>
         {tier && tier.key !== 'new' && (
           <div style={{ margin: '-4px 0 10px', fontSize: 11, color: '#8A6A2E' }}>สมาชิกระดับ {tier.label} · ยอดสะสม {fmtKg(stat?.total || 0)} กก.</div>
@@ -903,6 +958,12 @@ function PrintView({ session, readonly, isHandoff, verified, history, onGoSummar
           <div style={{ flex: 1, textAlign: 'center' }}><div style={{ borderTop: '1px dotted #2A2118', paddingTop: 6, fontSize: 11 }}>ลายเซ็นผู้ขาย</div></div>
           <div style={{ flex: 1, textAlign: 'center' }}><div style={{ borderTop: '1px dotted #2A2118', paddingTop: 6, fontSize: 11 }}>ลายเซ็นผู้ซื้อ</div></div>
         </div>
+        {vehiclePhotoUrl && (
+          <div style={{ marginTop: 12, borderTop: '1px dashed #C9BBA0', paddingTop: 10 }}>
+            <div style={{ fontSize: 10, color: '#8A7A66', marginBottom: 4 }}>ภาพทะเบียนรถ{session?.vehiclePlate ? ` · ${session.vehiclePlate}` : ''}</div>
+            <img src={vehiclePhotoUrl} alt="ทะเบียนรถ" style={{ width: '100%', maxHeight: 120, objectFit: 'cover', borderRadius: 6, border: '1px solid #E4D7BC' }} />
+          </div>
+        )}
         <div style={{ textAlign: 'center', marginTop: 14, fontSize: 10, color: '#8A7A66' }}>ขอบคุณที่ไว้วางใจ · ทุเรียนคัดสรร Qudsun · 082-691-4414</div>
       </div>
     </div>
@@ -1256,12 +1317,36 @@ export default function App() {
   const [syncStatus, setSyncStatus] = useState('');
   const [toastMsg, setToastMsg] = useState('');
   const [logOpen, setLogOpen] = useState(false);
+  const [vehiclePlates, setVehiclePlates] = useState({});
+  const [vehiclePhotoUrl, setVehiclePhotoUrl] = useState(null);
   const savedSession = useRef(null);
 
   const toast = useCallback((msg) => {
     setToastMsg(msg);
     setTimeout(() => setToastMsg(''), 1800);
   }, []);
+
+  const handleVehiclePlate = useCallback((plate) => {
+    updateSession(prev => ({ ...prev, vehiclePlate: plate }));
+    setSession(prev => prev ? { ...prev, vehiclePlate: plate } : prev);
+    if (session?.sellerPhone && plate) {
+      const next = { ...storage.loadVehiclePlates(), [session.sellerPhone]: plate };
+      storage.saveVehiclePlates(next);
+      setVehiclePlates(next);
+    }
+  }, [session, updateSession]);
+
+  const handleVehiclePhoto = useCallback(async (file) => {
+    if (!session) return;
+    try {
+      const dataUrl = await resizeImage(file);
+      const key = `vp_${session.id}`;
+      await savePhoto(key, dataUrl);
+      setVehiclePhotoUrl(dataUrl);
+      updateSession(prev => ({ ...prev, vehiclePhotoKey: key }));
+      toast('บันทึกภาพทะเบียนแล้ว');
+    } catch { toast('ถ่ายภาพไม่สำเร็จ'); }
+  }, [session, updateSession, toast]);
 
   const persistSession = useCallback((s) => { storage.saveSession(s); }, []);
 
@@ -1286,9 +1371,10 @@ export default function App() {
     const savedRole = sessionStorage.getItem('qudsun_role');
     const savedRecorder = sessionStorage.getItem('qudsun_recorder') || '';
     const pc = storage.loadPinnedCats();
-    setHistory(h); setPin(p); setVerified(v); setSupervisors(sv); setEmployeePin(ep); setPinnedCats(pc); setEmployees(emps);
+    const vp = storage.loadVehiclePlates();
+    setHistory(h); setPin(p); setVerified(v); setSupervisors(sv); setEmployeePin(ep); setPinnedCats(pc); setEmployees(emps); setVehiclePlates(vp);
     if (savedRole) { setAuthRole(savedRole); setRecorderName(savedRecorder); }
-    if (s) setSession(s);
+    if (s) { setSession(s); if (s.vehiclePhotoKey) loadPhoto(s.vehiclePhotoKey).then(u => { if (u) setVehiclePhotoUrl(u); }); }
     if (su) { setSheetUrl(su); setTimeout(() => syncNow(true), 1500); }
     const m = (location.hash || '').match(/bill=([^&]+)/);
     if (m) {
@@ -1382,7 +1468,10 @@ export default function App() {
   const createSession = useCallback((seller = '', sellerPhone = '', supervisor = '') => {
     const t = Date.now();
     const recorder = sessionStorage.getItem('qudsun_recorder') || recorderName || '';
-    const sess = { id: t, billNo: newBillNo(), createdAt: t, date: t, seller, sellerPhone, supervisor, recorder, prices: Object.fromEntries(CATS.map(c => [c.key, 0])), entries: [], log: [{ t, kind: 'open', text: 'เปิดใบรับซื้อใหม่' }], confirmed: false, confirmedAt: null, customLabel: '' };
+    const vp = storage.loadVehiclePlates();
+    const vehiclePlate = (sellerPhone && vp[sellerPhone]) ? vp[sellerPhone] : '';
+    const sess = { id: t, billNo: newBillNo(), createdAt: t, date: t, seller, sellerPhone, supervisor, recorder, vehiclePlate, vehiclePhotoKey: null, prices: Object.fromEntries(CATS.map(c => [c.key, 0])), entries: [], log: [{ t, kind: 'open', text: 'เปิดใบรับซื้อใหม่' }], confirmed: false, confirmedAt: null, customLabel: '' };
+    setVehiclePhotoUrl(null);
     setSession(sess); persistSession(sess); setScreen('record'); setActiveCat('AB'); setInput('');
   }, [persistSession]);
 
@@ -1645,7 +1734,8 @@ export default function App() {
           onEditEntry={openEditEntry} verified={verified} history={history}
           customLabel={session.customLabel || ''}
           onCustomLabelChange={label => updateSession(prev => ({ ...prev, customLabel: label }))}
-          pinnedCats={pinnedCats} onOpenPinEditor={() => setPinEditorOpen(true)} />
+          pinnedCats={pinnedCats} onOpenPinEditor={() => setPinEditorOpen(true)}
+          vehiclePhotoUrl={vehiclePhotoUrl} onVehiclePlate={handleVehiclePlate} onVehiclePhoto={handleVehiclePhoto} />
       )}
       {screen === 'summary' && session && (
         <SummaryView session={session} logOpen={logOpen}
@@ -1661,7 +1751,7 @@ export default function App() {
       {screen === 'print' && session && (
         <PrintView session={session} readonly={readonly} isHandoff={isHandoff} verified={verified} history={history}
           onGoSummary={() => setScreen('summary')} onGoBack={goBackFromBill} onFinish={finishBill}
-          customLabel={session.customLabel || ''} />
+          customLabel={session.customLabel || ''} vehiclePhotoUrl={vehiclePhotoUrl} />
       )}
       {screen === 'customers' && (
         <CustomersView history={history} verified={verified} onGoHome={() => setScreen('home')}

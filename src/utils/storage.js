@@ -1,13 +1,14 @@
 const KEYS = {
-  session:     'qudsun_session',
-  history:     'qudsun_history',
-  pin:         'qudsun_pin',
-  sheet:       'qudsun_sheet_url',
-  verified:    'qudsun_verified',
+  session:       'qudsun_session',
+  history:       'qudsun_history',
+  pin:           'qudsun_pin',
+  sheet:         'qudsun_sheet_url',
+  verified:      'qudsun_verified',
   supervisors:   'qudsun_supervisors',
   employeePin:   'qudsun_employee_pin',
   employees:     'qudsun_employees',
   pinnedCats:    'qudsun_pinned_cats',
+  vehiclePlates: 'qudsun_vehicle_plates',
 };
 
 const DEFAULT_PINS = ['AB', 'etc', 'taksai', 'hongyen', 'sutthai'];
@@ -39,6 +40,8 @@ export const storage = {
     } catch { return DEFAULT_EMPLOYEES; }
   },
   saveEmployees: arr => { try { localStorage.setItem(KEYS.employees, JSON.stringify(arr)); } catch {} },
-  loadPinnedCats:   () => { try { const v = JSON.parse(localStorage.getItem(KEYS.pinnedCats) || 'null'); return Array.isArray(v) ? v : DEFAULT_PINS; } catch { return DEFAULT_PINS; } },
-  savePinnedCats:   v  => { try { localStorage.setItem(KEYS.pinnedCats, JSON.stringify(v)); } catch {} },
+  loadPinnedCats:    () => { try { const v = JSON.parse(localStorage.getItem(KEYS.pinnedCats) || 'null'); return Array.isArray(v) ? v : DEFAULT_PINS; } catch { return DEFAULT_PINS; } },
+  savePinnedCats:    v  => { try { localStorage.setItem(KEYS.pinnedCats, JSON.stringify(v)); } catch {} },
+  loadVehiclePlates: () => { try { return JSON.parse(localStorage.getItem(KEYS.vehiclePlates) || '{}'); } catch { return {}; } },
+  saveVehiclePlates: m  => { try { localStorage.setItem(KEYS.vehiclePlates, JSON.stringify(m)); } catch {} },
 };
