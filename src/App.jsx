@@ -464,17 +464,32 @@ function VehicleModal({ plate, photoUrl, onSave, onPhoto, onClose }) {
     setOcrStatus('reading');
     try {
       const worker = await createWorker('tha+eng');
+      await worker.setParameters({
+        tessedit_pageseg_mode: '6',   // uniform block of text
+        preserve_interword_spaces: '1',
+      });
       const url = URL.createObjectURL(file);
       const { data } = await worker.recognize(url);
       URL.revokeObjectURL(url);
       await worker.terminate();
-      // extract first meaningful line, clean up
+
       const raw = data.text || '';
-      const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
-      const plate = lines[0] || '';
-      // keep Thai chars, digits, spaces — drop noise
-      const cleaned = plate.replace(/[^ก-๙0-9a-zA-Z\s]/g, '').trim().toUpperCase();
-      if (cleaned) { setText(cleaned); setOcrStatus('done'); }
+      // split lines, keep Thai consonants + digits + spaces
+      const lines = raw.split('\n')
+        .map(l => l.replace(/[^ก-ฮ0-9\s]/g, ' ').replace(/\s+/g, ' ').trim())
+        .filter(l => l.length >= 2);
+
+      // prefer a line that has both Thai and digits (= plate line)
+      const plateLine = lines.find(l => /[ก-ฮ]/.test(l) && /[0-9]/.test(l))
+        || lines.find(l => /[0-9]{3,}/.test(l))
+        || lines[0]
+        || '';
+
+      // also collect province if present (line with Thai only, 3+ chars)
+      const provinceLine = lines.find(l => /^[ก-๙\s]{3,}$/.test(l) && l !== plateLine) || '';
+
+      const result = [plateLine, provinceLine].filter(Boolean).join(' ').trim();
+      if (result) { setText(result); setOcrStatus('done'); }
       else setOcrStatus('fail');
     } catch { setOcrStatus('fail'); }
   }
