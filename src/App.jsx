@@ -468,7 +468,7 @@ function RecordView({ session, activeCat, input, onInput, onCommit, onPickCat, o
 
   return (
     <div style={{ flex: 1, maxWidth: 880, width: '100%', margin: '0 auto', padding: '14px 14px 130px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
         <button onClick={onGoHome} style={{ border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 10, padding: '8px 12px', fontSize: 13, color: '#7A6450', cursor: 'pointer' }}>‹ หน้าหลัก</button>
         <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.2 }}>
           <span style={{ fontWeight: 600, fontSize: 14, color: '#4A3526' }}>{session?.billNo}</span>
@@ -476,14 +476,30 @@ function RecordView({ session, activeCat, input, onInput, onCommit, onPickCat, o
         </div>
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
           {tier && tier.key !== 'new' && <TierBadge tier={tier} />}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
-            <button onClick={onEditSeller} style={{ border: '1px dashed #D8C8A8', background: '#FBF6EC', borderRadius: 10, padding: '8px 12px', fontSize: 13, color: '#7A5A22', cursor: 'pointer', maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              👤 {sellerText}
-            </button>
-            {supervisorText && <span style={{ fontSize: 11, color: '#A6925E', paddingRight: 4 }}>{supervisorText}</span>}
-            {recorderText && <span style={{ fontSize: 11, color: '#7A8C7A', paddingRight: 4 }}>{recorderText}</span>}
-          </div>
+          <button onClick={onEditSeller} style={{ border: '1px dashed #D8C8A8', background: '#FBF6EC', borderRadius: 10, padding: '8px 12px', fontSize: 13, color: '#7A5A22', cursor: 'pointer' }}>แก้ไข</button>
         </div>
+      </div>
+
+      {/* sticky info bar */}
+      <div style={{ display: 'flex', gap: 6, marginBottom: 12, flexWrap: 'wrap' }}>
+        {session?.recorder && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: '#EEF4EE', border: '1px solid #C4D9C4', borderRadius: 20, padding: '5px 12px' }}>
+            <span style={{ fontSize: 13 }}>✍️</span>
+            <span style={{ fontSize: 13, fontWeight: 600, color: '#3D6B3D' }}>{session.recorder}</span>
+          </div>
+        )}
+        {session?.supervisor && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: '#FBF3E2', border: '1px solid #E0C97A', borderRadius: 20, padding: '5px 12px' }}>
+            <span style={{ fontSize: 13 }}>👤</span>
+            <span style={{ fontSize: 13, fontWeight: 600, color: '#7A5A22' }}>{session.supervisor}</span>
+          </div>
+        )}
+        {(session?.seller || session?.sellerPhone) && (
+          <div onClick={onEditSeller} style={{ display: 'flex', alignItems: 'center', gap: 5, background: '#F0EAFA', border: '1px solid #C9B8E8', borderRadius: 20, padding: '5px 12px', cursor: 'pointer' }}>
+            <span style={{ fontSize: 13 }}>🧺</span>
+            <span style={{ fontSize: 13, fontWeight: 600, color: '#5A3E8A' }}>{session.seller || session.sellerPhone}</span>
+          </div>
+        )}
       </div>
 
       <div style={{ background: 'linear-gradient(135deg,#5C4326,#3F2D1E)', color: '#F6EEDD', borderRadius: 16, padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, boxShadow: '0 8px 20px rgba(63,45,30,.22)' }}>
