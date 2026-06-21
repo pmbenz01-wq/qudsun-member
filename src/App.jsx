@@ -191,6 +191,83 @@ function RecorderModal({ onSave, onSkip }) {
   );
 }
 
+// ─── EmployeeManager ──────────────────────────────────────────────────────────
+function EmployeeManager({ employees, onSave, onCancel }) {
+  const [list, setList] = useState(employees.map(e => ({ ...e, id: Math.random() })));
+  const [adding, setAdding] = useState(false);
+  const [editId, setEditId] = useState(null);
+  const [form, setForm] = useState({ pin: '', name: '' });
+  const [formErr, setFormErr] = useState('');
+
+  const openAdd = () => { setAdding(true); setEditId(null); setForm({ pin: '', name: '' }); setFormErr(''); };
+  const openEdit = item => { setEditId(item.id); setAdding(false); setForm({ pin: item.pin, name: item.name }); setFormErr(''); };
+  const closeForm = () => { setAdding(false); setEditId(null); setFormErr(''); };
+
+  const saveForm = () => {
+    const p = form.pin.trim(), n = form.name.trim();
+    if (!p || p.length < 4) { setFormErr('PIN ต้องมี 4 หลัก'); return; }
+    if (!/^\d{4,}$/.test(p)) { setFormErr('PIN ตัวเลขเท่านั้น'); return; }
+    if (!n) { setFormErr('ต้องใส่ชื่อ'); return; }
+    const dup = list.find(e => e.pin === p && e.id !== editId);
+    if (dup) { setFormErr(`PIN ${p} ซ้ำกับ "${dup.name}"`); return; }
+    if (editId) {
+      setList(l => l.map(e => e.id === editId ? { ...e, pin: p, name: n } : e));
+    } else {
+      setList(l => [...l, { pin: p, name: n, id: Math.random() }]);
+    }
+    closeForm();
+  };
+
+  const remove = id => setList(l => l.filter(e => e.id !== id));
+
+  const rowStyle = { display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: '#FBF6EC', borderRadius: 11, marginBottom: 8, border: '1px solid #EDE0C8' };
+  const btnSm = (bg, color) => ({ border: 'none', background: bg, color, borderRadius: 8, padding: '4px 10px', fontSize: 12, cursor: 'pointer', fontFamily: 'Prompt' });
+  const inp = { width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 10, padding: '10px 12px', fontSize: 15, color: '#3F2D1E', outline: 'none', boxSizing: 'border-box', marginBottom: 8 };
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 80, background: 'rgba(42,33,24,.55)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', padding: 18, animation: 'fadeIn .2s' }}>
+      <div style={{ background: '#FFFDF8', borderRadius: 20, padding: 22, width: '100%', maxWidth: 380, maxHeight: '85dvh', display: 'flex', flexDirection: 'column', animation: 'popIn .25s' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+          <h3 style={{ margin: 0, fontFamily: 'Prompt', fontWeight: 600, fontSize: 17, color: '#4A3526' }}>👥 จัดการพนักงาน</h3>
+          <button onClick={openAdd} style={{ border: 'none', background: '#3F2D1E', color: '#F6EEDD', borderRadius: 10, padding: '6px 14px', fontSize: 13, cursor: 'pointer', fontWeight: 600 }}>+ เพิ่ม</button>
+        </div>
+
+        <div style={{ flex: 1, overflowY: 'auto', marginBottom: 12 }}>
+          {list.length === 0 && <p style={{ textAlign: 'center', color: '#B7A684', fontSize: 13 }}>ยังไม่มีพนักงาน</p>}
+          {list.map(emp => (
+            <div key={emp.id} style={rowStyle}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 600, fontSize: 14, color: '#3F2D1E' }}>{emp.name}</div>
+                <div style={{ fontSize: 12, color: '#A6925E', letterSpacing: '0.1em' }}>PIN: {'●'.repeat(emp.pin.length)}</div>
+              </div>
+              <button onClick={() => openEdit(emp)} style={btnSm('#F3E9D2', '#7A5A22')}>แก้ไข</button>
+              <button onClick={() => remove(emp.id)} style={btnSm('#FBEEE8', '#B5503A')}>ลบ</button>
+            </div>
+          ))}
+
+          {(adding || editId) && (
+            <div style={{ background: '#F0E9D8', borderRadius: 13, padding: 14, marginTop: 8, border: '1.5px solid #DDD0B0' }}>
+              <p style={{ margin: '0 0 10px', fontSize: 13, fontWeight: 600, color: '#4A3526' }}>{editId ? 'แก้ไขพนักงาน' : 'เพิ่มพนักงานใหม่'}</p>
+              <input style={inp} placeholder="ชื่อพนักงาน เช่น จด1" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
+              <input style={inp} placeholder="PIN 4 หลัก" type="number" maxLength={4} value={form.pin} onChange={e => setForm(f => ({ ...f, pin: e.target.value.slice(0, 4) }))} />
+              {formErr && <p style={{ color: '#C0392B', fontSize: 12, margin: '-4px 0 8px' }}>{formErr}</p>}
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button onClick={closeForm} style={{ flex: 1, border: '1px solid #E4D7BC', background: '#fff', borderRadius: 10, padding: 10, fontSize: 13, color: '#9A8662', cursor: 'pointer' }}>ยกเลิก</button>
+                <button onClick={saveForm} style={{ flex: 2, border: 'none', background: '#3F2D1E', color: '#F6EEDD', borderRadius: 10, padding: 10, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>บันทึก</button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button onClick={onCancel} style={{ flex: 1, border: '1px solid #E4D7BC', background: '#fff', borderRadius: 12, padding: 12, fontSize: 14, color: '#9A8662', cursor: 'pointer' }}>ยกเลิก</button>
+          <button onClick={() => onSave(list.map(({ pin, name }) => ({ pin, name })))} style={{ flex: 2, border: 'none', background: '#3F2D1E', color: '#F6EEDD', borderRadius: 12, padding: 12, fontWeight: 600, fontSize: 15, cursor: 'pointer' }}>บันทึกทั้งหมด ✓</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── HomeView ─────────────────────────────────────────────────────────────────
 function HomeView({ session, history, sheetUrl, syncStatus, syncing, onNew, onResume, onGoCustomers, onGoSupervisors, onOpenSheet, onSyncNow, onChangePin, onSetEmployeePin, onOpenHistory, verified, supervisors, isEmployee, onLogout }) {
   const customerCount = Object.keys(loadCustomers(history)).length;
@@ -296,7 +373,7 @@ function HomeView({ session, history, sheetUrl, syncStatus, syncing, onNew, onRe
         </button>
         <button onClick={onSetEmployeePin} style={{ border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 13, padding: '13px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10 }}>
           <span style={{ fontSize: 18 }}>🧑‍💼</span>
-          <span style={{ fontSize: 14, color: '#4A3526', fontWeight: 500 }}>ตั้งรหัส Employee PIN</span>
+          <span style={{ fontSize: 14, color: '#4A3526', fontWeight: 500 }}>จัดการพนักงาน</span>
         </button>
         <button onClick={onOpenSheet} style={{ border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 13, padding: '13px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10 }}>
           <span style={{ fontSize: 18 }}>📊</span>
@@ -1133,6 +1210,8 @@ export default function App() {
   const [showRecorderModal, setShowRecorderModal] = useState(false);
   const [authRole, setAuthRole] = useState(null);
   const [employeePin, setEmployeePin] = useState('');
+  const [employees, setEmployees] = useState([]);
+  const [employeeManagerOpen, setEmployeeManagerOpen] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [pinPrompt, setPinPrompt] = useState(null);
   const [pinValue, setPinValue] = useState('');
@@ -1181,12 +1260,12 @@ export default function App() {
     const su = storage.loadSheet();
     const sv = storage.loadSupervisors();
     const ep = storage.loadEmployeePin();
+    const emps = storage.loadEmployees();
     const savedRole = sessionStorage.getItem('qudsun_role');
     const savedRecorder = sessionStorage.getItem('qudsun_recorder') || '';
     const pc = storage.loadPinnedCats();
-    setHistory(h); setPin(p); setVerified(v); setSupervisors(sv); setEmployeePin(ep); setPinnedCats(pc);
+    setHistory(h); setPin(p); setVerified(v); setSupervisors(sv); setEmployeePin(ep); setPinnedCats(pc); setEmployees(emps);
     if (savedRole) { setAuthRole(savedRole); setRecorderName(savedRecorder); }
-    if (savedRole && !savedRecorder) setShowRecorderModal(true);
     if (s) setSession(s);
     if (su) setSheetUrl(su);
     const m = (location.hash || '').match(/bill=([^&]+)/);
@@ -1427,24 +1506,29 @@ export default function App() {
   }, [requirePin]);
 
   const setEmployeePinAction = useCallback(() => {
-    requirePin('ยืนยัน Admin PIN ก่อนตั้งรหัสพนักงาน', () => {
-      setNumpad({ mode: 'setemployeepin', title: 'ตั้งรหัส Employee (4 หลัก)', unit: '', value: '', original: '', canDelete: false, saveLabel: 'บันทึกรหัส Employee' });
+    requirePin('ยืนยัน Admin PIN ก่อนจัดการพนักงาน', () => {
+      setEmployeeManagerOpen(true);
     });
   }, [requirePin]);
 
   const handleLogin = useCallback((entered) => {
     if (entered === pin) {
       setAuthRole('admin'); sessionStorage.setItem('qudsun_role', 'admin'); setLoginError('');
-      const saved = sessionStorage.getItem('qudsun_recorder');
-      if (!saved) setShowRecorderModal(true); else setRecorderName(saved);
-    } else if (employeePin && entered === employeePin) {
-      setAuthRole('employee'); sessionStorage.setItem('qudsun_role', 'employee'); setLoginError('');
-      const saved = sessionStorage.getItem('qudsun_recorder');
-      if (!saved) setShowRecorderModal(true); else setRecorderName(saved);
+      const name = 'Admin';
+      setRecorderName(name); sessionStorage.setItem('qudsun_recorder', name);
     } else {
-      setLoginError('รหัสไม่ถูกต้อง ลองใหม่');
+      const emp = employees.find(e => e.pin === entered);
+      if (emp) {
+        setAuthRole('employee'); sessionStorage.setItem('qudsun_role', 'employee'); setLoginError('');
+        setRecorderName(emp.name); sessionStorage.setItem('qudsun_recorder', emp.name);
+      } else if (employeePin && entered === employeePin) {
+        setAuthRole('employee'); sessionStorage.setItem('qudsun_role', 'employee'); setLoginError('');
+        setRecorderName('พนักงาน'); sessionStorage.setItem('qudsun_recorder', 'พนักงาน');
+      } else {
+        setLoginError('รหัสไม่ถูกต้อง ลองใหม่');
+      }
     }
-  }, [pin, employeePin]);
+  }, [pin, employeePin, employees]);
 
   const handleLogout = useCallback(() => {
     setAuthRole(null); setRecorderName('');
@@ -1567,7 +1651,7 @@ export default function App() {
         onConfirm={handleVerifyConfirm} onSkip={() => commitFinish()} onCancel={() => setVerifyPrompt(null)} />}
       {sheetModal && <SheetModal url={sheetModalUrl} onUrlChange={setSheetModalUrl} onSave={sheetSave} onCancel={() => setSheetModal(false)} />}
       {pinEditorOpen && <PinEditor pinnedCats={pinnedCats} onSave={pins => { storage.savePinnedCats(pins); setPinnedCats(pins); setPinEditorOpen(false); toast('บันทึกหมวดปักหมุดแล้ว'); }} onCancel={() => setPinEditorOpen(false)} />}
-      {showRecorderModal && <RecorderModal onSave={name => { setRecorderName(name); sessionStorage.setItem('qudsun_recorder', name); setShowRecorderModal(false); }} onSkip={() => setShowRecorderModal(false)} />}
+      {employeeManagerOpen && <EmployeeManager employees={employees} onSave={list => { storage.saveEmployees(list); setEmployees(list); setEmployeeManagerOpen(false); toast('บันทึกรายชื่อพนักงานแล้ว'); }} onCancel={() => setEmployeeManagerOpen(false)} />}
 
       <Toast msg={toastMsg} />
     </div>
