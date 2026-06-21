@@ -1340,11 +1340,31 @@ export default function App() {
     if (!session) return;
     try {
       const dataUrl = await resizeImage(file);
+      // Save locally for immediate display
       const key = `vp_${session.id}`;
       await savePhoto(key, dataUrl);
       setVehiclePhotoUrl(dataUrl);
       updateSession(prev => ({ ...prev, vehiclePhotoKey: key }));
-      toast('บันทึกภาพทะเบียนแล้ว');
+      toast('บันทึกภาพ — กำลัง upload Drive…');
+      // Upload to Google Drive via Apps Script
+      const url = storage.loadSheet();
+      if (url) {
+        const billNo = session.billNo || key;
+        fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'uploadPhoto', base64: dataUrl, filename: `${billNo}_plate.jpg` }),
+        })
+          .then(r => r.json())
+          .then(res => {
+            if (res.ok && res.fileId) {
+              const driveUrl = `https://drive.google.com/uc?id=${res.fileId}`;
+              updateSession(prev => ({ ...prev, vehicleDriveUrl: driveUrl }));
+              toast('อัปโหลดรูปขึ้น Drive แล้ว ✓');
+            }
+          })
+          .catch(() => toast('บันทึกรูปในเครื่องแล้ว (Drive ไม่สำเร็จ)'));
+      }
     } catch { toast('ถ่ายภาพไม่สำเร็จ'); }
   }, [session, updateSession, toast]);
 
@@ -1751,7 +1771,7 @@ export default function App() {
       {screen === 'print' && session && (
         <PrintView session={session} readonly={readonly} isHandoff={isHandoff} verified={verified} history={history}
           onGoSummary={() => setScreen('summary')} onGoBack={goBackFromBill} onFinish={finishBill}
-          customLabel={session.customLabel || ''} vehiclePhotoUrl={vehiclePhotoUrl} />
+          customLabel={session.customLabel || ''} vehiclePhotoUrl={session.vehicleDriveUrl || vehiclePhotoUrl} />
       )}
       {screen === 'customers' && (
         <CustomersView history={history} verified={verified} onGoHome={() => setScreen('home')}
