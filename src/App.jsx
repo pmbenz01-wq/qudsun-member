@@ -9,6 +9,7 @@ import {
 } from './utils/helpers.js';
 import { storage } from './utils/storage.js';
 import { savePhoto, loadPhoto, resizeImage } from './utils/photoDB.js';
+import { createWorker } from 'tesseract.js';
 
 // ─── Keypad ───────────────────────────────────────────────────────────────────
 function Keypad({ value, onChange, onConfirm, confirmLabel }) {
@@ -456,7 +457,28 @@ function PinEditor({ pinnedCats, onSave, onCancel }) {
 // ─── VehicleModal ─────────────────────────────────────────────────────────────
 function VehicleModal({ plate, photoUrl, onSave, onPhoto, onClose }) {
   const [text, setText] = useState(plate || '');
+  const [ocrStatus, setOcrStatus] = useState(null); // null | 'reading' | 'done' | 'fail'
   const fileRef = useRef();
+
+  async function runOcr(file) {
+    setOcrStatus('reading');
+    try {
+      const worker = await createWorker('tha+eng');
+      const url = URL.createObjectURL(file);
+      const { data } = await worker.recognize(url);
+      URL.revokeObjectURL(url);
+      await worker.terminate();
+      // extract first meaningful line, clean up
+      const raw = data.text || '';
+      const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+      const plate = lines[0] || '';
+      // keep Thai chars, digits, spaces — drop noise
+      const cleaned = plate.replace(/[^ก-๙0-9a-zA-Z\s]/g, '').trim().toUpperCase();
+      if (cleaned) { setText(cleaned); setOcrStatus('done'); }
+      else setOcrStatus('fail');
+    } catch { setOcrStatus('fail'); }
+  }
+
   return (
     <div className="no-print" style={{ position: 'fixed', inset: 0, zIndex: 70, background: 'rgba(42,33,24,.55)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', padding: '0 0 env(safe-area-inset-bottom)', animation: 'fadeIn .2s' }}>
       <div style={{ background: '#FFFDF8', borderRadius: '20px 20px 0 0', padding: '20px 18px 28px', width: '100%', maxWidth: 480, boxShadow: '0 -8px 30px rgba(42,33,24,.18)' }}>
@@ -464,15 +486,32 @@ function VehicleModal({ plate, photoUrl, onSave, onPhoto, onClose }) {
           <span style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 17, color: '#3F2D1E' }}>🚗 ทะเบียนรถ</span>
           <button onClick={onClose} style={{ border: 'none', background: 'none', fontSize: 20, cursor: 'pointer', color: '#9A8662' }}>✕</button>
         </div>
-        <input
-          value={text}
-          onChange={e => setText(e.target.value.toUpperCase())}
-          placeholder="เช่น กข 1234 กทม"
-          style={{ width: '100%', boxSizing: 'border-box', border: '1.5px solid #D8C8A8', borderRadius: 12, padding: '13px 14px', fontSize: 18, fontFamily: 'Prompt', fontWeight: 600, letterSpacing: '.1em', color: '#2A2118', background: '#FBF6EC', marginBottom: 12 }}
-          autoFocus
-        />
+        <div style={{ position: 'relative', marginBottom: 12 }}>
+          <input
+            value={text}
+            onChange={e => setText(e.target.value.toUpperCase())}
+            placeholder={ocrStatus === 'reading' ? 'กำลังอ่านทะเบียน…' : 'เช่น กข 1234 กทม'}
+            disabled={ocrStatus === 'reading'}
+            style={{ width: '100%', boxSizing: 'border-box', border: `1.5px solid ${ocrStatus === 'done' ? '#7EB87E' : '#D8C8A8'}`, borderRadius: 12, padding: '13px 14px', fontSize: 18, fontFamily: 'Prompt', fontWeight: 600, letterSpacing: '.1em', color: '#2A2118', background: ocrStatus === 'reading' ? '#F5F0E8' : '#FBF6EC', opacity: ocrStatus === 'reading' ? .7 : 1 }}
+            autoFocus={!ocrStatus}
+          />
+          {ocrStatus === 'reading' && (
+            <span style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: '#A6925E' }}>กำลังอ่าน…</span>
+          )}
+          {ocrStatus === 'done' && (
+            <span style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: '#5A9A5A' }}>✓ อ่านแล้ว แก้ได้</span>
+          )}
+          {ocrStatus === 'fail' && (
+            <span style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: '#C0704A' }}>อ่านไม่ชัด พิมพ์เอง</span>
+          )}
+        </div>
         <input ref={fileRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }}
-          onChange={e => { if (e.target.files[0]) onPhoto(e.target.files[0]); }} />
+          onChange={e => {
+            const file = e.target.files[0];
+            if (!file) return;
+            onPhoto(file);
+            runOcr(file);
+          }} />
         <button onClick={() => fileRef.current?.click()} style={{ width: '100%', border: '1.5px dashed #C9A24B', background: '#FBF3E2', borderRadius: 12, padding: '13px 0', fontSize: 15, fontWeight: 600, color: '#7A5A22', cursor: 'pointer', marginBottom: photoUrl ? 10 : 14 }}>
           📷 {photoUrl ? 'ถ่ายภาพใหม่' : 'ถ่ายภาพทะเบียน'}
         </button>
