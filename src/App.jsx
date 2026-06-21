@@ -1025,8 +1025,43 @@ function PrintView({ session, readonly, isHandoff, verified, history, onGoSummar
 }
 
 // ─── DashboardView ────────────────────────────────────────────────────────────
+function TransferSlipModal({ bill, onConfirm, onClose }) {
+  const [photoUrl, setPhotoUrl] = useState(null);
+  const fileRef = useRef();
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 80, background: 'rgba(42,33,24,.6)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+      <div style={{ background: '#FFFDF8', borderRadius: '20px 20px 0 0', padding: '20px 18px 28px', width: '100%', maxWidth: 480, boxShadow: '0 -8px 30px rgba(42,33,24,.2)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+          <span style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 16, color: '#3F2D1E' }}>ยืนยันการโอน</span>
+          <button onClick={onClose} style={{ border: 'none', background: 'none', fontSize: 20, cursor: 'pointer', color: '#9A8662' }}>✕</button>
+        </div>
+        <div style={{ background: '#F0E9DA', borderRadius: 10, padding: '10px 14px', marginBottom: 14, fontSize: 13 }}>
+          <div style={{ fontWeight: 700, color: '#2A2118' }}>{bill.seller || '—'}</div>
+          <div style={{ color: '#5A4A38' }}>{bill.billNo} · ฿{bill.baht}</div>
+        </div>
+        <input ref={fileRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }}
+          onChange={e => { const f = e.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = ev => setPhotoUrl(ev.target.result); r.readAsDataURL(f); }} />
+        <button onClick={() => fileRef.current?.click()}
+          style={{ width: '100%', border: '1.5px dashed #5A9A6A', background: '#EFF8F1', borderRadius: 12, padding: '13px 0', fontSize: 15, fontWeight: 600, color: '#2E7D32', cursor: 'pointer', marginBottom: photoUrl ? 10 : 14 }}>
+          📷 {photoUrl ? 'ถ่ายสลิปใหม่' : 'ถ่ายสลิปโอนเงิน'}
+        </button>
+        {photoUrl && <img src={photoUrl} alt="สลิป" style={{ width: '100%', maxHeight: 200, objectFit: 'cover', borderRadius: 10, border: '1px solid #C8E6C9', marginBottom: 14, display: 'block' }} />}
+        <button onClick={() => onConfirm(photoUrl)} disabled={!photoUrl}
+          style={{ width: '100%', border: 'none', borderRadius: 13, padding: 15, background: photoUrl ? '#5A9A6A' : '#C8D8C8', color: '#fff', fontWeight: 700, fontSize: 16, cursor: photoUrl ? 'pointer' : 'default', marginBottom: 8 }}>
+          ยืนยันโอนแล้ว ✓
+        </button>
+        <button onClick={() => onConfirm(null)}
+          style={{ width: '100%', border: 'none', background: 'none', color: '#9A8662', fontSize: 13, cursor: 'pointer', padding: '6px 0' }}>
+          ยืนยันโดยไม่มีสลิป
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function DashboardView({ history, payments, onPayment, onGoHome }) {
   const [tab, setTab] = useState('unpaid');
+  const [transferBill, setTransferBill] = useState(null);
 
   const bills = history.map(h => ({ ...h, pay: payments[h.billNo] || { status: 'unpaid' } }));
   const unpaid      = bills.filter(b => b.pay.status === 'unpaid');
@@ -1081,7 +1116,7 @@ function DashboardView({ history, payments, onPayment, onGoHome }) {
             </div>
             {b.pay.status === 'unpaid' ? (
               <div style={{ display: 'flex', gap: 8 }}>
-                <button onClick={() => onPayment(b.billNo, 'transferred')}
+                <button onClick={() => setTransferBill(b)}
                   style={{ flex: 1, border: 'none', borderRadius: 10, padding: '9px 0', background: '#5A9A6A', color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
                   โอนแล้ว ✓
                 </button>
@@ -1091,14 +1126,23 @@ function DashboardView({ history, payments, onPayment, onGoHome }) {
                 </button>
               </div>
             ) : (
-              <button onClick={() => onPayment(b.billNo, 'unpaid')}
-                style={{ width: '100%', border: '1px solid #D0C8C0', borderRadius: 10, padding: '8px 0', background: '#fff', color: '#8A7A66', fontSize: 12, cursor: 'pointer' }}>
-                ยกเลิกการชำระ
-              </button>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                {b.pay.slipUrl && <img src={b.pay.slipUrl} alt="สลิป" style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 6, border: '1px solid #C8E6C9', flexShrink: 0 }} />}
+                <button onClick={() => onPayment(b.billNo, 'unpaid')}
+                  style={{ flex: 1, border: '1px solid #D0C8C0', borderRadius: 10, padding: '8px 0', background: '#fff', color: '#8A7A66', fontSize: 12, cursor: 'pointer' }}>
+                  ยกเลิกการชำระ
+                </button>
+              </div>
             )}
           </div>
         ))}
       </div>
+
+      {transferBill && (
+        <TransferSlipModal bill={transferBill}
+          onConfirm={(slipPhotoUrl) => { onPayment(transferBill.billNo, 'transferred', slipPhotoUrl); setTransferBill(null); }}
+          onClose={() => setTransferBill(null)} />
+      )}
     </div>
   );
 }
@@ -1722,8 +1766,8 @@ export default function App() {
     });
   }, [numpad, requirePin, updateSession, toast]);
 
-  const handlePayment = useCallback((billNo, status) => {
-    const next = { ...storage.loadPayments(), [billNo]: { status, paidAt: Date.now() } };
+  const handlePayment = useCallback((billNo, status, slipPhotoUrl) => {
+    const next = { ...storage.loadPayments(), [billNo]: { status, paidAt: Date.now(), ...(slipPhotoUrl ? { slipUrl: slipPhotoUrl } : {}) } };
     if (status === 'unpaid') delete next[billNo];
     storage.savePayments(next);
     setPayments(next);
