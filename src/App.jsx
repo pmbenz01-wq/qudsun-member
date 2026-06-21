@@ -420,22 +420,24 @@ function RecordView({ session, activeCat, input, onInput, onCommit, onPickCat, o
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 8, marginBottom: 8 }}>
-        {mainCats.map(c => {
-          const d = aggData[c.key];
-          const active = activeCat === c.key;
-          return (
-            <button key={c.key} onClick={() => onPickCat(c.key)} style={{ border: active ? `2px solid ${c.accent}` : '1px solid #E4D7BC', background: active ? '#FFFDF8' : '#FBF6EC', borderRadius: 12, padding: '10px 4px', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: active ? `0 4px 12px ${c.accent}40` : 'none' }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'center' }}>
-                <span style={{ width: 8, height: 8, borderRadius: '50%', background: c.accent, display: 'inline-block', flexShrink: 0 }} />
-                <span style={{ fontWeight: 600, fontSize: 13 }}>{c.label}</span>
-              </span>
-              <span style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 16, marginTop: 3 }}>{fmtKg(d.kg)}</span>
-              <span style={{ fontSize: 10, opacity: .7 }}>{d.count} เข่ง</span>
-            </button>
-          );
-        })}
-      </div>
+      {(!pinnedCats || pinnedCats.length === 0) && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 8, marginBottom: 8 }}>
+          {mainCats.map(c => {
+            const d = aggData[c.key];
+            const active = activeCat === c.key;
+            return (
+              <button key={c.key} onClick={() => onPickCat(c.key)} style={{ border: active ? `2px solid ${c.accent}` : '1px solid #E4D7BC', background: active ? '#FFFDF8' : '#FBF6EC', borderRadius: 12, padding: '10px 4px', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: active ? `0 4px 12px ${c.accent}40` : 'none' }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'center' }}>
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: c.accent, display: 'inline-block', flexShrink: 0 }} />
+                  <span style={{ fontWeight: 600, fontSize: 13 }}>{c.label}</span>
+                </span>
+                <span style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 16, marginTop: 3 }}>{fmtKg(d.kg)}</span>
+                <span style={{ fontSize: 10, opacity: .7 }}>{d.count} เข่ง</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
       {(() => {
         const d = aggData['custom'];
         const active = activeCat === 'custom';
