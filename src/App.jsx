@@ -1641,7 +1641,7 @@ export default function App() {
     const namePart = (session.seller || 'ไม่ระบุ').replace(/[^ก-๙a-zA-Z0-9]/g, '_');
     const phonePart = session.sellerPhone || 'nophone';
     const filename = `slip_${namePart}_${phonePart}_${datePart}_${timePart}.jpg`;
-    fetch(url, { method: 'POST', body: JSON.stringify({ action: 'uploadPhoto', base64: dataUrl, filename }) }).catch(() => {});
+    fetch(url, { method: 'POST', body: JSON.stringify({ action: 'uploadPhoto', base64: dataUrl, filename, folder: 'QudsunSlips' }) }).catch(() => {});
   }, [session]);
 
   const doConfirm = useCallback(() => {
