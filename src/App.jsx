@@ -1328,6 +1328,10 @@ export default function App() {
       current.forEach(c => { if (c?.billNo) byNo[c.billNo] = c; });
       const merged = Object.values(byNo).sort((a, b) => (b.date || 0) - (a.date || 0)).slice(0, 300);
       if (data.verified) { const nv = { ...storage.loadVerified(), ...data.verified }; storage.saveVerified(nv); setVerified(nv); }
+      // rebuild supervisors from synced bill data
+      const svFromSync = {};
+      merged.forEach(c => { const ph = c.phone || c.sellerPhone || ''; const sup = (c.data && c.data.supervisor) || c.supervisor || ''; if (ph && sup) svFromSync[ph] = sup; });
+      if (Object.keys(svFromSync).length) { const nSv = { ...storage.loadSupervisors(), ...svFromSync }; storage.saveSupervisors(nSv); setSupervisors(nSv); }
       storage.saveHistory(merged); setHistory(merged);
       setSyncStatus('✓ ซิงก์แล้ว ' + new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }));
       localOnly.forEach(c => pushBill(c, true, url));
