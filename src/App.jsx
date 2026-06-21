@@ -165,6 +165,32 @@ function LoginScreen({ onLogin, error, onErrorClear }) {
   );
 }
 
+// ─── RecorderModal ────────────────────────────────────────────────────────────
+function RecorderModal({ onSave, onSkip }) {
+  const [name, setName] = useState('');
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 80, background: 'rgba(42,33,24,.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 18, animation: 'fadeIn .2s' }}>
+      <div style={{ background: '#FFFDF8', borderRadius: 20, padding: 24, width: '100%', maxWidth: 320, animation: 'popIn .25s' }}>
+        <div style={{ textAlign: 'center', fontSize: 28, marginBottom: 8 }}>✍️</div>
+        <h3 style={{ textAlign: 'center', fontFamily: 'Prompt', fontWeight: 500, fontSize: 17, margin: '0 0 4px', color: '#4A3526' }}>ชื่อผู้บันทึก</h3>
+        <p style={{ textAlign: 'center', fontSize: 12, color: '#9A8662', margin: '0 0 16px' }}>ชื่อจะแสดงบนทุกบิลที่บันทึกในรอบนี้</p>
+        <input
+          autoFocus
+          value={name}
+          onChange={e => setName(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter' && name.trim()) onSave(name.trim()); }}
+          placeholder="เช่น พี่โอ๋, น้องมิ้น…"
+          style={{ width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 12, padding: 14, fontSize: 16, color: '#3F2D1E', outline: 'none', boxSizing: 'border-box', marginBottom: 12 }}
+        />
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button onClick={onSkip} style={{ flex: 1, border: '1px solid #E4D7BC', background: '#fff', borderRadius: 12, padding: 12, fontSize: 14, color: '#9A8662', cursor: 'pointer' }}>ข้าม</button>
+          <button onClick={() => name.trim() && onSave(name.trim())} style={{ flex: 2, border: 'none', background: name.trim() ? '#3F2D1E' : '#C8B998', color: '#F6EEDD', borderRadius: 12, padding: 12, fontWeight: 600, fontSize: 15, cursor: name.trim() ? 'pointer' : 'default' }}>ยืนยัน →</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── HomeView ─────────────────────────────────────────────────────────────────
 function HomeView({ session, history, sheetUrl, syncStatus, syncing, onNew, onResume, onGoCustomers, onGoSupervisors, onOpenSheet, onSyncNow, onChangePin, onSetEmployeePin, onOpenHistory, verified, supervisors, isEmployee, onLogout }) {
   const customerCount = Object.keys(loadCustomers(history)).length;
@@ -359,6 +385,7 @@ function RecordView({ session, activeCat, input, onInput, onCommit, onPickCat, o
   const tier = stat ? stat.effectiveTier : null;
   const sellerText = (session?.seller || session?.sellerPhone) ? `${session.seller || ''}${session.sellerPhone ? (session.seller ? ' · ' : '') + session.sellerPhone : ''}` : 'ผู้ขาย —';
   const supervisorText = session?.supervisor ? `👤 ผู้ดูแล: ${session.supervisor}` : '';
+  const recorderText = session?.recorder ? `✍️ ผู้บันทึก: ${session.recorder}` : '';
   const mainCats = CATS.filter(c => c.key !== 'custom');
   const customCat = CATS.find(c => c.key === 'custom');
 
@@ -377,6 +404,7 @@ function RecordView({ session, activeCat, input, onInput, onCommit, onPickCat, o
               👤 {sellerText}
             </button>
             {supervisorText && <span style={{ fontSize: 11, color: '#A6925E', paddingRight: 4 }}>{supervisorText}</span>}
+            {recorderText && <span style={{ fontSize: 11, color: '#7A8C7A', paddingRight: 4 }}>{recorderText}</span>}
           </div>
         </div>
       </div>
@@ -732,7 +760,7 @@ function PrintView({ session, readonly, isHandoff, verified, history, onGoSummar
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', margin: '12px 0', fontSize: 11.5 }}>
           <span>วันที่: <b>{session ? dateStr(session.date) : ''}</b></span>
-          <span>ผู้ขาย: <b>{session?.seller || '—'}</b>{session?.sellerPhone ? ` · ${session.sellerPhone}` : ''}{session?.supervisor ? ` · ผู้ดูแล: ${session.supervisor}` : ''}</span>
+          <span>ผู้ขาย: <b>{session?.seller || '—'}</b>{session?.sellerPhone ? ` · ${session.sellerPhone}` : ''}{session?.supervisor ? ` · ผู้ดูแล: ${session.supervisor}` : ''}{session?.recorder ? ` · ผู้บันทึก: ${session.recorder}` : ''}</span>
         </div>
         {tier && tier.key !== 'new' && (
           <div style={{ margin: '-4px 0 10px', fontSize: 11, color: '#8A6A2E' }}>สมาชิกระดับ {tier.label} · ยอดสะสม {fmtKg(stat?.total || 0)} กก.</div>
@@ -1101,6 +1129,8 @@ export default function App() {
   const [activeSupervisor, setActiveSupervisor] = useState(null);
   const [pinnedCats, setPinnedCats] = useState([]);
   const [pinEditorOpen, setPinEditorOpen] = useState(false);
+  const [recorderName, setRecorderName] = useState('');
+  const [showRecorderModal, setShowRecorderModal] = useState(false);
   const [authRole, setAuthRole] = useState(null);
   const [employeePin, setEmployeePin] = useState('');
   const [loginError, setLoginError] = useState('');
@@ -1152,9 +1182,11 @@ export default function App() {
     const sv = storage.loadSupervisors();
     const ep = storage.loadEmployeePin();
     const savedRole = sessionStorage.getItem('qudsun_role');
+    const savedRecorder = sessionStorage.getItem('qudsun_recorder') || '';
     const pc = storage.loadPinnedCats();
     setHistory(h); setPin(p); setVerified(v); setSupervisors(sv); setEmployeePin(ep); setPinnedCats(pc);
-    if (savedRole) setAuthRole(savedRole);
+    if (savedRole) { setAuthRole(savedRole); setRecorderName(savedRecorder); }
+    if (savedRole && !savedRecorder) setShowRecorderModal(true);
     if (s) setSession(s);
     if (su) setSheetUrl(su);
     const m = (location.hash || '').match(/bill=([^&]+)/);
@@ -1244,7 +1276,8 @@ export default function App() {
   // Session
   const createSession = useCallback((seller = '', sellerPhone = '', supervisor = '') => {
     const t = Date.now();
-    const sess = { id: t, billNo: newBillNo(), createdAt: t, date: t, seller, sellerPhone, supervisor, prices: Object.fromEntries(CATS.map(c => [c.key, 0])), entries: [], log: [{ t, kind: 'open', text: 'เปิดใบรับซื้อใหม่' }], confirmed: false, confirmedAt: null, customLabel: '' };
+    const recorder = sessionStorage.getItem('qudsun_recorder') || recorderName || '';
+    const sess = { id: t, billNo: newBillNo(), createdAt: t, date: t, seller, sellerPhone, supervisor, recorder, prices: Object.fromEntries(CATS.map(c => [c.key, 0])), entries: [], log: [{ t, kind: 'open', text: 'เปิดใบรับซื้อใหม่' }], confirmed: false, confirmedAt: null, customLabel: '' };
     setSession(sess); persistSession(sess); setScreen('record'); setActiveCat('AB'); setInput('');
   }, [persistSession]);
 
@@ -1402,15 +1435,20 @@ export default function App() {
   const handleLogin = useCallback((entered) => {
     if (entered === pin) {
       setAuthRole('admin'); sessionStorage.setItem('qudsun_role', 'admin'); setLoginError('');
+      const saved = sessionStorage.getItem('qudsun_recorder');
+      if (!saved) setShowRecorderModal(true); else setRecorderName(saved);
     } else if (employeePin && entered === employeePin) {
       setAuthRole('employee'); sessionStorage.setItem('qudsun_role', 'employee'); setLoginError('');
+      const saved = sessionStorage.getItem('qudsun_recorder');
+      if (!saved) setShowRecorderModal(true); else setRecorderName(saved);
     } else {
       setLoginError('รหัสไม่ถูกต้อง ลองใหม่');
     }
   }, [pin, employeePin]);
 
   const handleLogout = useCallback(() => {
-    setAuthRole(null); sessionStorage.removeItem('qudsun_role');
+    setAuthRole(null); setRecorderName('');
+    sessionStorage.removeItem('qudsun_role'); sessionStorage.removeItem('qudsun_recorder');
   }, []);
 
   const sheetSave = () => {
@@ -1529,6 +1567,7 @@ export default function App() {
         onConfirm={handleVerifyConfirm} onSkip={() => commitFinish()} onCancel={() => setVerifyPrompt(null)} />}
       {sheetModal && <SheetModal url={sheetModalUrl} onUrlChange={setSheetModalUrl} onSave={sheetSave} onCancel={() => setSheetModal(false)} />}
       {pinEditorOpen && <PinEditor pinnedCats={pinnedCats} onSave={pins => { storage.savePinnedCats(pins); setPinnedCats(pins); setPinEditorOpen(false); toast('บันทึกหมวดปักหมุดแล้ว'); }} onCancel={() => setPinEditorOpen(false)} />}
+      {showRecorderModal && <RecorderModal onSave={name => { setRecorderName(name); sessionStorage.setItem('qudsun_recorder', name); setShowRecorderModal(false); }} onSkip={() => setShowRecorderModal(false)} />}
 
       <Toast msg={toastMsg} />
     </div>
