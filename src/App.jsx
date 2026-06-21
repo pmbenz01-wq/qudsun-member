@@ -1360,7 +1360,6 @@ export default function App() {
         const billNo = session.billNo || key;
         fetch(url, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ action: 'uploadPhoto', base64: dataUrl, filename: `${billNo}_plate.jpg` }),
         })
           .then(r => r.json())
