@@ -9,6 +9,7 @@ const KEYS = {
   employees:     'qudsun_employees',
   pinnedCats:    'qudsun_pinned_cats',
   vehiclePlates: 'qudsun_vehicle_plates',
+  payments:      'qudsun_payments',
 };
 
 const DEFAULT_PINS = ['AB', 'etc', 'taksai', 'hongyen', 'sutthai'];
@@ -44,4 +45,6 @@ export const storage = {
   savePinnedCats:    v  => { try { localStorage.setItem(KEYS.pinnedCats, JSON.stringify(v)); } catch {} },
   loadVehiclePlates: () => { try { return JSON.parse(localStorage.getItem(KEYS.vehiclePlates) || '{}'); } catch { return {}; } },
   saveVehiclePlates: m  => { try { localStorage.setItem(KEYS.vehiclePlates, JSON.stringify(m)); } catch {} },
+  loadPayments: () => { try { return JSON.parse(localStorage.getItem(KEYS.payments) || '{}'); } catch { return {}; } },
+  savePayments: m  => { try { localStorage.setItem(KEYS.payments, JSON.stringify(m)); } catch {} },
 };

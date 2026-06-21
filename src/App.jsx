@@ -271,7 +271,7 @@ function EmployeeManager({ employees, onSave, onCancel }) {
 }
 
 // ─── HomeView ─────────────────────────────────────────────────────────────────
-function HomeView({ session, history, sheetUrl, syncStatus, syncing, onNew, onResume, onGoCustomers, onGoSupervisors, onOpenSheet, onSyncNow, onChangePin, onSetEmployeePin, onOpenHistory, verified, supervisors, isEmployee, onLogout, onExport, onImport }) {
+function HomeView({ session, history, sheetUrl, syncStatus, syncing, onNew, onResume, onGoCustomers, onGoDashboard, onGoSupervisors, onOpenSheet, onSyncNow, onChangePin, onSetEmployeePin, onOpenHistory, verified, supervisors, isEmployee, onLogout, onExport, onImport }) {
   const customerCount = Object.keys(loadCustomers(history)).length;
   const supervisorCount = Object.values(supervisors || {}).filter(Boolean).reduce((set, n) => (set.add(n), set), new Set()).size;
   if (isEmployee) {
@@ -316,6 +316,15 @@ function HomeView({ session, history, sheetUrl, syncStatus, syncing, onNew, onRe
           </button>
         )}
       </div>
+
+      <button onClick={onGoDashboard} style={{ width: '100%', border: '1.5px solid #C9A24B', background: 'linear-gradient(135deg,#FBF3E2,#F5E6C8)', borderRadius: 14, padding: '14px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+        <span style={{ fontSize: 22 }}>📊</span>
+        <div style={{ textAlign: 'left' }}>
+          <div style={{ fontWeight: 700, fontSize: 15, color: '#4A3526' }}>Dashboard ยอดชำระ</div>
+          <div style={{ fontSize: 12, color: '#9A8662' }}>โอนแล้ว / ยังไม่โอน / เงินสด</div>
+        </div>
+        <span style={{ marginLeft: 'auto', color: '#C9A24B', fontSize: 18 }}>›</span>
+      </button>
 
       <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
         <button onClick={onGoCustomers} style={{ flex: 1, border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 14, padding: '15px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -1015,6 +1024,85 @@ function PrintView({ session, readonly, isHandoff, verified, history, onGoSummar
   );
 }
 
+// ─── DashboardView ────────────────────────────────────────────────────────────
+function DashboardView({ history, payments, onPayment, onGoHome }) {
+  const [tab, setTab] = useState('unpaid');
+
+  const bills = history.map(h => ({ ...h, pay: payments[h.billNo] || { status: 'unpaid' } }));
+  const unpaid      = bills.filter(b => b.pay.status === 'unpaid');
+  const transferred = bills.filter(b => b.pay.status === 'transferred');
+  const cash        = bills.filter(b => b.pay.status === 'cash');
+
+  const sumBaht = arr => arr.reduce((s, b) => s + (parseFloat((b.baht || '0').replace(/,/g, '')) || 0), 0);
+  const fmt = n => n.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  const displayed = tab === 'unpaid' ? unpaid : tab === 'transferred' ? transferred : tab === 'cash' ? cash : bills;
+
+  const SummaryCard = ({ label, amount, color, active, onClick }) => (
+    <div onClick={onClick} style={{ flex: 1, background: active ? color : '#FBF6EC', border: `1.5px solid ${color}`, borderRadius: 14, padding: '12px 10px', textAlign: 'center', cursor: 'pointer' }}>
+      <div style={{ fontSize: 10, color: active ? '#fff' : '#7A6450', fontWeight: 600, marginBottom: 4 }}>{label}</div>
+      <div style={{ fontSize: 14, fontWeight: 700, color: active ? '#fff' : '#2A2118' }}>฿{fmt(amount)}</div>
+    </div>
+  );
+
+  return (
+    <div style={{ minHeight: '100dvh', background: '#F5EFE3', paddingBottom: 32 }}>
+      <div style={{ background: '#3F2D1E', padding: '18px 18px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
+        <button onClick={onGoHome} style={{ border: 'none', background: 'none', color: '#F6EEDD', fontSize: 20, cursor: 'pointer', padding: 0 }}>‹</button>
+        <span style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 18, color: '#F6EEDD' }}>Dashboard ยอดชำระ</span>
+      </div>
+
+      <div style={{ padding: '16px 14px 8px' }}>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+          <SummaryCard label="ยังไม่โอน" amount={sumBaht(unpaid)} color="#E07A5F" active={tab==='unpaid'} onClick={() => setTab('unpaid')} />
+          <SummaryCard label="โอนแล้ว" amount={sumBaht(transferred)} color="#5A9A6A" active={tab==='transferred'} onClick={() => setTab('transferred')} />
+          <SummaryCard label="เงินสด" amount={sumBaht(cash)} color="#5A7FA8" active={tab==='cash'} onClick={() => setTab('cash')} />
+        </div>
+
+        {displayed.length === 0 && (
+          <div style={{ textAlign: 'center', color: '#A6925E', padding: '40px 0', fontSize: 14 }}>ไม่มีรายการ</div>
+        )}
+
+        {displayed.map(b => (
+          <div key={b.billNo} style={{ background: '#FFFDF8', borderRadius: 14, padding: '14px 14px 12px', marginBottom: 10, border: '1px solid #E4D7BC' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 15, color: '#2A2118' }}>{b.seller || '—'}</div>
+                <div style={{ fontSize: 11, color: '#8A7A66', marginTop: 2 }}>{b.billNo} · {b.dateText} · {b.kg} กก.</div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontWeight: 700, fontSize: 16, color: '#3F2D1E' }}>฿{b.baht}</div>
+                <div style={{ fontSize: 10, marginTop: 2, padding: '2px 8px', borderRadius: 8, display: 'inline-block',
+                  background: b.pay.status === 'unpaid' ? '#FDECEA' : b.pay.status === 'transferred' ? '#E6F4EA' : '#E8EEF8',
+                  color: b.pay.status === 'unpaid' ? '#C0392B' : b.pay.status === 'transferred' ? '#2E7D32' : '#1A4D80' }}>
+                  {b.pay.status === 'unpaid' ? 'ยังไม่โอน' : b.pay.status === 'transferred' ? 'โอนแล้ว' : 'เงินสด'}
+                </div>
+              </div>
+            </div>
+            {b.pay.status === 'unpaid' ? (
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button onClick={() => onPayment(b.billNo, 'transferred')}
+                  style={{ flex: 1, border: 'none', borderRadius: 10, padding: '9px 0', background: '#5A9A6A', color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
+                  โอนแล้ว ✓
+                </button>
+                <button onClick={() => onPayment(b.billNo, 'cash')}
+                  style={{ flex: 1, border: 'none', borderRadius: 10, padding: '9px 0', background: '#5A7FA8', color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
+                  เงินสด ✓
+                </button>
+              </div>
+            ) : (
+              <button onClick={() => onPayment(b.billNo, 'unpaid')}
+                style={{ width: '100%', border: '1px solid #D0C8C0', borderRadius: 10, padding: '8px 0', background: '#fff', color: '#8A7A66', fontSize: 12, cursor: 'pointer' }}>
+                ยกเลิกการชำระ
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─── CustomersView ────────────────────────────────────────────────────────────
 function CustomersView({ history, verified, onGoHome, onOpenCustomer }) {
   const customers = loadCustomers(history);
@@ -1363,6 +1451,7 @@ export default function App() {
   const [toastMsg, setToastMsg] = useState('');
   const [logOpen, setLogOpen] = useState(false);
   const [vehiclePlates, setVehiclePlates] = useState({});
+  const [payments, setPayments] = useState({});
   const [vehiclePhotoUrl, setVehiclePhotoUrl] = useState(null);
   const savedSession = useRef(null);
   const pendingPhotoDataUrl = useRef(null);
@@ -1448,7 +1537,8 @@ export default function App() {
     const savedRecorder = sessionStorage.getItem('qudsun_recorder') || '';
     const pc = storage.loadPinnedCats();
     const vp = storage.loadVehiclePlates();
-    setHistory(h); setPin(p); setVerified(v); setSupervisors(sv); setEmployeePin(ep); setPinnedCats(pc); setEmployees(emps); setVehiclePlates(vp);
+    const pm = storage.loadPayments();
+    setHistory(h); setPin(p); setVerified(v); setSupervisors(sv); setEmployeePin(ep); setPinnedCats(pc); setEmployees(emps); setVehiclePlates(vp); setPayments(pm);
     if (savedRole) { setAuthRole(savedRole); setRecorderName(savedRecorder); }
     if (s) { setSession(s); if (s.vehiclePhotoKey) loadPhoto(s.vehiclePhotoKey).then(u => { if (u) setVehiclePhotoUrl(u); }); }
     if (su) { setSheetUrl(su); setTimeout(() => syncNow(true), 1500); }
@@ -1632,6 +1722,13 @@ export default function App() {
     });
   }, [numpad, requirePin, updateSession, toast]);
 
+  const handlePayment = useCallback((billNo, status) => {
+    const next = { ...storage.loadPayments(), [billNo]: { status, paidAt: Date.now() } };
+    if (status === 'unpaid') delete next[billNo];
+    storage.savePayments(next);
+    setPayments(next);
+  }, []);
+
   const handleSaveSlip = useCallback((dataUrl) => {
     const url = storage.loadSheet();
     if (!url || !session) return;
@@ -1799,6 +1896,7 @@ export default function App() {
       {screen === 'home' && (
         <HomeView session={session} history={history} verified={verified} supervisors={supervisors} sheetUrl={sheetUrl} syncStatus={syncStatus} syncing={syncing}
           onNew={startNew} onResume={() => setScreen('record')} onGoCustomers={() => setScreen('customers')}
+          onGoDashboard={() => setScreen('dashboard')}
           onGoSupervisors={() => setScreen('supervisors')}
           onOpenSheet={() => { setSheetModal(true); setSheetModalUrl(sheetUrl); }}
           onSyncNow={() => syncNow(false)} onChangePin={changePin} onSetEmployeePin={setEmployeePinAction}
@@ -1841,6 +1939,9 @@ export default function App() {
           onGoSummary={() => setScreen('summary')} onGoBack={goBackFromBill} onFinish={finishBill}
           customLabel={session.customLabel || ''} vehiclePhotoUrl={session.vehicleDriveUrl || vehiclePhotoUrl}
           onSaveSlip={handleSaveSlip} />
+      )}
+      {screen === 'dashboard' && (
+        <DashboardView history={history} payments={payments} onPayment={handlePayment} onGoHome={() => setScreen('home')} />
       )}
       {screen === 'customers' && (
         <CustomersView history={history} verified={verified} onGoHome={() => setScreen('home')}
