@@ -387,23 +387,6 @@ function HomeView({ session, history, sheetUrl, syncStatus, syncing, onNew, onRe
             </button>
           )}
         </button>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={onExport} style={{ flex: 1, border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 13, padding: '13px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 17 }}>📤</span>
-            <div style={{ textAlign: 'left' }}>
-              <div style={{ fontSize: 13, color: '#4A3526', fontWeight: 500 }}>ส่งออกข้อมูล</div>
-              <div style={{ fontSize: 11, color: '#9A8662' }}>สำรอง / ย้ายเครื่อง</div>
-            </div>
-          </button>
-          <label style={{ flex: 1, border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 13, padding: '13px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 17 }}>📥</span>
-            <div style={{ textAlign: 'left' }}>
-              <div style={{ fontSize: 13, color: '#4A3526', fontWeight: 500 }}>นำเข้าข้อมูล</div>
-              <div style={{ fontSize: 11, color: '#9A8662' }}>เปิดไฟล์สำรอง</div>
-            </div>
-            <input type="file" accept=".json" onChange={onImport} style={{ display: 'none' }} />
-          </label>
-        </div>
       </div>
     </div>
   );
