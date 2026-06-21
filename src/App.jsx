@@ -1278,7 +1278,7 @@ export default function App() {
   const [screen, setScreen] = useState('home');
   const [session, setSession] = useState(null);
   const [history, setHistory] = useState([]);
-  const [activeCat, setActiveCat] = useState('AB');
+  const [activeCat, setActiveCat] = useState('รวม');
   const [input, setInput] = useState('');
   const [pin, setPin] = useState('1234');
   const [verified, setVerified] = useState({});
