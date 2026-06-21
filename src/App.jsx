@@ -1027,9 +1027,26 @@ function PrintView({ session, readonly, isHandoff, verified, history, onGoSummar
 // ─── DashboardView ────────────────────────────────────────────────────────────
 function TransferSlipModal({ bill, onConfirm, onClose }) {
   const [photoUrl, setPhotoUrl] = useState(null);
+  const [slipInfo, setSlipInfo] = useState(null);
+  const [reading, setReading] = useState(false);
   const cameraRef = useRef();
   const galleryRef = useRef();
-  const handleFile = e => { const f = e.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = ev => setPhotoUrl(ev.target.result); r.readAsDataURL(f); e.target.value = ''; };
+  const handleFile = async e => {
+    const f = e.target.files[0]; if (!f) return;
+    const r = new FileReader(); r.onload = async ev => {
+      const dataUrl = ev.target.result;
+      setPhotoUrl(dataUrl); setSlipInfo(null);
+      const url = storage.loadSheet();
+      if (url) {
+        setReading(true);
+        try {
+          const res = await fetch(url, { method: 'POST', body: JSON.stringify({ action: 'readSlip', base64: dataUrl }) });
+          const data = await res.json();
+          if (data.ok && data.info) setSlipInfo(data.info);
+        } catch {} finally { setReading(false); }
+      }
+    }; r.readAsDataURL(f); e.target.value = '';
+  };
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 80, background: 'rgba(42,33,24,.6)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
       <div style={{ background: '#FFFDF8', borderRadius: '20px 20px 0 0', padding: '20px 18px 28px', width: '100%', maxWidth: 480, boxShadow: '0 -8px 30px rgba(42,33,24,.2)' }}>
@@ -1053,7 +1070,10 @@ function TransferSlipModal({ bill, onConfirm, onClose }) {
             🖼️ {photoUrl ? 'เลือกใหม่' : 'อัปโหลด'}
           </button>
         </div>
-        {photoUrl && <img src={photoUrl} alt="สลิป" style={{ width: '100%', maxHeight: 200, objectFit: 'cover', borderRadius: 10, border: '1px solid #C8E6C9', marginBottom: 14, display: 'block' }} />}
+        {photoUrl && <img src={photoUrl} alt="สลิป" style={{ width: '100%', maxHeight: 180, objectFit: 'cover', borderRadius: 10, border: '1px solid #C8E6C9', marginBottom: 8, display: 'block' }} />}
+        {reading && <div style={{ textAlign: 'center', fontSize: 12, color: '#9A8662', marginBottom: 8 }}>กำลังอ่านสลิป…</div>}
+        {slipInfo && <div style={{ background: '#EFF8F1', borderRadius: 10, padding: '8px 12px', marginBottom: 10, fontSize: 12, color: '#2E7D32', lineHeight: 1.7 }}>{slipInfo}</div>}
+        {photoUrl && !reading && !slipInfo && <div style={{ height: 6 }} />}
         <button onClick={() => onConfirm(photoUrl)} disabled={!photoUrl}
           style={{ width: '100%', border: 'none', borderRadius: 13, padding: 15, background: photoUrl ? '#5A9A6A' : '#C8D8C8', color: '#fff', fontWeight: 700, fontSize: 16, cursor: photoUrl ? 'pointer' : 'default', marginBottom: 8 }}>
           ยืนยันโอนแล้ว ✓
