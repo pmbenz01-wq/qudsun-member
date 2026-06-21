@@ -910,12 +910,13 @@ function PrintView({ session, readonly, isHandoff, verified, history, onGoSummar
           <div style={{ textAlign: 'right', minWidth: 130 }}>
             <div style={{ fontWeight: 700, fontSize: 13 }}>ใบรับซื้อทุเรียน</div>
             <div style={{ fontSize: 10.5, color: '#5A4A38', marginBottom: 6 }}>เลขที่ {session?.billNo}</div>
-            <div style={{ fontSize: 10.5, color: '#3A2A18', lineHeight: 1.7 }}>
-              <div>📅 {session ? dateStr(session.date) : ''}</div>
-              <div>🧺 <b>{session?.seller || '—'}</b>{session?.sellerPhone ? ` · ${session.sellerPhone}` : ''}</div>
-              {session?.vehiclePlate && <div>🚗 {session.vehiclePlate}</div>}
-              {session?.supervisor && <div>👤 {session.supervisor}</div>}
-              {session?.recorder && <div>✍️ {session.recorder}</div>}
+            <div style={{ fontSize: 10.5, color: '#3A2A18', lineHeight: 1.8 }}>
+              <div>{session ? dateStr(session.date) : ''}</div>
+              <div><b>{session?.seller || '—'}</b>{session?.sellerPhone ? ` · ${session.sellerPhone}` : ''}</div>
+              {session?.vehiclePlate && <div>ทะเบียน: {session.vehiclePlate}</div>}
+              {(session?.supervisor || session?.recorder) && (
+                <div>{[session?.supervisor && `ผู้ดูแล: ${session.supervisor}`, session?.recorder && `ผู้จด: ${session.recorder}`].filter(Boolean).join(' · ')}</div>
+              )}
             </div>
           </div>
         </div>
