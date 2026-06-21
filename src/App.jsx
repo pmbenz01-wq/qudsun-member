@@ -9,6 +9,7 @@ import {
 } from './utils/helpers.js';
 import { storage } from './utils/storage.js';
 import { savePhoto, loadPhoto, resizeImage } from './utils/photoDB.js';
+import html2canvas from 'html2canvas';
 
 // ─── Keypad ───────────────────────────────────────────────────────────────────
 function Keypad({ value, onChange, onConfirm, confirmLabel }) {
@@ -835,7 +836,7 @@ function ConfirmView({ session, verified, history, onConfirm, onGoSummary, custo
 }
 
 // ─── PrintView ────────────────────────────────────────────────────────────────
-function PrintView({ session, readonly, isHandoff, verified, history, onGoSummary, onGoBack, onFinish, customLabel, vehiclePhotoUrl }) {
+function PrintView({ session, readonly, isHandoff, verified, history, onGoSummary, onGoBack, onFinish, customLabel, vehiclePhotoUrl, onSaveSlip }) {
   const [qrDataUrl, setQrDataUrl] = useState('');
   const [copied, setCopied] = useState(false);
   const link = session ? billLink(session) : '';
@@ -856,7 +857,18 @@ function PrintView({ session, readonly, isHandoff, verified, history, onGoSummar
 
   useEffect(() => {
     if (readonly || isHandoff) return;
-    const t = setTimeout(() => window.print(), 800);
+    const t = setTimeout(async () => {
+      if (onSaveSlip) {
+        try {
+          const el = document.querySelector('.bill-doc');
+          if (el) {
+            const canvas = await html2canvas(el, { scale: 2, useCORS: true, logging: false });
+            onSaveSlip(canvas.toDataURL('image/jpeg', 0.9));
+          }
+        } catch {}
+      }
+      window.print();
+    }, 800);
     return () => clearTimeout(t);
   }, []);
 
@@ -1620,6 +1632,18 @@ export default function App() {
     });
   }, [numpad, requirePin, updateSession, toast]);
 
+  const handleSaveSlip = useCallback((dataUrl) => {
+    const url = storage.loadSheet();
+    if (!url || !session) return;
+    const now = new Date();
+    const datePart = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+    const timePart = `${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
+    const namePart = (session.seller || 'ไม่ระบุ').replace(/[^ก-๙a-zA-Z0-9]/g, '_');
+    const phonePart = session.sellerPhone || 'nophone';
+    const filename = `slip_${namePart}_${phonePart}_${datePart}_${timePart}.jpg`;
+    fetch(url, { method: 'POST', body: JSON.stringify({ action: 'uploadPhoto', base64: dataUrl, filename }) }).catch(() => {});
+  }, [session]);
+
   const doConfirm = useCallback(() => {
     updateSession(prev => {
       const s = { ...prev, confirmed: true, confirmedAt: Date.now() };
@@ -1815,7 +1839,8 @@ export default function App() {
       {screen === 'print' && session && (
         <PrintView session={session} readonly={readonly} isHandoff={isHandoff} verified={verified} history={history}
           onGoSummary={() => setScreen('summary')} onGoBack={goBackFromBill} onFinish={finishBill}
-          customLabel={session.customLabel || ''} vehiclePhotoUrl={session.vehicleDriveUrl || vehiclePhotoUrl} />
+          customLabel={session.customLabel || ''} vehiclePhotoUrl={session.vehicleDriveUrl || vehiclePhotoUrl}
+          onSaveSlip={handleSaveSlip} />
       )}
       {screen === 'customers' && (
         <CustomersView history={history} verified={verified} onGoHome={() => setScreen('home')}
