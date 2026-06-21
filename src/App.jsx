@@ -958,12 +958,6 @@ function PrintView({ session, readonly, isHandoff, verified, history, onGoSummar
           <div style={{ flex: 1, textAlign: 'center' }}><div style={{ borderTop: '1px dotted #2A2118', paddingTop: 6, fontSize: 11 }}>ลายเซ็นผู้ขาย</div></div>
           <div style={{ flex: 1, textAlign: 'center' }}><div style={{ borderTop: '1px dotted #2A2118', paddingTop: 6, fontSize: 11 }}>ลายเซ็นผู้ซื้อ</div></div>
         </div>
-        {vehiclePhotoUrl && (
-          <div style={{ marginTop: 12, borderTop: '1px dashed #C9BBA0', paddingTop: 10 }}>
-            <div style={{ fontSize: 10, color: '#8A7A66', marginBottom: 4 }}>ภาพทะเบียนรถ{session?.vehiclePlate ? ` · ${session.vehiclePlate}` : ''}</div>
-            <img src={vehiclePhotoUrl} alt="ทะเบียนรถ" style={{ width: '100%', maxHeight: 120, objectFit: 'cover', borderRadius: 6, border: '1px solid #E4D7BC' }} />
-          </div>
-        )}
         <div style={{ textAlign: 'center', marginTop: 14, fontSize: 10, color: '#8A7A66' }}>ขอบคุณที่ไว้วางใจ · ทุเรียนคัดสรร Qudsun · 082-691-4414</div>
       </div>
     </div>
