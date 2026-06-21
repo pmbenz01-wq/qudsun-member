@@ -1326,6 +1326,16 @@ export default function App() {
     setTimeout(() => setToastMsg(''), 1800);
   }, []);
 
+  const persistSession = useCallback((s) => { storage.saveSession(s); }, []);
+
+  const updateSession = useCallback((updater) => {
+    setSession(prev => {
+      const next = updater(prev ? { ...prev } : prev);
+      if (next) storage.saveSession(next);
+      return next;
+    });
+  }, []);
+
   const handleVehiclePlate = useCallback((plate) => {
     updateSession(prev => ({ ...prev, vehiclePlate: plate }));
     setSession(prev => prev ? { ...prev, vehiclePlate: plate } : prev);
@@ -1340,13 +1350,11 @@ export default function App() {
     if (!session) return;
     try {
       const dataUrl = await resizeImage(file);
-      // Save locally for immediate display
       const key = `vp_${session.id}`;
       await savePhoto(key, dataUrl);
       setVehiclePhotoUrl(dataUrl);
       updateSession(prev => ({ ...prev, vehiclePhotoKey: key }));
       toast('บันทึกภาพ — กำลัง upload Drive…');
-      // Upload to Google Drive via Apps Script
       const url = storage.loadSheet();
       if (url) {
         const billNo = session.billNo || key;
@@ -1367,16 +1375,6 @@ export default function App() {
       }
     } catch { toast('ถ่ายภาพไม่สำเร็จ'); }
   }, [session, updateSession, toast]);
-
-  const persistSession = useCallback((s) => { storage.saveSession(s); }, []);
-
-  const updateSession = useCallback((updater) => {
-    setSession(prev => {
-      const next = updater(prev ? { ...prev } : prev);
-      if (next) storage.saveSession(next);
-      return next;
-    });
-  }, []);
 
   // Init
   useEffect(() => {
