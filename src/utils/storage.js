@@ -18,15 +18,15 @@ export const storage = {
   saveSession:  s  => { try { if (s) localStorage.setItem(KEYS.session, JSON.stringify(s)); else localStorage.removeItem(KEYS.session); } catch {} },
   loadHistory:  () => { try { const h = JSON.parse(localStorage.getItem(KEYS.history) || '[]'); return Array.isArray(h) ? h : []; } catch { return []; } },
   saveHistory:  h  => { try { localStorage.setItem(KEYS.history, JSON.stringify(h)); } catch {} },
-  loadPin:      () => localStorage.getItem(KEYS.pin) || '7594',
+  loadPin:      () => localStorage.getItem(KEYS.pin) || import.meta.env.VITE_ADMIN_PIN || '7594',
   savePin:      p  => { try { localStorage.setItem(KEYS.pin, p); } catch {} },
-  loadSheet:    () => localStorage.getItem(KEYS.sheet) || 'https://script.google.com/macros/s/AKfycbxS4CPdpxuY98JekAskHTetv3vDOjoz5FkIqdsAwcIKFQBvN5rtII4WMQcLjaA8Hbyh5g/exec',
+  loadSheet:    () => localStorage.getItem(KEYS.sheet) || import.meta.env.VITE_SHEET_URL || '',
   saveSheet:    u  => { try { localStorage.setItem(KEYS.sheet, u); } catch {} },
   loadVerified:     () => { try { return JSON.parse(localStorage.getItem(KEYS.verified) || '{}'); } catch { return {}; } },
   saveVerified:     m  => { try { localStorage.setItem(KEYS.verified, JSON.stringify(m)); } catch {} },
   loadSupervisors:  () => { try { return JSON.parse(localStorage.getItem(KEYS.supervisors) || '{}'); } catch { return {}; } },
   saveSupervisors:  m  => { try { localStorage.setItem(KEYS.supervisors, JSON.stringify(m)); } catch {} },
-  loadEmployeePin:  () => localStorage.getItem(KEYS.employeePin) || '2525',
+  loadEmployeePin:  () => localStorage.getItem(KEYS.employeePin) || import.meta.env.VITE_EMPLOYEE_PIN || '2525',
   saveEmployeePin:  p  => { try { localStorage.setItem(KEYS.employeePin, p); } catch {} },
   loadEmployees: () => {
     try {
