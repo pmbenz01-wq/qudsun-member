@@ -1300,7 +1300,7 @@ export default function App() {
     setHistory(h); setPin(p); setVerified(v); setSupervisors(sv); setEmployeePin(ep); setPinnedCats(pc); setEmployees(emps);
     if (savedRole) { setAuthRole(savedRole); setRecorderName(savedRecorder); }
     if (s) setSession(s);
-    if (su) setSheetUrl(su);
+    if (su) { setSheetUrl(su); setTimeout(() => syncNow(true), 1500); }
     const m = (location.hash || '').match(/bill=([^&]+)/);
     if (m) {
       try {
