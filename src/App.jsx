@@ -1027,7 +1027,9 @@ function PrintView({ session, readonly, isHandoff, verified, history, onGoSummar
 // ─── DashboardView ────────────────────────────────────────────────────────────
 function TransferSlipModal({ bill, onConfirm, onClose }) {
   const [photoUrl, setPhotoUrl] = useState(null);
-  const fileRef = useRef();
+  const cameraRef = useRef();
+  const galleryRef = useRef();
+  const handleFile = e => { const f = e.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = ev => setPhotoUrl(ev.target.result); r.readAsDataURL(f); e.target.value = ''; };
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 80, background: 'rgba(42,33,24,.6)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
       <div style={{ background: '#FFFDF8', borderRadius: '20px 20px 0 0', padding: '20px 18px 28px', width: '100%', maxWidth: 480, boxShadow: '0 -8px 30px rgba(42,33,24,.2)' }}>
@@ -1039,12 +1041,18 @@ function TransferSlipModal({ bill, onConfirm, onClose }) {
           <div style={{ fontWeight: 700, color: '#2A2118' }}>{bill.seller || '—'}</div>
           <div style={{ color: '#5A4A38' }}>{bill.billNo} · ฿{bill.baht}</div>
         </div>
-        <input ref={fileRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }}
-          onChange={e => { const f = e.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = ev => setPhotoUrl(ev.target.result); r.readAsDataURL(f); }} />
-        <button onClick={() => fileRef.current?.click()}
-          style={{ width: '100%', border: '1.5px dashed #5A9A6A', background: '#EFF8F1', borderRadius: 12, padding: '13px 0', fontSize: 15, fontWeight: 600, color: '#2E7D32', cursor: 'pointer', marginBottom: photoUrl ? 10 : 14 }}>
-          📷 {photoUrl ? 'ถ่ายสลิปใหม่' : 'ถ่ายสลิปโอนเงิน'}
-        </button>
+        <input ref={cameraRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={handleFile} />
+        <input ref={galleryRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFile} />
+        <div style={{ display: 'flex', gap: 8, marginBottom: photoUrl ? 10 : 14 }}>
+          <button onClick={() => cameraRef.current?.click()}
+            style={{ flex: 1, border: '1.5px dashed #5A9A6A', background: '#EFF8F1', borderRadius: 12, padding: '13px 0', fontSize: 14, fontWeight: 600, color: '#2E7D32', cursor: 'pointer' }}>
+            📷 {photoUrl ? 'ถ่ายใหม่' : 'ถ่ายรูป'}
+          </button>
+          <button onClick={() => galleryRef.current?.click()}
+            style={{ flex: 1, border: '1.5px dashed #5A7FA8', background: '#EEF2F8', borderRadius: 12, padding: '13px 0', fontSize: 14, fontWeight: 600, color: '#1A4D80', cursor: 'pointer' }}>
+            🖼️ {photoUrl ? 'เลือกใหม่' : 'อัปโหลด'}
+          </button>
+        </div>
         {photoUrl && <img src={photoUrl} alt="สลิป" style={{ width: '100%', maxHeight: 200, objectFit: 'cover', borderRadius: 10, border: '1px solid #C8E6C9', marginBottom: 14, display: 'block' }} />}
         <button onClick={() => onConfirm(photoUrl)} disabled={!photoUrl}
           style={{ width: '100%', border: 'none', borderRadius: 13, padding: 15, background: photoUrl ? '#5A9A6A' : '#C8D8C8', color: '#fff', fontWeight: 700, fontSize: 16, cursor: photoUrl ? 'pointer' : 'default', marginBottom: 8 }}>
