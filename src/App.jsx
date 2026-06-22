@@ -943,7 +943,7 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
                 <div style={{ fontSize: 12.5, color: '#9A8662' }}>ยืนยันแล้วเมื่อ {confirmTime}</div>
               </div>
             </div>
-            {readonly && (() => {
+            {(() => {
               const pay = payments?.[session?.billNo];
               const noPhoto = { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: 80, borderRadius: 10, border: '1.5px dashed #D8C8A8', color: '#C0A87A', fontSize: 11, gap: 4 };
               const upBtn = { border: 'none', background: 'rgba(168,118,62,.12)', color: '#7A5A22', borderRadius: 6, padding: '2px 8px', fontSize: 10, cursor: 'pointer', marginTop: 4 };
