@@ -1159,84 +1159,111 @@ function CancelPaymentModal({ bill, pin, onConfirm, onClose }) {
 }
 
 function DashboardView({ history, payments, pin, onPayment, onGoHome }) {
-  const [tab, setTab] = useState('unpaid');
+  const [filter, setFilter] = useState('all');
   const [transferBill, setTransferBill] = useState(null);
   const [cancelBill, setCancelBill] = useState(null);
 
-  const bills = history.map(h => ({ ...h, pay: payments[h.billNo] || { status: 'unpaid' } }));
+  const STATUS = {
+    unpaid:      { label: 'ยังไม่โอน', color: '#E07A5F', bg: '#FDECEA', text: '#C0392B' },
+    transferred: { label: 'โอนแล้ว',   color: '#5A9A6A', bg: '#E6F4EA', text: '#2E7D32' },
+    cash:        { label: 'เงินสด',    color: '#5A7FA8', bg: '#E8EEF8', text: '#1A4D80' },
+  };
+
+  const bills = history
+    .map(h => ({ ...h, pay: payments[h.billNo] || { status: 'unpaid' } }))
+    .sort((a, b) => {
+      const order = { unpaid: 0, transferred: 1, cash: 2 };
+      return (order[a.pay.status] ?? 1) - (order[b.pay.status] ?? 1);
+    });
+
   const unpaid      = bills.filter(b => b.pay.status === 'unpaid');
   const transferred = bills.filter(b => b.pay.status === 'transferred');
   const cash        = bills.filter(b => b.pay.status === 'cash');
+  const displayed   = filter === 'all' ? bills : bills.filter(b => b.pay.status === filter);
 
   const sumBaht = arr => arr.reduce((s, b) => s + (parseFloat((b.baht || '0').replace(/,/g, '')) || 0), 0);
   const fmt = n => n.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-  const displayed = tab === 'unpaid' ? unpaid : tab === 'transferred' ? transferred : tab === 'cash' ? cash : tab === 'all' ? bills : unpaid;
-
-  const SummaryCard = ({ label, amount, color, active, onClick }) => (
-    <div onClick={onClick} style={{ flex: 1, background: active ? color : '#FBF6EC', border: `1.5px solid ${color}`, borderRadius: 14, padding: '12px 10px', textAlign: 'center', cursor: 'pointer' }}>
-      <div style={{ fontSize: 10, color: active ? '#fff' : '#7A6450', fontWeight: 600, marginBottom: 4 }}>{label}</div>
-      <div style={{ fontSize: 14, fontWeight: 700, color: active ? '#fff' : '#2A2118' }}>฿{fmt(amount)}</div>
-    </div>
-  );
 
   return (
     <div style={{ minHeight: '100dvh', background: '#F5EFE3', paddingBottom: 32 }}>
       <div style={{ background: '#3F2D1E', padding: '18px 18px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <button onClick={onGoHome} style={{ border: 'none', background: 'none', color: '#F6EEDD', fontSize: 20, cursor: 'pointer', padding: 0 }}>‹</button>
-        <span style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 18, color: '#F6EEDD' }}>Dashboard ยอดชำระ</span>
+        <span style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 18, color: '#F6EEDD' }}>Dashboard ออเดอร์</span>
       </div>
 
-      <div style={{ padding: '16px 14px 8px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 16 }}>
-          <SummaryCard label="ยังไม่โอน" amount={sumBaht(unpaid)} color="#E07A5F" active={tab==='unpaid'} onClick={() => setTab('unpaid')} />
-          <SummaryCard label="โอนแล้ว" amount={sumBaht(transferred)} color="#5A9A6A" active={tab==='transferred'} onClick={() => setTab('transferred')} />
-          <SummaryCard label="เงินสด" amount={sumBaht(cash)} color="#5A7FA8" active={tab==='cash'} onClick={() => setTab('cash')} />
-          <SummaryCard label="ทั้งหมด" amount={sumBaht(bills)} color="#9A8662" active={tab==='all'} onClick={() => setTab('all')} />
-        </div>
+      {/* Summary bar */}
+      <div style={{ display: 'flex', gap: 6, padding: '12px 14px 0', overflowX: 'auto' }}>
+        {[
+          { key: 'all',         label: 'ทั้งหมด',   count: bills.length,       sum: sumBaht(bills),       color: '#9A8662' },
+          { key: 'unpaid',      label: 'ยังไม่โอน', count: unpaid.length,      sum: sumBaht(unpaid),      color: '#E07A5F' },
+          { key: 'transferred', label: 'โอนแล้ว',   count: transferred.length, sum: sumBaht(transferred), color: '#5A9A6A' },
+          { key: 'cash',        label: 'เงินสด',    count: cash.length,        sum: sumBaht(cash),        color: '#5A7FA8' },
+        ].map(({ key, label, count, sum, color }) => (
+          <button key={key} onClick={() => setFilter(key)} style={{
+            flexShrink: 0, border: `1.5px solid ${color}`, borderRadius: 12, padding: '8px 12px',
+            background: filter === key ? color : '#FBF6EC', cursor: 'pointer', textAlign: 'left',
+          }}>
+            <div style={{ fontSize: 10, fontWeight: 600, color: filter === key ? '#fff' : '#7A6450', marginBottom: 2 }}>{label} ({count})</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: filter === key ? '#fff' : '#2A2118' }}>฿{fmt(sum)}</div>
+          </button>
+        ))}
+      </div>
 
+      {/* Bill list — all customers, each with status badge */}
+      <div style={{ padding: '12px 14px 8px' }}>
         {displayed.length === 0 && (
           <div style={{ textAlign: 'center', color: '#A6925E', padding: '40px 0', fontSize: 14 }}>ไม่มีรายการ</div>
         )}
 
-        {displayed.map(b => (
-          <div key={b.billNo} style={{ background: '#FFFDF8', borderRadius: 14, padding: '14px 14px 12px', marginBottom: 10, border: '1px solid #E4D7BC' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
-              <div>
-                <div style={{ fontWeight: 700, fontSize: 15, color: '#2A2118' }}>{b.seller || '—'}</div>
-                <div style={{ fontSize: 11, color: '#8A7A66', marginTop: 2 }}>{b.billNo} · {b.dateText} · {b.kg} กก.</div>
-              </div>
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ fontWeight: 700, fontSize: 16, color: '#3F2D1E' }}>฿{b.baht}</div>
-                <div style={{ fontSize: 10, marginTop: 2, padding: '2px 8px', borderRadius: 8, display: 'inline-block',
-                  background: b.pay.status === 'unpaid' ? '#FDECEA' : b.pay.status === 'transferred' ? '#E6F4EA' : '#E8EEF8',
-                  color: b.pay.status === 'unpaid' ? '#C0392B' : b.pay.status === 'transferred' ? '#2E7D32' : '#1A4D80' }}>
-                  {b.pay.status === 'unpaid' ? 'ยังไม่โอน' : b.pay.status === 'transferred' ? 'โอนแล้ว' : 'เงินสด'}
+        {displayed.map(b => {
+          const st = STATUS[b.pay.status] || STATUS.unpaid;
+          return (
+            <div key={b.billNo} style={{
+              background: '#FFFDF8', borderRadius: 14, marginBottom: 10,
+              border: '1px solid #E4D7BC', overflow: 'hidden',
+              borderLeft: `4px solid ${st.color}`,
+            }}>
+              {/* Customer row */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 14px 8px' }}>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 15, color: '#2A2118' }}>{b.seller || '—'}</div>
+                  <div style={{ fontSize: 11, color: '#8A7A66', marginTop: 2 }}>{b.billNo} · {b.dateText} · {b.kg} กก.</div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontWeight: 700, fontSize: 16, color: '#3F2D1E' }}>฿{b.baht}</div>
+                  <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 8, display: 'inline-block', marginTop: 3,
+                    background: st.bg, color: st.text, fontWeight: 600 }}>
+                    {st.label}
+                  </span>
                 </div>
               </div>
+
+              {/* Action row */}
+              <div style={{ padding: '0 14px 12px', display: 'flex', gap: 8 }}>
+                {b.pay.status === 'unpaid' ? (
+                  <>
+                    <button onClick={() => setTransferBill(b)}
+                      style={{ flex: 1, border: 'none', borderRadius: 10, padding: '9px 0', background: '#5A9A6A', color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
+                      โอนแล้ว ✓
+                    </button>
+                    <button onClick={() => onPayment(b.billNo, 'cash')}
+                      style={{ flex: 1, border: 'none', borderRadius: 10, padding: '9px 0', background: '#5A7FA8', color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
+                      เงินสด ✓
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    {b.pay.slipUrl && <img src={b.pay.slipUrl} alt="สลิป" style={{ width: 38, height: 38, objectFit: 'cover', borderRadius: 6, border: '1px solid #C8E6C9', flexShrink: 0 }} />}
+                    <button onClick={() => setCancelBill(b)}
+                      style={{ flex: 1, border: '1px solid #D0C8C0', borderRadius: 10, padding: '8px 0', background: '#fff', color: '#8A7A66', fontSize: 12, cursor: 'pointer' }}>
+                      🔒 ยกเลิกการชำระ
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
-            {b.pay.status === 'unpaid' ? (
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button onClick={() => setTransferBill(b)}
-                  style={{ flex: 1, border: 'none', borderRadius: 10, padding: '9px 0', background: '#5A9A6A', color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
-                  โอนแล้ว ✓
-                </button>
-                <button onClick={() => onPayment(b.billNo, 'cash')}
-                  style={{ flex: 1, border: 'none', borderRadius: 10, padding: '9px 0', background: '#5A7FA8', color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
-                  เงินสด ✓
-                </button>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                {b.pay.slipUrl && <img src={b.pay.slipUrl} alt="สลิป" style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 6, border: '1px solid #C8E6C9', flexShrink: 0 }} />}
-                <button onClick={() => setCancelBill(b)}
-                  style={{ flex: 1, border: '1px solid #D0C8C0', borderRadius: 10, padding: '8px 0', background: '#fff', color: '#8A7A66', fontSize: 12, cursor: 'pointer' }}>
-                  🔒 ยกเลิกการชำระ
-                </button>
-              </div>
-            )}
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {transferBill && (
