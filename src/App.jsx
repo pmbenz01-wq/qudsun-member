@@ -1232,7 +1232,9 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
           onClick={e => { if (e.target === e.currentTarget) setSlipOcr(null); }}>
           <div style={{ background: '#FFFDF8', width: '100%', maxWidth: 520, margin: '0 auto', borderRadius: '20px 20px 0 0', padding: '22px 18px 36px', maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 16, color: '#3F2D1E', marginBottom: 3 }}>ตรวจสอบข้อมูลก่อนบันทึก</div>
-            <div style={{ fontSize: 12, color: '#9A8662', marginBottom: 14 }}>แก้ไขข้อมูลธนาคาร แล้วกด "บันทึก" เพื่อ save ลงโปรไฟล์ลูกค้า</div>
+            <div style={{ fontSize: 12, color: '#9A8662', marginBottom: 12 }}>แก้ไขข้อมูลธนาคาร แล้วกด "บันทึก" เพื่อ save ลงโปรไฟล์ลูกค้า</div>
+
+            <img src={slipOcr.dataUrl} alt="สลิป" style={{ width: '100%', maxHeight: 200, objectFit: 'contain', borderRadius: 10, border: '1px solid #E4D7BC', background: '#f5f5f5', display: 'block', marginBottom: 12 }} />
 
             {slipOcr.loading && (
               <div style={{ textAlign: 'center', color: '#B7A684', fontSize: 13, padding: '12px 0' }}>⏳ กำลังอ่านข้อมูลสลิป…</div>
