@@ -91,10 +91,13 @@ export default async function handler(req, res) {
       const action = req.query?.action;
 
       if (action === 'getPayments') {
-        const rows = await read(token, 'Payments!A:C') ?? [];
+        const rows = await read(token, 'Payments!A:F') ?? [];
         const payments = {};
         for (let i = 1; i < rows.length; i++) {
-          if (rows[i][0] && rows[i][1]) payments[String(rows[i][0])] = { status: rows[i][1], paidAt: rows[i][2] ?? null };
+          if (rows[i][0] && rows[i][1]) payments[String(rows[i][0])] = {
+            status: rows[i][1], paidAt: rows[i][2] ?? null,
+            receiptUrl: rows[i][3] || null, slipUrl: rows[i][4] || null, vehicleUrl: rows[i][5] || null,
+          };
         }
         return res.json({ ok: true, payments });
       }
@@ -147,17 +150,18 @@ export default async function handler(req, res) {
       }
 
       if (action === 'updatePayment') {
-        await ensureSheet(token, 'Payments', ['เลขที่บิล', 'สถานะ', 'เวลา']);
+        await ensureSheet(token, 'Payments', ['เลขที่บิล', 'สถานะ', 'เวลา', 'receiptUrl', 'slipUrl', 'vehicleUrl']);
         const col = await read(token, 'Payments!A:A') ?? [];
         let found = -1;
         for (let i = 1; i < col.length; i++) {
           if (String(col[i]?.[0] ?? '') === String(body.billNo)) { found = i + 1; break; }
         }
+        const urlCols = [body.receiptUrl ?? '', body.slipUrl ?? '', body.vehicleUrl ?? ''];
         if (found > 0) {
           if (body.status === 'unpaid') await deleteRow(token, 'Payments', found);
-          else await update(token, `Payments!B${found}:C${found}`, [[body.status, body.paidAt ?? '']]);
+          else await update(token, `Payments!B${found}:F${found}`, [[body.status, body.paidAt ?? '', ...urlCols]]);
         } else if (body.status !== 'unpaid') {
-          await append(token, 'Payments!A:C', [[body.billNo, body.status, body.paidAt ?? '']]);
+          await append(token, 'Payments!A:F', [[body.billNo, body.status, body.paidAt ?? '', ...urlCols]]);
         }
         return res.json({ ok: true });
       }

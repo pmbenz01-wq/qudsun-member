@@ -2172,13 +2172,18 @@ export default function App() {
     });
   }, [numpad, requirePin, updateSession, toast]);
 
+  const pushPayment = useCallback((billNo, pay) => {
+    if (!pay) return;
+    fetch('/api/sheets', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'updatePayment', billNo, status: pay.status, paidAt: pay.paidAt ?? null, receiptUrl: pay.receiptUrl || '', slipUrl: pay.slipUrl || '', vehicleUrl: pay.vehicleUrl || '' }) }).catch(() => {});
+  }, []);
+
   const handlePayment = useCallback((billNo, status, slipPhotoUrl, slipData, cancelNote, receiptPhotoUrl) => {
     const paidAt = Date.now();
     const next = { ...storage.loadPayments(), [billNo]: { status, paidAt, ...(slipPhotoUrl ? { slipUrl: slipPhotoUrl } : {}), ...(slipData ? { slipData } : {}), ...(cancelNote ? { cancelNote } : {}), ...(receiptPhotoUrl ? { receiptUrl: receiptPhotoUrl } : {}) } };
     if (status === 'unpaid') delete next[billNo];
     storage.savePayments(next);
     setPayments(next);
-    fetch('/api/sheets', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'updatePayment', billNo, status, paidAt }) }).catch(() => {});
+    pushPayment(billNo, next[billNo] || { status: 'unpaid' });
     if (status === 'transferred' && slipPhotoUrl) {
       const bill = history.find(h => h.billNo === billNo);
       const now = new Date();
@@ -2189,7 +2194,7 @@ export default function App() {
       const filename = `transfer_${namePart}_${phonePart}_${datePart}_${timePart}.jpg`;
       fetch('/api/drive', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ base64: slipPhotoUrl, filename, folder: 'QudsunTransfers' }) }).catch(() => {});
     }
-  }, [history]);
+  }, [history, pushPayment]);
 
   const handleDeleteBill = useCallback((billNo) => {
     storage.addDeletedBill(billNo);
@@ -2238,12 +2243,14 @@ export default function App() {
       const urlKey = type === 'receipt' ? 'receiptUrl' : type === 'vehicle' ? 'vehicleUrl' : 'slipUrl';
       const prev = storage.loadPayments();
       const existing = prev[session.billNo] || { status: 'transferred', paidAt: Date.now() };
-      const next = { ...prev, [session.billNo]: { ...existing, [urlKey]: url } };
+      const updated = { ...existing, [urlKey]: url };
+      const next = { ...prev, [session.billNo]: updated };
       storage.savePayments(next);
       setPayments(next);
+      pushPayment(session.billNo, updated);
       toast('อัพโหลดรูปแล้ว ✓');
     } catch { toast('อัพโหลดไม่สำเร็จ'); }
-  }, [session, toast]);
+  }, [session, toast, pushPayment]);
 
   const doConfirm = useCallback(() => {
     updateSession(prev => {
