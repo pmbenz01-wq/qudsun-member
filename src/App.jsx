@@ -1024,9 +1024,10 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
               {tier ? (() => {
                 const g = TIER_GRAD[tier.key] || TIER_GRAD.silver;
                 return (
-                  <div style={{ display: 'inline-flex', alignItems: 'center', borderRadius: 5, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,.15)', marginTop: 2 }}>
-                    <span style={{ background: g.bg, color: g.color, fontFamily: 'Prompt', fontWeight: 700, fontSize: 9, letterSpacing: '.12em', textTransform: 'uppercase', padding: '3px 8px', whiteSpace: 'nowrap' }}>{tier.label}</span>
-                    <span style={{ background: 'rgba(0,0,0,.06)', color: '#2A2118', fontSize: 10.5, fontWeight: 700, padding: '3px 8px', whiteSpace: 'nowrap' }}>{session?.seller || '—'}{session?.sellerPhone ? ` · ${session.sellerPhone}` : ''}</span>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: g.bg, color: g.color, borderRadius: 5, padding: '4px 10px', boxShadow: '0 1px 3px rgba(0,0,0,.18)', marginTop: 2, whiteSpace: 'nowrap' }}>
+                    <span style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 9, letterSpacing: '.14em', textTransform: 'uppercase', opacity: .85 }}>{tier.label}</span>
+                    <span style={{ width: 1, height: 10, background: 'currentColor', opacity: .3 }} />
+                    <span style={{ fontWeight: 700, fontSize: 10.5 }}>{session?.seller || '—'}{session?.sellerPhone ? ` · ${session.sellerPhone}` : ''}</span>
                   </div>
                 );
               })() : <span><b>{session?.seller || '—'}</b>{session?.sellerPhone ? ` · ${session.sellerPhone}` : ''}</span>}
