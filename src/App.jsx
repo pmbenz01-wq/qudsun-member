@@ -1160,6 +1160,7 @@ function CancelPaymentModal({ bill, pin, onConfirm, onClose }) {
 
 function DashboardView({ history, payments, pin, onPayment, onGoHome }) {
   const [filter, setFilter] = useState('all');
+  const [view, setView] = useState('orders'); // 'orders' | 'daily'
   const [transferBill, setTransferBill] = useState(null);
   const [cancelBill, setCancelBill] = useState(null);
 
@@ -1171,15 +1172,23 @@ function DashboardView({ history, payments, pin, onPayment, onGoHome }) {
 
   const bills = history
     .map(h => ({ ...h, pay: payments[h.billNo] || { status: 'unpaid' } }))
-    .sort((a, b) => {
-      const order = { unpaid: 0, transferred: 1, cash: 2 };
-      return (order[a.pay.status] ?? 1) - (order[b.pay.status] ?? 1);
-    });
+    .sort((a, b) => (b.date || 0) - (a.date || 0));
 
   const unpaid      = bills.filter(b => b.pay.status === 'unpaid');
   const transferred = bills.filter(b => b.pay.status === 'transferred');
   const cash        = bills.filter(b => b.pay.status === 'cash');
   const displayed   = filter === 'all' ? bills : bills.filter(b => b.pay.status === filter);
+
+  // Group by dateText for daily summary
+  const dailyGroups = (() => {
+    const map = {};
+    bills.forEach(b => {
+      const key = b.dateText || 'ไม่ระบุวัน';
+      if (!map[key]) map[key] = { dateText: key, dateVal: b.date || 0, bills: [] };
+      map[key].bills.push(b);
+    });
+    return Object.values(map).sort((a, b) => b.dateVal - a.dateVal);
+  })();
 
   const sumBaht = arr => arr.reduce((s, b) => s + (parseFloat((b.baht || '0').replace(/,/g, '')) || 0), 0);
   const fmt = n => n.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -1188,7 +1197,16 @@ function DashboardView({ history, payments, pin, onPayment, onGoHome }) {
     <div style={{ minHeight: '100dvh', background: '#F5EFE3', paddingBottom: 32 }}>
       <div style={{ background: '#3F2D1E', padding: '18px 18px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <button onClick={onGoHome} style={{ border: 'none', background: 'none', color: '#F6EEDD', fontSize: 20, cursor: 'pointer', padding: 0 }}>‹</button>
-        <span style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 18, color: '#F6EEDD' }}>Dashboard ออเดอร์</span>
+        <span style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 18, color: '#F6EEDD', flex: 1 }}>Dashboard</span>
+        <div style={{ display: 'flex', gap: 0 }}>
+          {[['orders','ออเดอร์'],['daily','รายวัน']].map(([v,l]) => (
+            <button key={v} onClick={() => setView(v)} style={{
+              border: 'none', padding: '5px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+              background: view === v ? '#DC743C' : 'rgba(255,255,255,0.12)',
+              color: '#fff', borderRadius: 8,
+            }}>{l}</button>
+          ))}
+        </div>
       </div>
 
       {/* Summary bar */}
@@ -1199,17 +1217,65 @@ function DashboardView({ history, payments, pin, onPayment, onGoHome }) {
           { key: 'transferred', label: 'โอนแล้ว',   count: transferred.length, sum: sumBaht(transferred), color: '#5A9A6A' },
           { key: 'cash',        label: 'เงินสด',    count: cash.length,        sum: sumBaht(cash),        color: '#5A7FA8' },
         ].map(({ key, label, count, sum, color }) => (
-          <button key={key} onClick={() => setFilter(key)} style={{
+          <button key={key} onClick={() => { setFilter(key); setView('orders'); }} style={{
             flexShrink: 0, border: `1.5px solid ${color}`, borderRadius: 12, padding: '8px 12px',
-            background: filter === key ? color : '#FBF6EC', cursor: 'pointer', textAlign: 'left',
+            background: filter === key && view === 'orders' ? color : '#FBF6EC', cursor: 'pointer', textAlign: 'left',
           }}>
-            <div style={{ fontSize: 10, fontWeight: 600, color: filter === key ? '#fff' : '#7A6450', marginBottom: 2 }}>{label} ({count})</div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: filter === key ? '#fff' : '#2A2118' }}>฿{fmt(sum)}</div>
+            <div style={{ fontSize: 10, fontWeight: 600, color: filter === key && view === 'orders' ? '#fff' : '#7A6450', marginBottom: 2 }}>{label} ({count})</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: filter === key && view === 'orders' ? '#fff' : '#2A2118' }}>฿{fmt(sum)}</div>
           </button>
         ))}
       </div>
 
-      {/* Bill list — all customers, each with status badge */}
+      {/* ── DAILY VIEW ── */}
+      {view === 'daily' && (
+        <div style={{ padding: '12px 14px 8px' }}>
+          {dailyGroups.length === 0 && <div style={{ textAlign: 'center', color: '#A6925E', padding: '40px 0', fontSize: 14 }}>ไม่มีรายการ</div>}
+          {dailyGroups.map(({ dateText, bills: db }) => {
+            const totalKg   = db.reduce((s, b) => s + (parseFloat((b.kg || '0').replace(/,/g, '')) || 0), 0);
+            const totalBaht = sumBaht(db);
+            const nUnpaid   = db.filter(b => b.pay.status === 'unpaid').length;
+            const nTrans    = db.filter(b => b.pay.status === 'transferred').length;
+            const nCash     = db.filter(b => b.pay.status === 'cash').length;
+            return (
+              <div key={dateText} style={{ marginBottom: 16 }}>
+                {/* Date header */}
+                <div style={{ background: '#3F2D1E', borderRadius: '12px 12px 0 0', padding: '10px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 14, color: '#F6EEDD' }}>{dateText}</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: '#DC743C' }}>฿{fmt(totalBaht)}</span>
+                </div>
+                {/* Day stats */}
+                <div style={{ background: '#FBF6EC', padding: '8px 14px', display: 'flex', gap: 14, borderBottom: '1px solid #E4D7BC', flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: 11, color: '#7A6450' }}>{db.length} บิล · {totalKg.toLocaleString('th-TH')} กก.</span>
+                  {nUnpaid > 0   && <span style={{ fontSize: 11, color: '#C0392B', fontWeight: 600 }}>ค้างโอน {nUnpaid}</span>}
+                  {nTrans > 0    && <span style={{ fontSize: 11, color: '#2E7D32', fontWeight: 600 }}>โอนแล้ว {nTrans}</span>}
+                  {nCash > 0     && <span style={{ fontSize: 11, color: '#1A4D80', fontWeight: 600 }}>เงินสด {nCash}</span>}
+                </div>
+                {/* Bills of that day */}
+                {db.map(b => {
+                  const st = STATUS[b.pay.status] || STATUS.unpaid;
+                  return (
+                    <div key={b.billNo} style={{ background: '#FFFDF8', borderLeft: `4px solid ${st.color}`, borderBottom: '1px solid #E4D7BC', padding: '10px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <div style={{ fontWeight: 700, fontSize: 14, color: '#2A2118' }}>{b.seller || '—'}</div>
+                        <div style={{ fontSize: 11, color: '#8A7A66', marginTop: 1 }}>{b.billNo} · {b.kg} กก.</div>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontWeight: 700, fontSize: 15, color: '#3F2D1E' }}>฿{b.baht}</div>
+                        <span style={{ fontSize: 10, padding: '1px 7px', borderRadius: 7, background: st.bg, color: st.text, fontWeight: 600 }}>{st.label}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+                <div style={{ borderRadius: '0 0 12px 12px', overflow: 'hidden', border: '1px solid #E4D7BC', borderTop: 'none' }} />
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* ── ORDER VIEW ── */}
+      {view === 'orders' && (
       <div style={{ padding: '12px 14px 8px' }}>
         {displayed.length === 0 && (
           <div style={{ textAlign: 'center', color: '#A6925E', padding: '40px 0', fontSize: 14 }}>ไม่มีรายการ</div>
@@ -1265,6 +1331,7 @@ function DashboardView({ history, payments, pin, onPayment, onGoHome }) {
           );
         })}
       </div>
+      )}
 
       {transferBill && (
         <TransferSlipModal bill={transferBill}
