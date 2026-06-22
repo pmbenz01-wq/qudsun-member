@@ -289,7 +289,7 @@ function EmployeeManager({ employees, onSave, onCancel }) {
 }
 
 // ─── HomeView ─────────────────────────────────────────────────────────────────
-function HomeView({ session, history, syncStatus, syncing, onNew, onResume, onGoCustomers, onGoDashboard, onGoSupervisors, onOpenSheet, onSyncNow, onChangePin, onSetEmployeePin, onOpenHistory, verified, supervisors, isEmployee, onLogout, onExport, onImport }) {
+function HomeView({ session, history, payments, syncStatus, syncing, onNew, onResume, onGoCustomers, onGoDashboard, onGoSupervisors, onOpenSheet, onSyncNow, onChangePin, onSetEmployeePin, onOpenHistory, onPayment, verified, supervisors, isEmployee, onLogout, onExport, onImport }) {
   const customerCount = Object.keys(loadCustomers(history)).length;
   const supervisorCount = Object.values(supervisors || {}).filter(Boolean).reduce((set, n) => (set.add(n), set), new Set()).size;
   if (isEmployee) {
@@ -373,18 +373,40 @@ function HomeView({ session, history, syncStatus, syncing, onNew, onResume, onGo
             {history.slice(0, 20).map((h, i) => {
               const stat = h.phone ? customerStat(h.phone, history, verified) : null;
               const tier = stat ? stat.effectiveTier : null;
+              const pay = payments?.[h.billNo];
+              const status = pay?.status || 'unpaid';
+              const borderColor = status === 'transferred' ? '#5A9A6A' : status === 'cash' ? '#5A7FA8' : '#E05050';
+              const statusLabel = status === 'transferred' ? '✓ โอนแล้ว' : status === 'cash' ? '✓ เงินสด' : null;
+              const statusColor = status === 'transferred' ? '#2E7D32' : status === 'cash' ? '#1A4D80' : null;
               return (
-                <button key={i} onClick={() => onOpenHistory(h)} style={{ textAlign: 'left', border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 13, padding: '12px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{ width: 38, height: 38, borderRadius: 9, background: '#F0E4C8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, flexShrink: 0 }}>🧾</div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 600, fontSize: 14, color: '#4A3526' }}>{h.billNo}</div>
-                    <div style={{ fontSize: 12, color: '#9A8662', marginTop: 1 }}>
-                      {h.dateText} · {h.seller || '—'} · {h.kg} กก.
+                <div key={i} style={{ border: `1.5px solid ${borderColor}`, background: '#FFFDF8', borderRadius: 13, overflow: 'hidden' }}>
+                  <button onClick={() => onOpenHistory(h)} style={{ textAlign: 'left', background: 'none', border: 'none', width: '100%', padding: '12px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ width: 38, height: 38, borderRadius: 9, background: '#F0E4C8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, flexShrink: 0 }}>🧾</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <span style={{ fontWeight: 600, fontSize: 14, color: '#4A3526' }}>{h.billNo}</span>
+                        {statusLabel && <span style={{ fontSize: 10, fontWeight: 700, color: statusColor }}>{statusLabel}</span>}
+                      </div>
+                      <div style={{ fontSize: 12, color: '#9A8662', marginTop: 1 }}>
+                        {h.dateText} · {h.seller || '—'} · {h.kg} กก.
+                      </div>
+                      {tier && tier.key !== 'silver' && <TierBadge tier={tier} />}
                     </div>
-                    {tier && tier.key !== 'silver' && <TierBadge tier={tier} />}
-                  </div>
-                  <span style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 15, color: '#3F2D1E', whiteSpace: 'nowrap' }}>฿{h.baht}</span>
-                </button>
+                    <span style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 15, color: '#3F2D1E', whiteSpace: 'nowrap' }}>฿{h.baht}</span>
+                  </button>
+                  {status === 'unpaid' && onPayment && (
+                    <div style={{ display: 'flex', gap: 8, padding: '0 12px 10px' }}>
+                      <button onClick={() => onPayment(h.billNo, 'transferred')}
+                        style={{ flex: 1, border: 'none', borderRadius: 9, padding: '8px 0', background: '#5A9A6A', color: '#fff', fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>
+                        โอนแล้ว ✓
+                      </button>
+                      <button onClick={() => onPayment(h.billNo, 'cash')}
+                        style={{ flex: 1, border: 'none', borderRadius: 9, padding: '8px 0', background: '#5A7FA8', color: '#fff', fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>
+                        เงินสด ✓
+                      </button>
+                    </div>
+                  )}
+                </div>
               );
             })}
           </div>
@@ -2310,13 +2332,13 @@ export default function App() {
       <Header />
 
       {screen === 'home' && (
-        <HomeView session={session} history={history} verified={verified} supervisors={supervisors} syncStatus={syncStatus} syncing={syncing}
+        <HomeView session={session} history={history} payments={payments} verified={verified} supervisors={supervisors} syncStatus={syncStatus} syncing={syncing}
           onNew={startNew} onResume={() => setScreen('record')} onGoCustomers={() => setScreen('customers')}
           onGoDashboard={() => setScreen('dashboard')}
           onGoSupervisors={() => setScreen('supervisors')}
           onOpenSheet={() => { setSheetModal(true); setSheetModalUrl(sheetUrl); }}
           onSyncNow={() => syncNow(false)} onChangePin={changePin} onSetEmployeePin={setEmployeePinAction}
-          onOpenHistory={openHistory} isEmployee={authRole === 'employee'} onLogout={handleLogout}
+          onOpenHistory={openHistory} onPayment={handlePayment} isEmployee={authRole === 'employee'} onLogout={handleLogout}
           onExport={handleExport} onImport={handleImport} />
       )}
       {screen === 'record' && session && (
