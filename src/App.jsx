@@ -1021,13 +1021,13 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
             <div style={{ fontSize: 10.5, color: '#5A4A38', marginBottom: 6 }}>เลขที่ {session?.billNo}</div>
             <div style={{ fontSize: 10.5, color: '#3A2A18', lineHeight: 1.8 }}>
               <div>{session ? dateStr(session.date) : ''}</div>
-              <div><b>{session?.seller || '—'}</b>{session?.sellerPhone ? ` · ${session.sellerPhone}` : ''}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                {tier && tier.key !== 'silver' && <TierBadge tier={tier} size="sm" />}
+                <span><b>{session?.seller || '—'}</b>{session?.sellerPhone ? ` · ${session.sellerPhone}` : ''}</span>
+              </div>
             </div>
           </div>
         </div>
-        {tier && tier.key !== 'silver' && (
-          <div style={{ margin: '-4px 0 10px', fontSize: 11, color: '#8A6A2E' }}>สมาชิกระดับ {tier.label} · ยอดสะสม {fmtKg(stat?.total || 0)} กก.</div>
-        )}
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11.5 }}>
           <thead>
             <tr style={{ background: '#F0E9DA' }}>
