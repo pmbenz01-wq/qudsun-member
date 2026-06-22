@@ -1865,9 +1865,10 @@ export default function App() {
       const res = await fetch('/api/sheets', { method: 'GET' });
       const data = await res.json();
       if (!data?.ok) throw new Error('bad');
-      const remote = (data.bills || []).map(b => { try { return JSON.parse(b.json); } catch { return null; } }).filter(Boolean);
+      const deleted = storage.loadDeletedBills();
+      const remote = (data.bills || []).map(b => { try { return JSON.parse(b.json); } catch { return null; } }).filter(b => b && !deleted.has(b.billNo));
       const remoteNos = new Set(remote.map(c => c.billNo));
-      const current = storage.loadHistory();
+      const current = storage.loadHistory().filter(h => !deleted.has(h.billNo));
       const localOnly = current.filter(c => c?.billNo && !remoteNos.has(c.billNo));
       const byNo = {};
       remote.forEach(c => { if (c?.billNo) byNo[c.billNo] = c; });
@@ -2054,6 +2055,7 @@ export default function App() {
   }, [history]);
 
   const handleDeleteBill = useCallback((billNo) => {
+    storage.addDeletedBill(billNo);
     const nextHistory = storage.loadHistory().filter(h => h.billNo !== billNo);
     storage.saveHistory(nextHistory);
     setHistory(nextHistory);
