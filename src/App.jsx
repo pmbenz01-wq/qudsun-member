@@ -506,6 +506,7 @@ function VehicleModal({ plate, photoUrl, onSave, onPhoto, onClose }) {
   const [text, setText] = useState(plate || '');
   const [ocrStatus, setOcrStatus] = useState(null); // null | 'reading' | 'done' | 'fail'
   const fileRef = useRef();
+  const galleryRef = useRef();
 
   async function runOcr(file) {
     setOcrStatus('reading');
@@ -549,15 +550,17 @@ function VehicleModal({ plate, photoUrl, onSave, onPhoto, onClose }) {
           )}
         </div>
         <input ref={fileRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }}
-          onChange={e => {
-            const file = e.target.files[0];
-            if (!file) return;
-            onPhoto(file);
-            runOcr(file);
-          }} />
-        <button onClick={() => fileRef.current?.click()} style={{ width: '100%', border: '1.5px dashed #C9A24B', background: '#FBF3E2', borderRadius: 12, padding: '13px 0', fontSize: 15, fontWeight: 600, color: '#7A5A22', cursor: 'pointer', marginBottom: photoUrl ? 10 : 14 }}>
-          📷 {photoUrl ? 'ถ่ายภาพใหม่' : 'ถ่ายภาพทะเบียน'}
-        </button>
+          onChange={e => { const file = e.target.files[0]; if (!file) return; onPhoto(file); runOcr(file); e.target.value = ''; }} />
+        <input ref={galleryRef} type="file" accept="image/*" style={{ display: 'none' }}
+          onChange={e => { const file = e.target.files[0]; if (!file) return; onPhoto(file); runOcr(file); e.target.value = ''; }} />
+        <div style={{ display: 'flex', gap: 8, marginBottom: photoUrl ? 10 : 14 }}>
+          <button onClick={() => fileRef.current?.click()} style={{ flex: 1, border: '1.5px dashed #C9A24B', background: '#FBF3E2', borderRadius: 12, padding: '13px 0', fontSize: 14, fontWeight: 600, color: '#7A5A22', cursor: 'pointer' }}>
+            📷 ถ่ายภาพ
+          </button>
+          <button onClick={() => galleryRef.current?.click()} style={{ flex: 1, border: '1.5px dashed #9AB87A', background: '#F2F8EC', borderRadius: 12, padding: '13px 0', fontSize: 14, fontWeight: 600, color: '#4A7A2A', cursor: 'pointer' }}>
+            🖼 อัพโหลด
+          </button>
+        </div>
         {photoUrl && (
           <img src={photoUrl} alt="ทะเบียนรถ" style={{ width: '100%', maxHeight: 160, objectFit: 'cover', borderRadius: 10, border: '1px solid #E4D7BC', marginBottom: 14, display: 'block' }} />
         )}
