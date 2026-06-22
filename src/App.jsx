@@ -1014,7 +1014,7 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
           <div style={{ flex: 1 }}>
             <div style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 17, letterSpacing: '.04em' }}>ทุเรียนคัดสรร <span style={{ color: '#8A6A2E' }}>QUDSUN</span></div>
             <div style={{ fontSize: 11, color: '#5A4A38', marginTop: 2 }}>Premium Durian Selection</div>
-            <div style={{ fontSize: 11, color: '#5A4A38', marginTop: 2 }}>โทร. 082-691-4414</div>
+            <div style={{ fontSize: 11, color: '#5A4A38', marginTop: 2 }}>โทร. 094-149-1914 (วิน) · 082-691-4414 (เบนซ์)</div>
           </div>
           <div style={{ textAlign: 'right', minWidth: 130 }}>
             <div style={{ fontWeight: 700, fontSize: 13 }}>ใบรับซื้อทุเรียน</div>
