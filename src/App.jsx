@@ -1171,7 +1171,7 @@ function DashboardView({ history, payments, pin, onPayment, onGoHome }) {
   const sumBaht = arr => arr.reduce((s, b) => s + (parseFloat((b.baht || '0').replace(/,/g, '')) || 0), 0);
   const fmt = n => n.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-  const displayed = tab === 'unpaid' ? unpaid : tab === 'transferred' ? transferred : tab === 'cash' ? cash : bills;
+  const displayed = tab === 'unpaid' ? unpaid : tab === 'transferred' ? transferred : tab === 'cash' ? cash : tab === 'all' ? bills : unpaid;
 
   const SummaryCard = ({ label, amount, color, active, onClick }) => (
     <div onClick={onClick} style={{ flex: 1, background: active ? color : '#FBF6EC', border: `1.5px solid ${color}`, borderRadius: 14, padding: '12px 10px', textAlign: 'center', cursor: 'pointer' }}>
@@ -1188,10 +1188,11 @@ function DashboardView({ history, payments, pin, onPayment, onGoHome }) {
       </div>
 
       <div style={{ padding: '16px 14px 8px' }}>
-        <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 16 }}>
           <SummaryCard label="ยังไม่โอน" amount={sumBaht(unpaid)} color="#E07A5F" active={tab==='unpaid'} onClick={() => setTab('unpaid')} />
           <SummaryCard label="โอนแล้ว" amount={sumBaht(transferred)} color="#5A9A6A" active={tab==='transferred'} onClick={() => setTab('transferred')} />
           <SummaryCard label="เงินสด" amount={sumBaht(cash)} color="#5A7FA8" active={tab==='cash'} onClick={() => setTab('cash')} />
+          <SummaryCard label="ทั้งหมด" amount={sumBaht(bills)} color="#9A8662" active={tab==='all'} onClick={() => setTab('all')} />
         </div>
 
         {displayed.length === 0 && (
@@ -1689,9 +1690,6 @@ export default function App() {
     if (savedRole) { setAuthRole(savedRole); setRecorderName(savedRecorder); }
     if (s) { setSession(s); if (s.vehiclePhotoKey) loadPhoto(s.vehiclePhotoKey).then(u => { if (u) setVehiclePhotoUrl(u); }); }
     if (su) setSheetUrl(su);
-    setTimeout(() => syncNow(true), 1500);
-    const autoSync = setInterval(() => syncNow(true), 30000);
-    return () => clearInterval(autoSync);
     fetch('/api/sheets?action=getPayments').then(r => r.json()).then(data => {
       if (data.ok && data.payments) {
         const merged = { ...storage.loadPayments(), ...data.payments };
@@ -1713,6 +1711,9 @@ export default function App() {
         setIsHandoff(true); setSession(data); setScreen('print');
       } catch {}
     }
+    setTimeout(() => syncNow(true), 1500);
+    const autoSync = setInterval(() => syncNow(true), 30000);
+    return () => clearInterval(autoSync);
   }, []);
 
   // Google Sheet
@@ -1735,6 +1736,12 @@ export default function App() {
       merged.forEach(c => { const ph = c.phone || c.sellerPhone || ''; const sup = (c.data && c.data.supervisor) || c.supervisor || ''; if (ph && sup) svFromSync[ph] = sup; });
       if (Object.keys(svFromSync).length) { const nSv = { ...storage.loadSupervisors(), ...svFromSync }; storage.saveSupervisors(nSv); setSupervisors(nSv); }
       storage.saveHistory(merged); setHistory(merged);
+      const payRes = await fetch('/api/sheets?action=getPayments');
+      const payData = await payRes.json();
+      if (payData.ok && payData.payments) {
+        const pm = { ...storage.loadPayments(), ...payData.payments };
+        storage.savePayments(pm); setPayments(pm);
+      }
       setSyncStatus('✓ ซิงก์แล้ว ' + new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }));
       localOnly.forEach(c => pushBill(c, true));
     } catch {
