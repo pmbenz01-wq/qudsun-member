@@ -1,6 +1,6 @@
 import { getToken } from './_auth.js';
 
-const SHEET_ID = process.env.GOOGLE_SHEET_ID;
+const SHEET_ID = (process.env.GOOGLE_SHEET_ID || '').replace(/^﻿/, '').trim();
 const SCOPE = 'https://www.googleapis.com/auth/spreadsheets';
 const BASE = `https://sheets.googleapis.com/v4/spreadsheets`;
 
