@@ -885,7 +885,7 @@ function ConfirmView({ session, verified, history, onConfirm, onGoSummary, custo
 }
 
 // ─── PrintView ────────────────────────────────────────────────────────────────
-function PrintView({ session, readonly, isHandoff, verified, history, payments, onGoSummary, onGoBack, onFinish, customLabel, vehiclePhotoUrl, onSaveSlip, onUploadEvidence }) {
+function PrintView({ session, readonly, isHandoff, verified, history, payments, onGoSummary, onGoBack, onFinish, customLabel, vehiclePhotoUrl, onSaveSlip, onUploadEvidence, supervisors, customerInfo }) {
   const [qrDataUrl, setQrDataUrl] = useState('');
   const [copied, setCopied] = useState(false);
   const [uploading, setUploading] = useState(null); // null | 'receipt' | 'slip' | 'vehicle'
@@ -936,13 +936,49 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
       <div className="no-print" style={{ maxWidth: 620, margin: '0 auto 18px' }}>
         {readonly ? (
           <>
-            <div style={{ background: '#F0E9DA', border: '1px solid #E0D2B4', borderRadius: 14, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-              <span style={{ fontSize: 22 }}>👁</span>
-              <div>
-                <div style={{ fontWeight: 600, color: '#7A5A22' }}>ดูบิลย้อนหลัง · อ่านอย่างเดียว</div>
-                <div style={{ fontSize: 12.5, color: '#9A8662' }}>ยืนยันแล้วเมื่อ {confirmTime}</div>
-              </div>
-            </div>
+            {(() => {
+              const phone = session?.sellerPhone || '';
+              const info = customerInfo?.[phone] || {};
+              const verifiedName = verified?.[phone];
+              const supervisor = session?.supervisor || supervisors?.[phone] || '';
+              return (
+                <div style={{ background: '#FFFDF8', border: '1px solid #E4D7BC', borderRadius: 16, padding: '16px 18px', marginBottom: 12 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                    <span style={{ fontSize: 18 }}>👁</span>
+                    <span style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 14, color: '#7A5A22' }}>ดูบิลย้อนหลัง · อ่านอย่างเดียว</span>
+                    <span style={{ marginLeft: 'auto', fontSize: 11, color: '#B7A684' }}>ยืนยัน {confirmTime}</span>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 14px' }}>
+                    <div>
+                      <div style={{ fontSize: 10, color: '#B7A684', marginBottom: 1 }}>ชื่อ</div>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: '#3F2D1E' }}>{verifiedName || session?.seller || '—'}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 10, color: '#B7A684', marginBottom: 1 }}>เบอร์โทร</div>
+                      <div style={{ fontSize: 13, color: '#3F2D1E', fontFamily: 'Prompt' }}>{phone || '—'}</div>
+                    </div>
+                    {supervisor ? <div>
+                      <div style={{ fontSize: 10, color: '#B7A684', marginBottom: 1 }}>ผู้ดูแล</div>
+                      <div style={{ fontSize: 13, color: '#3F2D1E' }}>{supervisor}</div>
+                    </div> : null}
+                    {info.bankName || info.bankAccount ? <>
+                      <div>
+                        <div style={{ fontSize: 10, color: '#B7A684', marginBottom: 1 }}>ธนาคาร</div>
+                        <div style={{ fontSize: 13, color: '#3F2D1E' }}>{info.bankName || '—'}</div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 10, color: '#B7A684', marginBottom: 1 }}>เลขบัญชี</div>
+                        <div style={{ fontSize: 13, color: '#3F2D1E', fontFamily: 'Prompt', letterSpacing: '.04em' }}>{info.bankAccount || '—'}</div>
+                      </div>
+                      {info.note ? <div style={{ gridColumn: '1/-1' }}>
+                        <div style={{ fontSize: 10, color: '#B7A684', marginBottom: 1 }}>ชื่อผู้รับ / หมายเหตุ</div>
+                        <div style={{ fontSize: 13, color: '#3F2D1E' }}>{info.note}</div>
+                      </div> : null}
+                    </> : null}
+                  </div>
+                </div>
+              );
+            })()}
             {(() => {
               const pay = payments?.[session?.billNo];
               const noPhoto = { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: 80, borderRadius: 10, border: '1.5px dashed #D8C8A8', color: '#C0A87A', fontSize: 11, gap: 4 };
@@ -2519,7 +2555,8 @@ export default function App() {
         <PrintView session={session} readonly={readonly} isHandoff={isHandoff} verified={verified} history={history} payments={payments}
           onGoSummary={() => setScreen('summary')} onGoBack={goBackFromBill} onFinish={finishBill}
           customLabel={session.customLabel || ''} vehiclePhotoUrl={session.vehicleDriveUrl || vehiclePhotoUrl}
-          onSaveSlip={handleSaveSlip} onUploadEvidence={readonly ? handleUploadEvidence : undefined} />
+          onSaveSlip={handleSaveSlip} onUploadEvidence={readonly ? handleUploadEvidence : undefined}
+          supervisors={supervisors} customerInfo={customerInfo} />
       )}
       {screen === 'dashboard' && (
         <DashboardView history={history} payments={payments} pin={pin} onPayment={handlePayment} onDeleteBill={handleDeleteBill} onGoHome={() => setScreen('home')} />
