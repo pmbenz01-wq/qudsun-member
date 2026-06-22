@@ -26,10 +26,11 @@ input  { font-family: 'IBM Plex Sans Thai', sans-serif; }
 
 @media print {
   @page {
+    size: A5 portrait;
     margin: 0;
   }
   body {
-    margin: 6mm;
+    margin: 8mm;
     background: #fff;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
