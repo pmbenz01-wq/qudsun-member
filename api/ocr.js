@@ -22,7 +22,8 @@ export default async function handler(req, res) {
     })
   });
   const data = await r.json();
+  if (data.error) return res.status(500).json({ ok: false, error: data.error.type, message: data.error.message });
   const text = data.content?.[0]?.text?.trim();
-  if (!text) return res.json({ ok: false });
+  if (!text) return res.json({ ok: false, error: 'no_text' });
   return res.json({ ok: true, ...(mode === 'plate' ? { plate: text } : { info: text }) });
 }
