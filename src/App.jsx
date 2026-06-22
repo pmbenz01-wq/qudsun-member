@@ -1082,13 +1082,22 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
 
 // ─── DashboardView ────────────────────────────────────────────────────────────
 function TransferSlipModal({ bill, onConfirm, onClose }) {
+  const [step, setStep] = useState(1); // 1=ถ่ายใบเสร็จมีลายเซ็น, 2=อัพโหลดสลิป
+  const [receiptUrl, setReceiptUrl] = useState(null);
   const [photoUrl, setPhotoUrl] = useState(null);
   const [slipInfo, setSlipInfo] = useState(null);
   const [slipData, setSlipData] = useState(null);
   const [reading, setReading] = useState(false);
+  const receiptCamRef = useRef();
   const cameraRef = useRef();
   const galleryRef = useRef();
-  const handleFile = async e => {
+
+  const handleReceiptFile = e => {
+    const f = e.target.files[0]; if (!f) return;
+    const r = new FileReader(); r.onload = ev => setReceiptUrl(ev.target.result);
+    r.readAsDataURL(f); e.target.value = '';
+  };
+  const handleSlipFile = async e => {
     const f = e.target.files[0]; if (!f) return;
     const r = new FileReader(); r.onload = async ev => {
       const dataUrl = ev.target.result;
@@ -1105,41 +1114,80 @@ function TransferSlipModal({ bill, onConfirm, onClose }) {
       } catch {} finally { setReading(false); }
     }; r.readAsDataURL(f); e.target.value = '';
   };
+
+  const billInfo = (
+    <div style={{ background: '#F0E9DA', borderRadius: 10, padding: '10px 14px', marginBottom: 14, fontSize: 13 }}>
+      <div style={{ fontWeight: 700, color: '#2A2118' }}>{bill.seller || '—'}</div>
+      <div style={{ color: '#5A4A38' }}>{bill.billNo} · ฿{bill.baht}</div>
+    </div>
+  );
+
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 80, background: 'rgba(42,33,24,.6)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
       <div style={{ background: '#FFFDF8', borderRadius: '20px 20px 0 0', padding: '20px 18px 28px', width: '100%', maxWidth: 480, boxShadow: '0 -8px 30px rgba(42,33,24,.2)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-          <span style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 16, color: '#3F2D1E' }}>ยืนยันการโอน</span>
-          <button onClick={onClose} style={{ border: 'none', background: 'none', fontSize: 20, cursor: 'pointer', color: '#9A8662' }}>✕</button>
+        {/* step indicator */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1 }}>
+            {[1, 2].map(s => (
+              <React.Fragment key={s}>
+                <div style={{ width: 24, height: 24, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700,
+                  background: step >= s ? '#3F2D1E' : '#E4D7BC', color: step >= s ? '#F6EEDD' : '#9A8662' }}>{s}</div>
+                {s < 2 && <div style={{ flex: 1, height: 2, background: step > 1 ? '#3F2D1E' : '#E4D7BC', borderRadius: 1 }} />}
+              </React.Fragment>
+            ))}
+          </div>
+          <button onClick={onClose} style={{ border: 'none', background: 'none', fontSize: 20, cursor: 'pointer', color: '#9A8662', marginLeft: 8 }}>✕</button>
         </div>
-        <div style={{ background: '#F0E9DA', borderRadius: 10, padding: '10px 14px', marginBottom: 14, fontSize: 13 }}>
-          <div style={{ fontWeight: 700, color: '#2A2118' }}>{bill.seller || '—'}</div>
-          <div style={{ color: '#5A4A38' }}>{bill.billNo} · ฿{bill.baht}</div>
-        </div>
-        <input ref={cameraRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={handleFile} />
-        <input ref={galleryRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFile} />
-        <div style={{ display: 'flex', gap: 8, marginBottom: photoUrl ? 10 : 14 }}>
-          <button onClick={() => cameraRef.current?.click()}
-            style={{ flex: 1, border: '1.5px dashed #5A9A6A', background: '#EFF8F1', borderRadius: 12, padding: '13px 0', fontSize: 14, fontWeight: 600, color: '#2E7D32', cursor: 'pointer' }}>
-            📷 {photoUrl ? 'ถ่ายใหม่' : 'ถ่ายรูป'}
-          </button>
-          <button onClick={() => galleryRef.current?.click()}
-            style={{ flex: 1, border: '1.5px dashed #5A7FA8', background: '#EEF2F8', borderRadius: 12, padding: '13px 0', fontSize: 14, fontWeight: 600, color: '#1A4D80', cursor: 'pointer' }}>
-            🖼️ {photoUrl ? 'เลือกใหม่' : 'อัปโหลด'}
-          </button>
-        </div>
-        {photoUrl && <img src={photoUrl} alt="สลิป" style={{ width: '100%', maxHeight: 180, objectFit: 'cover', borderRadius: 10, border: '1px solid #C8E6C9', marginBottom: 8, display: 'block' }} />}
-        {reading && <div style={{ textAlign: 'center', fontSize: 12, color: '#9A8662', marginBottom: 8 }}>กำลังอ่านสลิป…</div>}
-        {slipInfo && <div style={{ background: '#EFF8F1', borderRadius: 10, padding: '8px 12px', marginBottom: 10, fontSize: 12, color: '#2E7D32', lineHeight: 1.7 }}>{slipInfo}</div>}
-        {photoUrl && !reading && !slipInfo && <div style={{ height: 6 }} />}
-        <button onClick={() => onConfirm(photoUrl, slipData)} disabled={!photoUrl}
-          style={{ width: '100%', border: 'none', borderRadius: 13, padding: 15, background: photoUrl ? '#5A9A6A' : '#C8D8C8', color: '#fff', fontWeight: 700, fontSize: 16, cursor: photoUrl ? 'pointer' : 'default', marginBottom: 8 }}>
-          ยืนยันโอนแล้ว ✓
-        </button>
-        <button onClick={() => onConfirm(null, null)}
-          style={{ width: '100%', border: 'none', background: 'none', color: '#9A8662', fontSize: 13, cursor: 'pointer', padding: '6px 0' }}>
-          ยืนยันโดยไม่มีสลิป
-        </button>
+
+        {step === 1 ? (
+          <>
+            <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 15, color: '#3F2D1E', marginBottom: 4 }}>ถ่ายรูปใบเสร็จที่มีลายเซ็น</div>
+            <div style={{ fontSize: 12, color: '#9A8662', marginBottom: 12 }}>บังคับถ่ายรูปใบเสร็จที่ลูกค้าเซ็นแล้ว ก่อนไปขั้นถัดไป</div>
+            {billInfo}
+            <input ref={receiptCamRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={handleReceiptFile} />
+            <button onClick={() => receiptCamRef.current?.click()}
+              style={{ width: '100%', border: `1.5px dashed ${receiptUrl ? '#5A9A6A' : '#C9A24B'}`, background: receiptUrl ? '#EFF8F1' : '#FBF6EC', borderRadius: 12, padding: '16px 0', fontSize: 15, fontWeight: 600, color: receiptUrl ? '#2E7D32' : '#7A5A22', cursor: 'pointer', marginBottom: 10 }}>
+              📷 {receiptUrl ? 'ถ่ายใหม่' : 'ถ่ายรูปใบเสร็จ'}
+            </button>
+            {receiptUrl && <img src={receiptUrl} alt="ใบเสร็จ" style={{ width: '100%', maxHeight: 200, objectFit: 'cover', borderRadius: 10, border: '2px solid #5A9A6A', marginBottom: 12, display: 'block' }} />}
+            <button onClick={() => setStep(2)} disabled={!receiptUrl}
+              style={{ width: '100%', border: 'none', borderRadius: 13, padding: 15, background: receiptUrl ? '#3F2D1E' : '#C8C0B0', color: '#F6EEDD', fontWeight: 700, fontSize: 16, cursor: receiptUrl ? 'pointer' : 'default' }}>
+              ถัดไป — อัพโหลดสลิป →
+            </button>
+          </>
+        ) : (
+          <>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+              <button onClick={() => setStep(1)} style={{ border: 'none', background: 'none', fontSize: 18, cursor: 'pointer', color: '#9A8662', padding: 0 }}>←</button>
+              <span style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 15, color: '#3F2D1E' }}>อัพโหลดสลิปโอน</span>
+            </div>
+            {billInfo}
+            <input ref={cameraRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={handleSlipFile} />
+            <input ref={galleryRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleSlipFile} />
+            <div style={{ display: 'flex', gap: 8, marginBottom: photoUrl ? 10 : 14 }}>
+              <button onClick={() => cameraRef.current?.click()}
+                style={{ flex: 1, border: '1.5px dashed #5A9A6A', background: '#EFF8F1', borderRadius: 12, padding: '13px 0', fontSize: 14, fontWeight: 600, color: '#2E7D32', cursor: 'pointer' }}>
+                📷 {photoUrl ? 'ถ่ายใหม่' : 'ถ่ายรูป'}
+              </button>
+              <button onClick={() => galleryRef.current?.click()}
+                style={{ flex: 1, border: '1.5px dashed #5A7FA8', background: '#EEF2F8', borderRadius: 12, padding: '13px 0', fontSize: 14, fontWeight: 600, color: '#1A4D80', cursor: 'pointer' }}>
+                🖼️ {photoUrl ? 'เลือกใหม่' : 'อัปโหลด'}
+              </button>
+            </div>
+            {photoUrl && <img src={photoUrl} alt="สลิป" style={{ width: '100%', maxHeight: 180, objectFit: 'cover', borderRadius: 10, border: '1px solid #C8E6C9', marginBottom: 8, display: 'block' }} />}
+            {reading && <div style={{ textAlign: 'center', fontSize: 12, color: '#9A8662', marginBottom: 8 }}>กำลังอ่านสลิป…</div>}
+            {slipInfo && <div style={{ background: '#EFF8F1', borderRadius: 10, padding: '8px 12px', marginBottom: 10, fontSize: 12, color: '#2E7D32', lineHeight: 1.7 }}>{slipInfo}</div>}
+            {photoUrl && !reading && !slipInfo && <div style={{ height: 6 }} />}
+            <button onClick={() => onConfirm(photoUrl, slipData, receiptUrl)} disabled={!photoUrl}
+              style={{ width: '100%', border: 'none', borderRadius: 13, padding: 15, background: photoUrl ? '#5A9A6A' : '#C8D8C8', color: '#fff', fontWeight: 700, fontSize: 16, cursor: photoUrl ? 'pointer' : 'default', marginBottom: 8 }}>
+              ยืนยันโอนแล้ว ✓
+            </button>
+            <button onClick={() => onConfirm(null, null, receiptUrl)}
+              style={{ width: '100%', border: 'none', background: 'none', color: '#9A8662', fontSize: 13, cursor: 'pointer', padding: '6px 0' }}>
+              ยืนยันโดยไม่มีสลิป
+            </button>
+          </>
+        )}
       </div>
     </div>
   );
