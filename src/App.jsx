@@ -1119,9 +1119,49 @@ function TransferSlipModal({ bill, onConfirm, onClose }) {
   );
 }
 
-function DashboardView({ history, payments, onPayment, onGoHome }) {
+function CancelPaymentModal({ bill, pin, onConfirm, onClose }) {
+  const [pinVal, setPinVal] = useState('');
+  const [note, setNote] = useState('');
+  const [pinErr, setPinErr] = useState('');
+  const keys = ['1','2','3','4','5','6','7','8','9','⌫','0','✓'];
+  const S = { border: '1px solid #E4D7BC', background: '#FBF6EC', borderRadius: 11, padding: '13px 0', fontSize: 20, color: '#3F2D1E', cursor: 'pointer' };
+  const F = { border: '1px solid #E0D2B4', background: '#F3E9D2', borderRadius: 11, padding: '13px 0', fontSize: 18, color: '#7A5A22', cursor: 'pointer' };
+  const handleKey = k => {
+    if (k === '⌫') { setPinVal(v => v.slice(0, -1)); setPinErr(''); return; }
+    if (k === '✓') {
+      if (pinVal.length < 4) return;
+      if (pinVal !== pin) { setPinErr('รหัสไม่ถูกต้อง'); setPinVal(''); return; }
+      if (!note.trim()) { setPinErr('กรุณาใส่หมายเหตุ'); return; }
+      onConfirm(note.trim());
+      return;
+    }
+    if (pinVal.length < 4) setPinVal(v => v + k);
+  };
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 80, background: 'rgba(42,33,24,.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 18 }}>
+      <div style={{ background: '#FFFDF8', borderRadius: 20, padding: '22px 18px', width: '100%', maxWidth: 340 }}>
+        <div style={{ textAlign: 'center', fontSize: 24, marginBottom: 4 }}>🔒</div>
+        <h3 style={{ textAlign: 'center', fontFamily: 'Prompt', fontWeight: 500, fontSize: 16, margin: '0 0 4px', color: '#4A3526' }}>ยกเลิกการชำระ</h3>
+        <p style={{ textAlign: 'center', fontSize: 12, color: '#9A8662', margin: '0 0 12px' }}>{bill.billNo} · ฿{bill.baht}</p>
+        <textarea value={note} onChange={e => setNote(e.target.value)} placeholder="หมายเหตุ (บังคับ) เช่น โอนผิด, แก้ไขยอด" rows={2}
+          style={{ width: '100%', boxSizing: 'border-box', border: '1.5px solid #E4D7BC', borderRadius: 10, padding: '10px 12px', fontSize: 13, fontFamily: 'inherit', resize: 'none', marginBottom: 12, outline: 'none' }} />
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginBottom: 6 }}>
+          {[0,1,2,3].map(i => <span key={i} style={{ width: 12, height: 12, borderRadius: '50%', background: i < pinVal.length ? '#C9A24B' : '#E4D7BC', border: '1.5px solid #C9A24B', display: 'inline-block' }} />)}
+        </div>
+        <p style={{ textAlign: 'center', fontSize: 11, color: '#C0392B', minHeight: 14, margin: '0 0 8px' }}>{pinErr}</p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 7, marginBottom: 10 }}>
+          {keys.map(k => <button key={k} onClick={() => handleKey(k)} style={k === '⌫' || k === '✓' ? F : S}>{k}</button>)}
+        </div>
+        <button onClick={onClose} style={{ width: '100%', border: 'none', background: 'none', color: '#9A8662', fontSize: 13, cursor: 'pointer', padding: 6 }}>ยกเลิก</button>
+      </div>
+    </div>
+  );
+}
+
+function DashboardView({ history, payments, pin, onPayment, onGoHome }) {
   const [tab, setTab] = useState('unpaid');
   const [transferBill, setTransferBill] = useState(null);
+  const [cancelBill, setCancelBill] = useState(null);
 
   const bills = history.map(h => ({ ...h, pay: payments[h.billNo] || { status: 'unpaid' } }));
   const unpaid      = bills.filter(b => b.pay.status === 'unpaid');
@@ -1188,9 +1228,9 @@ function DashboardView({ history, payments, onPayment, onGoHome }) {
             ) : (
               <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                 {b.pay.slipUrl && <img src={b.pay.slipUrl} alt="สลิป" style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 6, border: '1px solid #C8E6C9', flexShrink: 0 }} />}
-                <button onClick={() => onPayment(b.billNo, 'unpaid')}
+                <button onClick={() => setCancelBill(b)}
                   style={{ flex: 1, border: '1px solid #D0C8C0', borderRadius: 10, padding: '8px 0', background: '#fff', color: '#8A7A66', fontSize: 12, cursor: 'pointer' }}>
-                  ยกเลิกการชำระ
+                  🔒 ยกเลิกการชำระ
                 </button>
               </div>
             )}
@@ -1202,6 +1242,11 @@ function DashboardView({ history, payments, onPayment, onGoHome }) {
         <TransferSlipModal bill={transferBill}
           onConfirm={(slipPhotoUrl, slipData) => { onPayment(transferBill.billNo, 'transferred', slipPhotoUrl, slipData); setTransferBill(null); }}
           onClose={() => setTransferBill(null)} />
+      )}
+      {cancelBill && (
+        <CancelPaymentModal bill={cancelBill} pin={pin}
+          onConfirm={note => { onPayment(cancelBill.billNo, 'unpaid', null, null, note); setCancelBill(null); }}
+          onClose={() => setCancelBill(null)} />
       )}
     </div>
   );
@@ -1840,9 +1885,9 @@ export default function App() {
     });
   }, [numpad, requirePin, updateSession, toast]);
 
-  const handlePayment = useCallback((billNo, status, slipPhotoUrl, slipData) => {
+  const handlePayment = useCallback((billNo, status, slipPhotoUrl, slipData, cancelNote) => {
     const paidAt = Date.now();
-    const next = { ...storage.loadPayments(), [billNo]: { status, paidAt, ...(slipPhotoUrl ? { slipUrl: slipPhotoUrl } : {}), ...(slipData ? { slipData } : {}) } };
+    const next = { ...storage.loadPayments(), [billNo]: { status, paidAt, ...(slipPhotoUrl ? { slipUrl: slipPhotoUrl } : {}), ...(slipData ? { slipData } : {}), ...(cancelNote ? { cancelNote } : {}) } };
     if (status === 'unpaid') delete next[billNo];
     storage.savePayments(next);
     setPayments(next);
@@ -2067,7 +2112,7 @@ export default function App() {
           onSaveSlip={handleSaveSlip} />
       )}
       {screen === 'dashboard' && (
-        <DashboardView history={history} payments={payments} onPayment={handlePayment} onGoHome={() => setScreen('home')} />
+        <DashboardView history={history} payments={payments} pin={pin} onPayment={handlePayment} onGoHome={() => setScreen('home')} />
       )}
       {screen === 'customers' && (
         <CustomersView history={history} verified={verified} onGoHome={() => setScreen('home')}
