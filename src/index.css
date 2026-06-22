@@ -27,12 +27,24 @@ input  { font-family: 'IBM Plex Sans Thai', sans-serif; }
 @media print {
   @page {
     size: A5 portrait;
-    margin: 0;
-  }
-  body {
     margin: 8mm;
-    background: #fff;
+  }
+  body, #root {
+    background: #fff !important;
+    padding: 0 !important;
+    margin: 0 !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
+  }
+  .no-print { display: none !important; }
+  /* reset card — no floating card look, just clean content */
+  .bill-doc-wrapper {
+    max-width: 100% !important;
+    margin: 0 !important;
+  }
+  .bill-doc {
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
   }
 }

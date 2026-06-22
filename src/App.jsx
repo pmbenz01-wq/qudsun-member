@@ -102,7 +102,7 @@ function Toast({ msg }) {
 // ─── Header ───────────────────────────────────────────────────────────────────
 function Header() {
   return (
-    <div style={{ background: '#FBF6EC', borderBottom: '1px solid #E4D7BC', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
+    <div className="no-print" style={{ background: '#FBF6EC', borderBottom: '1px solid #E4D7BC', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
       <img src="/logo.jpg" alt="Qudsun" style={{ width: 32, height: 32, borderRadius: 8, objectFit: 'cover' }} />
       <div>
         <div style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 15, color: '#4A3526', letterSpacing: '.04em' }}>QUDSUN</div>
@@ -1007,7 +1007,8 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
       </div>
 
       {/* The Bill A5 */}
-      <div className="bill-doc" style={{ maxWidth: 420, margin: '0 auto', background: '#fff', border: '1px solid #E4D7BC', borderRadius: 6, boxShadow: '0 10px 30px rgba(95,70,40,.14)', padding: '22px 22px 18px', color: '#2A2118', fontSize: 12 }}>
+      <div className="bill-doc-wrapper" style={{ maxWidth: 420, margin: '0 auto' }}>
+      <div className="bill-doc" style={{ background: '#fff', border: '1px solid #E4D7BC', borderRadius: 6, boxShadow: '0 10px 30px rgba(95,70,40,.14)', padding: '22px 22px 18px', color: '#2A2118', fontSize: 12 }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, borderBottom: '2px solid #2A2118', paddingBottom: 12 }}>
           <img src="/logo.jpg" style={{ width: 64, height: 'auto' }} alt="" />
           <div style={{ flex: 1 }}>
@@ -1067,6 +1068,7 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
           <div style={{ flex: 1, textAlign: 'center' }}><div style={{ borderTop: '1px dotted #2A2118', paddingTop: 6, fontSize: 11 }}>ลายเซ็นผู้ซื้อ</div></div>
         </div>
         <div style={{ textAlign: 'center', marginTop: 14, fontSize: 10, color: '#8A7A66' }}>ขอบคุณที่ไว้วางใจ · ทุเรียนคัดสรร Qudsun · 082-691-4414</div>
+      </div>
       </div>
     </div>
   );
