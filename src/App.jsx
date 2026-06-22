@@ -1021,10 +1021,15 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
             <div style={{ fontSize: 10.5, color: '#5A4A38', marginBottom: 6 }}>เลขที่ {session?.billNo}</div>
             <div style={{ fontSize: 10.5, color: '#3A2A18', lineHeight: 1.8 }}>
               <div>{session ? dateStr(session.date) : ''}</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                {tier && <TierBadge tier={tier} size="sm" />}
-                <span><b>{session?.seller || '—'}</b>{session?.sellerPhone ? ` · ${session.sellerPhone}` : ''}</span>
-              </div>
+              {tier ? (() => {
+                const g = TIER_GRAD[tier.key] || TIER_GRAD.silver;
+                return (
+                  <div style={{ display: 'inline-flex', alignItems: 'center', borderRadius: 5, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,.15)', marginTop: 2 }}>
+                    <span style={{ background: g.bg, color: g.color, fontFamily: 'Prompt', fontWeight: 700, fontSize: 9, letterSpacing: '.12em', textTransform: 'uppercase', padding: '3px 8px', whiteSpace: 'nowrap' }}>{tier.label}</span>
+                    <span style={{ background: 'rgba(0,0,0,.06)', color: '#2A2118', fontSize: 10.5, fontWeight: 700, padding: '3px 8px', whiteSpace: 'nowrap' }}>{session?.seller || '—'}{session?.sellerPhone ? ` · ${session.sellerPhone}` : ''}</span>
+                  </div>
+                );
+              })() : <span><b>{session?.seller || '—'}</b>{session?.sellerPhone ? ` · ${session.sellerPhone}` : ''}</span>}
             </div>
           </div>
         </div>
