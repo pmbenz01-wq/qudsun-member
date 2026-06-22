@@ -885,9 +885,12 @@ function ConfirmView({ session, verified, history, onConfirm, onGoSummary, custo
 }
 
 // ─── PrintView ────────────────────────────────────────────────────────────────
-function PrintView({ session, readonly, isHandoff, verified, history, payments, onGoSummary, onGoBack, onFinish, customLabel, vehiclePhotoUrl, onSaveSlip }) {
+function PrintView({ session, readonly, isHandoff, verified, history, payments, onGoSummary, onGoBack, onFinish, customLabel, vehiclePhotoUrl, onSaveSlip, onUploadEvidence }) {
   const [qrDataUrl, setQrDataUrl] = useState('');
   const [copied, setCopied] = useState(false);
+  const [uploading, setUploading] = useState(null); // null | 'receipt' | 'slip'
+  const receiptUpRef = useRef();
+  const slipUpRef = useRef();
   const link = session ? billLink(session) : '';
   const code = session ? billCode(session) : '';
   const aggData = agg(session);
@@ -941,10 +944,18 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
             </div>
             {readonly && (() => {
               const pay = payments?.[session?.billNo];
-              const noPhoto = { display: 'flex', alignItems: 'center', justifyContent: 'center', height: 80, borderRadius: 10, border: '1.5px dashed #D8C8A8', color: '#C0A87A', fontSize: 11 };
+              const noPhoto = { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: 80, borderRadius: 10, border: '1.5px dashed #D8C8A8', color: '#C0A87A', fontSize: 11, gap: 4 };
+              const upBtn = { border: 'none', background: 'rgba(168,118,62,.12)', color: '#7A5A22', borderRadius: 6, padding: '2px 8px', fontSize: 10, cursor: 'pointer', marginTop: 4 };
+              const handleUp = async (type, file) => {
+                if (!file || !onUploadEvidence) return;
+                setUploading(type);
+                try { await onUploadEvidence(type, file); } finally { setUploading(null); }
+              };
               return (
               <div style={{ background: '#FFFDF8', border: '1px solid #E4D7BC', borderRadius: 14, padding: '14px 16px', marginBottom: 16 }}>
                 <div style={{ fontSize: 12, color: '#A6925E', fontWeight: 600, marginBottom: 10 }}>รูปหลักฐาน</div>
+                <input ref={receiptUpRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => { handleUp('receipt', e.target.files[0]); e.target.value = ''; }} />
+                <input ref={slipUpRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => { handleUp('slip', e.target.files[0]); e.target.value = ''; }} />
                 <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                   <div style={{ flex: 1, minWidth: 120 }}>
                     <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 4 }}>🚗 ทะเบียนรถ {session?.vehiclePlate ? `· ${session.vehiclePlate}` : ''}</div>
@@ -955,14 +966,24 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
                   <div style={{ flex: 1, minWidth: 120 }}>
                     <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 4 }}>📄 ใบเสร็จลายเซ็น</div>
                     {pay?.receiptUrl
-                      ? <a href={pay.receiptUrl} target="_blank" rel="noreferrer"><img src={pay.receiptUrl} alt="ใบเสร็จ" style={{ width: '100%', maxHeight: 140, objectFit: 'cover', borderRadius: 10, border: '1px solid #C8E6C9', display: 'block' }} /></a>
-                      : <div style={noPhoto}>ไม่มีรูป</div>}
+                      ? <div style={{ position: 'relative' }}>
+                          <a href={pay.receiptUrl} target="_blank" rel="noreferrer"><img src={pay.receiptUrl} alt="ใบเสร็จ" style={{ width: '100%', maxHeight: 140, objectFit: 'cover', borderRadius: 10, border: '1px solid #C8E6C9', display: 'block' }} /></a>
+                          {onUploadEvidence && <button onClick={() => receiptUpRef.current?.click()} style={{ position: 'absolute', top: 4, right: 4, ...upBtn }}>{uploading === 'receipt' ? '…' : 'เปลี่ยน'}</button>}
+                        </div>
+                      : <div style={{ ...noPhoto, cursor: onUploadEvidence ? 'pointer' : 'default', border: onUploadEvidence ? '1.5px dashed #C9A24B' : noPhoto.border }} onClick={() => onUploadEvidence && receiptUpRef.current?.click()}>
+                          {uploading === 'receipt' ? 'กำลัง upload…' : onUploadEvidence ? <><span>📤</span><span style={{ fontSize: 10 }}>แตะเพื่ออัพโหลด</span></> : 'ไม่มีรูป'}
+                        </div>}
                   </div>
                   <div style={{ flex: 1, minWidth: 120 }}>
                     <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 4 }}>💸 สลิปโอน</div>
                     {pay?.slipUrl
-                      ? <a href={pay.slipUrl} target="_blank" rel="noreferrer"><img src={pay.slipUrl} alt="สลิป" style={{ width: '100%', maxHeight: 140, objectFit: 'cover', borderRadius: 10, border: '1px solid #C8E6C9', display: 'block' }} /></a>
-                      : <div style={noPhoto}>ไม่มีรูป</div>}
+                      ? <div style={{ position: 'relative' }}>
+                          <a href={pay.slipUrl} target="_blank" rel="noreferrer"><img src={pay.slipUrl} alt="สลิป" style={{ width: '100%', maxHeight: 140, objectFit: 'cover', borderRadius: 10, border: '1px solid #C8E6C9', display: 'block' }} /></a>
+                          {onUploadEvidence && <button onClick={() => slipUpRef.current?.click()} style={{ position: 'absolute', top: 4, right: 4, ...upBtn }}>{uploading === 'slip' ? '…' : 'เปลี่ยน'}</button>}
+                        </div>
+                      : <div style={{ ...noPhoto, cursor: onUploadEvidence ? 'pointer' : 'default', border: onUploadEvidence ? '1.5px dashed #C9A24B' : noPhoto.border }} onClick={() => onUploadEvidence && slipUpRef.current?.click()}>
+                          {uploading === 'slip' ? 'กำลัง upload…' : onUploadEvidence ? <><span>📤</span><span style={{ fontSize: 10 }}>แตะเพื่ออัพโหลด</span></> : 'ไม่มีรูป'}
+                        </div>}
                   </div>
                 </div>
                 {payments?.[session?.billNo]?.slipData && (() => {
@@ -2182,6 +2203,35 @@ export default function App() {
     fetch('/api/drive', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ base64: dataUrl, filename, folder: 'QudsunSlips' }) }).catch(() => {});
   }, [session]);
 
+  const handleUploadEvidence = useCallback(async (type, file) => {
+    if (!session) return;
+    try {
+      const dataUrl = await resizeImage(file, 1400);
+      const now = new Date();
+      const datePart = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+      const timePart = `${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
+      const namePart = (session.seller || 'ไม่ระบุ').replace(/[^ก-๙a-zA-Z0-9]/g, '_');
+      const phonePart = session.sellerPhone || 'nophone';
+      const prefix = type === 'receipt' ? 'receipt' : 'slip';
+      const folder = type === 'receipt' ? 'QudsunReceipts' : 'QudsunTransfers';
+      const filename = `${prefix}_${namePart}_${phonePart}_${datePart}_${timePart}.jpg`;
+      toast('กำลัง upload…');
+      let url = dataUrl;
+      try {
+        const res = await fetch('/api/drive', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ base64: dataUrl, filename, folder }) });
+        const data = await res.json();
+        if (data.ok && data.fileId) url = `https://drive.google.com/uc?id=${data.fileId}`;
+      } catch {}
+      const urlKey = type === 'receipt' ? 'receiptUrl' : 'slipUrl';
+      const prev = storage.loadPayments();
+      const existing = prev[session.billNo] || { status: 'transferred', paidAt: Date.now() };
+      const next = { ...prev, [session.billNo]: { ...existing, [urlKey]: url } };
+      storage.savePayments(next);
+      setPayments(next);
+      toast('อัพโหลดรูปแล้ว ✓');
+    } catch { toast('อัพโหลดไม่สำเร็จ'); }
+  }, [session, toast]);
+
   const doConfirm = useCallback(() => {
     updateSession(prev => {
       const s = { ...prev, confirmed: true, confirmedAt: Date.now() };
@@ -2376,7 +2426,7 @@ export default function App() {
         <PrintView session={session} readonly={readonly} isHandoff={isHandoff} verified={verified} history={history} payments={payments}
           onGoSummary={() => setScreen('summary')} onGoBack={goBackFromBill} onFinish={finishBill}
           customLabel={session.customLabel || ''} vehiclePhotoUrl={session.vehicleDriveUrl || vehiclePhotoUrl}
-          onSaveSlip={handleSaveSlip} />
+          onSaveSlip={handleSaveSlip} onUploadEvidence={readonly ? handleUploadEvidence : undefined} />
       )}
       {screen === 'dashboard' && (
         <DashboardView history={history} payments={payments} pin={pin} onPayment={handlePayment} onDeleteBill={handleDeleteBill} onGoHome={() => setScreen('home')} />
