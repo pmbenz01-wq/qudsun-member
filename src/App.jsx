@@ -914,7 +914,7 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
                 <div style={{ fontSize: 12.5, color: '#9A8662' }}>ยืนยันแล้วเมื่อ {confirmTime}</div>
               </div>
             </div>
-            {(vehiclePhotoUrl || payments?.[session?.billNo]?.slipUrl) && (
+            {(vehiclePhotoUrl || payments?.[session?.billNo]?.slipUrl || payments?.[session?.billNo]?.receiptUrl) && (
               <div style={{ background: '#FFFDF8', border: '1px solid #E4D7BC', borderRadius: 14, padding: '14px 16px', marginBottom: 16 }}>
                 <div style={{ fontSize: 12, color: '#A6925E', fontWeight: 600, marginBottom: 10 }}>รูปหลักฐาน</div>
                 <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
@@ -923,6 +923,14 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
                       <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 4 }}>🚗 ทะเบียนรถ {session?.vehiclePlate ? `· ${session.vehiclePlate}` : ''}</div>
                       <a href={vehiclePhotoUrl} target="_blank" rel="noreferrer">
                         <img src={vehiclePhotoUrl} alt="ทะเบียน" style={{ width: '100%', maxHeight: 140, objectFit: 'cover', borderRadius: 10, border: '1px solid #E4D7BC', display: 'block' }} />
+                      </a>
+                    </div>
+                  )}
+                  {payments?.[session?.billNo]?.receiptUrl && (
+                    <div style={{ flex: 1, minWidth: 120 }}>
+                      <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 4 }}>📄 ใบเสร็จลายเซ็น</div>
+                      <a href={payments[session.billNo].receiptUrl} target="_blank" rel="noreferrer">
+                        <img src={payments[session.billNo].receiptUrl} alt="ใบเสร็จลายเซ็น" style={{ width: '100%', maxHeight: 140, objectFit: 'cover', borderRadius: 10, border: '1px solid #C8E6C9', display: 'block' }} />
                       </a>
                     </div>
                   )}
@@ -1452,7 +1460,7 @@ function DashboardView({ history, payments, pin, onPayment, onDeleteBill, onGoHo
 
       {transferBill && (
         <TransferSlipModal bill={transferBill}
-          onConfirm={(slipPhotoUrl, slipData) => { onPayment(transferBill.billNo, 'transferred', slipPhotoUrl, slipData); setTransferBill(null); }}
+          onConfirm={(slipPhotoUrl, slipData, receiptUrl) => { onPayment(transferBill.billNo, 'transferred', slipPhotoUrl, slipData, null, receiptUrl); setTransferBill(null); }}
           onClose={() => setTransferBill(null)} />
       )}
       {cancelBill && (
@@ -2109,9 +2117,9 @@ export default function App() {
     });
   }, [numpad, requirePin, updateSession, toast]);
 
-  const handlePayment = useCallback((billNo, status, slipPhotoUrl, slipData, cancelNote) => {
+  const handlePayment = useCallback((billNo, status, slipPhotoUrl, slipData, cancelNote, receiptPhotoUrl) => {
     const paidAt = Date.now();
-    const next = { ...storage.loadPayments(), [billNo]: { status, paidAt, ...(slipPhotoUrl ? { slipUrl: slipPhotoUrl } : {}), ...(slipData ? { slipData } : {}), ...(cancelNote ? { cancelNote } : {}) } };
+    const next = { ...storage.loadPayments(), [billNo]: { status, paidAt, ...(slipPhotoUrl ? { slipUrl: slipPhotoUrl } : {}), ...(slipData ? { slipData } : {}), ...(cancelNote ? { cancelNote } : {}), ...(receiptPhotoUrl ? { receiptUrl: receiptPhotoUrl } : {}) } };
     if (status === 'unpaid') delete next[billNo];
     storage.savePayments(next);
     setPayments(next);
