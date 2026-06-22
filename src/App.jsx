@@ -936,34 +936,31 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
                 <div style={{ fontSize: 12.5, color: '#9A8662' }}>ยืนยันแล้วเมื่อ {confirmTime}</div>
               </div>
             </div>
-            {(vehiclePhotoUrl || payments?.[session?.billNo]?.slipUrl || payments?.[session?.billNo]?.receiptUrl) && (
+            {readonly && (() => {
+              const pay = payments?.[session?.billNo];
+              const noPhoto = { display: 'flex', alignItems: 'center', justifyContent: 'center', height: 80, borderRadius: 10, border: '1.5px dashed #D8C8A8', color: '#C0A87A', fontSize: 11 };
+              return (
               <div style={{ background: '#FFFDF8', border: '1px solid #E4D7BC', borderRadius: 14, padding: '14px 16px', marginBottom: 16 }}>
                 <div style={{ fontSize: 12, color: '#A6925E', fontWeight: 600, marginBottom: 10 }}>รูปหลักฐาน</div>
                 <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                  {vehiclePhotoUrl && (
-                    <div style={{ flex: 1, minWidth: 120 }}>
-                      <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 4 }}>🚗 ทะเบียนรถ {session?.vehiclePlate ? `· ${session.vehiclePlate}` : ''}</div>
-                      <a href={vehiclePhotoUrl} target="_blank" rel="noreferrer">
-                        <img src={vehiclePhotoUrl} alt="ทะเบียน" style={{ width: '100%', maxHeight: 140, objectFit: 'cover', borderRadius: 10, border: '1px solid #E4D7BC', display: 'block' }} />
-                      </a>
-                    </div>
-                  )}
-                  {payments?.[session?.billNo]?.receiptUrl && (
-                    <div style={{ flex: 1, minWidth: 120 }}>
-                      <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 4 }}>📄 ใบเสร็จลายเซ็น</div>
-                      <a href={payments[session.billNo].receiptUrl} target="_blank" rel="noreferrer">
-                        <img src={payments[session.billNo].receiptUrl} alt="ใบเสร็จลายเซ็น" style={{ width: '100%', maxHeight: 140, objectFit: 'cover', borderRadius: 10, border: '1px solid #C8E6C9', display: 'block' }} />
-                      </a>
-                    </div>
-                  )}
-                  {payments?.[session?.billNo]?.slipUrl && (
-                    <div style={{ flex: 1, minWidth: 120 }}>
-                      <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 4 }}>💸 สลิปโอน</div>
-                      <a href={payments[session.billNo].slipUrl} target="_blank" rel="noreferrer">
-                        <img src={payments[session.billNo].slipUrl} alt="สลิป" style={{ width: '100%', maxHeight: 140, objectFit: 'cover', borderRadius: 10, border: '1px solid #C8E6C9', display: 'block' }} />
-                      </a>
-                    </div>
-                  )}
+                  <div style={{ flex: 1, minWidth: 120 }}>
+                    <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 4 }}>🚗 ทะเบียนรถ {session?.vehiclePlate ? `· ${session.vehiclePlate}` : ''}</div>
+                    {vehiclePhotoUrl
+                      ? <a href={vehiclePhotoUrl} target="_blank" rel="noreferrer"><img src={vehiclePhotoUrl} alt="ทะเบียน" style={{ width: '100%', maxHeight: 140, objectFit: 'cover', borderRadius: 10, border: '1px solid #E4D7BC', display: 'block' }} /></a>
+                      : <div style={noPhoto}>ไม่มีรูป</div>}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 120 }}>
+                    <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 4 }}>📄 ใบเสร็จลายเซ็น</div>
+                    {pay?.receiptUrl
+                      ? <a href={pay.receiptUrl} target="_blank" rel="noreferrer"><img src={pay.receiptUrl} alt="ใบเสร็จ" style={{ width: '100%', maxHeight: 140, objectFit: 'cover', borderRadius: 10, border: '1px solid #C8E6C9', display: 'block' }} /></a>
+                      : <div style={noPhoto}>ไม่มีรูป</div>}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 120 }}>
+                    <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 4 }}>💸 สลิปโอน</div>
+                    {pay?.slipUrl
+                      ? <a href={pay.slipUrl} target="_blank" rel="noreferrer"><img src={pay.slipUrl} alt="สลิป" style={{ width: '100%', maxHeight: 140, objectFit: 'cover', borderRadius: 10, border: '1px solid #C8E6C9', display: 'block' }} /></a>
+                      : <div style={noPhoto}>ไม่มีรูป</div>}
+                  </div>
                 </div>
                 {payments?.[session?.billNo]?.slipData && (() => {
                   const sd = payments[session.billNo].slipData;
@@ -978,7 +975,7 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
                   );
                 })()}
               </div>
-            )}
+            ); })()}
           </>
         ) : (
           <div style={{ background: '#E7F4EC', border: '1px solid #BFE0CC', borderRadius: 14, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
