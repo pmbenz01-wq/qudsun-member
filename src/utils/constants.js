@@ -13,11 +13,10 @@ export const CATS = [
 ];
 
 export const TIERS = [
-  { key: 'premium', label: 'Premium', min: 10000, badge: 'background:#2A2118;color:#E7C766;',   dot: '#C9A227' },
-  { key: 'gold',    label: 'Gold',    min: 5000,  badge: 'background:#FBF1CE;color:#9A7A12;',   dot: '#C9A227' },
-  { key: 'silver',  label: 'Silver',  min: 3000,  badge: 'background:#ECEEF1;color:#5E6670;',   dot: '#9AA0A6' },
-  { key: 'bronze',  label: 'Bronze',  min: 1000,  badge: 'background:#F2E3D2;color:#9C6B3C;',   dot: '#B07A48' },
-  { key: 'new',     label: 'ทั่วไป',  min: 0,     badge: 'background:#F0E9DA;color:#A6925E;',   dot: '#C8B998' },
+  { key: 'crown',  label: 'Crown',  min: 15000, badge: 'background:#1A0A2E;color:#E7C766;border:1px solid #4A2E8A;', dot: '#C9A227' },
+  { key: 'ruby',   label: 'Ruby',   min: 6000,  badge: 'background:#4A0E1A;color:#F4A0A8;border:1px solid #8B2233;', dot: '#C0392B' },
+  { key: 'gold',   label: 'Gold',   min: 2000,  badge: 'background:#FBF1CE;color:#8A6A08;border:1px solid #C9A227;', dot: '#C9A227' },
+  { key: 'silver', label: 'Silver', min: 0,     badge: 'background:#F0F1F3;color:#5E6670;border:1px solid #B0B8C0;', dot: '#9AA0A6' },
 ];
 
-export const REQUIRE_NAME = { gold: true, premium: true };
+export const REQUIRE_NAME = { crown: true, ruby: true, gold: true };

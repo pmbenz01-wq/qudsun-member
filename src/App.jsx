@@ -113,11 +113,12 @@ function Header() {
 }
 
 // ─── TierBadge ────────────────────────────────────────────────────────────────
+const TIER_ICON = { crown: '♛', ruby: '◆', gold: '★', silver: '◈' };
 function TierBadge({ tier, size }) {
   const lg = size === 'lg';
   return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, borderRadius: 20, fontFamily: 'Prompt', fontWeight: 600, letterSpacing: '.04em', padding: lg ? '6px 14px' : '3px 10px', fontSize: lg ? 13 : 11, background: tierBgColor(tier), color: tierTextColor(tier) }}>
-      ★ {tier.label}
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, borderRadius: 20, fontFamily: 'Prompt', fontWeight: 700, letterSpacing: '.06em', padding: lg ? '6px 16px' : '3px 10px', fontSize: lg ? 14 : 11, background: tierBgColor(tier), color: tierTextColor(tier), border: tierBorder(tier) }}>
+      {TIER_ICON[tier.key] || '★'} {tier.label}
     </span>
   );
 }
@@ -126,6 +127,9 @@ function tierBgColor(t) {
 }
 function tierTextColor(t) {
   const m = t.badge.match(/color:([^;]+)/); return m ? m[1].trim() : '#A6925E';
+}
+function tierBorder(t) {
+  const m = t.badge.match(/border:([^;]+)/); return m ? m[1].trim() : 'none';
 }
 
 // ─── LoginScreen ──────────────────────────────────────────────────────────────
@@ -363,7 +367,7 @@ function HomeView({ session, history, syncStatus, syncing, onNew, onResume, onGo
                     <div style={{ fontSize: 12, color: '#9A8662', marginTop: 1 }}>
                       {h.dateText} · {h.seller || '—'} · {h.kg} กก.
                     </div>
-                    {tier && tier.key !== 'new' && <TierBadge tier={tier} />}
+                    {tier && tier.key !== 'silver' && <TierBadge tier={tier} />}
                   </div>
                   <span style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 15, color: '#3F2D1E', whiteSpace: 'nowrap' }}>฿{h.baht}</span>
                 </button>
@@ -554,7 +558,7 @@ function RecordView({ session, activeCat, input, onInput, onCommit, onPickCat, o
           <span style={{ fontSize: 12, color: '#9A8662' }}>{session ? dateStr(session.date) : ''}</span>
         </div>
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
-          {tier && tier.key !== 'new' && <TierBadge tier={tier} />}
+          {tier && tier.key !== 'silver' && <TierBadge tier={tier} />}
           <button onClick={onEditSeller} style={{ border: '1px dashed #D8C8A8', background: '#FBF6EC', borderRadius: 10, padding: '8px 12px', fontSize: 13, color: '#7A5A22', cursor: 'pointer' }}>แก้ไข</button>
         </div>
       </div>
@@ -809,7 +813,7 @@ function ConfirmView({ session, verified, history, onConfirm, onGoSummary, custo
             {session?.billNo} · {session ? dateStr(session.date) : ''} · ผู้ขาย {session?.seller || '—'}
             {session?.sellerPhone ? ` · ${session.sellerPhone}` : ''}
           </p>
-          {tier && tier.key !== 'new' && <div style={{ marginTop: 10 }}><TierBadge tier={tier} size="lg" /></div>}
+          {tier && tier.key !== 'silver' && <div style={{ marginTop: 10 }}><TierBadge tier={tier} size="lg" /></div>}
         </div>
         <div style={{ padding: '8px 18px' }}>
           {rows.map(c => {
@@ -1006,7 +1010,7 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
             </div>
           </div>
         </div>
-        {tier && tier.key !== 'new' && (
+        {tier && tier.key !== 'silver' && (
           <div style={{ margin: '-4px 0 10px', fontSize: 11, color: '#8A6A2E' }}>สมาชิกระดับ {tier.label} · ยอดสะสม {fmtKg(stat?.total || 0)} กก.</div>
         )}
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11.5 }}>
@@ -1513,7 +1517,7 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontWeight: 600, fontSize: 15, color: '#4A3526' }}>{c?.name || '—'}</div>
                 <div style={{ fontSize: 12, color: '#9A8662' }}>{phone} · {c ? fmtKg(c.totalKg) + ' กก.' : '0 กก.'}</div>
-                {tier && tier.key !== 'new' && <TierBadge tier={tier} />}
+                {tier && tier.key !== 'silver' && <TierBadge tier={tier} />}
               </div>
               <span style={{ color: '#C9A24B', fontSize: 18 }}>›</span>
             </button>
@@ -1643,7 +1647,7 @@ function SellerModal({ name, phone, supervisor, nameLocked, supervisorLocked, on
         <input value={phone} onChange={e => onPhoneChange(e.target.value)} inputMode="tel" placeholder="เช่น 081-234-5678" style={{ width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 12, padding: 14, fontSize: 16, color: '#3F2D1E', outline: 'none', marginBottom: 12 }} />
         <label style={{ display: 'block', fontSize: 12, color: '#A6925E', marginBottom: 5 }}>ผู้ดูแล {supervisorLocked && <span style={{ color: '#C9A24B' }}>🔒 จากประวัติ</span>}</label>
         <input value={supervisor} onChange={e => !supervisorLocked && onSupervisorChange(e.target.value)} readOnly={supervisorLocked} placeholder="เช่น พี่โอ๋" style={{ width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 12, padding: 14, fontSize: 16, color: supervisorLocked ? '#9A8662' : '#3F2D1E', outline: 'none', background: supervisorLocked ? '#F5F0E8' : '#fff' }} />
-        {tier && tier.key !== 'new' && stat && (
+        {tier && tier.key !== 'silver' && stat && (
           <div style={{ marginTop: 14, background: '#FBF6EC', border: '1px solid #E4D7BC', borderRadius: 14, padding: '13px 14px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
               <TierBadge tier={tier} />
