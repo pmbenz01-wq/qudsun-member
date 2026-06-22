@@ -2017,7 +2017,12 @@ export default function App() {
     if (su) setSheetUrl(su);
     fetch('/api/sheets?action=getPayments').then(r => r.json()).then(data => {
       if (data.ok && data.payments) {
-        const merged = { ...storage.loadPayments(), ...data.payments };
+        const local = storage.loadPayments();
+        const merged = { ...local };
+        for (const [bn, rp] of Object.entries(data.payments)) {
+          const lp = local[bn] || {};
+          merged[bn] = { ...lp, ...rp, receiptUrl: rp.receiptUrl || lp.receiptUrl || null, slipUrl: rp.slipUrl || lp.slipUrl || null, vehicleUrl: rp.vehicleUrl || lp.vehicleUrl || null };
+        }
         storage.savePayments(merged);
         setPayments(merged);
       }
@@ -2072,7 +2077,12 @@ export default function App() {
       const payRes = await fetch('/api/sheets?action=getPayments');
       const payData = await payRes.json();
       if (payData.ok && payData.payments) {
-        const pm = { ...storage.loadPayments(), ...payData.payments };
+        const localPm = storage.loadPayments();
+        const pm = { ...localPm };
+        for (const [bn, rp] of Object.entries(payData.payments)) {
+          const lp = localPm[bn] || {};
+          pm[bn] = { ...lp, ...rp, receiptUrl: rp.receiptUrl || lp.receiptUrl || null, slipUrl: rp.slipUrl || lp.slipUrl || null, vehicleUrl: rp.vehicleUrl || lp.vehicleUrl || null };
+        }
         storage.savePayments(pm); setPayments(pm);
       }
       const ciRes = await fetch('/api/sheets?action=getCustomerInfo');
