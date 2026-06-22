@@ -1611,6 +1611,8 @@ export default function App() {
     if (s) { setSession(s); if (s.vehiclePhotoKey) loadPhoto(s.vehiclePhotoKey).then(u => { if (u) setVehiclePhotoUrl(u); }); }
     if (su) setSheetUrl(su);
     setTimeout(() => syncNow(true), 1500);
+    const autoSync = setInterval(() => syncNow(true), 30000);
+    return () => clearInterval(autoSync);
     fetch('/api/sheets?action=getPayments').then(r => r.json()).then(data => {
       if (data.ok && data.payments) {
         const merged = { ...storage.loadPayments(), ...data.payments };
