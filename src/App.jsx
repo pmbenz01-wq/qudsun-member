@@ -113,12 +113,26 @@ function Header() {
 }
 
 // ─── TierBadge ────────────────────────────────────────────────────────────────
-const TIER_ICON = { crown: '♛', ruby: '◆', gold: '★', silver: '◈' };
+const TIER_GRAD = {
+  silver: { bg: 'linear-gradient(105deg,#B0B8C0 0%,#E2E6EA 45%,#9AA3AC 100%)', color: '#3A3F45' },
+  gold:   { bg: 'linear-gradient(105deg,#A8780A 0%,#E8C040 45%,#B8900C 100%)', color: '#fff' },
+  ruby:   { bg: 'linear-gradient(105deg,#6B0018 0%,#B02030 50%,#780020 100%)', color: '#FFD8DC' },
+  crown:  { bg: 'linear-gradient(105deg,#0D0620 0%,#2A0E5C 45%,#C9A024 100%)', color: '#FFE88A' },
+};
 function TierBadge({ tier, size }) {
   const lg = size === 'lg';
+  const g = TIER_GRAD[tier.key] || TIER_GRAD.silver;
   return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, borderRadius: 20, fontFamily: 'Prompt', fontWeight: 700, letterSpacing: '.06em', padding: lg ? '6px 16px' : '3px 10px', fontSize: lg ? 14 : 11, background: tierBgColor(tier), color: tierTextColor(tier), border: tierBorder(tier) }}>
-      {TIER_ICON[tier.key] || '★'} {tier.label}
+    <span style={{
+      display: 'inline-block', borderRadius: 6,
+      padding: lg ? '5px 18px' : '2px 10px',
+      fontSize: lg ? 13 : 10,
+      fontFamily: 'Prompt', fontWeight: 700, letterSpacing: '.12em',
+      textTransform: 'uppercase',
+      background: g.bg, color: g.color,
+      boxShadow: '0 1px 4px rgba(0,0,0,.18)',
+    }}>
+      {tier.label}
     </span>
   );
 }
@@ -1411,11 +1425,11 @@ function CustomersView({ history, verified, onGoHome, onOpenCustomer }) {
         <h2 style={{ fontFamily: 'Prompt', fontWeight: 400, fontSize: 20, color: '#4A3526', margin: 0 }}>ทะเบียนลูกค้า</h2>
       </div>
 
-      <div style={{ display: 'flex', gap: 6, marginBottom: 14, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 6, marginBottom: 14, flexWrap: 'wrap', alignItems: 'center' }}>
         {TIERS.map(t => (
-          <span key={t.key} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, borderRadius: 20, fontFamily: 'Prompt', fontWeight: 600, letterSpacing: '.04em', padding: '3px 10px', fontSize: 11, background: tierBgColor(t), color: tierTextColor(t) }}>
-            <span style={{ width: 7, height: 7, borderRadius: '50%', background: t.dot, display: 'inline-block' }} />
-            {t.label} {t.min > 0 ? `≥${t.min.toLocaleString()} กก.` : ''}
+          <span key={t.key} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, color: '#8A7A66' }}>
+            <TierBadge tier={t} />
+            {t.min > 0 ? `≥${t.min.toLocaleString()}` : 'เริ่มต้น'}
           </span>
         ))}
       </div>
