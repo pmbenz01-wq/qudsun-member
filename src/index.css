@@ -29,22 +29,25 @@ input  { font-family: 'IBM Plex Sans Thai', sans-serif; }
     size: A5 portrait;
     margin: 8mm;
   }
-  body, #root {
+  *, *::before, *::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  body, #root, .print-view-root {
     background: #fff !important;
     padding: 0 !important;
     margin: 0 !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
   }
   .no-print { display: none !important; }
-  /* reset card — no floating card look, just clean content */
   .bill-doc-wrapper {
     max-width: 100% !important;
     margin: 0 !important;
   }
   .bill-doc {
+    background: #fff !important;
     border: none !important;
     border-radius: 0 !important;
     box-shadow: none !important;
+    padding: 0 !important;
   }
 }
