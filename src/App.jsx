@@ -2282,6 +2282,10 @@ export default function App() {
     savedSession.current = session;
     setIsHandoff(false); setSession(card.data); setScreen('print'); setReadonly(true);
     if (!fromCust) setCustPhone(null);
+    setVehiclePhotoUrl(null);
+    if (card.data?.vehiclePhotoKey) {
+      loadPhoto(card.data.vehiclePhotoKey).then(u => { if (u) setVehiclePhotoUrl(u); });
+    }
   }, [session]);
 
   const goBackFromBill = useCallback(() => {
