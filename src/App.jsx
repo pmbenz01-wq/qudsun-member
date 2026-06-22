@@ -2029,6 +2029,13 @@ export default function App() {
         setVehiclePlates(merged);
       }
     }).catch(() => {});
+    fetch('/api/sheets?action=getCustomerInfo').then(r => r.json()).then(data => {
+      if (data.ok && data.info) {
+        const merged = { ...storage.loadCustomerInfo(), ...data.info };
+        storage.saveCustomerInfo(merged);
+        setCustomerInfo(merged);
+      }
+    }).catch(() => {});
     const m = (location.hash || '').match(/bill=([^&]+)/);
     if (m) {
       try {
@@ -2067,6 +2074,12 @@ export default function App() {
       if (payData.ok && payData.payments) {
         const pm = { ...storage.loadPayments(), ...payData.payments };
         storage.savePayments(pm); setPayments(pm);
+      }
+      const ciRes = await fetch('/api/sheets?action=getCustomerInfo');
+      const ciData = await ciRes.json();
+      if (ciData.ok && ciData.info) {
+        const ci = { ...storage.loadCustomerInfo(), ...ciData.info };
+        storage.saveCustomerInfo(ci); setCustomerInfo(ci);
       }
       setSyncStatus('✓ ซิงก์แล้ว ' + new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }));
       localOnly.forEach(c => pushBill(c, true));
@@ -2520,7 +2533,7 @@ export default function App() {
           vehiclePlates={vehiclePlates} customerInfo={customerInfo}
           onGoBack={() => setScreen('customers')} onOpenHistory={card => openHistory(card, true)}
           onSaveSupervisor={(phone, name) => { const ns = { ...supervisors, [phone]: name }; storage.saveSupervisors(ns); setSupervisors(ns); }}
-          onSaveCustomerInfo={(phone, info) => { const next = { ...storage.loadCustomerInfo(), [phone]: info }; storage.saveCustomerInfo(next); setCustomerInfo(next); }}
+          onSaveCustomerInfo={(phone, info) => { const next = { ...storage.loadCustomerInfo(), [phone]: info }; storage.saveCustomerInfo(next); setCustomerInfo(next); fetch('/api/sheets', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'updateCustomerInfo', phone, ...info }) }).catch(() => {}); }}
           onOpenVerify={phone => {
             const stat = customerStat(phone, history, verified);
             setVerifyPrompt({ phone, tier: tierOf(stat.total), draft: stat.name || '', newTotal: stat.total, mode: 'manage' });

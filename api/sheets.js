@@ -111,6 +111,15 @@ export default async function handler(req, res) {
         return res.json({ ok: true, plates });
       }
 
+      if (action === 'getCustomerInfo') {
+        const rows = await read(token, 'CustomerInfo!A:D') ?? [];
+        const info = {};
+        for (let i = 1; i < rows.length; i++) {
+          if (rows[i][0]) info[String(rows[i][0])] = { bankName: rows[i][1] || '', bankAccount: rows[i][2] || '', note: rows[i][3] || '' };
+        }
+        return res.json({ ok: true, info });
+      }
+
       // Default: getBills
       const rows = await read(token, 'Bills!A:H') ?? [];
       const bills = [];
@@ -172,6 +181,19 @@ export default async function handler(req, res) {
         const plates = body.plates || {};
         const rows = [['phone', 'plate'], ...Object.entries(plates)];
         if (rows.length > 1) await append(token, 'Plates!A1', rows);
+        return res.json({ ok: true });
+      }
+
+      if (action === 'updateCustomerInfo') {
+        await ensureSheet(token, 'CustomerInfo', ['phone', 'bankName', 'bankAccount', 'note']);
+        const col = await read(token, 'CustomerInfo!A:A') ?? [];
+        let found = -1;
+        for (let i = 1; i < col.length; i++) {
+          if (String(col[i]?.[0] ?? '') === String(body.phone)) { found = i + 1; break; }
+        }
+        const row = [body.bankName ?? '', body.bankAccount ?? '', body.note ?? ''];
+        if (found > 0) await update(token, `CustomerInfo!B${found}:D${found}`, [row]);
+        else await append(token, 'CustomerInfo!A:D', [[body.phone, ...row]]);
         return res.json({ ok: true });
       }
 
