@@ -136,6 +136,16 @@ export default async function handler(req, res) {
         return res.json({ ok: true });
       }
 
+      if (action === 'deleteBill') {
+        const col = await read(token, 'Bills!A:A') ?? [];
+        let found = -1;
+        for (let i = 1; i < col.length; i++) {
+          if (String(col[i]?.[0] ?? '') === String(body.billNo)) { found = i + 1; break; }
+        }
+        if (found > 0) await deleteRow(token, 'Bills', found);
+        return res.json({ ok: true });
+      }
+
       if (action === 'updatePayment') {
         await ensureSheet(token, 'Payments', ['เลขที่บิล', 'สถานะ', 'เวลา']);
         const col = await read(token, 'Payments!A:A') ?? [];
