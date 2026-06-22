@@ -885,10 +885,11 @@ function ConfirmView({ session, verified, history, onConfirm, onGoSummary, custo
 }
 
 // ─── PrintView ────────────────────────────────────────────────────────────────
-function PrintView({ session, readonly, isHandoff, verified, history, payments, onGoSummary, onGoBack, onFinish, customLabel, vehiclePhotoUrl, onSaveSlip, onUploadEvidence, supervisors, customerInfo }) {
+function PrintView({ session, readonly, isHandoff, verified, history, payments, onGoSummary, onGoBack, onFinish, customLabel, vehiclePhotoUrl, onSaveSlip, onUploadEvidence, onSaveCustomerInfo, supervisors, customerInfo }) {
   const [qrDataUrl, setQrDataUrl] = useState('');
   const [copied, setCopied] = useState(false);
   const [uploading, setUploading] = useState(null); // null | 'receipt' | 'slip' | 'vehicle'
+  const [slipOcr, setSlipOcr] = useState(null); // null | { file, dataUrl, bankName, bankAccount, note, loading, slipData? }
   const receiptUpRef = useRef();
   const slipUpRef = useRef();
   const vehicleUpRef = useRef();
@@ -930,6 +931,61 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
     setCopied(true);
     setTimeout(() => setCopied(false), 1600);
   };
+
+  const handleUp = useCallback(async (type, file) => {
+    if (!file || !onUploadEvidence) return;
+    setUploading(type);
+    try { await onUploadEvidence(type, file); } finally { setUploading(null); }
+  }, [onUploadEvidence]);
+
+  const handleSlipOcr = useCallback(async (file) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      const dataUrl = ev.target.result;
+      const phone = session?.sellerPhone || '';
+      const existing = customerInfo?.[phone] || {};
+      setSlipOcr({ file, dataUrl, bankName: existing.bankName || '', bankAccount: existing.bankAccount || '', note: existing.note || '', loading: true });
+      try {
+        const ocrRes = await fetch('/api/ocr', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ base64: dataUrl, mode: 'slip' }) });
+        const ocrData = await ocrRes.json();
+        if (ocrData.ok && ocrData.slipData) {
+          const sd = ocrData.slipData;
+          const recipientText = sd.recipient || '';
+          const bankMatch = recipientText.match(/ธ\.[ก-๙]+|ธนาคาร[ก-๙\s]+/);
+          const accountMatch = recipientText.match(/[xX\d]{3,}[-xX\d]+/);
+          const nameClean = recipientText.replace(/ธ\.[ก-๙]+.*/, '').replace(/[xX\d]{3,}[-xX\d]+.*/, '').trim();
+          setSlipOcr(prev => prev ? { ...prev, loading: false, slipData: sd,
+            bankName: bankMatch?.[0] || prev.bankName,
+            bankAccount: accountMatch?.[0] || prev.bankAccount,
+            note: nameClean || prev.note } : null);
+        } else {
+          setSlipOcr(prev => prev ? { ...prev, loading: false } : null);
+        }
+      } catch {
+        setSlipOcr(prev => prev ? { ...prev, loading: false } : null);
+      }
+    };
+    reader.readAsDataURL(file);
+  }, [session, customerInfo]);
+
+  const confirmSlipSave = useCallback(async () => {
+    if (!slipOcr) return;
+    const phone = session?.sellerPhone || '';
+    if (phone && onSaveCustomerInfo && (slipOcr.bankName || slipOcr.bankAccount || slipOcr.note)) {
+      onSaveCustomerInfo(phone, { bankName: slipOcr.bankName, bankAccount: slipOcr.bankAccount, note: slipOcr.note });
+    }
+    const f = slipOcr.file;
+    setSlipOcr(null);
+    await handleUp('slip', f);
+  }, [slipOcr, session, onSaveCustomerInfo, handleUp]);
+
+  const skipSlipSave = useCallback(async () => {
+    if (!slipOcr) return;
+    const f = slipOcr.file;
+    setSlipOcr(null);
+    await handleUp('slip', f);
+  }, [slipOcr, handleUp]);
 
   return (
     <div className="print-view-root" style={{ flex: 1, padding: '18px 14px 60px' }}>
@@ -983,16 +1039,11 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
               const pay = payments?.[session?.billNo];
               const noPhoto = { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: 80, borderRadius: 10, border: '1.5px dashed #D8C8A8', color: '#C0A87A', fontSize: 11, gap: 4 };
               const upBtn = { border: 'none', background: 'rgba(168,118,62,.12)', color: '#7A5A22', borderRadius: 6, padding: '2px 8px', fontSize: 10, cursor: 'pointer', marginTop: 4 };
-              const handleUp = async (type, file) => {
-                if (!file || !onUploadEvidence) return;
-                setUploading(type);
-                try { await onUploadEvidence(type, file); } finally { setUploading(null); }
-              };
               return (
               <div style={{ background: '#FFFDF8', border: '1px solid #E4D7BC', borderRadius: 14, padding: '14px 16px', marginBottom: 16 }}>
                 <div style={{ fontSize: 12, color: '#A6925E', fontWeight: 600, marginBottom: 10 }}>รูปหลักฐาน</div>
                 <input ref={receiptUpRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => { handleUp('receipt', e.target.files[0]); e.target.value = ''; }} />
-                <input ref={slipUpRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => { handleUp('slip', e.target.files[0]); e.target.value = ''; }} />
+                <input ref={slipUpRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => { const f = e.target.files[0]; e.target.value = ''; if (f) handleSlipOcr(f); }} />
                 <input ref={vehicleUpRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => { handleUp('vehicle', e.target.files[0]); e.target.value = ''; }} />
                 {/* Row 1: ใบเสร็จ + สลิป */}
                 <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
@@ -1175,6 +1226,72 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
         <div style={{ textAlign: 'center', marginTop: 14, fontSize: 10, color: '#8A7A66' }}>ขอบคุณที่ไว้วางใจ · ทุเรียนคัดสรร Qudsun</div>
       </div>
       </div>
+
+      {slipOcr && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 200, display: 'flex', alignItems: 'flex-end' }}
+          onClick={e => { if (e.target === e.currentTarget) setSlipOcr(null); }}>
+          <div style={{ background: '#FFFDF8', width: '100%', maxWidth: 520, margin: '0 auto', borderRadius: '20px 20px 0 0', padding: '22px 18px 36px', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 16, color: '#3F2D1E', marginBottom: 3 }}>ตรวจสอบข้อมูลก่อนบันทึก</div>
+            <div style={{ fontSize: 12, color: '#9A8662', marginBottom: 14 }}>แก้ไขข้อมูลธนาคาร แล้วกด "บันทึก" เพื่อ save ลงโปรไฟล์ลูกค้า</div>
+
+            {slipOcr.loading && (
+              <div style={{ textAlign: 'center', color: '#B7A684', fontSize: 13, padding: '12px 0' }}>⏳ กำลังอ่านข้อมูลสลิป…</div>
+            )}
+
+            {!slipOcr.loading && slipOcr.slipData && (() => {
+              const sd = slipOcr.slipData;
+              return (
+                <div style={{ background: '#EFF8F1', borderRadius: 10, padding: '10px 14px', fontSize: 12, color: '#2E7D32', marginBottom: 14, lineHeight: 1.9 }}>
+                  {sd.amount && <div>💰 ยอด: <b>{sd.amount}</b> บาท</div>}
+                  {sd.sender && <div>📤 ผู้โอน: {sd.sender}</div>}
+                  {sd.recipient && <div>📥 ผู้รับ: {sd.recipient}</div>}
+                  {sd.datetime && <div>🕐 เวลา: {sd.datetime}</div>}
+                  {sd.ref && <div>📋 อ้างอิง: {sd.ref}</div>}
+                </div>
+              );
+            })()}
+
+            {!slipOcr.loading && !slipOcr.slipData && (
+              <div style={{ background: '#FFF8E1', borderRadius: 10, padding: '10px 14px', fontSize: 12, color: '#8A6E0A', marginBottom: 14 }}>
+                ⚠️ อ่านข้อมูลจากสลิปไม่ได้ กรอกเองด้านล่างได้เลย
+              </div>
+            )}
+
+            <div style={{ marginBottom: 10 }}>
+              <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 3 }}>ธนาคาร</div>
+              <input value={slipOcr.bankName}
+                onChange={e => setSlipOcr(s => s ? { ...s, bankName: e.target.value } : s)}
+                placeholder="เช่น ธ.กสิกรไทย, ธนาคารกรุงไทย"
+                style={{ width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 8, padding: '9px 12px', fontSize: 13, fontFamily: 'Prompt', background: '#fff', boxSizing: 'border-box' }} />
+            </div>
+            <div style={{ marginBottom: 10 }}>
+              <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 3 }}>เลขบัญชี</div>
+              <input value={slipOcr.bankAccount}
+                onChange={e => setSlipOcr(s => s ? { ...s, bankAccount: e.target.value } : s)}
+                placeholder="xxx-x-xxxxx-x"
+                style={{ width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 8, padding: '9px 12px', fontSize: 13, fontFamily: 'Prompt', background: '#fff', boxSizing: 'border-box', letterSpacing: '.04em' }} />
+            </div>
+            <div style={{ marginBottom: 18 }}>
+              <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 3 }}>ชื่อผู้รับ / หมายเหตุ</div>
+              <input value={slipOcr.note}
+                onChange={e => setSlipOcr(s => s ? { ...s, note: e.target.value } : s)}
+                placeholder="ชื่อเจ้าของบัญชี"
+                style={{ width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 8, padding: '9px 12px', fontSize: 13, fontFamily: 'Prompt', background: '#fff', boxSizing: 'border-box' }} />
+            </div>
+
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={confirmSlipSave} disabled={slipOcr.loading}
+                style={{ flex: 1, background: '#6B8E4E', color: '#fff', border: 'none', borderRadius: 12, padding: '13px 0', fontSize: 14, fontFamily: 'Prompt', fontWeight: 600, cursor: 'pointer', opacity: slipOcr.loading ? 0.6 : 1 }}>
+                {slipOcr.loading ? 'รอสักครู่…' : '✓ บันทึกและอัพโหลด'}
+              </button>
+              <button onClick={skipSlipSave} disabled={slipOcr.loading}
+                style={{ background: '#F0EAE0', color: '#7A5A22', border: 'none', borderRadius: 12, padding: '13px 16px', fontSize: 13, fontFamily: 'Prompt', cursor: 'pointer', opacity: slipOcr.loading ? 0.6 : 1 }}>
+                ข้ามไป
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -2348,39 +2465,7 @@ export default function App() {
       const urlKey = type === 'receipt' ? 'receiptUrl' : type === 'vehicle' ? 'vehicleUrl' : 'slipUrl';
       const prev = storage.loadPayments();
       const existing = prev[session.billNo] || { status: 'transferred', paidAt: Date.now() };
-      let updated = { ...existing, [urlKey]: url };
-
-      if (type === 'slip') {
-        toast('กำลังอ่านข้อมูลสลิป…');
-        try {
-          const ocrRes = await fetch('/api/ocr', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ base64: dataUrl, mode: 'slip' }) });
-          const ocrData = await ocrRes.json();
-          if (ocrData.ok && ocrData.slipData) {
-            updated = { ...updated, slipData: ocrData.slipData };
-            const phone = session.sellerPhone;
-            if (phone) {
-              const sd = ocrData.slipData;
-              const ciPrev = storage.loadCustomerInfo();
-              const ciExist = ciPrev[phone] || {};
-              const recipientText = sd.recipient || '';
-              const bankMatch = recipientText.match(/ธ\.[ก-๙]+|ธนาคาร[ก-๙\s]+/);
-              const accountMatch = recipientText.match(/[xX\d]{3,}[-xX\d]+/);
-              const nameClean = recipientText.replace(/ธ\.[ก-๙]+.*/, '').replace(/[xX\d]{3,}[-xX\d]+.*/, '').trim();
-              const newInfo = {
-                bankName: bankMatch ? bankMatch[0] : ciExist.bankName || '',
-                bankAccount: accountMatch ? accountMatch[0] : ciExist.bankAccount || '',
-                note: nameClean || ciExist.note || '',
-              };
-              if (newInfo.bankName || newInfo.bankAccount || newInfo.note) {
-                const ciNext = { ...ciPrev, [phone]: { ...ciExist, ...Object.fromEntries(Object.entries(newInfo).filter(([, v]) => v)) } };
-                storage.saveCustomerInfo(ciNext);
-                setCustomerInfo(ciNext);
-                fetch('/api/sheets', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'updateCustomerInfo', phone, ...ciNext[phone] }) }).catch(() => {});
-              }
-            }
-          }
-        } catch {}
-      }
+      const updated = { ...existing, [urlKey]: url };
 
       const next = { ...prev, [session.billNo]: updated };
       storage.savePayments(next);
@@ -2389,6 +2474,17 @@ export default function App() {
       toast('อัพโหลดรูปแล้ว ✓');
     } catch { toast('อัพโหลดไม่สำเร็จ'); }
   }, [session, toast, pushPayment]);
+
+  const handleSaveCustomerInfo = useCallback((phone, info) => {
+    if (!phone) return;
+    const ciPrev = storage.loadCustomerInfo();
+    const ciExist = ciPrev[phone] || {};
+    const newInfo = Object.fromEntries(Object.entries(info).filter(([, v]) => v));
+    const ciNext = { ...ciPrev, [phone]: { ...ciExist, ...newInfo } };
+    storage.saveCustomerInfo(ciNext);
+    setCustomerInfo(ciNext);
+    fetch('/api/sheets', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'updateCustomerInfo', phone, ...ciNext[phone] }) }).catch(() => {});
+  }, []);
 
   const doConfirm = useCallback(() => {
     updateSession(prev => {
@@ -2589,6 +2685,7 @@ export default function App() {
           onGoSummary={() => setScreen('summary')} onGoBack={goBackFromBill} onFinish={finishBill}
           customLabel={session.customLabel || ''} vehiclePhotoUrl={session.vehicleDriveUrl || vehiclePhotoUrl}
           onSaveSlip={handleSaveSlip} onUploadEvidence={readonly ? handleUploadEvidence : undefined}
+          onSaveCustomerInfo={readonly ? handleSaveCustomerInfo : undefined}
           supervisors={supervisors} customerInfo={customerInfo} />
       )}
       {screen === 'dashboard' && (
