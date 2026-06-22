@@ -1073,7 +1073,7 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
           <div style={{ flex: 1, textAlign: 'center' }}><div style={{ borderTop: '1px dotted #2A2118', paddingTop: 6, fontSize: 11 }}>ลายเซ็นผู้ขาย</div></div>
           <div style={{ flex: 1, textAlign: 'center' }}><div style={{ borderTop: '1px dotted #2A2118', paddingTop: 6, fontSize: 11 }}>ลายเซ็นผู้ซื้อ</div></div>
         </div>
-        <div style={{ textAlign: 'center', marginTop: 14, fontSize: 10, color: '#8A7A66' }}>ขอบคุณที่ไว้วางใจ · ทุเรียนคัดสรร Qudsun · 082-691-4414</div>
+        <div style={{ textAlign: 'center', marginTop: 14, fontSize: 10, color: '#8A7A66' }}>ขอบคุณที่ไว้วางใจ · ทุเรียนคัดสรร Qudsun</div>
       </div>
       </div>
     </div>
