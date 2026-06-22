@@ -2348,7 +2348,40 @@ export default function App() {
       const urlKey = type === 'receipt' ? 'receiptUrl' : type === 'vehicle' ? 'vehicleUrl' : 'slipUrl';
       const prev = storage.loadPayments();
       const existing = prev[session.billNo] || { status: 'transferred', paidAt: Date.now() };
-      const updated = { ...existing, [urlKey]: url };
+      let updated = { ...existing, [urlKey]: url };
+
+      if (type === 'slip') {
+        toast('กำลังอ่านข้อมูลสลิป…');
+        try {
+          const ocrRes = await fetch('/api/ocr', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ base64: dataUrl, mode: 'slip' }) });
+          const ocrData = await ocrRes.json();
+          if (ocrData.ok && ocrData.slipData) {
+            updated = { ...updated, slipData: ocrData.slipData };
+            const phone = session.sellerPhone;
+            if (phone) {
+              const sd = ocrData.slipData;
+              const ciPrev = storage.loadCustomerInfo();
+              const ciExist = ciPrev[phone] || {};
+              const recipientText = sd.recipient || '';
+              const bankMatch = recipientText.match(/ธ\.[ก-๙]+|ธนาคาร[ก-๙\s]+/);
+              const accountMatch = recipientText.match(/[xX\d]{3,}[-xX\d]+/);
+              const nameClean = recipientText.replace(/ธ\.[ก-๙]+.*/, '').replace(/[xX\d]{3,}[-xX\d]+.*/, '').trim();
+              const newInfo = {
+                bankName: bankMatch ? bankMatch[0] : ciExist.bankName || '',
+                bankAccount: accountMatch ? accountMatch[0] : ciExist.bankAccount || '',
+                note: nameClean || ciExist.note || '',
+              };
+              if (newInfo.bankName || newInfo.bankAccount || newInfo.note) {
+                const ciNext = { ...ciPrev, [phone]: { ...ciExist, ...Object.fromEntries(Object.entries(newInfo).filter(([, v]) => v)) } };
+                storage.saveCustomerInfo(ciNext);
+                setCustomerInfo(ciNext);
+                fetch('/api/sheets', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'updateCustomerInfo', phone, ...ciNext[phone] }) }).catch(() => {});
+              }
+            }
+          }
+        } catch {}
+      }
+
       const next = { ...prev, [session.billNo]: updated };
       storage.savePayments(next);
       setPayments(next);
