@@ -842,7 +842,7 @@ function ConfirmView({ session, verified, history, onConfirm, onGoSummary, custo
 }
 
 // ─── PrintView ────────────────────────────────────────────────────────────────
-function PrintView({ session, readonly, isHandoff, verified, history, onGoSummary, onGoBack, onFinish, customLabel, vehiclePhotoUrl, onSaveSlip }) {
+function PrintView({ session, readonly, isHandoff, verified, history, payments, onGoSummary, onGoBack, onFinish, customLabel, vehiclePhotoUrl, onSaveSlip }) {
   const [qrDataUrl, setQrDataUrl] = useState('');
   const [copied, setCopied] = useState(false);
   const link = session ? billLink(session) : '';
@@ -888,13 +888,50 @@ function PrintView({ session, readonly, isHandoff, verified, history, onGoSummar
     <div style={{ flex: 1, padding: '18px 14px 60px' }}>
       <div className="no-print" style={{ maxWidth: 620, margin: '0 auto 18px' }}>
         {readonly ? (
-          <div style={{ background: '#F0E9DA', border: '1px solid #E0D2B4', borderRadius: 14, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-            <span style={{ fontSize: 22 }}>👁</span>
-            <div>
-              <div style={{ fontWeight: 600, color: '#7A5A22' }}>ดูบิลย้อนหลัง · อ่านอย่างเดียว</div>
-              <div style={{ fontSize: 12.5, color: '#9A8662' }}>ยืนยันแล้วเมื่อ {confirmTime}</div>
+          <>
+            <div style={{ background: '#F0E9DA', border: '1px solid #E0D2B4', borderRadius: 14, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+              <span style={{ fontSize: 22 }}>👁</span>
+              <div>
+                <div style={{ fontWeight: 600, color: '#7A5A22' }}>ดูบิลย้อนหลัง · อ่านอย่างเดียว</div>
+                <div style={{ fontSize: 12.5, color: '#9A8662' }}>ยืนยันแล้วเมื่อ {confirmTime}</div>
+              </div>
             </div>
-          </div>
+            {(vehiclePhotoUrl || payments?.[session?.billNo]?.slipUrl) && (
+              <div style={{ background: '#FFFDF8', border: '1px solid #E4D7BC', borderRadius: 14, padding: '14px 16px', marginBottom: 16 }}>
+                <div style={{ fontSize: 12, color: '#A6925E', fontWeight: 600, marginBottom: 10 }}>รูปหลักฐาน</div>
+                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                  {vehiclePhotoUrl && (
+                    <div style={{ flex: 1, minWidth: 120 }}>
+                      <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 4 }}>🚗 ทะเบียนรถ {session?.vehiclePlate ? `· ${session.vehiclePlate}` : ''}</div>
+                      <a href={vehiclePhotoUrl} target="_blank" rel="noreferrer">
+                        <img src={vehiclePhotoUrl} alt="ทะเบียน" style={{ width: '100%', maxHeight: 140, objectFit: 'cover', borderRadius: 10, border: '1px solid #E4D7BC', display: 'block' }} />
+                      </a>
+                    </div>
+                  )}
+                  {payments?.[session?.billNo]?.slipUrl && (
+                    <div style={{ flex: 1, minWidth: 120 }}>
+                      <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 4 }}>💸 สลิปโอน</div>
+                      <a href={payments[session.billNo].slipUrl} target="_blank" rel="noreferrer">
+                        <img src={payments[session.billNo].slipUrl} alt="สลิป" style={{ width: '100%', maxHeight: 140, objectFit: 'cover', borderRadius: 10, border: '1px solid #C8E6C9', display: 'block' }} />
+                      </a>
+                    </div>
+                  )}
+                </div>
+                {payments?.[session?.billNo]?.slipData && (() => {
+                  const sd = payments[session.billNo].slipData;
+                  return (
+                    <div style={{ marginTop: 10, background: '#EFF8F1', borderRadius: 10, padding: '8px 12px', fontSize: 11.5, color: '#2E7D32', lineHeight: 1.8 }}>
+                      {sd.amount && <div>ยอด: {sd.amount} บาท</div>}
+                      {sd.sender && <div>ผู้โอน: {sd.sender}</div>}
+                      {sd.recipient && <div>ผู้รับ: {sd.recipient}</div>}
+                      {sd.datetime && <div>เวลา: {sd.datetime}</div>}
+                      {sd.ref && <div>อ้างอิง: {sd.ref}</div>}
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+          </>
         ) : (
           <div style={{ background: '#E7F4EC', border: '1px solid #BFE0CC', borderRadius: 14, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
             <span style={{ fontSize: 24 }}>✓</span>
@@ -2024,7 +2061,7 @@ export default function App() {
           customLabel={session.customLabel || ''} />
       )}
       {screen === 'print' && session && (
-        <PrintView session={session} readonly={readonly} isHandoff={isHandoff} verified={verified} history={history}
+        <PrintView session={session} readonly={readonly} isHandoff={isHandoff} verified={verified} history={history} payments={payments}
           onGoSummary={() => setScreen('summary')} onGoBack={goBackFromBill} onFinish={finishBill}
           customLabel={session.customLabel || ''} vehiclePhotoUrl={session.vehicleDriveUrl || vehiclePhotoUrl}
           onSaveSlip={handleSaveSlip} />
