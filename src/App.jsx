@@ -1021,6 +1021,7 @@ function PrintView({ session, readonly, isHandoff, verified, history, onGoSummar
 function TransferSlipModal({ bill, onConfirm, onClose }) {
   const [photoUrl, setPhotoUrl] = useState(null);
   const [slipInfo, setSlipInfo] = useState(null);
+  const [slipData, setSlipData] = useState(null);
   const [reading, setReading] = useState(false);
   const cameraRef = useRef();
   const galleryRef = useRef();
@@ -1028,7 +1029,7 @@ function TransferSlipModal({ bill, onConfirm, onClose }) {
     const f = e.target.files[0]; if (!f) return;
     const r = new FileReader(); r.onload = async ev => {
       const dataUrl = ev.target.result;
-      setPhotoUrl(dataUrl); setSlipInfo(null);
+      setPhotoUrl(dataUrl); setSlipInfo(null); setSlipData(null);
       setReading(true);
       try {
         const res = await fetch('/api/ocr', {
@@ -1037,7 +1038,7 @@ function TransferSlipModal({ bill, onConfirm, onClose }) {
           body: JSON.stringify({ base64: dataUrl, mode: 'slip' }),
         });
         const data = await res.json();
-        if (data.ok && data.info) setSlipInfo(data.info);
+        if (data.ok && data.info) { setSlipInfo(data.info); setSlipData(data.slipData || null); }
       } catch {} finally { setReading(false); }
     }; r.readAsDataURL(f); e.target.value = '';
   };
@@ -1068,11 +1069,11 @@ function TransferSlipModal({ bill, onConfirm, onClose }) {
         {reading && <div style={{ textAlign: 'center', fontSize: 12, color: '#9A8662', marginBottom: 8 }}>กำลังอ่านสลิป…</div>}
         {slipInfo && <div style={{ background: '#EFF8F1', borderRadius: 10, padding: '8px 12px', marginBottom: 10, fontSize: 12, color: '#2E7D32', lineHeight: 1.7 }}>{slipInfo}</div>}
         {photoUrl && !reading && !slipInfo && <div style={{ height: 6 }} />}
-        <button onClick={() => onConfirm(photoUrl)} disabled={!photoUrl}
+        <button onClick={() => onConfirm(photoUrl, slipData)} disabled={!photoUrl}
           style={{ width: '100%', border: 'none', borderRadius: 13, padding: 15, background: photoUrl ? '#5A9A6A' : '#C8D8C8', color: '#fff', fontWeight: 700, fontSize: 16, cursor: photoUrl ? 'pointer' : 'default', marginBottom: 8 }}>
           ยืนยันโอนแล้ว ✓
         </button>
-        <button onClick={() => onConfirm(null)}
+        <button onClick={() => onConfirm(null, null)}
           style={{ width: '100%', border: 'none', background: 'none', color: '#9A8662', fontSize: 13, cursor: 'pointer', padding: '6px 0' }}>
           ยืนยันโดยไม่มีสลิป
         </button>
@@ -1162,7 +1163,7 @@ function DashboardView({ history, payments, onPayment, onGoHome }) {
 
       {transferBill && (
         <TransferSlipModal bill={transferBill}
-          onConfirm={(slipPhotoUrl) => { onPayment(transferBill.billNo, 'transferred', slipPhotoUrl); setTransferBill(null); }}
+          onConfirm={(slipPhotoUrl, slipData) => { onPayment(transferBill.billNo, 'transferred', slipPhotoUrl, slipData); setTransferBill(null); }}
           onClose={() => setTransferBill(null)} />
       )}
     </div>
@@ -1802,9 +1803,9 @@ export default function App() {
     });
   }, [numpad, requirePin, updateSession, toast]);
 
-  const handlePayment = useCallback((billNo, status, slipPhotoUrl) => {
+  const handlePayment = useCallback((billNo, status, slipPhotoUrl, slipData) => {
     const paidAt = Date.now();
-    const next = { ...storage.loadPayments(), [billNo]: { status, paidAt, ...(slipPhotoUrl ? { slipUrl: slipPhotoUrl } : {}) } };
+    const next = { ...storage.loadPayments(), [billNo]: { status, paidAt, ...(slipPhotoUrl ? { slipUrl: slipPhotoUrl } : {}), ...(slipData ? { slipData } : {}) } };
     if (status === 'unpaid') delete next[billNo];
     storage.savePayments(next);
     setPayments(next);
