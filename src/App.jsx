@@ -1662,9 +1662,11 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
 }
 
 // ─── CustomerDetailView ───────────────────────────────────────────────────────
-function CustomerDetailView({ phone, history, verified, supervisors, onGoBack, onOpenHistory, onOpenVerify, onSaveSupervisor }) {
+function CustomerDetailView({ phone, history, verified, supervisors, vehiclePlates, customerInfo, onGoBack, onOpenHistory, onOpenVerify, onSaveSupervisor, onSaveCustomerInfo }) {
   const [editSupervisor, setEditSupervisor] = useState(false);
   const [supDraft, setSupDraft] = useState('');
+  const [editInfo, setEditInfo] = useState(false);
+  const [infoDraft, setInfoDraft] = useState({ bankName: '', bankAccount: '', note: '' });
   const stat = customerStat(phone, history, verified);
   if (!stat) return null;
   const tier = stat.effectiveTier;
@@ -1674,6 +1676,11 @@ function CustomerDetailView({ phone, history, verified, supervisors, onGoBack, o
   const currentSupervisor = supervisors?.[phone] || '';
   const pct = stat.next ? Math.min(100, (stat.total / stat.next.min) * 100) : 100;
   const bills = history.filter(h => String(h.phone || '').trim() === phone);
+  const info = customerInfo?.[phone] || {};
+  // collect unique plates from bills + vehiclePlates map
+  const platesFromBills = [...new Set(bills.map(h => h.data?.vehiclePlate).filter(Boolean))];
+  const plateFromMap = vehiclePlates?.[phone];
+  const allPlates = [...new Set([...(plateFromMap ? [plateFromMap] : []), ...platesFromBills])];
 
   return (
     <div style={{ flex: 1, maxWidth: 720, width: '100%', margin: '0 auto', padding: '14px 14px 40px' }}>
@@ -1737,6 +1744,43 @@ function CustomerDetailView({ phone, history, verified, supervisors, onGoBack, o
           <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
             <input value={supDraft} onChange={e => setSupDraft(e.target.value)} placeholder="ชื่อผู้ดูแล" style={{ flex: 1, border: '1.5px solid #E4D7BC', borderRadius: 10, padding: '10px 12px', fontSize: 14, color: '#3F2D1E', outline: 'none' }} />
             <button onClick={() => { onSaveSupervisor(phone, supDraft.trim()); setEditSupervisor(false); }} style={{ border: 'none', background: '#3F2D1E', color: '#F6EEDD', borderRadius: 10, padding: '10px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>บันทึก</button>
+          </div>
+        )}
+      </div>
+
+      {/* ทะเบียนรถ */}
+      <div style={{ background: '#FBF6EC', border: '1px solid #E4D7BC', borderRadius: 14, padding: '14px 16px', marginBottom: 12 }}>
+        <div style={{ fontSize: 13, color: '#4A3526', fontWeight: 600, marginBottom: allPlates.length ? 8 : 0 }}>🚗 ทะเบียนรถ</div>
+        {allPlates.length > 0
+          ? <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {allPlates.map((p, i) => <span key={i} style={{ background: '#FFF3E0', border: '1px solid #FFB74D', borderRadius: 8, padding: '3px 10px', fontSize: 13, fontWeight: 600, color: '#BF360C' }}>{p}</span>)}
+            </div>
+          : <div style={{ fontSize: 12, color: '#B7A684' }}>ยังไม่มีทะเบียน</div>}
+      </div>
+
+      {/* บัญชีธนาคาร */}
+      <div style={{ background: '#FBF6EC', border: '1px solid #E4D7BC', borderRadius: 14, padding: '14px 16px', marginBottom: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: editInfo ? 10 : 0 }}>
+          <div style={{ fontSize: 13, color: '#4A3526', fontWeight: 600 }}>🏦 บัญชีธนาคาร</div>
+          <button onClick={() => { setEditInfo(v => !v); setInfoDraft({ bankName: info.bankName || '', bankAccount: info.bankAccount || '', note: info.note || '' }); }} style={{ border: '1px solid #D8C8A8', background: '#F3E9D2', borderRadius: 9, padding: '5px 10px', fontSize: 12, color: '#7A5A22', cursor: 'pointer' }}>
+            {editInfo ? 'ยกเลิก' : 'แก้ไข'}
+          </button>
+        </div>
+        {!editInfo && (
+          info.bankAccount
+            ? <div style={{ fontSize: 13, color: '#3F2D1E', marginTop: 6 }}>
+                {info.bankName && <span style={{ color: '#7A5A22', marginRight: 6 }}>{info.bankName}</span>}
+                <span style={{ fontFamily: 'Prompt', fontWeight: 600, letterSpacing: '.06em' }}>{info.bankAccount}</span>
+                {info.note && <div style={{ fontSize: 11, color: '#9A8662', marginTop: 3 }}>{info.note}</div>}
+              </div>
+            : <div style={{ fontSize: 12, color: '#B7A684', marginTop: 4 }}>ยังไม่มีข้อมูล</div>
+        )}
+        {editInfo && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <input value={infoDraft.bankName} onChange={e => setInfoDraft(d => ({ ...d, bankName: e.target.value }))} placeholder="ชื่อธนาคาร เช่น กสิกร" style={{ border: '1.5px solid #E4D7BC', borderRadius: 10, padding: '10px 12px', fontSize: 14, color: '#3F2D1E', outline: 'none' }} />
+            <input value={infoDraft.bankAccount} onChange={e => setInfoDraft(d => ({ ...d, bankAccount: e.target.value }))} placeholder="เลขบัญชี" style={{ border: '1.5px solid #E4D7BC', borderRadius: 10, padding: '10px 12px', fontSize: 14, fontFamily: 'Prompt', letterSpacing: '.06em', color: '#3F2D1E', outline: 'none' }} />
+            <input value={infoDraft.note} onChange={e => setInfoDraft(d => ({ ...d, note: e.target.value }))} placeholder="หมายเหตุ (ไม่บังคับ)" style={{ border: '1.5px solid #E4D7BC', borderRadius: 10, padding: '10px 12px', fontSize: 13, color: '#3F2D1E', outline: 'none' }} />
+            <button onClick={() => { onSaveCustomerInfo(phone, infoDraft); setEditInfo(false); }} style={{ border: 'none', background: '#3F2D1E', color: '#F6EEDD', borderRadius: 10, padding: '12px 0', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>บันทึก</button>
           </div>
         )}
       </div>
@@ -1879,6 +1923,7 @@ export default function App() {
   const [toastMsg, setToastMsg] = useState('');
   const [logOpen, setLogOpen] = useState(false);
   const [vehiclePlates, setVehiclePlates] = useState({});
+  const [customerInfo, setCustomerInfo] = useState({});
   const [payments, setPayments] = useState({});
   const [vehiclePhotoUrl, setVehiclePhotoUrl] = useState(null);
   const savedSession = useRef(null);
@@ -1965,7 +2010,8 @@ export default function App() {
     const pc = storage.loadPinnedCats();
     const vp = storage.loadVehiclePlates();
     const pm = storage.loadPayments();
-    setHistory(h); setPin(p); setVerified(v); setSupervisors(sv); setEmployeePin(ep); setPinnedCats(pc); setEmployees(emps); setVehiclePlates(vp); setPayments(pm);
+    const ci = storage.loadCustomerInfo();
+    setHistory(h); setPin(p); setVerified(v); setSupervisors(sv); setEmployeePin(ep); setPinnedCats(pc); setEmployees(emps); setVehiclePlates(vp); setPayments(pm); setCustomerInfo(ci);
     if (savedRole) { setAuthRole(savedRole); setRecorderName(savedRecorder); }
     if (s) { setSession(s); if (s.vehiclePhotoKey) loadPhoto(s.vehiclePhotoKey).then(u => { if (u) setVehiclePhotoUrl(u); }); }
     if (su) setSheetUrl(su);
@@ -2471,8 +2517,10 @@ export default function App() {
       )}
       {screen === 'customerDetail' && custPhone && (
         <CustomerDetailView phone={custPhone} history={history} verified={verified} supervisors={supervisors}
+          vehiclePlates={vehiclePlates} customerInfo={customerInfo}
           onGoBack={() => setScreen('customers')} onOpenHistory={card => openHistory(card, true)}
           onSaveSupervisor={(phone, name) => { const ns = { ...supervisors, [phone]: name }; storage.saveSupervisors(ns); setSupervisors(ns); }}
+          onSaveCustomerInfo={(phone, info) => { const next = { ...storage.loadCustomerInfo(), [phone]: info }; storage.saveCustomerInfo(next); setCustomerInfo(next); }}
           onOpenVerify={phone => {
             const stat = customerStat(phone, history, verified);
             setVerifyPrompt({ phone, tier: tierOf(stat.total), draft: stat.name || '', newTotal: stat.total, mode: 'manage' });
