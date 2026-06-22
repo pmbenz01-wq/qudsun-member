@@ -1158,11 +1158,51 @@ function CancelPaymentModal({ bill, pin, onConfirm, onClose }) {
   );
 }
 
-function DashboardView({ history, payments, pin, onPayment, onGoHome }) {
+function DeleteBillModal({ bill, pin, onConfirm, onClose }) {
+  const [pinVal, setPinVal] = useState('');
+  const [pinErr, setPinErr] = useState('');
+  const keys = ['1','2','3','4','5','6','7','8','9','⌫','0','✓'];
+  const S = { border: '1px solid #E4D7BC', background: '#FBF6EC', borderRadius: 11, padding: '13px 0', fontSize: 20, color: '#3F2D1E', cursor: 'pointer' };
+  const F = { border: '1px solid #E0D2B4', background: '#F3E9D2', borderRadius: 11, padding: '13px 0', fontSize: 18, color: '#7A5A22', cursor: 'pointer' };
+  const handleKey = k => {
+    if (k === '⌫') { setPinVal(v => v.slice(0, -1)); setPinErr(''); return; }
+    if (k === '✓') {
+      if (pinVal.length < 4) return;
+      if (pinVal !== pin) { setPinErr('รหัสไม่ถูกต้อง'); setPinVal(''); return; }
+      onConfirm();
+      return;
+    }
+    if (pinVal.length < 4) setPinVal(v => v + k);
+  };
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 80, background: 'rgba(42,33,24,.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 18 }}>
+      <div style={{ background: '#FFFDF8', borderRadius: 20, padding: '22px 18px', width: '100%', maxWidth: 340 }}>
+        <div style={{ textAlign: 'center', fontSize: 24, marginBottom: 4 }}>🗑️</div>
+        <h3 style={{ textAlign: 'center', fontFamily: 'Prompt', fontWeight: 500, fontSize: 16, margin: '0 0 4px', color: '#C0392B' }}>ลบบิล</h3>
+        <p style={{ textAlign: 'center', fontSize: 12, color: '#9A8662', margin: '0 0 4px' }}>{bill.seller || '—'}</p>
+        <p style={{ textAlign: 'center', fontSize: 12, color: '#9A8662', margin: '0 0 14px' }}>{bill.billNo} · ฿{bill.baht}</p>
+        <p style={{ textAlign: 'center', fontSize: 11, color: '#C0392B', margin: '0 0 14px', background: '#FDECEA', borderRadius: 8, padding: '8px 12px' }}>
+          บิลจะถูกลบถาวรและไม่สามารถกู้คืนได้
+        </p>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginBottom: 6 }}>
+          {[0,1,2,3].map(i => <span key={i} style={{ width: 12, height: 12, borderRadius: '50%', background: i < pinVal.length ? '#C0392B' : '#E4D7BC', border: '1.5px solid #C0392B', display: 'inline-block' }} />)}
+        </div>
+        <p style={{ textAlign: 'center', fontSize: 11, color: '#C0392B', minHeight: 14, margin: '0 0 8px' }}>{pinErr}</p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 7, marginBottom: 10 }}>
+          {keys.map(k => <button key={k} onClick={() => handleKey(k)} style={k === '⌫' || k === '✓' ? F : S}>{k}</button>)}
+        </div>
+        <button onClick={onClose} style={{ width: '100%', border: 'none', background: 'none', color: '#9A8662', fontSize: 13, cursor: 'pointer', padding: 6 }}>ยกเลิก</button>
+      </div>
+    </div>
+  );
+}
+
+function DashboardView({ history, payments, pin, onPayment, onDeleteBill, onGoHome }) {
   const [filter, setFilter] = useState('all');
   const [view, setView] = useState('orders'); // 'orders' | 'daily'
   const [transferBill, setTransferBill] = useState(null);
   const [cancelBill, setCancelBill] = useState(null);
+  const [deleteBill, setDeleteBill] = useState(null);
 
   const STATUS = {
     unpaid:      { label: 'ยังไม่โอน', color: '#E07A5F', bg: '#FDECEA', text: '#C0392B' },
@@ -1291,13 +1331,16 @@ function DashboardView({ history, payments, pin, onPayment, onGoHome }) {
             }}>
               {/* Customer row */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 14px 8px' }}>
-                <div>
+                <div style={{ flex: 1 }}>
                   <div style={{ fontWeight: 700, fontSize: 15, color: '#2A2118' }}>{b.seller || '—'}</div>
                   <div style={{ fontSize: 11, color: '#8A7A66', marginTop: 2 }}>{b.billNo} · {b.dateText} · {b.kg} กก.</div>
                 </div>
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontWeight: 700, fontSize: 16, color: '#3F2D1E' }}>฿{b.baht}</div>
-                  <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 8, display: 'inline-block', marginTop: 3,
+                <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <div style={{ fontWeight: 700, fontSize: 16, color: '#3F2D1E' }}>฿{b.baht}</div>
+                    <button onClick={() => setDeleteBill(b)} style={{ border: 'none', background: 'none', padding: '2px 4px', cursor: 'pointer', fontSize: 14, color: '#C8B89A', lineHeight: 1 }} title="ลบบิล">🗑</button>
+                  </div>
+                  <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 8, display: 'inline-block',
                     background: st.bg, color: st.text, fontWeight: 600 }}>
                     {st.label}
                   </span>
@@ -1342,6 +1385,11 @@ function DashboardView({ history, payments, pin, onPayment, onGoHome }) {
         <CancelPaymentModal bill={cancelBill} pin={pin}
           onConfirm={note => { onPayment(cancelBill.billNo, 'unpaid', null, null, note); setCancelBill(null); }}
           onClose={() => setCancelBill(null)} />
+      )}
+      {deleteBill && (
+        <DeleteBillModal bill={deleteBill} pin={pin}
+          onConfirm={() => { onDeleteBill(deleteBill.billNo); setDeleteBill(null); }}
+          onClose={() => setDeleteBill(null)} />
       )}
     </div>
   );
@@ -2005,6 +2053,18 @@ export default function App() {
     }
   }, [history]);
 
+  const handleDeleteBill = useCallback((billNo) => {
+    const nextHistory = storage.loadHistory().filter(h => h.billNo !== billNo);
+    storage.saveHistory(nextHistory);
+    setHistory(nextHistory);
+    const nextPay = { ...storage.loadPayments() };
+    delete nextPay[billNo];
+    storage.savePayments(nextPay);
+    setPayments(nextPay);
+    fetch('/api/sheets', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'deleteBill', billNo }) }).catch(() => {});
+    fetch('/api/sheets', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'updatePayment', billNo, status: 'unpaid', paidAt: null }) }).catch(() => {});
+  }, []);
+
   const handleSaveSlip = useCallback((dataUrl) => {
     if (!session) return;
     const now = new Date();
@@ -2213,7 +2273,7 @@ export default function App() {
           onSaveSlip={handleSaveSlip} />
       )}
       {screen === 'dashboard' && (
-        <DashboardView history={history} payments={payments} pin={pin} onPayment={handlePayment} onGoHome={() => setScreen('home')} />
+        <DashboardView history={history} payments={payments} pin={pin} onPayment={handlePayment} onDeleteBill={handleDeleteBill} onGoHome={() => setScreen('home')} />
       )}
       {screen === 'customers' && (
         <CustomersView history={history} verified={verified} onGoHome={() => setScreen('home')}
