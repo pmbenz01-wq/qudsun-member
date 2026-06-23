@@ -2721,22 +2721,17 @@ export default function App() {
       setPayments(localNext);
       toast('กำลัง upload…');
 
-      // Try Drive upload in background
+      // Upload to Supabase Storage
       try {
-        const res = await fetch('/api/drive', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ base64: dataUrl, filename, folder }) });
-        const data = await res.json();
-        if (data.ok && data.fileId) {
-          const driveUrl = `https://drive.google.com/uc?id=${data.fileId}`;
-          if (type === 'vehicle') setVehiclePhotoUrl(driveUrl);
-          const driveUpdated = { ...existing, [urlKey]: driveUrl };
-          const driveNext = { ...prev, [session.billNo]: driveUpdated };
-          storage.savePayments(driveNext);
-          setPayments(driveNext);
-          pushPayment(session.billNo, driveUpdated); // only save Drive URL to Supabase
-          toast('อัพโหลดรูปแล้ว ✓');
-        } else {
-          toast('บันทึกรูปไว้ในเครื่อง ✓');
-        }
+        const storagePath = `${folder}/${filename}`;
+        const publicUrl = await db.uploadPhoto(dataUrl, storagePath);
+        if (type === 'vehicle') setVehiclePhotoUrl(publicUrl);
+        const cloudUpdated = { ...existing, [urlKey]: publicUrl };
+        const cloudNext = { ...prev, [session.billNo]: cloudUpdated };
+        storage.savePayments(cloudNext);
+        setPayments(cloudNext);
+        pushPayment(session.billNo, cloudUpdated);
+        toast('อัพโหลดรูปแล้ว ✓');
       } catch {
         toast('บันทึกรูปไว้ในเครื่อง ✓');
       }

@@ -175,4 +175,19 @@ export const db = {
     const { error } = await supabase.from('qm_sales').update({ deleted: true }).eq('id', id);
     if (error) throw error;
   },
+
+  // ─── Storage ──────────────────────────────────────────────────────────────
+  async uploadPhoto(base64DataUrl, path) {
+    const base64 = base64DataUrl.replace(/^data:image\/\w+;base64,/, '');
+    const bytes = Uint8Array.from(atob(base64), c => c.charCodeAt(0));
+    const blob = new Blob([bytes], { type: 'image/jpeg' });
+    const { data, error } = await supabase.storage
+      .from('qudsun-photos')
+      .upload(path, blob, { upsert: true, contentType: 'image/jpeg' });
+    if (error) throw error;
+    const { data: { publicUrl } } = supabase.storage
+      .from('qudsun-photos')
+      .getPublicUrl(data.path);
+    return publicUrl;
+  },
 };
