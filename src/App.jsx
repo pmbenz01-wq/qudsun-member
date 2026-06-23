@@ -1792,13 +1792,17 @@ function AddSaleModal({ date, accounts, onSave, onClose, onSaveAccount }) {
 
         <div style={{ marginBottom: 18 }}>
           <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 6 }}>สถานะการรับเงิน</div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={() => setStatus('cash')} style={{ flex: 1, border: `2px solid ${status === 'cash' ? '#2E7D32' : '#E4D7BC'}`, background: status === 'cash' ? '#E8F5E9' : '#fff', borderRadius: 10, padding: '11px 0', fontSize: 14, fontFamily: 'Prompt', fontWeight: 600, color: status === 'cash' ? '#1B5E20' : '#9A8662', cursor: 'pointer' }}>
-              💵 เงินสด
-            </button>
-            <button onClick={() => setStatus('pending')} style={{ flex: 1, border: `2px solid ${status === 'pending' ? '#E65100' : '#E4D7BC'}`, background: status === 'pending' ? '#FFF3E0' : '#fff', borderRadius: 10, padding: '11px 0', fontSize: 14, fontFamily: 'Prompt', fontWeight: 600, color: status === 'pending' ? '#E65100' : '#9A8662', cursor: 'pointer' }}>
-              ⏳ รอรับเงิน
-            </button>
+          <div style={{ display: 'flex', gap: 6 }}>
+            {[
+              { key: 'cash',        label: '💵 เงินสด',         active: '#2E7D32', activeBg: '#E8F5E9' },
+              { key: 'transferred', label: '✅ โอนแล้ว',         active: '#1565C0', activeBg: '#E3F2FD' },
+              { key: 'pending',     label: '⏳ ยังไม่ได้โอน',   active: '#E65100', activeBg: '#FFF3E0' },
+            ].map(opt => (
+              <button key={opt.key} onClick={() => setStatus(opt.key)}
+                style={{ flex: 1, border: `2px solid ${status === opt.key ? opt.active : '#E4D7BC'}`, background: status === opt.key ? opt.activeBg : '#fff', borderRadius: 10, padding: '10px 4px', fontSize: 12, fontFamily: 'Prompt', fontWeight: 600, color: status === opt.key ? opt.active : '#9A8662', cursor: 'pointer' }}>
+                {opt.label}
+              </button>
+            ))}
           </div>
         </div>
 
@@ -1883,16 +1887,23 @@ function SalesView({ history, sales, accounts, pin, onGoHome, onAddSale, onDelet
         <div style={{ textAlign: 'center', color: '#B7A684', fontSize: 13, padding: '20px 0' }}>ยังไม่มีรายการขาย</div>
       )}
       {outSales.map(s => {
-        const isPending = s.note === 'pending';
+        const st = s.note || 'cash';
+        const nextSt = st === 'cash' ? 'transferred' : st === 'transferred' ? 'pending' : 'cash';
+        const stMap = {
+          cash:        { label: '💵 เงินสด',       bg: '#E8F5E9', color: '#2E7D32', border: '#E4D7BC' },
+          transferred: { label: '✅ โอนแล้ว',       bg: '#E3F2FD', color: '#1565C0', border: '#90CAF9' },
+          pending:     { label: '⏳ ยังไม่ได้โอน', bg: '#FFF3E0', color: '#E65100', border: '#FFB74D' },
+        };
+        const badge = stMap[st] || stMap.cash;
         return (
-          <div key={s.id} style={{ background: '#FFFDF8', border: `1px solid ${isPending ? '#FFB74D' : '#E4D7BC'}`, borderRadius: 14, padding: '14px 16px', marginBottom: 10, display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+          <div key={s.id} style={{ background: '#FFFDF8', border: `1px solid ${badge.border}`, borderRadius: 14, padding: '14px 16px', marginBottom: 10, display: 'flex', alignItems: 'flex-start', gap: 10 }}>
             {s.receiptUrl && <a href={s.receiptUrl} target="_blank" rel="noreferrer"><img src={s.receiptUrl} alt="ใบเสร็จ" style={{ width: 52, height: 52, objectFit: 'cover', borderRadius: 8, border: '1px solid #E4D7BC', flexShrink: 0, display: 'block' }} /></a>}
             <div style={{ flex: 1 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
                 <div style={{ fontWeight: 700, fontSize: 15, color: '#1B5E20' }}>{fmtKg(Number(s.kg))} กก. · ฿{fmtBaht(Number(s.baht))}</div>
-                <button onClick={() => onUpdateSale(s.id, { note: isPending ? 'cash' : 'pending' })}
-                  style={{ border: 'none', borderRadius: 20, padding: '3px 10px', fontSize: 11, fontFamily: 'Prompt', fontWeight: 600, cursor: 'pointer', background: isPending ? '#FFF3E0' : '#E8F5E9', color: isPending ? '#E65100' : '#2E7D32' }}>
-                  {isPending ? '⏳ รอรับเงิน' : '💵 เงินสด'}
+                <button onClick={() => onUpdateSale(s.id, { note: nextSt })}
+                  style={{ border: 'none', borderRadius: 20, padding: '3px 10px', fontSize: 11, fontFamily: 'Prompt', fontWeight: 600, cursor: 'pointer', background: badge.bg, color: badge.color }}>
+                  {badge.label}
                 </button>
               </div>
               {s.buyer && <div style={{ fontSize: 12, color: '#7A6450' }}>บัญชี {s.buyer}</div>}
