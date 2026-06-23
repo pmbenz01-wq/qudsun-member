@@ -1704,14 +1704,33 @@ function AddSaleModal({ date, accounts, onSave, onClose, onSaveAccount }) {
   const [newAcct, setNewAcct] = useState('');
   const [kg, setKg] = useState('');
   const [baht, setBaht] = useState('');
+  const [receiptPreview, setReceiptPreview] = useState('');
+  const [receiptUrl, setReceiptUrl] = useState('');
   const [loading, setLoading] = useState(false);
+  const camRef = useRef();
+  const galleryRef = useRef();
+
+  const handleReceiptFile = (file) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      const dataUrl = ev.target.result;
+      setReceiptPreview(dataUrl);
+      try {
+        const res = await fetch('/api/drive', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ base64: dataUrl, filename: `sale_receipt_${Date.now()}.jpg`, folder: 'QudsunSaleReceipts' }) });
+        const data = await res.json();
+        setReceiptUrl(data.ok && data.fileId ? `https://drive.google.com/uc?id=${data.fileId}` : dataUrl);
+      } catch { setReceiptUrl(dataUrl); }
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleSave = async () => {
     if (!baht && !kg) return;
     const acct = isNew ? newAcct.trim() : account;
     if (isNew && acct) onSaveAccount(acct);
     setLoading(true);
-    await onSave({ account: acct, kg: Number(kg) || 0, baht: Number(baht) || 0, date });
+    await onSave({ account: acct, kg: Number(kg) || 0, baht: Number(baht) || 0, receiptUrl, date });
     setLoading(false);
   };
 
@@ -1719,8 +1738,23 @@ function AddSaleModal({ date, accounts, onSave, onClose, onSaveAccount }) {
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 200, display: 'flex', alignItems: 'flex-end' }}
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div style={{ background: '#FFFDF8', width: '100%', maxWidth: 520, margin: '0 auto', borderRadius: '20px 20px 0 0', padding: '22px 18px 36px' }}>
-        <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 16, color: '#3F2D1E', marginBottom: 18 }}>เพิ่มยอดขาย</div>
+      <div style={{ background: '#FFFDF8', width: '100%', maxWidth: 520, margin: '0 auto', borderRadius: '20px 20px 0 0', padding: '22px 18px 36px', maxHeight: '92vh', overflowY: 'auto' }}>
+        <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 16, color: '#3F2D1E', marginBottom: 14 }}>เพิ่มยอดขาย</div>
+
+        <input ref={camRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={e => { handleReceiptFile(e.target.files[0]); e.target.value = ''; }} />
+        <input ref={galleryRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => { handleReceiptFile(e.target.files[0]); e.target.value = ''; }} />
+
+        {receiptPreview ? (
+          <div style={{ marginBottom: 14, position: 'relative' }}>
+            <img src={receiptPreview} alt="ใบเสร็จ" style={{ width: '100%', maxHeight: 180, objectFit: 'contain', borderRadius: 10, border: '1px solid #E4D7BC', background: '#f5f5f5', display: 'block' }} />
+            <button onClick={() => { setReceiptPreview(''); setReceiptUrl(''); }} style={{ position: 'absolute', top: 6, right: 6, border: 'none', background: 'rgba(0,0,0,.4)', color: '#fff', borderRadius: '50%', width: 26, height: 26, cursor: 'pointer', fontSize: 15, lineHeight: '26px' }}>×</button>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
+            <button onClick={() => camRef.current?.click()} style={{ flex: 1, border: '1.5px dashed #C9A24B', background: 'none', borderRadius: 10, padding: '10px 0', fontSize: 13, color: '#7A5A22', cursor: 'pointer' }}>📷 ถ่ายรูปใบเสร็จ</button>
+            <button onClick={() => galleryRef.current?.click()} style={{ flex: 1, border: '1.5px dashed #9AB87A', background: 'none', borderRadius: 10, padding: '10px 0', fontSize: 13, color: '#4A7A2E', cursor: 'pointer' }}>🖼 อัพโหลด</button>
+          </div>
+        )}
 
         <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
           <div style={{ flex: 1 }}>
@@ -1833,7 +1867,8 @@ function SalesView({ history, sales, accounts, onGoHome, onAddSale, onDeleteSale
         <div style={{ textAlign: 'center', color: '#B7A684', fontSize: 13, padding: '20px 0' }}>ยังไม่มีรายการขาย</div>
       )}
       {outSales.map(s => (
-        <div key={s.id} style={{ background: '#FFFDF8', border: '1px solid #E4D7BC', borderRadius: 14, padding: '14px 16px', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div key={s.id} style={{ background: '#FFFDF8', border: '1px solid #E4D7BC', borderRadius: 14, padding: '14px 16px', marginBottom: 10, display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+          {s.receiptUrl && <a href={s.receiptUrl} target="_blank" rel="noreferrer"><img src={s.receiptUrl} alt="ใบเสร็จ" style={{ width: 52, height: 52, objectFit: 'cover', borderRadius: 8, border: '1px solid #E4D7BC', flexShrink: 0, display: 'block' }} /></a>}
           <div style={{ flex: 1 }}>
             <div style={{ fontWeight: 700, fontSize: 15, color: '#1B5E20' }}>{fmtKg(Number(s.kg))} กก. · ฿{fmtBaht(Number(s.baht))}</div>
             {s.buyer && <div style={{ fontSize: 12, color: '#7A6450', marginTop: 3 }}>บัญชี {s.buyer}</div>}
@@ -2635,9 +2670,9 @@ export default function App() {
     });
   }, []);
 
-  const handleAddSale = useCallback(async ({ account, kg, baht, date }) => {
+  const handleAddSale = useCallback(async ({ account, kg, baht, receiptUrl, date }) => {
     const ts = date ? new Date(date + 'T12:00:00').getTime() : Date.now();
-    const sale = { id: String(Date.now()) + '_' + Math.random().toString(36).slice(2), date: ts, buyer: account || '', kg: Number(kg) || 0, baht: Number(baht) || 0, note: '', receiptUrl: '' };
+    const sale = { id: String(Date.now()) + '_' + Math.random().toString(36).slice(2), date: ts, buyer: account || '', kg: Number(kg) || 0, baht: Number(baht) || 0, note: '', receiptUrl: receiptUrl || '' };
     const next = [sale, ...sales];
     storage.saveSales(next);
     setSales(next);
