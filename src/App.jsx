@@ -1310,110 +1310,112 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
 
 // ─── DashboardView ────────────────────────────────────────────────────────────
 function TransferSlipModal({ bill, onConfirm, onClose }) {
-  const [step, setStep] = useState(1); // 1=ถ่ายใบเสร็จมีลายเซ็น, 2=อัพโหลดสลิป
+  const [step, setStep] = useState(1); // 1=ใบเสร็จ 2=สลิป 3=ทะเบียน 4=สรุป
   const [receiptUrl, setReceiptUrl] = useState(null);
-  const [photoUrl, setPhotoUrl] = useState(null);
-  const [slipInfo, setSlipInfo] = useState(null);
-  const [slipData, setSlipData] = useState(null);
-  const [reading, setReading] = useState(false);
-  const receiptCamRef = useRef();
-  const cameraRef = useRef();
-  const galleryRef = useRef();
+  const [slipUrl, setSlipUrl] = useState(null);
+  const [plateUrl, setPlateUrl] = useState(null);
 
-  const handleReceiptFile = e => {
+  const cam1 = useRef(); const gal1 = useRef();
+  const cam2 = useRef(); const gal2 = useRef();
+  const cam3 = useRef(); const gal3 = useRef();
+
+  const readFile = setter => e => {
     const f = e.target.files[0]; if (!f) return;
-    const r = new FileReader(); r.onload = ev => setReceiptUrl(ev.target.result);
+    const r = new FileReader(); r.onload = ev => setter(ev.target.result);
     r.readAsDataURL(f); e.target.value = '';
   };
-  const handleSlipFile = async e => {
-    const f = e.target.files[0]; if (!f) return;
-    const r = new FileReader(); r.onload = async ev => {
-      const dataUrl = ev.target.result;
-      setPhotoUrl(dataUrl); setSlipInfo(null); setSlipData(null);
-      setReading(true);
-      try {
-        const res = await fetch('/api/ocr', {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ base64: dataUrl, mode: 'slip' }),
-        });
-        const data = await res.json();
-        if (data.ok && data.info) { setSlipInfo(data.info); setSlipData(data.slipData || null); }
-      } catch {} finally { setReading(false); }
-    }; r.readAsDataURL(f); e.target.value = '';
-  };
 
-  const billInfo = (
-    <div style={{ background: '#F0E9DA', borderRadius: 10, padding: '10px 14px', marginBottom: 14, fontSize: 13 }}>
-      <div style={{ fontWeight: 700, color: '#2A2118' }}>{bill.seller || '—'}</div>
-      <div style={{ color: '#5A4A38' }}>{bill.billNo} · ฿{bill.baht}</div>
-    </div>
-  );
+  const STEPS = [
+    { num: 1, label: 'ใบเสร็จลายเซ็น', emoji: '📄', hint: 'บังคับ — ถ่ายหรืออัปโหลด', url: receiptUrl, setUrl: setReceiptUrl, cam: cam1, gal: gal1, required: true },
+    { num: 2, label: 'สลิปโอนเงิน',     emoji: '💸', hint: 'บังคับ — ถ่ายหรืออัปโหลด', url: slipUrl,    setUrl: setSlipUrl,    cam: cam2, gal: gal2, required: true },
+    { num: 3, label: 'ทะเบียนรถ',        emoji: '🚗', hint: 'ไม่บังคับ — กดข้ามได้',   url: plateUrl,   setUrl: setPlateUrl,   cam: cam3, gal: gal3, required: false },
+  ];
+  const cur = STEPS[step - 1];
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 80, background: 'rgba(42,33,24,.6)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-      <div style={{ background: '#FFFDF8', borderRadius: '20px 20px 0 0', padding: '20px 18px 28px', width: '100%', maxWidth: 480, boxShadow: '0 -8px 30px rgba(42,33,24,.2)' }}>
-        {/* step indicator */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1 }}>
-            {[1, 2].map(s => (
-              <React.Fragment key={s}>
-                <div style={{ width: 24, height: 24, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700,
-                  background: step >= s ? '#3F2D1E' : '#E4D7BC', color: step >= s ? '#F6EEDD' : '#9A8662' }}>{s}</div>
-                {s < 2 && <div style={{ flex: 1, height: 2, background: step > 1 ? '#3F2D1E' : '#E4D7BC', borderRadius: 1 }} />}
-              </React.Fragment>
-            ))}
-          </div>
-          <button onClick={onClose} style={{ border: 'none', background: 'none', fontSize: 20, cursor: 'pointer', color: '#9A8662', marginLeft: 8 }}>✕</button>
+      <div style={{ background: '#FFFDF8', borderRadius: '20px 20px 0 0', padding: '20px 18px 32px', width: '100%', maxWidth: 480, boxShadow: '0 -8px 30px rgba(42,33,24,.2)', maxHeight: '92dvh', overflowY: 'auto' }}>
+
+        {/* Progress bar */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 16 }}>
+          {[1,2,3,4].map(s => (
+            <React.Fragment key={s}>
+              <div style={{ width: 26, height: 26, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, flexShrink: 0,
+                background: step > s ? '#5A9A6A' : step === s ? '#3F2D1E' : '#E4D7BC',
+                color: step >= s ? '#F6EEDD' : '#9A8662' }}>
+                {step > s ? '✓' : s === 4 ? '📋' : s}
+              </div>
+              {s < 4 && <div style={{ flex: 1, height: 2, background: step > s ? '#5A9A6A' : '#E4D7BC', borderRadius: 1 }} />}
+            </React.Fragment>
+          ))}
+          <button onClick={onClose} style={{ border: 'none', background: 'none', fontSize: 20, cursor: 'pointer', color: '#9A8662', marginLeft: 6, flexShrink: 0 }}>✕</button>
         </div>
 
-        {step === 1 ? (
+        {/* Bill info */}
+        <div style={{ background: '#F0E9DA', borderRadius: 10, padding: '10px 14px', marginBottom: 16, fontSize: 13 }}>
+          <div style={{ fontWeight: 700, color: '#2A2118' }}>{bill.seller || '—'}</div>
+          <div style={{ color: '#5A4A38' }}>{bill.billNo} · ฿{bill.baht}</div>
+        </div>
+
+        {/* Steps 1–3: upload */}
+        {step <= 3 && (
           <>
-            <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 15, color: '#3F2D1E', marginBottom: 4 }}>ถ่ายรูปใบเสร็จที่มีลายเซ็น</div>
-            <div style={{ fontSize: 12, color: '#9A8662', marginBottom: 12 }}>บังคับถ่ายรูปใบเสร็จที่ลูกค้าเซ็นแล้ว ก่อนไปขั้นถัดไป</div>
-            {billInfo}
-            <input ref={receiptCamRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={handleReceiptFile} />
-            <button onClick={() => receiptCamRef.current?.click()}
-              style={{ width: '100%', border: `1.5px dashed ${receiptUrl ? '#5A9A6A' : '#C9A24B'}`, background: receiptUrl ? '#EFF8F1' : '#FBF6EC', borderRadius: 12, padding: '16px 0', fontSize: 15, fontWeight: 600, color: receiptUrl ? '#2E7D32' : '#7A5A22', cursor: 'pointer', marginBottom: 10 }}>
-              📷 {receiptUrl ? 'ถ่ายใหม่' : 'ถ่ายรูปใบเสร็จ'}
-            </button>
-            {receiptUrl && <img src={receiptUrl} alt="ใบเสร็จ" style={{ width: '100%', maxHeight: 200, objectFit: 'cover', borderRadius: 10, border: '2px solid #5A9A6A', marginBottom: 12, display: 'block' }} />}
-            <button onClick={() => setStep(2)} disabled={!receiptUrl}
-              style={{ width: '100%', border: 'none', borderRadius: 13, padding: 15, background: receiptUrl ? '#3F2D1E' : '#C8C0B0', color: '#F6EEDD', fontWeight: 700, fontSize: 16, cursor: receiptUrl ? 'pointer' : 'default' }}>
-              ถัดไป — อัพโหลดสลิป →
-            </button>
+            <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 15, color: '#3F2D1E', marginBottom: 2 }}>{cur.emoji} {cur.label}</div>
+            <div style={{ fontSize: 12, color: '#9A8662', marginBottom: 14 }}>{cur.hint}</div>
+
+            <input ref={cur.cam} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={readFile(cur.setUrl)} />
+            <input ref={cur.gal} type="file" accept="image/*" style={{ display: 'none' }} onChange={readFile(cur.setUrl)} />
+
+            {cur.url ? (
+              <div style={{ position: 'relative', marginBottom: 14 }}>
+                <img src={cur.url} alt={cur.label} style={{ width: '100%', maxHeight: 220, objectFit: 'contain', borderRadius: 12, border: '2px solid #5A9A6A', background: '#f5f5f5', display: 'block' }} />
+                <button onClick={() => cur.setUrl(null)} style={{ position: 'absolute', top: 8, right: 8, border: 'none', background: 'rgba(0,0,0,.45)', color: '#fff', borderRadius: '50%', width: 28, height: 28, cursor: 'pointer', fontSize: 16, lineHeight: '28px', textAlign: 'center' }}>×</button>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
+                <button onClick={() => cur.cam.current?.click()} style={{ flex: 1, border: '1.5px dashed #C9A24B', background: '#FBF6EC', borderRadius: 12, padding: '20px 0', fontSize: 14, fontWeight: 600, color: '#7A5A22', cursor: 'pointer' }}>📷 ถ่ายรูป</button>
+                <button onClick={() => cur.gal.current?.click()} style={{ flex: 1, border: '1.5px dashed #5A9A6A', background: '#EFF8F1', borderRadius: 12, padding: '20px 0', fontSize: 14, fontWeight: 600, color: '#2E7D32', cursor: 'pointer' }}>🖼 อัปโหลด</button>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: 8 }}>
+              {step > 1 && (
+                <button onClick={() => setStep(step - 1)} style={{ border: '1px solid #E4D7BC', background: '#fff', borderRadius: 12, padding: '13px 14px', fontSize: 13, color: '#7A6450', cursor: 'pointer' }}>←</button>
+              )}
+              <button
+                onClick={() => setStep(step + 1)}
+                disabled={cur.required && !cur.url}
+                style={{ flex: 1, border: 'none', borderRadius: 12, padding: '13px 0', fontSize: 15, fontWeight: 700, cursor: (cur.required && !cur.url) ? 'default' : 'pointer',
+                  background: (cur.required && !cur.url) ? '#C8C0B0' : '#3F2D1E', color: '#F6EEDD' }}>
+                {step === 3 ? (cur.url ? 'ดูสรุป →' : 'ข้าม →') : 'ถัดไป →'}
+              </button>
+            </div>
           </>
-        ) : (
+        )}
+
+        {/* Step 4: Review all */}
+        {step === 4 && (
           <>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-              <button onClick={() => setStep(1)} style={{ border: 'none', background: 'none', fontSize: 18, cursor: 'pointer', color: '#9A8662', padding: 0 }}>←</button>
-              <span style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 15, color: '#3F2D1E' }}>อัพโหลดสลิปโอน</span>
+            <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 15, color: '#3F2D1E', marginBottom: 14 }}>📋 ตรวจสอบหลักฐาน</div>
+            <div style={{ display: 'grid', gridTemplateColumns: plateUrl ? '1fr 1fr 1fr' : '1fr 1fr', gap: 10, marginBottom: 18 }}>
+              {[
+                { label: 'ใบเสร็จ', url: receiptUrl },
+                { label: 'สลิป',    url: slipUrl },
+                plateUrl ? { label: 'ทะเบียน', url: plateUrl } : null,
+              ].filter(Boolean).map(({ label, url }) => (
+                <div key={label} style={{ textAlign: 'center' }}>
+                  <img src={url} alt={label} style={{ width: '100%', aspectRatio: '1', objectFit: 'cover', borderRadius: 10, border: '1.5px solid #E4D7BC', display: 'block', marginBottom: 5 }} />
+                  <div style={{ fontSize: 11, color: '#7A6450', fontWeight: 600 }}>{label}</div>
+                </div>
+              ))}
             </div>
-            {billInfo}
-            <input ref={cameraRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={handleSlipFile} />
-            <input ref={galleryRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleSlipFile} />
-            <div style={{ display: 'flex', gap: 8, marginBottom: photoUrl ? 10 : 14 }}>
-              <button onClick={() => cameraRef.current?.click()}
-                style={{ flex: 1, border: '1.5px dashed #5A9A6A', background: '#EFF8F1', borderRadius: 12, padding: '13px 0', fontSize: 14, fontWeight: 600, color: '#2E7D32', cursor: 'pointer' }}>
-                📷 {photoUrl ? 'ถ่ายใหม่' : 'ถ่ายรูป'}
-              </button>
-              <button onClick={() => galleryRef.current?.click()}
-                style={{ flex: 1, border: '1.5px dashed #5A7FA8', background: '#EEF2F8', borderRadius: 12, padding: '13px 0', fontSize: 14, fontWeight: 600, color: '#1A4D80', cursor: 'pointer' }}>
-                🖼️ {photoUrl ? 'เลือกใหม่' : 'อัปโหลด'}
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={() => setStep(3)} style={{ border: '1px solid #E4D7BC', background: '#fff', borderRadius: 12, padding: '13px 14px', fontSize: 13, color: '#7A6450', cursor: 'pointer' }}>← แก้ไข</button>
+              <button onClick={() => onConfirm(slipUrl, null, receiptUrl, plateUrl)}
+                style={{ flex: 1, border: 'none', borderRadius: 12, padding: '13px 0', background: '#5A9A6A', color: '#fff', fontWeight: 700, fontSize: 16, cursor: 'pointer' }}>
+                ✓ ยืนยันโอนแล้ว
               </button>
             </div>
-            {photoUrl && <img src={photoUrl} alt="สลิป" style={{ width: '100%', maxHeight: 180, objectFit: 'cover', borderRadius: 10, border: '1px solid #C8E6C9', marginBottom: 8, display: 'block' }} />}
-            {reading && <div style={{ textAlign: 'center', fontSize: 12, color: '#9A8662', marginBottom: 8 }}>กำลังอ่านสลิป…</div>}
-            {slipInfo && <div style={{ background: '#EFF8F1', borderRadius: 10, padding: '8px 12px', marginBottom: 10, fontSize: 12, color: '#2E7D32', lineHeight: 1.7 }}>{slipInfo}</div>}
-            {photoUrl && !reading && !slipInfo && <div style={{ height: 6 }} />}
-            <button onClick={() => onConfirm(photoUrl, slipData, receiptUrl)} disabled={!photoUrl}
-              style={{ width: '100%', border: 'none', borderRadius: 13, padding: 15, background: photoUrl ? '#5A9A6A' : '#C8D8C8', color: '#fff', fontWeight: 700, fontSize: 16, cursor: photoUrl ? 'pointer' : 'default', marginBottom: 8 }}>
-              ยืนยันโอนแล้ว ✓
-            </button>
-            <button onClick={() => onConfirm(null, null, receiptUrl)}
-              style={{ width: '100%', border: 'none', background: 'none', color: '#9A8662', fontSize: 13, cursor: 'pointer', padding: '6px 0' }}>
-              ยืนยันโดยไม่มีสลิป
-            </button>
           </>
         )}
       </div>
@@ -1590,12 +1592,12 @@ function DashboardView({ history, payments, pin, onPayment, onDeleteBill, onGoHo
               {b.pay.status === 'unpaid' ? (
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button onClick={() => setTransferBill(b)}
-                    style={{ flex: 1, border: 'none', borderRadius: 10, padding: '9px 0', background: '#5A9A6A', color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
-                    โอนแล้ว ✓
+                    style={{ flex: 2, border: 'none', borderRadius: 10, padding: '9px 0', background: '#3F2D1E', color: '#F6EEDD', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
+                    📎 อัปโหลดหลักฐาน
                   </button>
                   <button onClick={() => onPayment(b.billNo, 'cash')}
-                    style={{ flex: 1, border: 'none', borderRadius: 10, padding: '9px 0', background: '#5A7FA8', color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
-                    เงินสด ✓
+                    style={{ flex: 1, border: '1px solid #5A7FA8', borderRadius: 10, padding: '9px 0', background: '#E8EEF8', color: '#1A4D80', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
+                    💵 เงินสด
                   </button>
                 </div>
               ) : (
@@ -1611,7 +1613,7 @@ function DashboardView({ history, payments, pin, onPayment, onDeleteBill, onGoHo
 
       {transferBill && (
         <TransferSlipModal bill={transferBill}
-          onConfirm={(slipPhotoUrl, slipData, receiptUrl) => { onPayment(transferBill.billNo, 'transferred', slipPhotoUrl, slipData, null, receiptUrl); setTransferBill(null); }}
+          onConfirm={(slipPhotoUrl, slipData, receiptUrl, plateUrl) => { onPayment(transferBill.billNo, 'transferred', slipPhotoUrl, slipData, null, receiptUrl, plateUrl); setTransferBill(null); }}
           onClose={() => setTransferBill(null)} />
       )}
       {cancelBill && (
@@ -2618,9 +2620,9 @@ export default function App() {
     db.upsertPayment(billNo, pay).catch(() => {});
   }, []);
 
-  const handlePayment = useCallback((billNo, status, slipPhotoUrl, slipData, cancelNote, receiptPhotoUrl) => {
+  const handlePayment = useCallback((billNo, status, slipPhotoUrl, slipData, cancelNote, receiptPhotoUrl, vehiclePhotoUrl) => {
     const paidAt = Date.now();
-    const next = { ...storage.loadPayments(), [billNo]: { status, paidAt, ...(slipPhotoUrl ? { slipUrl: slipPhotoUrl } : {}), ...(slipData ? { slipData } : {}), ...(cancelNote ? { cancelNote } : {}), ...(receiptPhotoUrl ? { receiptUrl: receiptPhotoUrl } : {}) } };
+    const next = { ...storage.loadPayments(), [billNo]: { status, paidAt, ...(slipPhotoUrl ? { slipUrl: slipPhotoUrl } : {}), ...(slipData ? { slipData } : {}), ...(cancelNote ? { cancelNote } : {}), ...(receiptPhotoUrl ? { receiptUrl: receiptPhotoUrl } : {}), ...(vehiclePhotoUrl ? { vehicleUrl: vehiclePhotoUrl } : {}) } };
     if (status === 'unpaid') delete next[billNo];
     storage.savePayments(next);
     setPayments(next);
