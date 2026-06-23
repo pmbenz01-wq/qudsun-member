@@ -33,11 +33,6 @@ function Keypad({ value, onChange, onConfirm, confirmLabel }) {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8 }}>
         {keys.map(k => <button key={k.ch} onClick={() => press(k.ch)} style={k.s}>{k.ch}</button>)}
       </div>
-      {onConfirm && (
-        <button onClick={onConfirm} style={{ width: '100%', marginTop: 10, border: 'none', borderRadius: 14, padding: 18, background: 'linear-gradient(135deg,#C9A24B,#A8763E)', color: '#fff', fontFamily: 'IBM Plex Sans Thai', fontWeight: 700, fontSize: 18, cursor: 'pointer', boxShadow: '0 8px 18px rgba(168,118,62,.32)' }}>
-          {confirmLabel || '＋ บันทึกเข่งนี้'}
-        </button>
-      )}
     </div>
   );
 }
@@ -761,6 +756,12 @@ function RecordView({ session, activeCat, input, onInput, onCommit, onPickCat, o
       )}
 
       <div className="no-print" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 25, background: '#FBF6EC', borderTop: '1px solid #E4D7BC', padding: 'calc(env(safe-area-inset-bottom) + 10px) 14px 10px', display: 'flex', gap: 10 }}>
+        <button
+          onClick={onCommit}
+          disabled={!input || parseFloat(input) <= 0}
+          style={{ flex: 1, border: 'none', borderRadius: 13, padding: 15, background: (!input || parseFloat(input) <= 0) ? '#D9CDB8' : 'linear-gradient(135deg,#C9A24B,#A8763E)', color: (!input || parseFloat(input) <= 0) ? '#A89880' : '#fff', fontWeight: 700, fontSize: 16, cursor: (!input || parseFloat(input) <= 0) ? 'not-allowed' : 'pointer', transition: 'background .2s' }}>
+          ＋ บันทึกเข่งนี้
+        </button>
         <button onClick={onGoSummary} style={{ flex: 1, border: 'none', borderRadius: 13, padding: 15, background: '#3F2D1E', color: '#F6EEDD', fontWeight: 600, fontSize: 16, cursor: 'pointer' }}>ดูสรุป & ตั้งราคา →</button>
       </div>
     </div>
