@@ -178,16 +178,13 @@ export const db = {
 
   // ─── Storage ──────────────────────────────────────────────────────────────
   async uploadPhoto(base64DataUrl, path) {
-    const base64 = base64DataUrl.replace(/^data:image\/\w+;base64,/, '');
-    const bytes = Uint8Array.from(atob(base64), c => c.charCodeAt(0));
-    const blob = new Blob([bytes], { type: 'image/jpeg' });
-    const { data, error } = await supabase.storage
-      .from('qudsun-photos')
-      .upload(path, blob, { upsert: true, contentType: 'image/jpeg' });
-    if (error) throw error;
-    const { data: { publicUrl } } = supabase.storage
-      .from('qudsun-photos')
-      .getPublicUrl(data.path);
-    return publicUrl;
+    const res = await fetch('/api/upload', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ base64: base64DataUrl, path }),
+    });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || 'upload failed');
+    return data.url;
   },
 };
