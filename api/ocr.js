@@ -6,6 +6,8 @@ export default async function handler(req, res) {
 
   const prompt = mode === 'plate'
     ? 'อ่านป้ายทะเบียนรถในภาพ ตอบแค่ตัวอักษร/ตัวเลขบนป้าย และชื่อจังหวัด เช่น "1กจ 1558 ตราด" ไม่ต้องอธิบายเพิ่ม'
+    : mode === 'market'
+    ? 'อ่านใบเสร็จจากตลาดในภาพ (อาจเขียนมือ) ตอบเป็น JSON เท่านั้น ห้ามมีข้อความอื่น รูปแบบ: {"totalKg":"น้ำหนักรวม กก. เป็นตัวเลข เช่น 1234.50","totalBaht":"ยอดรวม บาท เป็นตัวเลข เช่น 56000","buyer":"ชื่อผู้ซื้อหรือตลาด","note":"หมายเหตุเพิ่มเติม เช่น ราคาต่อกก."} ถ้าไม่มีข้อมูลให้ใส่ ""'
     : 'อ่านสลิปโอนเงินในภาพ แล้วตอบเป็น JSON เท่านั้น ห้ามมีข้อความอื่น รูปแบบ: {"amount":"ยอดโอน เช่น 1000.00","sender":"ชื่อผู้โอน","recipient":"ชื่อผู้รับ","datetime":"วันเวลา เช่น 22 มิ.ย. 69 17:21","ref":"เลขอ้างอิง"} ถ้าไม่มีข้อมูลให้ใส่ ""';
 
   const clean = base64.replace(/^data:image\/\w+;base64,/, '');
@@ -27,6 +29,16 @@ export default async function handler(req, res) {
   if (!text) return res.json({ ok: false, error: 'no_text' });
 
   if (mode === 'plate') return res.json({ ok: true, plate: text });
+
+  if (mode === 'market') {
+    try {
+      const jsonStr = text.match(/\{[\s\S]*\}/)?.[0];
+      const marketData = JSON.parse(jsonStr);
+      return res.json({ ok: true, marketData });
+    } catch {
+      return res.json({ ok: true, marketData: null, raw: text });
+    }
+  }
 
   try {
     const jsonStr = text.match(/\{[\s\S]*\}/)?.[0];

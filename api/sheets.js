@@ -111,6 +111,21 @@ export default async function handler(req, res) {
         return res.json({ ok: true, plates });
       }
 
+      if (action === 'getSales') {
+        const rows = await read(token, 'Sales!A:H') ?? [];
+        const sales = [];
+        for (let i = 1; i < rows.length; i++) {
+          if (rows[i][0]) sales.push({
+            id: rows[i][0], date: rows[i][1] ? Number(rows[i][1]) : null,
+            dateText: rows[i][2] || '', buyer: rows[i][3] || '',
+            kg: rows[i][4] ? Number(rows[i][4]) : 0,
+            baht: rows[i][5] ? Number(rows[i][5]) : 0,
+            receiptUrl: rows[i][6] || '', note: rows[i][7] || '',
+          });
+        }
+        return res.json({ ok: true, sales });
+      }
+
       if (action === 'getCustomerInfo') {
         const rows = await read(token, 'CustomerInfo!A:D') ?? [];
         const info = {};
@@ -181,6 +196,29 @@ export default async function handler(req, res) {
         const plates = body.plates || {};
         const rows = [['phone', 'plate'], ...Object.entries(plates)];
         if (rows.length > 1) await append(token, 'Plates!A1', rows);
+        return res.json({ ok: true });
+      }
+
+      if (action === 'addSale') {
+        await ensureSheet(token, 'Sales', ['id', 'date', 'dateText', 'buyer', 'kg', 'baht', 'receiptUrl', 'note']);
+        const col = await read(token, 'Sales!A:A') ?? [];
+        let found = -1;
+        for (let i = 1; i < col.length; i++) {
+          if (String(col[i]?.[0] ?? '') === String(body.id)) { found = i + 1; break; }
+        }
+        const row = [body.date ?? '', body.dateText ?? '', body.buyer ?? '', body.kg ?? 0, body.baht ?? 0, body.receiptUrl ?? '', body.note ?? ''];
+        if (found > 0) await update(token, `Sales!B${found}:H${found}`, [row]);
+        else await append(token, 'Sales!A:H', [[body.id, ...row]]);
+        return res.json({ ok: true });
+      }
+
+      if (action === 'deleteSale') {
+        const col = await read(token, 'Sales!A:A') ?? [];
+        let found = -1;
+        for (let i = 1; i < col.length; i++) {
+          if (String(col[i]?.[0] ?? '') === String(body.id)) { found = i + 1; break; }
+        }
+        if (found > 0) await deleteRow(token, 'Sales', found);
         return res.json({ ok: true });
       }
 

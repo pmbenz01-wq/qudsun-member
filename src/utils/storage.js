@@ -12,6 +12,7 @@ const KEYS = {
   payments:      'qudsun_payments',
   deletedBills:  'qudsun_deleted_bills',
   customerInfo:  'qudsun_customer_info',
+  sales:         'qudsun_sales',
 };
 
 const DEFAULT_PINS = ['AB', 'etc', 'taksai', 'hongyen', 'sutthai'];
@@ -53,4 +54,6 @@ export const storage = {
   addDeletedBill:   id => { try { const s = new Set(JSON.parse(localStorage.getItem(KEYS.deletedBills) || '[]')); s.add(id); localStorage.setItem(KEYS.deletedBills, JSON.stringify([...s])); } catch {} },
   loadCustomerInfo: () => { try { return JSON.parse(localStorage.getItem(KEYS.customerInfo) || '{}'); } catch { return {}; } },
   saveCustomerInfo: m  => { try { localStorage.setItem(KEYS.customerInfo, JSON.stringify(m)); } catch {} },
+  loadSales: () => { try { const v = JSON.parse(localStorage.getItem(KEYS.sales) || '[]'); return Array.isArray(v) ? v : []; } catch { return []; } },
+  saveSales: arr => { try { localStorage.setItem(KEYS.sales, JSON.stringify(arr)); } catch {} },
 };
