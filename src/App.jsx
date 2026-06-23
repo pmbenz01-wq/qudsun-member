@@ -1202,11 +1202,10 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
       <div className="bill-doc-wrapper" style={{ maxWidth: 420, margin: '0 auto' }}>
       <div className="bill-doc" style={{ background: '#fff', border: '1px solid #E4D7BC', borderRadius: 6, boxShadow: '0 10px 30px rgba(95,70,40,.14)', padding: '22px 22px 18px', color: '#2A2118', fontSize: 12 }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, borderBottom: '2px solid #2A2118', paddingBottom: 12 }}>
-          <img src="/logo.jpg" className="no-print" style={{ width: 64, height: 'auto' }} alt="" />
+          <img src="/logo-sleep.png" style={{ width: 72, height: 'auto' }} alt="" onError={e => { e.target.src = '/logo.jpg'; }} />
           <div style={{ flex: 1 }}>
             <div style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 17, letterSpacing: '.04em' }}>ทุเรียนคัดสรร <span style={{ color: '#8A6A2E' }}>QUDSUN</span></div>
             <div style={{ fontSize: 11, color: '#5A4A38', marginTop: 2 }}>Premium Durian Selection</div>
-            <div style={{ fontSize: 11, color: '#5A4A38', marginTop: 2 }}>โทร. 094-149-1914 (วิน) · 082-691-4414 (เบนซ์)</div>
           </div>
           <div style={{ textAlign: 'right', minWidth: 130 }}>
             <div style={{ fontWeight: 700, fontSize: 13 }}>ใบรับซื้อทุเรียน</div>
@@ -1265,7 +1264,13 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
           <div style={{ flex: 1, textAlign: 'center' }}><div style={{ borderTop: '1px dotted #2A2118', paddingTop: 6, fontSize: 11 }}>ลายเซ็นผู้ขาย</div></div>
           <div style={{ flex: 1, textAlign: 'center' }}><div style={{ borderTop: '1px dotted #2A2118', paddingTop: 6, fontSize: 11 }}>ลายเซ็นผู้ซื้อ</div></div>
         </div>
-        <div style={{ textAlign: 'center', marginTop: 14, fontSize: 10, color: '#8A7A66' }}>ขอบคุณที่ไว้วางใจ · ทุเรียนคัดสรร Qudsun</div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 14 }}>
+          <div>
+            <div style={{ fontSize: 10, color: '#8A7A66' }}>ขอบคุณที่ไว้วางใจ · ทุเรียนคัดสรร Qudsun</div>
+            <div style={{ fontSize: 10, color: '#8A7A66', marginTop: 2 }}>โทร. 094-149-1914 (วิน) · 082-691-4414 (เบนซ์)</div>
+          </div>
+          <img src="/qr-bill.png" alt="QR" style={{ width: 52, height: 52, objectFit: 'contain' }} onError={e => { e.target.style.display = 'none'; }} />
+        </div>
       </div>
       </div>
 
