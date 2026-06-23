@@ -587,7 +587,7 @@ function RecordView({ session, activeCat, input, onInput, onCommit, onPickCat, o
   const [vehicleModalOpen, setVehicleModalOpen] = useState(false);
   const totalKg = grandKg(session);
   const totalCount = (session?.entries || []).length;
-  const recent = (session?.entries || []).filter(e => e.cat === activeCat).slice(-5).reverse();
+  const recent = (session?.entries || []).filter(e => e.cat === activeCat).reverse();
   const sellerPhone = session?.sellerPhone || '';
   const stat = sellerPhone ? customerStat(sellerPhone, history, verified) : null;
   const tier = stat ? stat.effectiveTier : null;
