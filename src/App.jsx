@@ -2444,8 +2444,8 @@ export default function App() {
     const sv = storage.loadSupervisors();
     const ep = storage.loadEmployeePin();
     const emps = storage.loadEmployees();
-    const savedRole = sessionStorage.getItem('qudsun_role');
-    const savedRecorder = sessionStorage.getItem('qudsun_recorder') || '';
+    const savedRole = localStorage.getItem('qudsun_role');
+    const savedRecorder = localStorage.getItem('qudsun_recorder') || '';
     const pc = storage.loadPinnedCats();
     const vp = storage.loadVehiclePlates();
     const pm = storage.loadPayments();
@@ -2598,7 +2598,7 @@ export default function App() {
   // Session
   const createSession = useCallback((seller = '', sellerPhone = '', supervisor = '') => {
     const t = Date.now();
-    const recorder = sessionStorage.getItem('qudsun_recorder') || recorderName || '';
+    const recorder = localStorage.getItem('qudsun_recorder') || recorderName || '';
     const vp = storage.loadVehiclePlates();
     const vehiclePlate = (sellerPhone && vp[sellerPhone]) ? vp[sellerPhone] : '';
     const sess = { id: t, billNo: newBillNo(), createdAt: t, date: t, seller, sellerPhone, supervisor, recorder, vehiclePlate, vehiclePhotoKey: null, prices: Object.fromEntries(CATS.map(c => [c.key, 0])), entries: [], log: [{ t, kind: 'open', text: 'เปิดใบรับซื้อใหม่' }], confirmed: false, confirmedAt: null, customLabel: '' };
@@ -2990,17 +2990,17 @@ export default function App() {
 
   const handleLogin = useCallback((entered) => {
     if (entered === pin) {
-      setAuthRole('admin'); sessionStorage.setItem('qudsun_role', 'admin'); setLoginError('');
+      setAuthRole('admin'); localStorage.setItem('qudsun_role', 'admin'); setLoginError('');
       const name = 'Admin';
-      setRecorderName(name); sessionStorage.setItem('qudsun_recorder', name);
+      setRecorderName(name); localStorage.setItem('qudsun_recorder', name);
     } else {
       const emp = employees.find(e => e.pin === entered);
       if (emp) {
-        setAuthRole('employee'); sessionStorage.setItem('qudsun_role', 'employee'); setLoginError('');
-        setRecorderName(emp.name); sessionStorage.setItem('qudsun_recorder', emp.name);
+        setAuthRole('employee'); localStorage.setItem('qudsun_role', 'employee'); setLoginError('');
+        setRecorderName(emp.name); localStorage.setItem('qudsun_recorder', emp.name);
       } else if (employeePin && entered === employeePin) {
-        setAuthRole('employee'); sessionStorage.setItem('qudsun_role', 'employee'); setLoginError('');
-        setRecorderName('พนักงาน'); sessionStorage.setItem('qudsun_recorder', 'พนักงาน');
+        setAuthRole('employee'); localStorage.setItem('qudsun_role', 'employee'); setLoginError('');
+        setRecorderName('พนักงาน'); localStorage.setItem('qudsun_recorder', 'พนักงาน');
       } else {
         setLoginError('รหัสไม่ถูกต้อง ลองใหม่');
       }
@@ -3009,7 +3009,7 @@ export default function App() {
 
   const handleLogout = useCallback(() => {
     setAuthRole(null); setRecorderName('');
-    sessionStorage.removeItem('qudsun_role'); sessionStorage.removeItem('qudsun_recorder');
+    localStorage.removeItem('qudsun_role'); localStorage.removeItem('qudsun_recorder');
   }, []);
 
   const sheetSave = () => {
