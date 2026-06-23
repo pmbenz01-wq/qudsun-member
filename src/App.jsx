@@ -1704,6 +1704,7 @@ function AddSaleModal({ date, accounts, onSave, onClose, onSaveAccount }) {
   const [newAcct, setNewAcct] = useState('');
   const [kg, setKg] = useState('');
   const [baht, setBaht] = useState('');
+  const [status, setStatus] = useState('cash');
   const [receiptPreview, setReceiptPreview] = useState('');
   const [receiptUrl, setReceiptUrl] = useState('');
   const [loading, setLoading] = useState(false);
@@ -1730,7 +1731,7 @@ function AddSaleModal({ date, accounts, onSave, onClose, onSaveAccount }) {
     const acct = isNew ? newAcct.trim() : account;
     if (isNew && acct) onSaveAccount(acct);
     setLoading(true);
-    await onSave({ account: acct, kg: Number(kg) || 0, baht: Number(baht) || 0, receiptUrl, date });
+    await onSave({ account: acct, kg: Number(kg) || 0, baht: Number(baht) || 0, receiptUrl, status, date });
     setLoading(false);
   };
 
@@ -1789,6 +1790,18 @@ function AddSaleModal({ date, accounts, onSave, onClose, onSaveAccount }) {
           )}
         </div>
 
+        <div style={{ marginBottom: 18 }}>
+          <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 6 }}>สถานะการรับเงิน</div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={() => setStatus('cash')} style={{ flex: 1, border: `2px solid ${status === 'cash' ? '#2E7D32' : '#E4D7BC'}`, background: status === 'cash' ? '#E8F5E9' : '#fff', borderRadius: 10, padding: '11px 0', fontSize: 14, fontFamily: 'Prompt', fontWeight: 600, color: status === 'cash' ? '#1B5E20' : '#9A8662', cursor: 'pointer' }}>
+              💵 เงินสด
+            </button>
+            <button onClick={() => setStatus('pending')} style={{ flex: 1, border: `2px solid ${status === 'pending' ? '#E65100' : '#E4D7BC'}`, background: status === 'pending' ? '#FFF3E0' : '#fff', borderRadius: 10, padding: '11px 0', fontSize: 14, fontFamily: 'Prompt', fontWeight: 600, color: status === 'pending' ? '#E65100' : '#9A8662', cursor: 'pointer' }}>
+              ⏳ รอรับเงิน
+            </button>
+          </div>
+        </div>
+
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={handleSave} disabled={loading || (!baht && !kg)}
             style={{ flex: 1, background: '#6B8E4E', color: '#fff', border: 'none', borderRadius: 12, padding: '14px 0', fontSize: 15, fontFamily: 'Prompt', fontWeight: 600, cursor: 'pointer', opacity: (!baht && !kg) ? 0.5 : 1 }}>
@@ -1801,10 +1814,13 @@ function AddSaleModal({ date, accounts, onSave, onClose, onSaveAccount }) {
   );
 }
 
-function SalesView({ history, sales, accounts, onGoHome, onAddSale, onDeleteSale, onSaveAccount }) {
+function SalesView({ history, sales, accounts, pin, onGoHome, onAddSale, onDeleteSale, onUpdateSale, onSaveAccount }) {
   const todayStr = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
   const [selectedDate, setSelectedDate] = useState(todayStr);
   const [addOpen, setAddOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deletePinVal, setDeletePinVal] = useState('');
+  const [deletePinErr, setDeletePinErr] = useState('');
 
   const toDateStr = ts => { const d = new Date(ts); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
 
@@ -1866,17 +1882,26 @@ function SalesView({ history, sales, accounts, onGoHome, onAddSale, onDeleteSale
       {outSales.length === 0 && (
         <div style={{ textAlign: 'center', color: '#B7A684', fontSize: 13, padding: '20px 0' }}>ยังไม่มีรายการขาย</div>
       )}
-      {outSales.map(s => (
-        <div key={s.id} style={{ background: '#FFFDF8', border: '1px solid #E4D7BC', borderRadius: 14, padding: '14px 16px', marginBottom: 10, display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-          {s.receiptUrl && <a href={s.receiptUrl} target="_blank" rel="noreferrer"><img src={s.receiptUrl} alt="ใบเสร็จ" style={{ width: 52, height: 52, objectFit: 'cover', borderRadius: 8, border: '1px solid #E4D7BC', flexShrink: 0, display: 'block' }} /></a>}
-          <div style={{ flex: 1 }}>
-            <div style={{ fontWeight: 700, fontSize: 15, color: '#1B5E20' }}>{fmtKg(Number(s.kg))} กก. · ฿{fmtBaht(Number(s.baht))}</div>
-            {s.buyer && <div style={{ fontSize: 12, color: '#7A6450', marginTop: 3 }}>บัญชี {s.buyer}</div>}
+      {outSales.map(s => {
+        const isPending = s.note === 'pending';
+        return (
+          <div key={s.id} style={{ background: '#FFFDF8', border: `1px solid ${isPending ? '#FFB74D' : '#E4D7BC'}`, borderRadius: 14, padding: '14px 16px', marginBottom: 10, display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+            {s.receiptUrl && <a href={s.receiptUrl} target="_blank" rel="noreferrer"><img src={s.receiptUrl} alt="ใบเสร็จ" style={{ width: 52, height: 52, objectFit: 'cover', borderRadius: 8, border: '1px solid #E4D7BC', flexShrink: 0, display: 'block' }} /></a>}
+            <div style={{ flex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                <div style={{ fontWeight: 700, fontSize: 15, color: '#1B5E20' }}>{fmtKg(Number(s.kg))} กก. · ฿{fmtBaht(Number(s.baht))}</div>
+                <button onClick={() => onUpdateSale(s.id, { note: isPending ? 'cash' : 'pending' })}
+                  style={{ border: 'none', borderRadius: 20, padding: '3px 10px', fontSize: 11, fontFamily: 'Prompt', fontWeight: 600, cursor: 'pointer', background: isPending ? '#FFF3E0' : '#E8F5E9', color: isPending ? '#E65100' : '#2E7D32' }}>
+                  {isPending ? '⏳ รอรับเงิน' : '💵 เงินสด'}
+                </button>
+              </div>
+              {s.buyer && <div style={{ fontSize: 12, color: '#7A6450' }}>บัญชี {s.buyer}</div>}
+            </div>
+            <button onClick={() => { setDeleteTarget(s.id); setDeletePinVal(''); setDeletePinErr(''); }}
+              style={{ border: 'none', background: 'none', color: '#C8A080', fontSize: 20, cursor: 'pointer', lineHeight: 1 }}>×</button>
           </div>
-          <button onClick={() => { if (window.confirm('ลบรายการนี้?')) onDeleteSale(s.id); }}
-            style={{ border: 'none', background: 'none', color: '#C8A080', fontSize: 20, cursor: 'pointer', lineHeight: 1 }}>×</button>
-        </div>
-      ))}
+        );
+      })}
 
       {/* ขาเข้า */}
       {inBills.length > 0 && (
@@ -1901,6 +1926,29 @@ function SalesView({ history, sales, accounts, onGoHome, onAddSale, onDeleteSale
       )}
 
       {addOpen && <AddSaleModal date={selectedDate} accounts={accounts || []} onSaveAccount={onSaveAccount} onSave={async (data) => { await onAddSale(data); setAddOpen(false); }} onClose={() => setAddOpen(false)} />}
+
+      {deleteTarget && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div style={{ background: '#FFFDF8', borderRadius: 18, padding: '24px 20px', width: '100%', maxWidth: 320 }}>
+            <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 15, color: '#3F2D1E', marginBottom: 6 }}>ลบรายการขาย</div>
+            <div style={{ fontSize: 13, color: '#9A8662', marginBottom: 16 }}>ใส่รหัส Admin เพื่อยืนยัน</div>
+            <input type="password" inputMode="numeric" maxLength={6} value={deletePinVal}
+              onChange={e => { setDeletePinVal(e.target.value); setDeletePinErr(''); }}
+              placeholder="รหัส Admin"
+              autoFocus
+              style={{ width: '100%', border: `1.5px solid ${deletePinErr ? '#C62828' : '#E4D7BC'}`, borderRadius: 10, padding: '11px 14px', fontSize: 18, fontFamily: 'Prompt', textAlign: 'center', letterSpacing: '0.3em', boxSizing: 'border-box', background: '#fff', marginBottom: 6 }} />
+            {deletePinErr && <div style={{ color: '#C62828', fontSize: 12, marginBottom: 8, textAlign: 'center' }}>{deletePinErr}</div>}
+            <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+              <button onClick={() => {
+                if (deletePinVal !== pin) { setDeletePinErr('รหัสไม่ถูกต้อง'); setDeletePinVal(''); return; }
+                onDeleteSale(deleteTarget);
+                setDeleteTarget(null);
+              }} style={{ flex: 1, background: '#C62828', color: '#fff', border: 'none', borderRadius: 10, padding: '12px 0', fontFamily: 'Prompt', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>ลบ</button>
+              <button onClick={() => setDeleteTarget(null)} style={{ flex: 1, background: '#F0EAE0', color: '#7A5A22', border: 'none', borderRadius: 10, padding: '12px 0', fontSize: 13, cursor: 'pointer' }}>ยกเลิก</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -2670,9 +2718,9 @@ export default function App() {
     });
   }, []);
 
-  const handleAddSale = useCallback(async ({ account, kg, baht, receiptUrl, date }) => {
+  const handleAddSale = useCallback(async ({ account, kg, baht, receiptUrl, status, date }) => {
     const ts = date ? new Date(date + 'T12:00:00').getTime() : Date.now();
-    const sale = { id: String(Date.now()) + '_' + Math.random().toString(36).slice(2), date: ts, buyer: account || '', kg: Number(kg) || 0, baht: Number(baht) || 0, note: '', receiptUrl: receiptUrl || '' };
+    const sale = { id: String(Date.now()) + '_' + Math.random().toString(36).slice(2), date: ts, buyer: account || '', kg: Number(kg) || 0, baht: Number(baht) || 0, note: status || 'cash', receiptUrl: receiptUrl || '' };
     const next = [sale, ...sales];
     storage.saveSales(next);
     setSales(next);
@@ -2684,6 +2732,14 @@ export default function App() {
     storage.saveSales(next);
     setSales(next);
     try { await db.deleteSale(id); } catch {}
+  }, [sales]);
+
+  const handleUpdateSale = useCallback(async (id, patch) => {
+    const next = sales.map(s => s.id === id ? { ...s, ...patch } : s);
+    storage.saveSales(next);
+    setSales(next);
+    const updated = next.find(s => s.id === id);
+    if (updated) try { await db.upsertSale(updated); } catch {}
   }, [sales]);
 
   const handleSaveSlip = useCallback((dataUrl) => {
@@ -2948,7 +3004,7 @@ export default function App() {
         <DashboardView history={history} payments={payments} pin={pin} onPayment={handlePayment} onDeleteBill={handleDeleteBill} onGoHome={() => setScreen('home')} />
       )}
       {screen === 'sales' && (
-        <SalesView history={history} sales={sales} accounts={accounts} onGoHome={() => setScreen('home')} onAddSale={handleAddSale} onDeleteSale={handleDeleteSale} onSaveAccount={handleSaveAccount} />
+        <SalesView history={history} sales={sales} accounts={accounts} pin={pin} onGoHome={() => setScreen('home')} onAddSale={handleAddSale} onDeleteSale={handleDeleteSale} onUpdateSale={handleUpdateSale} onSaveAccount={handleSaveAccount} />
       )}
       {screen === 'customers' && (
         <CustomersView history={history} verified={verified} onGoHome={() => setScreen('home')}
