@@ -8,6 +8,7 @@ import {
   loadCustomers, customerStat, decodeBill
 } from './utils/helpers.js';
 import { storage } from './utils/storage.js';
+import { db } from './utils/db.js';
 import { savePhoto, loadPhoto, resizeImage } from './utils/photoDB.js';
 import html2canvas from 'html2canvas';
 
@@ -289,7 +290,7 @@ function EmployeeManager({ employees, onSave, onCancel }) {
 }
 
 // ─── HomeView ─────────────────────────────────────────────────────────────────
-function HomeView({ session, history, payments, syncStatus, syncing, onNew, onResume, onGoCustomers, onGoDashboard, onGoSupervisors, onOpenSheet, onSyncNow, onChangePin, onSetEmployeePin, onOpenHistory, onPayment, verified, supervisors, isEmployee, onLogout, onExport, onImport }) {
+function HomeView({ session, history, payments, syncStatus, syncing, onNew, onResume, onGoCustomers, onGoDashboard, onGoSupervisors, onGoSales, onOpenSheet, onSyncNow, onChangePin, onSetEmployeePin, onOpenHistory, onPayment, verified, supervisors, isEmployee, onLogout, onExport, onImport }) {
   const customerCount = Object.keys(loadCustomers(history)).length;
   const supervisorCount = Object.values(supervisors || {}).filter(Boolean).reduce((set, n) => (set.add(n), set), new Set()).size;
   if (isEmployee) {
@@ -342,6 +343,15 @@ function HomeView({ session, history, payments, syncStatus, syncing, onNew, onRe
           <div style={{ fontSize: 12, color: '#9A8662' }}>โอนแล้ว / ยังไม่โอน / เงินสด</div>
         </div>
         <span style={{ marginLeft: 'auto', color: '#C9A24B', fontSize: 18 }}>›</span>
+      </button>
+
+      <button onClick={onGoSales} style={{ width: '100%', border: '1.5px solid #6B8E4E', background: 'linear-gradient(135deg,#EDF5E7,#DFF0D4)', borderRadius: 14, padding: '14px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+        <span style={{ fontSize: 22 }}>📤</span>
+        <div style={{ textAlign: 'left' }}>
+          <div style={{ fontWeight: 700, fontSize: 15, color: '#3A5A28' }}>ยอดขาย / กำไร</div>
+          <div style={{ fontSize: 12, color: '#6A8A58' }}>ขาเข้า / ขาออก / กำไร-ขาดทุน</div>
+        </div>
+        <span style={{ marginLeft: 'auto', color: '#6B8E4E', fontSize: 18 }}>›</span>
       </button>
 
       <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
@@ -1687,6 +1697,212 @@ function DashboardView({ history, payments, pin, onPayment, onDeleteBill, onGoHo
   );
 }
 
+// ─── SalesView ────────────────────────────────────────────────────────────────
+function AddSaleModal({ date, onSave, onClose }) {
+  const [buyer, setBuyer] = useState('');
+  const [kg, setKg] = useState('');
+  const [baht, setBaht] = useState('');
+  const [note, setNote] = useState('');
+  const [receiptUrl, setReceiptUrl] = useState('');
+  const [receiptPreview, setReceiptPreview] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [ocrLoading, setOcrLoading] = useState(false);
+  const camRef = useRef();
+  const galleryRef = useRef();
+
+  const handleReceiptFile = (file) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      const dataUrl = ev.target.result;
+      setReceiptPreview(dataUrl);
+      setOcrLoading(true);
+      try {
+        const ocrRes = await fetch('/api/ocr', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ base64: dataUrl, mode: 'market' }) });
+        const ocrData = await ocrRes.json();
+        if (ocrData.ok && ocrData.marketData) {
+          const md = ocrData.marketData;
+          if (md.totalKg) setKg(prev => prev || String(md.totalKg).replace(/[^0-9.]/g, ''));
+          if (md.totalBaht) setBaht(prev => prev || String(md.totalBaht).replace(/[^0-9.]/g, ''));
+          if (md.buyer) setBuyer(prev => prev || md.buyer);
+          if (md.note) setNote(prev => prev || md.note);
+        }
+      } catch {} finally { setOcrLoading(false); }
+      try {
+        const res = await fetch('/api/drive', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ base64: dataUrl, filename: `sale_receipt_${Date.now()}.jpg`, folder: 'QudsunSaleReceipts' }) });
+        const data = await res.json();
+        setReceiptUrl(data.ok && data.fileId ? `https://drive.google.com/uc?id=${data.fileId}` : dataUrl);
+      } catch { setReceiptUrl(dataUrl); }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSave = async () => {
+    if (!baht && !kg) return;
+    setLoading(true);
+    await onSave({ buyer, kg: Number(kg) || 0, baht: Number(baht) || 0, receiptUrl, note, date });
+    setLoading(false);
+  };
+
+  const inp = { width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 8, padding: '9px 12px', fontSize: 13, fontFamily: 'Prompt', background: '#fff', boxSizing: 'border-box' };
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 200, display: 'flex', alignItems: 'flex-end' }}
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div style={{ background: '#FFFDF8', width: '100%', maxWidth: 520, margin: '0 auto', borderRadius: '20px 20px 0 0', padding: '22px 18px 36px', maxHeight: '92vh', overflowY: 'auto' }}>
+        <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 16, color: '#3F2D1E', marginBottom: 14 }}>เพิ่มยอดขาย</div>
+
+        <input ref={camRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={e => { handleReceiptFile(e.target.files[0]); e.target.value = ''; }} />
+        <input ref={galleryRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => { handleReceiptFile(e.target.files[0]); e.target.value = ''; }} />
+
+        {receiptPreview ? (
+          <div style={{ marginBottom: 14, position: 'relative' }}>
+            <img src={receiptPreview} alt="ใบเสร็จ" style={{ width: '100%', maxHeight: 200, objectFit: 'contain', borderRadius: 10, border: '1px solid #E4D7BC', background: '#f5f5f5', display: 'block' }} />
+            {ocrLoading && <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 10, fontSize: 13, color: '#7A5A22' }}>⏳ กำลังอ่านใบเสร็จ…</div>}
+            <button onClick={() => { setReceiptPreview(''); setReceiptUrl(''); }} style={{ position: 'absolute', top: 6, right: 6, border: 'none', background: 'rgba(0,0,0,.4)', color: '#fff', borderRadius: '50%', width: 26, height: 26, cursor: 'pointer', fontSize: 15, lineHeight: '26px' }}>×</button>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
+            <button onClick={() => camRef.current?.click()} style={{ flex: 1, border: '1.5px dashed #C9A24B', background: 'none', borderRadius: 10, padding: '10px 0', fontSize: 13, color: '#7A5A22', cursor: 'pointer' }}>📷 ถ่ายรูปใบเสร็จ</button>
+            <button onClick={() => galleryRef.current?.click()} style={{ flex: 1, border: '1.5px dashed #9AB87A', background: 'none', borderRadius: 10, padding: '10px 0', fontSize: 13, color: '#4A7A2E', cursor: 'pointer' }}>🖼 อัพโหลด</button>
+          </div>
+        )}
+
+        <div style={{ marginBottom: 10 }}>
+          <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 3 }}>ชื่อตลาด / ผู้ซื้อ</div>
+          <input value={buyer} onChange={e => setBuyer(e.target.value)} placeholder="เช่น ตลาดทุเรียนสุราษฎร์" style={inp} />
+        </div>
+        <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 3 }}>น้ำหนัก (กก.)</div>
+            <input value={kg} onChange={e => setKg(e.target.value)} type="number" placeholder="0.00" inputMode="decimal" style={inp} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 3 }}>ยอดขาย (บาท)</div>
+            <input value={baht} onChange={e => setBaht(e.target.value)} type="number" placeholder="0.00" inputMode="decimal" style={inp} />
+          </div>
+        </div>
+        <div style={{ marginBottom: 18 }}>
+          <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 3 }}>หมายเหตุ (ไม่บังคับ)</div>
+          <input value={note} onChange={e => setNote(e.target.value)} placeholder="เช่น ราคา 15 บาท/กก." style={inp} />
+        </div>
+
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button onClick={handleSave} disabled={loading || (!baht && !kg)}
+            style={{ flex: 1, background: '#6B8E4E', color: '#fff', border: 'none', borderRadius: 12, padding: '13px 0', fontSize: 14, fontFamily: 'Prompt', fontWeight: 600, cursor: 'pointer', opacity: (!baht && !kg) ? 0.5 : 1 }}>
+            {loading ? 'กำลังบันทึก…' : '✓ บันทึกยอดขาย'}
+          </button>
+          <button onClick={onClose} style={{ background: '#F0EAE0', color: '#7A5A22', border: 'none', borderRadius: 12, padding: '13px 16px', fontSize: 13, cursor: 'pointer' }}>ยกเลิก</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SalesView({ history, sales, onGoHome, onAddSale, onDeleteSale }) {
+  const todayStr = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
+  const [selectedDate, setSelectedDate] = useState(todayStr);
+  const [addOpen, setAddOpen] = useState(false);
+
+  const toDateStr = ts => { const d = new Date(ts); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
+
+  const inBills = history.filter(h => h.date && toDateStr(h.date) === selectedDate);
+  const inKg = inBills.reduce((sum, h) => sum + (grandKg(h.data) || 0), 0);
+  const inBaht = inBills.reduce((sum, h) => sum + (grandBaht(h.data) || 0), 0);
+
+  const outSales = (sales || []).filter(s => s.date && toDateStr(s.date) === selectedDate);
+  const outKg = outSales.reduce((sum, s) => sum + (Number(s.kg) || 0), 0);
+  const outBaht = outSales.reduce((sum, s) => sum + (Number(s.baht) || 0), 0);
+
+  const profit = outBaht - inBaht;
+
+  return (
+    <div style={{ flex: 1, padding: '14px 14px 60px', maxWidth: 620, margin: '0 auto', width: '100%' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+        <button onClick={onGoHome} style={{ border: 'none', background: 'none', fontSize: 22, cursor: 'pointer', color: '#7A6450' }}>‹</button>
+        <span style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 18, color: '#3F2D1E' }}>ยอดขาย</span>
+        <input type="date" value={selectedDate} onChange={e => setSelectedDate(e.target.value)}
+          style={{ marginLeft: 'auto', border: '1px solid #E4D7BC', borderRadius: 8, padding: '6px 10px', fontSize: 13, fontFamily: 'Prompt', color: '#4A3526', background: '#FFFDF8' }} />
+      </div>
+
+      {/* Summary */}
+      <div style={{ background: '#FFFDF8', border: '1px solid #E4D7BC', borderRadius: 16, padding: '16px 18px', marginBottom: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
+          <div style={{ background: '#FFF3E0', borderRadius: 12, padding: '12px 14px' }}>
+            <div style={{ fontSize: 11, color: '#8A5E00', marginBottom: 4 }}>📥 ขาเข้า (รับซื้อ)</div>
+            <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 17, color: '#4A3526' }}>{fmtKg(inKg)} กก.</div>
+            <div style={{ fontSize: 13, color: '#7A5A22', marginTop: 2 }}>฿{fmtBaht(inBaht)}</div>
+            {inBills.length > 0 && <div style={{ fontSize: 10, color: '#B7A684', marginTop: 4 }}>{inBills.length} บิล</div>}
+          </div>
+          <div style={{ background: '#E8F5E9', borderRadius: 12, padding: '12px 14px' }}>
+            <div style={{ fontSize: 11, color: '#2E7D32', marginBottom: 4 }}>📤 ขาออก (ขาย)</div>
+            <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 17, color: '#1B5E20' }}>{fmtKg(outKg)} กก.</div>
+            <div style={{ fontSize: 13, color: '#2E7D32', marginTop: 2 }}>฿{fmtBaht(outBaht)}</div>
+            {outSales.length > 0 && <div style={{ fontSize: 10, color: '#81C784', marginTop: 4 }}>{outSales.length} รายการ</div>}
+          </div>
+        </div>
+        <div style={{ borderTop: '1px solid #E4D7BC', paddingTop: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <div style={{ fontSize: 11, color: '#9A8662' }}>กำไร / ขาดทุน</div>
+            {inKg > 0 && outKg > 0 && (
+              <div style={{ fontSize: 10, color: '#B7A684', marginTop: 2 }}>น้ำหนักต่าง {fmtKg(Math.abs(inKg - outKg))} กก.</div>
+            )}
+          </div>
+          <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 22, color: profit >= 0 ? '#2E7D32' : '#C62828' }}>
+            {profit >= 0 ? '+' : '-'}฿{fmtBaht(Math.abs(profit))}
+          </div>
+        </div>
+      </div>
+
+      {/* ขาออก */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+        <span style={{ fontSize: 13, fontWeight: 600, color: '#4A3526' }}>รายการขาย</span>
+        <div style={{ flex: 1, height: 1, background: '#E4D7BC' }} />
+        <button onClick={() => setAddOpen(true)} style={{ border: 'none', background: '#6B8E4E', color: '#fff', borderRadius: 10, padding: '7px 14px', fontSize: 13, cursor: 'pointer', fontFamily: 'Prompt' }}>+ เพิ่ม</button>
+      </div>
+
+      {outSales.length === 0 && (
+        <div style={{ textAlign: 'center', color: '#B7A684', fontSize: 13, padding: '20px 0' }}>ยังไม่มีรายการขาย</div>
+      )}
+      {outSales.map(s => (
+        <div key={s.id} style={{ background: '#FFFDF8', border: '1px solid #E4D7BC', borderRadius: 14, padding: '14px 16px', marginBottom: 10, display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+          {s.receiptUrl && <a href={s.receiptUrl} target="_blank" rel="noreferrer"><img src={s.receiptUrl} alt="ใบเสร็จ" style={{ width: 56, height: 56, objectFit: 'cover', borderRadius: 8, border: '1px solid #E4D7BC', flexShrink: 0, display: 'block' }} /></a>}
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: 700, fontSize: 14, color: '#3F2D1E' }}>{s.buyer || '—'}</div>
+            <div style={{ fontSize: 12.5, color: '#7A6450', marginTop: 3 }}>{fmtKg(Number(s.kg))} กก. · ฿{fmtBaht(Number(s.baht))}</div>
+            {s.note && <div style={{ fontSize: 11.5, color: '#9A8662', marginTop: 2 }}>{s.note}</div>}
+          </div>
+          <button onClick={() => { if (window.confirm('ลบรายการนี้?')) onDeleteSale(s.id); }}
+            style={{ border: 'none', background: 'none', color: '#C8A080', fontSize: 20, cursor: 'pointer', lineHeight: 1 }}>×</button>
+        </div>
+      ))}
+
+      {/* ขาเข้า */}
+      {inBills.length > 0 && (
+        <>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '16px 0 10px' }}>
+            <span style={{ fontSize: 13, fontWeight: 600, color: '#4A3526' }}>บิลรับซื้อวันนี้</span>
+            <div style={{ flex: 1, height: 1, background: '#E4D7BC' }} />
+          </div>
+          {inBills.map(h => (
+            <div key={h.billNo} style={{ background: '#FFF8EE', border: '1px solid #E8D8B4', borderRadius: 14, padding: '12px 16px', marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <div style={{ fontWeight: 600, fontSize: 14, color: '#3F2D1E' }}>{h.seller || h.billNo}</div>
+                <div style={{ fontSize: 11.5, color: '#9A8662', marginTop: 2 }}>{h.billNo}</div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontWeight: 700, fontSize: 14, color: '#7A5A22' }}>฿{h.baht}</div>
+                <div style={{ fontSize: 11.5, color: '#9A8662' }}>{h.kg}</div>
+              </div>
+            </div>
+          ))}
+        </>
+      )}
+
+      {addOpen && <AddSaleModal date={selectedDate} onSave={async (data) => { await onAddSale(data); setAddOpen(false); }} onClose={() => setAddOpen(false)} />}
+    </div>
+  );
+}
+
 // ─── CustomersView ────────────────────────────────────────────────────────────
 function CustomersView({ history, verified, onGoHome, onOpenCustomer }) {
   const customers = loadCustomers(history);
@@ -2081,6 +2297,7 @@ export default function App() {
   const [customerInfo, setCustomerInfo] = useState({});
   const [payments, setPayments] = useState({});
   const [vehiclePhotoUrl, setVehiclePhotoUrl] = useState(null);
+  const [sales, setSales] = useState([]);
   const savedSession = useRef(null);
   const pendingPhotoDataUrl = useRef(null);
 
@@ -2106,7 +2323,7 @@ export default function App() {
       const next = { ...storage.loadVehiclePlates(), [session.sellerPhone]: plate };
       storage.saveVehiclePlates(next);
       setVehiclePlates(next);
-      fetch('/api/sheets', { method: 'POST', body: JSON.stringify({ action: 'updatePlates', plates: next }) }).catch(() => {});
+      db.upsertVehiclePlate(session.sellerPhone, plate).catch(() => {});
     }
     // Drive upload now happens here so we have the plate in the filename
     const dataUrl = pendingPhotoDataUrl.current;
@@ -2166,35 +2383,38 @@ export default function App() {
     const vp = storage.loadVehiclePlates();
     const pm = storage.loadPayments();
     const ci = storage.loadCustomerInfo();
-    setHistory(h); setPin(p); setVerified(v); setSupervisors(sv); setEmployeePin(ep); setPinnedCats(pc); setEmployees(emps); setVehiclePlates(vp); setPayments(pm); setCustomerInfo(ci);
+    const sl = storage.loadSales();
+    setHistory(h); setPin(p); setVerified(v); setSupervisors(sv); setEmployeePin(ep); setPinnedCats(pc); setEmployees(emps); setVehiclePlates(vp); setPayments(pm); setCustomerInfo(ci); setSales(sl);
     if (savedRole) { setAuthRole(savedRole); setRecorderName(savedRecorder); }
     if (s) { setSession(s); if (s.vehiclePhotoKey) loadPhoto(s.vehiclePhotoKey).then(u => { if (u) setVehiclePhotoUrl(u); }); }
     if (su) setSheetUrl(su);
-    fetch('/api/sheets?action=getPayments').then(r => r.json()).then(data => {
-      if (data.ok && data.payments) {
-        const local = storage.loadPayments();
-        const merged = { ...local };
-        for (const [bn, rp] of Object.entries(data.payments)) {
-          const lp = local[bn] || {};
-          merged[bn] = { ...lp, ...rp, receiptUrl: rp.receiptUrl || lp.receiptUrl || null, slipUrl: rp.slipUrl || lp.slipUrl || null, vehicleUrl: rp.vehicleUrl || lp.vehicleUrl || null };
-        }
-        storage.savePayments(merged);
-        setPayments(merged);
+    db.getPayments().then(remote => {
+      const local = storage.loadPayments();
+      const merged = { ...local };
+      for (const [bn, rp] of Object.entries(remote)) {
+        const lp = local[bn] || {};
+        merged[bn] = { ...lp, ...rp, receiptUrl: rp.receiptUrl || lp.receiptUrl || null, slipUrl: rp.slipUrl || lp.slipUrl || null, vehicleUrl: rp.vehicleUrl || lp.vehicleUrl || null };
       }
+      storage.savePayments(merged);
+      setPayments(merged);
     }).catch(() => {});
-    fetch('/api/sheets?action=getPlates').then(r => r.json()).then(data => {
-      if (data.ok && data.plates) {
-        const merged = { ...storage.loadVehiclePlates(), ...data.plates };
-        storage.saveVehiclePlates(merged);
-        setVehiclePlates(merged);
-      }
+    db.getVehiclePlates().then(remote => {
+      const merged = { ...storage.loadVehiclePlates(), ...remote };
+      storage.saveVehiclePlates(merged);
+      setVehiclePlates(merged);
     }).catch(() => {});
-    fetch('/api/sheets?action=getCustomerInfo').then(r => r.json()).then(data => {
-      if (data.ok && data.info) {
-        const merged = { ...storage.loadCustomerInfo(), ...data.info };
-        storage.saveCustomerInfo(merged);
-        setCustomerInfo(merged);
-      }
+    db.getCustomerInfo().then(remote => {
+      const merged = { ...storage.loadCustomerInfo(), ...remote };
+      storage.saveCustomerInfo(merged);
+      setCustomerInfo(merged);
+    }).catch(() => {});
+    db.getSales().then(remote => {
+      const local = storage.loadSales();
+      const remoteMap = new Map(remote.map(s => [s.id, s]));
+      const merged = [...remote];
+      for (const ls of local) { if (!remoteMap.has(ls.id)) merged.push(ls); }
+      merged.sort((a, b) => (b.date || 0) - (a.date || 0));
+      storage.saveSales(merged); setSales(merged);
     }).catch(() => {});
     const m = (location.hash || '').match(/bill=([^&]+)/);
     if (m) {
@@ -2208,48 +2428,56 @@ export default function App() {
     return () => clearInterval(autoSync);
   }, []);
 
-  // Google Sheet
+  // Supabase sync
   const syncNow = useCallback(async (silent) => {
-    setSyncing(true); setSyncStatus('กำลังซิงก์…');
+    setSyncing(true); if (!silent) setSyncStatus('กำลังซิงก์…');
     try {
-      const res = await fetch('/api/sheets', { method: 'GET' });
-      const data = await res.json();
-      if (!data?.ok) throw new Error('bad');
       const deleted = storage.loadDeletedBills();
-      const remote = (data.bills || []).map(b => { try { return JSON.parse(b.json); } catch { return null; } }).filter(b => b && !deleted.has(b.billNo));
-      const remoteNos = new Set(remote.map(c => c.billNo));
+      const [remoteBills, remotePayments, remoteVerified, remoteCI] = await Promise.all([
+        db.getBills(),
+        db.getPayments(),
+        db.getVerified(),
+        db.getCustomerInfo(),
+      ]);
+
+      // Merge bills
+      const remoteNos = new Set(remoteBills.map(c => c.billNo));
       const current = storage.loadHistory().filter(h => !deleted.has(h.billNo));
       const localOnly = current.filter(c => c?.billNo && !remoteNos.has(c.billNo));
       const byNo = {};
-      remote.forEach(c => { if (c?.billNo) byNo[c.billNo] = c; });
+      remoteBills.forEach(c => { if (c?.billNo) byNo[c.billNo] = c; });
       current.forEach(c => { if (c?.billNo) byNo[c.billNo] = c; });
       const merged = Object.values(byNo).sort((a, b) => (b.date || 0) - (a.date || 0)).slice(0, 300);
-      if (data.verified) { const nv = { ...storage.loadVerified(), ...data.verified }; storage.saveVerified(nv); setVerified(nv); }
       const svFromSync = {};
       merged.forEach(c => { const ph = c.phone || c.sellerPhone || ''; const sup = (c.data && c.data.supervisor) || c.supervisor || ''; if (ph && sup) svFromSync[ph] = sup; });
       if (Object.keys(svFromSync).length) { const nSv = { ...storage.loadSupervisors(), ...svFromSync }; storage.saveSupervisors(nSv); setSupervisors(nSv); }
       storage.saveHistory(merged); setHistory(merged);
-      const payRes = await fetch('/api/sheets?action=getPayments');
-      const payData = await payRes.json();
-      if (payData.ok && payData.payments) {
-        const localPm = storage.loadPayments();
-        const pm = { ...localPm };
-        for (const [bn, rp] of Object.entries(payData.payments)) {
-          const lp = localPm[bn] || {};
-          pm[bn] = { ...lp, ...rp, receiptUrl: rp.receiptUrl || lp.receiptUrl || null, slipUrl: rp.slipUrl || lp.slipUrl || null, vehicleUrl: rp.vehicleUrl || lp.vehicleUrl || null };
-        }
-        storage.savePayments(pm); setPayments(pm);
+
+      // Merge verified
+      if (remoteVerified && Object.keys(remoteVerified).length) {
+        const nv = { ...storage.loadVerified(), ...remoteVerified };
+        storage.saveVerified(nv); setVerified(nv);
       }
-      const ciRes = await fetch('/api/sheets?action=getCustomerInfo');
-      const ciData = await ciRes.json();
-      if (ciData.ok && ciData.info) {
-        const ci = { ...storage.loadCustomerInfo(), ...ciData.info };
+
+      // Merge payments
+      const localPm = storage.loadPayments();
+      const pm = { ...localPm };
+      for (const [bn, rp] of Object.entries(remotePayments)) {
+        const lp = localPm[bn] || {};
+        pm[bn] = { ...lp, ...rp, receiptUrl: rp.receiptUrl || lp.receiptUrl || null, slipUrl: rp.slipUrl || lp.slipUrl || null, vehicleUrl: rp.vehicleUrl || lp.vehicleUrl || null };
+      }
+      storage.savePayments(pm); setPayments(pm);
+
+      // Merge customer info
+      if (remoteCI && Object.keys(remoteCI).length) {
+        const ci = { ...storage.loadCustomerInfo(), ...remoteCI };
         storage.saveCustomerInfo(ci); setCustomerInfo(ci);
       }
+
       setSyncStatus('✓ ซิงก์แล้ว ' + new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }));
       localOnly.forEach(c => pushBill(c, true));
     } catch {
-      setSyncStatus('⚠ ซิงก์ไม่สำเร็จ');
+      if (!silent) setSyncStatus('⚠ ซิงก์ไม่สำเร็จ');
     }
     setSyncing(false);
   }, [toast]); // eslint-disable-line
@@ -2257,17 +2485,13 @@ export default function App() {
   const pushBill = useCallback(async (card, quiet) => {
     if (!card) return;
     try {
-      await fetch('/api/sheets', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ action: 'bill', bill: { billNo: card.billNo, date: card.date, dateText: card.dateText, seller: card.seller, phone: card.phone, kg: card.kg, baht: card.baht, json: JSON.stringify(card) } }),
-      });
-      if (!quiet) setSyncStatus('✓ บันทึกขึ้นชีตแล้ว ' + new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }));
+      await db.upsertBill(card);
+      if (!quiet) setSyncStatus('✓ บันทึกแล้ว ' + new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }));
     } catch { if (!quiet) setSyncStatus('⚠ อัปโหลดไม่สำเร็จ'); }
   }, []);
 
   const pushVerify = useCallback(async (phone, name) => {
-    try { await fetch('/api/sheets', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'verify', phone, name }) }); } catch {}
+    try { await db.upsertVerified(phone, name); } catch {}
   }, []);
 
   // PIN
@@ -2398,7 +2622,7 @@ export default function App() {
 
   const pushPayment = useCallback((billNo, pay) => {
     if (!pay) return;
-    fetch('/api/sheets', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'updatePayment', billNo, status: pay.status, paidAt: pay.paidAt ?? null, receiptUrl: pay.receiptUrl || '', slipUrl: pay.slipUrl || '', vehicleUrl: pay.vehicleUrl || '' }) }).catch(() => {});
+    db.upsertPayment(billNo, pay).catch(() => {});
   }, []);
 
   const handlePayment = useCallback((billNo, status, slipPhotoUrl, slipData, cancelNote, receiptPhotoUrl) => {
@@ -2429,9 +2653,25 @@ export default function App() {
     delete nextPay[billNo];
     storage.savePayments(nextPay);
     setPayments(nextPay);
-    fetch('/api/sheets', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'deleteBill', billNo }) }).catch(() => {});
-    fetch('/api/sheets', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'updatePayment', billNo, status: 'unpaid', paidAt: null }) }).catch(() => {});
+    db.deleteBill(billNo).catch(() => {});
+    db.deletePayment(billNo).catch(() => {});
   }, []);
+
+  const handleAddSale = useCallback(async ({ buyer, kg, baht, note, receiptUrl, date }) => {
+    const ts = date ? new Date(date + 'T12:00:00').getTime() : Date.now();
+    const sale = { id: String(Date.now()) + '_' + Math.random().toString(36).slice(2), date: ts, buyer: buyer || '', kg: Number(kg) || 0, baht: Number(baht) || 0, note: note || '', receiptUrl: receiptUrl || '' };
+    const next = [sale, ...sales];
+    storage.saveSales(next);
+    setSales(next);
+    try { await db.upsertSale(sale); } catch {}
+  }, [sales]);
+
+  const handleDeleteSale = useCallback(async (id) => {
+    const next = sales.filter(s => s.id !== id);
+    storage.saveSales(next);
+    setSales(next);
+    try { await db.deleteSale(id); } catch {}
+  }, [sales]);
 
   const handleSaveSlip = useCallback((dataUrl) => {
     if (!session) return;
@@ -2485,7 +2725,7 @@ export default function App() {
     const ciNext = { ...ciPrev, [phone]: { ...ciExist, ...newInfo } };
     storage.saveCustomerInfo(ciNext);
     setCustomerInfo(ciNext);
-    fetch('/api/sheets', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'updateCustomerInfo', phone, ...ciNext[phone] }) }).catch(() => {});
+    db.upsertCustomerInfo(phone, ciNext[phone]).catch(() => {});
   }, []);
 
   const doConfirm = useCallback(() => {
@@ -2645,6 +2885,7 @@ export default function App() {
         <HomeView session={session} history={history} payments={payments} verified={verified} supervisors={supervisors} syncStatus={syncStatus} syncing={syncing}
           onNew={startNew} onResume={() => setScreen('record')} onGoCustomers={() => setScreen('customers')}
           onGoDashboard={() => setScreen('dashboard')}
+          onGoSales={() => setScreen('sales')}
           onGoSupervisors={() => setScreen('supervisors')}
           onOpenSheet={() => { setSheetModal(true); setSheetModalUrl(sheetUrl); }}
           onSyncNow={() => syncNow(false)} onChangePin={changePin} onSetEmployeePin={setEmployeePinAction}
@@ -2693,6 +2934,9 @@ export default function App() {
       {screen === 'dashboard' && (
         <DashboardView history={history} payments={payments} pin={pin} onPayment={handlePayment} onDeleteBill={handleDeleteBill} onGoHome={() => setScreen('home')} />
       )}
+      {screen === 'sales' && (
+        <SalesView history={history} sales={sales} onGoHome={() => setScreen('home')} onAddSale={handleAddSale} onDeleteSale={handleDeleteSale} />
+      )}
       {screen === 'customers' && (
         <CustomersView history={history} verified={verified} onGoHome={() => setScreen('home')}
           onOpenCustomer={phone => { setCustPhone(phone); setScreen('customerDetail'); }} />
@@ -2712,7 +2956,7 @@ export default function App() {
           vehiclePlates={vehiclePlates} customerInfo={customerInfo}
           onGoBack={() => setScreen('customers')} onOpenHistory={card => openHistory(card, true)}
           onSaveSupervisor={(phone, name) => { const ns = { ...supervisors, [phone]: name }; storage.saveSupervisors(ns); setSupervisors(ns); }}
-          onSaveCustomerInfo={(phone, info) => { const next = { ...storage.loadCustomerInfo(), [phone]: info }; storage.saveCustomerInfo(next); setCustomerInfo(next); fetch('/api/sheets', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'updateCustomerInfo', phone, ...info }) }).catch(() => {}); }}
+          onSaveCustomerInfo={(phone, info) => { const next = { ...storage.loadCustomerInfo(), [phone]: info }; storage.saveCustomerInfo(next); setCustomerInfo(next); db.upsertCustomerInfo(phone, info).catch(() => {}); }}
           onOpenVerify={phone => {
             const stat = customerStat(phone, history, verified);
             setVerifyPrompt({ phone, tier: tierOf(stat.total), draft: stat.name || '', newTotal: stat.total, mode: 'manage' });
