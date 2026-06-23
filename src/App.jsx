@@ -895,7 +895,7 @@ function ConfirmView({ session, verified, history, onConfirm, onGoSummary, custo
 }
 
 // ─── PrintView ────────────────────────────────────────────────────────────────
-function PrintView({ session, readonly, isHandoff, verified, history, payments, onGoSummary, onGoBack, onFinish, customLabel, vehiclePhotoUrl, onSaveSlip, onUploadEvidence, onReusePhoto, onSaveCustomerInfo, supervisors, customerInfo }) {
+function PrintView({ session, readonly, isHandoff, verified, history, payments, onGoSummary, onGoBack, onFinish, customLabel, vehiclePhotoUrl, onSaveSlip, onUploadEvidence, onReusePhoto, onBulkUpload, onSaveCustomerInfo, supervisors, customerInfo }) {
   const [qrDataUrl, setQrDataUrl] = useState('');
   const [copied, setCopied] = useState(false);
   const [uploading, setUploading] = useState(null); // null | 'receipt' | 'slip' | 'vehicle'
@@ -917,6 +917,7 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
     return result;
   }, [session?.sellerPhone, session?.phone, session?.billNo, history, payments]);
   const [slipOcr, setSlipOcr] = useState(null); // null | { file, dataUrl, bankName, bankAccount, note, loading, slipData? }
+  const [showBulkUpload, setShowBulkUpload] = useState(false);
   const receiptUpRef = useRef();
   const slipUpRef = useRef();
   const vehicleUpRef = useRef();
@@ -1068,7 +1069,15 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
               const upBtn = { border: 'none', background: 'rgba(168,118,62,.12)', color: '#7A5A22', borderRadius: 6, padding: '2px 8px', fontSize: 10, cursor: 'pointer', marginTop: 4 };
               return (
               <div style={{ background: '#FFFDF8', border: '1px solid #E4D7BC', borderRadius: 14, padding: '14px 16px', marginBottom: 16 }}>
-                <div style={{ fontSize: 12, color: '#A6925E', fontWeight: 600, marginBottom: 10 }}>รูปหลักฐาน</div>
+                <div style={{ display: 'flex', alignItems: 'center', marginBottom: 10 }}>
+                  <span style={{ fontSize: 12, color: '#A6925E', fontWeight: 600, flex: 1 }}>รูปหลักฐาน</span>
+                  {onBulkUpload && (
+                    <button onClick={() => setShowBulkUpload(true)}
+                      style={{ border: 'none', background: '#3F2D1E', color: '#F6EEDD', borderRadius: 10, padding: '6px 14px', fontSize: 12, cursor: 'pointer', fontFamily: 'Prompt' }}>
+                      📎 อัปโหลดหลักฐาน
+                    </button>
+                  )}
+                </div>
                 <input ref={receiptUpRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => { handleUp('receipt', e.target.files[0]); e.target.value = ''; }} />
                 <input ref={slipUpRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => { const f = e.target.files[0]; e.target.value = ''; if (f) handleSlipOcr(f); }} />
                 <input ref={vehicleUpRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => { handleUp('vehicle', e.target.files[0]); e.target.value = ''; }} />
@@ -1273,6 +1282,15 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
         </div>
       </div>
       </div>
+
+      {showBulkUpload && session && (
+        <TransferSlipModal bill={session}
+          onConfirm={(slipUrl, slipData, receiptUrl, plateUrl) => {
+            onBulkUpload(receiptUrl, slipUrl, plateUrl);
+            setShowBulkUpload(false);
+          }}
+          onClose={() => setShowBulkUpload(false)} />
+      )}
 
       {slipOcr && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 200, display: 'flex', alignItems: 'flex-end' }}
@@ -2791,6 +2809,44 @@ export default function App() {
     } catch { toast('อัพโหลดไม่สำเร็จ'); }
   }, [session, toast, pushPayment]);
 
+  const handleBulkUpload = useCallback(async (receiptUrl, slipUrl, vehicleUrl) => {
+    if (!session) return;
+    toast('กำลัง upload…');
+    const prev = storage.loadPayments();
+    const existing = prev[session.billNo] || { status: 'transferred', paidAt: Date.now() };
+    const now = new Date();
+    const datePart = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+    const timePart = `${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
+    const namePart = (session.seller || 'noname').replace(/[^ก-๙a-zA-Z0-9]/g, '_');
+    const phone = session.sellerPhone || 'nophone';
+
+    const uploadOne = async (dataUrl, prefix, folder) => {
+      if (!dataUrl) return null;
+      try {
+        const filename = `${prefix}_${namePart}_${phone}_${datePart}_${timePart}.jpg`;
+        return await db.uploadPhoto(dataUrl, `${folder}/${filename}`);
+      } catch { return dataUrl; } // keep base64 as fallback
+    };
+
+    const [rUrl, sUrl, vUrl] = await Promise.all([
+      uploadOne(receiptUrl, 'receipt', 'QudsunReceipts'),
+      uploadOne(slipUrl, 'slip', 'QudsunTransfers'),
+      uploadOne(vehicleUrl, 'vehicle', 'QudsunVehicles'),
+    ]);
+
+    const updated = {
+      ...existing,
+      ...(rUrl ? { receiptUrl: rUrl } : {}),
+      ...(sUrl ? { slipUrl: sUrl } : {}),
+      ...(vUrl ? { vehicleUrl: vUrl } : {}),
+    };
+    const next = { ...prev, [session.billNo]: updated };
+    storage.savePayments(next);
+    setPayments(next);
+    pushPayment(session.billNo, updated);
+    toast('อัพโหลดรูปแล้ว ✓');
+  }, [session, toast, pushPayment]);
+
   const handleReusePhoto = useCallback((type, url) => {
     if (!session || !url) return;
     const urlKey = type === 'receipt' ? 'receiptUrl' : type === 'vehicle' ? 'vehicleUrl' : 'slipUrl';
@@ -3016,6 +3072,7 @@ export default function App() {
           customLabel={session.customLabel || ''} vehiclePhotoUrl={session.vehicleDriveUrl || vehiclePhotoUrl}
           onSaveSlip={handleSaveSlip} onUploadEvidence={readonly ? handleUploadEvidence : undefined}
           onReusePhoto={readonly ? handleReusePhoto : undefined}
+          onBulkUpload={readonly ? handleBulkUpload : undefined}
           onSaveCustomerInfo={readonly ? handleSaveCustomerInfo : undefined}
           supervisors={supervisors} customerInfo={customerInfo} />
       )}
