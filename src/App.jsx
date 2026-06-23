@@ -3027,7 +3027,7 @@ export default function App() {
 
       {screen === 'home' && (
         <HomeView session={session} history={history} payments={payments} verified={verified} supervisors={supervisors} syncStatus={syncStatus} syncing={syncing}
-          onNew={startNew} onResume={() => setScreen('record')} onGoCustomers={() => setScreen('customers')}
+          onNew={startNew} onResume={() => { setScreen('record'); if (session?.entries?.length > 0) { setActiveCat(session.entries[session.entries.length - 1].cat); } else { setActiveCat('AB'); } }} onGoCustomers={() => setScreen('customers')}
           onGoDashboard={() => setScreen('purchases')}
           onGoSales={() => setScreen('sales')}
           onGoSupervisors={() => setScreen('supervisors')}
