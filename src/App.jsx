@@ -1698,107 +1698,76 @@ function DashboardView({ history, payments, pin, onPayment, onDeleteBill, onGoHo
 }
 
 // ─── SalesView ────────────────────────────────────────────────────────────────
-function AddSaleModal({ date, onSave, onClose }) {
-  const [buyer, setBuyer] = useState('');
+function AddSaleModal({ date, accounts, onSave, onClose, onSaveAccount }) {
+  const [account, setAccount] = useState(accounts[0] || '');
+  const [isNew, setIsNew] = useState(accounts.length === 0);
+  const [newAcct, setNewAcct] = useState('');
   const [kg, setKg] = useState('');
   const [baht, setBaht] = useState('');
-  const [note, setNote] = useState('');
-  const [receiptUrl, setReceiptUrl] = useState('');
-  const [receiptPreview, setReceiptPreview] = useState('');
   const [loading, setLoading] = useState(false);
-  const [ocrLoading, setOcrLoading] = useState(false);
-  const camRef = useRef();
-  const galleryRef = useRef();
-
-  const handleReceiptFile = (file) => {
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = async (ev) => {
-      const dataUrl = ev.target.result;
-      setReceiptPreview(dataUrl);
-      setOcrLoading(true);
-      try {
-        const ocrRes = await fetch('/api/ocr', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ base64: dataUrl, mode: 'market' }) });
-        const ocrData = await ocrRes.json();
-        if (ocrData.ok && ocrData.marketData) {
-          const md = ocrData.marketData;
-          if (md.totalKg) setKg(prev => prev || String(md.totalKg).replace(/[^0-9.]/g, ''));
-          if (md.totalBaht) setBaht(prev => prev || String(md.totalBaht).replace(/[^0-9.]/g, ''));
-          if (md.buyer) setBuyer(prev => prev || md.buyer);
-          if (md.note) setNote(prev => prev || md.note);
-        }
-      } catch {} finally { setOcrLoading(false); }
-      try {
-        const res = await fetch('/api/drive', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ base64: dataUrl, filename: `sale_receipt_${Date.now()}.jpg`, folder: 'QudsunSaleReceipts' }) });
-        const data = await res.json();
-        setReceiptUrl(data.ok && data.fileId ? `https://drive.google.com/uc?id=${data.fileId}` : dataUrl);
-      } catch { setReceiptUrl(dataUrl); }
-    };
-    reader.readAsDataURL(file);
-  };
 
   const handleSave = async () => {
     if (!baht && !kg) return;
+    const acct = isNew ? newAcct.trim() : account;
+    if (isNew && acct) onSaveAccount(acct);
     setLoading(true);
-    await onSave({ buyer, kg: Number(kg) || 0, baht: Number(baht) || 0, receiptUrl, note, date });
+    await onSave({ account: acct, kg: Number(kg) || 0, baht: Number(baht) || 0, date });
     setLoading(false);
   };
 
-  const inp = { width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 8, padding: '9px 12px', fontSize: 13, fontFamily: 'Prompt', background: '#fff', boxSizing: 'border-box' };
+  const inp = { width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 8, padding: '11px 12px', fontSize: 15, fontFamily: 'Prompt', background: '#fff', boxSizing: 'border-box' };
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 200, display: 'flex', alignItems: 'flex-end' }}
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div style={{ background: '#FFFDF8', width: '100%', maxWidth: 520, margin: '0 auto', borderRadius: '20px 20px 0 0', padding: '22px 18px 36px', maxHeight: '92vh', overflowY: 'auto' }}>
-        <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 16, color: '#3F2D1E', marginBottom: 14 }}>เพิ่มยอดขาย</div>
+      <div style={{ background: '#FFFDF8', width: '100%', maxWidth: 520, margin: '0 auto', borderRadius: '20px 20px 0 0', padding: '22px 18px 36px' }}>
+        <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 16, color: '#3F2D1E', marginBottom: 18 }}>เพิ่มยอดขาย</div>
 
-        <input ref={camRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={e => { handleReceiptFile(e.target.files[0]); e.target.value = ''; }} />
-        <input ref={galleryRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => { handleReceiptFile(e.target.files[0]); e.target.value = ''; }} />
-
-        {receiptPreview ? (
-          <div style={{ marginBottom: 14, position: 'relative' }}>
-            <img src={receiptPreview} alt="ใบเสร็จ" style={{ width: '100%', maxHeight: 200, objectFit: 'contain', borderRadius: 10, border: '1px solid #E4D7BC', background: '#f5f5f5', display: 'block' }} />
-            {ocrLoading && <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 10, fontSize: 13, color: '#7A5A22' }}>⏳ กำลังอ่านใบเสร็จ…</div>}
-            <button onClick={() => { setReceiptPreview(''); setReceiptUrl(''); }} style={{ position: 'absolute', top: 6, right: 6, border: 'none', background: 'rgba(0,0,0,.4)', color: '#fff', borderRadius: '50%', width: 26, height: 26, cursor: 'pointer', fontSize: 15, lineHeight: '26px' }}>×</button>
-          </div>
-        ) : (
-          <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
-            <button onClick={() => camRef.current?.click()} style={{ flex: 1, border: '1.5px dashed #C9A24B', background: 'none', borderRadius: 10, padding: '10px 0', fontSize: 13, color: '#7A5A22', cursor: 'pointer' }}>📷 ถ่ายรูปใบเสร็จ</button>
-            <button onClick={() => galleryRef.current?.click()} style={{ flex: 1, border: '1.5px dashed #9AB87A', background: 'none', borderRadius: 10, padding: '10px 0', fontSize: 13, color: '#4A7A2E', cursor: 'pointer' }}>🖼 อัพโหลด</button>
-          </div>
-        )}
-
-        <div style={{ marginBottom: 10 }}>
-          <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 3 }}>ชื่อตลาด / ผู้ซื้อ</div>
-          <input value={buyer} onChange={e => setBuyer(e.target.value)} placeholder="เช่น ตลาดทุเรียนสุราษฎร์" style={inp} />
-        </div>
-        <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
+        <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 3 }}>น้ำหนัก (กก.)</div>
-            <input value={kg} onChange={e => setKg(e.target.value)} type="number" placeholder="0.00" inputMode="decimal" style={inp} />
+            <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 4 }}>น้ำหนัก (กก.)</div>
+            <input value={kg} onChange={e => setKg(e.target.value)} type="number" placeholder="0.00" inputMode="decimal" autoFocus style={inp} />
           </div>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 3 }}>ยอดขาย (บาท)</div>
+            <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 4 }}>ยอดขาย (บาท)</div>
             <input value={baht} onChange={e => setBaht(e.target.value)} type="number" placeholder="0.00" inputMode="decimal" style={inp} />
           </div>
         </div>
-        <div style={{ marginBottom: 18 }}>
-          <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 3 }}>หมายเหตุ (ไม่บังคับ)</div>
-          <input value={note} onChange={e => setNote(e.target.value)} placeholder="เช่น ราคา 15 บาท/กก." style={inp} />
+
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 4 }}>เลขบัญชีที่รับเงิน</div>
+          {!isNew ? (
+            <div style={{ display: 'flex', gap: 8 }}>
+              <select value={account} onChange={e => {
+                if (e.target.value === '__new__') { setIsNew(true); setNewAcct(''); }
+                else setAccount(e.target.value);
+              }} style={{ ...inp, flex: 1 }}>
+                {accounts.map(a => <option key={a} value={a}>{a}</option>)}
+                <option value="__new__">+ เพิ่มบัญชีใหม่</option>
+              </select>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', gap: 8 }}>
+              <input value={newAcct} onChange={e => setNewAcct(e.target.value)} placeholder="เช่น 012-3-45678-9 ธ.กสิกร" style={{ ...inp, flex: 1 }} />
+              {accounts.length > 0 && (
+                <button onClick={() => { setIsNew(false); setAccount(accounts[0]); }} style={{ border: '1px solid #E4D7BC', background: '#F5F0E8', borderRadius: 8, padding: '0 12px', fontSize: 13, color: '#7A5A22', cursor: 'pointer' }}>เลือก</button>
+              )}
+            </div>
+          )}
         </div>
 
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={handleSave} disabled={loading || (!baht && !kg)}
-            style={{ flex: 1, background: '#6B8E4E', color: '#fff', border: 'none', borderRadius: 12, padding: '13px 0', fontSize: 14, fontFamily: 'Prompt', fontWeight: 600, cursor: 'pointer', opacity: (!baht && !kg) ? 0.5 : 1 }}>
+            style={{ flex: 1, background: '#6B8E4E', color: '#fff', border: 'none', borderRadius: 12, padding: '14px 0', fontSize: 15, fontFamily: 'Prompt', fontWeight: 600, cursor: 'pointer', opacity: (!baht && !kg) ? 0.5 : 1 }}>
             {loading ? 'กำลังบันทึก…' : '✓ บันทึกยอดขาย'}
           </button>
-          <button onClick={onClose} style={{ background: '#F0EAE0', color: '#7A5A22', border: 'none', borderRadius: 12, padding: '13px 16px', fontSize: 13, cursor: 'pointer' }}>ยกเลิก</button>
+          <button onClick={onClose} style={{ background: '#F0EAE0', color: '#7A5A22', border: 'none', borderRadius: 12, padding: '14px 16px', fontSize: 13, cursor: 'pointer' }}>ยกเลิก</button>
         </div>
       </div>
     </div>
   );
 }
 
-function SalesView({ history, sales, onGoHome, onAddSale, onDeleteSale }) {
+function SalesView({ history, sales, accounts, onGoHome, onAddSale, onDeleteSale, onSaveAccount }) {
   const todayStr = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
   const [selectedDate, setSelectedDate] = useState(todayStr);
   const [addOpen, setAddOpen] = useState(false);
@@ -1864,12 +1833,10 @@ function SalesView({ history, sales, onGoHome, onAddSale, onDeleteSale }) {
         <div style={{ textAlign: 'center', color: '#B7A684', fontSize: 13, padding: '20px 0' }}>ยังไม่มีรายการขาย</div>
       )}
       {outSales.map(s => (
-        <div key={s.id} style={{ background: '#FFFDF8', border: '1px solid #E4D7BC', borderRadius: 14, padding: '14px 16px', marginBottom: 10, display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-          {s.receiptUrl && <a href={s.receiptUrl} target="_blank" rel="noreferrer"><img src={s.receiptUrl} alt="ใบเสร็จ" style={{ width: 56, height: 56, objectFit: 'cover', borderRadius: 8, border: '1px solid #E4D7BC', flexShrink: 0, display: 'block' }} /></a>}
+        <div key={s.id} style={{ background: '#FFFDF8', border: '1px solid #E4D7BC', borderRadius: 14, padding: '14px 16px', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{ flex: 1 }}>
-            <div style={{ fontWeight: 700, fontSize: 14, color: '#3F2D1E' }}>{s.buyer || '—'}</div>
-            <div style={{ fontSize: 12.5, color: '#7A6450', marginTop: 3 }}>{fmtKg(Number(s.kg))} กก. · ฿{fmtBaht(Number(s.baht))}</div>
-            {s.note && <div style={{ fontSize: 11.5, color: '#9A8662', marginTop: 2 }}>{s.note}</div>}
+            <div style={{ fontWeight: 700, fontSize: 15, color: '#1B5E20' }}>{fmtKg(Number(s.kg))} กก. · ฿{fmtBaht(Number(s.baht))}</div>
+            {s.buyer && <div style={{ fontSize: 12, color: '#7A6450', marginTop: 3 }}>บัญชี {s.buyer}</div>}
           </div>
           <button onClick={() => { if (window.confirm('ลบรายการนี้?')) onDeleteSale(s.id); }}
             style={{ border: 'none', background: 'none', color: '#C8A080', fontSize: 20, cursor: 'pointer', lineHeight: 1 }}>×</button>
@@ -1898,7 +1865,7 @@ function SalesView({ history, sales, onGoHome, onAddSale, onDeleteSale }) {
         </>
       )}
 
-      {addOpen && <AddSaleModal date={selectedDate} onSave={async (data) => { await onAddSale(data); setAddOpen(false); }} onClose={() => setAddOpen(false)} />}
+      {addOpen && <AddSaleModal date={selectedDate} accounts={accounts || []} onSaveAccount={onSaveAccount} onSave={async (data) => { await onAddSale(data); setAddOpen(false); }} onClose={() => setAddOpen(false)} />}
     </div>
   );
 }
@@ -2298,6 +2265,7 @@ export default function App() {
   const [payments, setPayments] = useState({});
   const [vehiclePhotoUrl, setVehiclePhotoUrl] = useState(null);
   const [sales, setSales] = useState([]);
+  const [accounts, setAccounts] = useState(() => storage.loadAccounts());
   const savedSession = useRef(null);
   const pendingPhotoDataUrl = useRef(null);
 
@@ -2657,9 +2625,19 @@ export default function App() {
     db.deletePayment(billNo).catch(() => {});
   }, []);
 
-  const handleAddSale = useCallback(async ({ buyer, kg, baht, note, receiptUrl, date }) => {
+  const handleSaveAccount = useCallback((acct) => {
+    if (!acct) return;
+    setAccounts(prev => {
+      if (prev.includes(acct)) return prev;
+      const next = [acct, ...prev];
+      storage.saveAccounts(next);
+      return next;
+    });
+  }, []);
+
+  const handleAddSale = useCallback(async ({ account, kg, baht, date }) => {
     const ts = date ? new Date(date + 'T12:00:00').getTime() : Date.now();
-    const sale = { id: String(Date.now()) + '_' + Math.random().toString(36).slice(2), date: ts, buyer: buyer || '', kg: Number(kg) || 0, baht: Number(baht) || 0, note: note || '', receiptUrl: receiptUrl || '' };
+    const sale = { id: String(Date.now()) + '_' + Math.random().toString(36).slice(2), date: ts, buyer: account || '', kg: Number(kg) || 0, baht: Number(baht) || 0, note: '', receiptUrl: '' };
     const next = [sale, ...sales];
     storage.saveSales(next);
     setSales(next);
@@ -2935,7 +2913,7 @@ export default function App() {
         <DashboardView history={history} payments={payments} pin={pin} onPayment={handlePayment} onDeleteBill={handleDeleteBill} onGoHome={() => setScreen('home')} />
       )}
       {screen === 'sales' && (
-        <SalesView history={history} sales={sales} onGoHome={() => setScreen('home')} onAddSale={handleAddSale} onDeleteSale={handleDeleteSale} />
+        <SalesView history={history} sales={sales} accounts={accounts} onGoHome={() => setScreen('home')} onAddSale={handleAddSale} onDeleteSale={handleDeleteSale} onSaveAccount={handleSaveAccount} />
       )}
       {screen === 'customers' && (
         <CustomersView history={history} verified={verified} onGoHome={() => setScreen('home')}
