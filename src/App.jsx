@@ -2709,24 +2709,37 @@ export default function App() {
       const prefix = type === 'receipt' ? 'receipt' : type === 'vehicle' ? 'vehicle' : 'slip';
       const folder = type === 'receipt' ? 'QudsunReceipts' : type === 'vehicle' ? 'QudsunVehicles' : 'QudsunTransfers';
       const filename = `${prefix}_${namePart}_${phonePart}_${datePart}_${timePart}.jpg`;
-      toast('กำลัง upload…');
-      let url = dataUrl;
-      try {
-        const res = await fetch('/api/drive', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ base64: dataUrl, filename, folder }) });
-        const data = await res.json();
-        if (data.ok && data.fileId) url = `https://drive.google.com/uc?id=${data.fileId}`;
-      } catch {}
-      if (type === 'vehicle') setVehiclePhotoUrl(url);
       const urlKey = type === 'receipt' ? 'receiptUrl' : type === 'vehicle' ? 'vehicleUrl' : 'slipUrl';
       const prev = storage.loadPayments();
       const existing = prev[session.billNo] || { status: 'transferred', paidAt: Date.now() };
-      const updated = { ...existing, [urlKey]: url };
 
-      const next = { ...prev, [session.billNo]: updated };
-      storage.savePayments(next);
-      setPayments(next);
-      pushPayment(session.billNo, updated);
-      toast('อัพโหลดรูปแล้ว ✓');
+      // Show base64 immediately in UI (local only)
+      if (type === 'vehicle') setVehiclePhotoUrl(dataUrl);
+      const localUpdated = { ...existing, [urlKey]: dataUrl };
+      const localNext = { ...prev, [session.billNo]: localUpdated };
+      storage.savePayments(localNext);
+      setPayments(localNext);
+      toast('กำลัง upload…');
+
+      // Try Drive upload in background
+      try {
+        const res = await fetch('/api/drive', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ base64: dataUrl, filename, folder }) });
+        const data = await res.json();
+        if (data.ok && data.fileId) {
+          const driveUrl = `https://drive.google.com/uc?id=${data.fileId}`;
+          if (type === 'vehicle') setVehiclePhotoUrl(driveUrl);
+          const driveUpdated = { ...existing, [urlKey]: driveUrl };
+          const driveNext = { ...prev, [session.billNo]: driveUpdated };
+          storage.savePayments(driveNext);
+          setPayments(driveNext);
+          pushPayment(session.billNo, driveUpdated); // only save Drive URL to Supabase
+          toast('อัพโหลดรูปแล้ว ✓');
+        } else {
+          toast('บันทึกรูปไว้ในเครื่อง ✓');
+        }
+      } catch {
+        toast('บันทึกรูปไว้ในเครื่อง ✓');
+      }
     } catch { toast('อัพโหลดไม่สำเร็จ'); }
   }, [session, toast, pushPayment]);
 
