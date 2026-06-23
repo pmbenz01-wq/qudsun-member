@@ -1500,8 +1500,8 @@ function DeleteBillModal({ bill, pin, onConfirm, onClose }) {
 }
 
 function DashboardView({ history, payments, pin, onPayment, onDeleteBill, onGoHome }) {
-  const [filter, setFilter] = useState('all');
-  const [view, setView] = useState('orders'); // 'orders' | 'daily'
+  const todayStr = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
+  const [selectedDate, setSelectedDate] = useState(todayStr);
   const [transferBill, setTransferBill] = useState(null);
   const [cancelBill, setCancelBill] = useState(null);
   const [deleteBill, setDeleteBill] = useState(null);
@@ -1512,171 +1512,102 @@ function DashboardView({ history, payments, pin, onPayment, onDeleteBill, onGoHo
     cash:        { label: 'เงินสด',    color: '#5A7FA8', bg: '#E8EEF8', text: '#1A4D80' },
   };
 
-  const bills = history
+  const toDateStr = ts => { const d = new Date(ts); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
+
+  const dayBills = history
+    .filter(h => h.date && toDateStr(h.date) === selectedDate)
     .map(h => ({ ...h, pay: payments[h.billNo] || { status: 'unpaid' } }))
     .sort((a, b) => (b.date || 0) - (a.date || 0));
 
-  const unpaid      = bills.filter(b => b.pay.status === 'unpaid');
-  const transferred = bills.filter(b => b.pay.status === 'transferred');
-  const cash        = bills.filter(b => b.pay.status === 'cash');
-  const displayed   = filter === 'all' ? bills : bills.filter(b => b.pay.status === filter);
+  const totalKg   = dayBills.reduce((s, b) => s + (parseFloat((b.kg || '0').replace(/,/g, '')) || 0), 0);
+  const totalBaht = dayBills.reduce((s, b) => s + (parseFloat((b.baht || '0').replace(/,/g, '')) || 0), 0);
+  const nUnpaid   = dayBills.filter(b => b.pay.status === 'unpaid').length;
+  const nPaid     = dayBills.length - nUnpaid;
 
-  // Group by dateText for daily summary
-  const dailyGroups = (() => {
-    const map = {};
-    bills.forEach(b => {
-      const key = b.dateText || 'ไม่ระบุวัน';
-      if (!map[key]) map[key] = { dateText: key, dateVal: b.date || 0, bills: [] };
-      map[key].bills.push(b);
-    });
-    return Object.values(map).sort((a, b) => b.dateVal - a.dateVal);
-  })();
-
-  const sumBaht = arr => arr.reduce((s, b) => s + (parseFloat((b.baht || '0').replace(/,/g, '')) || 0), 0);
-  const fmt = n => n.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const fmt    = n => n.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const fmtKg2 = n => n.toLocaleString('th-TH', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 
   return (
-    <div style={{ minHeight: '100dvh', background: '#F5EFE3', paddingBottom: 32 }}>
-      <div style={{ background: '#3F2D1E', padding: '18px 18px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
-        <button onClick={onGoHome} style={{ border: 'none', background: 'none', color: '#F6EEDD', fontSize: 20, cursor: 'pointer', padding: 0 }}>‹</button>
-        <span style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 18, color: '#F6EEDD', flex: 1 }}>ยอดซื้อ</span>
-        <div style={{ display: 'flex', gap: 0 }}>
-          {[['orders','ออเดอร์'],['daily','รายวัน']].map(([v,l]) => (
-            <button key={v} onClick={() => setView(v)} style={{
-              border: 'none', padding: '5px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer',
-              background: view === v ? '#DC743C' : 'rgba(255,255,255,0.12)',
-              color: '#fff', borderRadius: 8,
-            }}>{l}</button>
-          ))}
+    <div style={{ flex: 1, padding: '14px 14px 60px', maxWidth: 620, margin: '0 auto', width: '100%' }}>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+        <button onClick={onGoHome} style={{ border: 'none', background: 'none', fontSize: 22, cursor: 'pointer', color: '#7A6450' }}>‹</button>
+        <span style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 18, color: '#3F2D1E' }}>ยอดซื้อ</span>
+        <input type="date" value={selectedDate} onChange={e => setSelectedDate(e.target.value)}
+          style={{ marginLeft: 'auto', border: '1px solid #E4D7BC', borderRadius: 8, padding: '6px 10px', fontSize: 13, fontFamily: 'Prompt', color: '#4A3526', background: '#FFFDF8' }} />
+      </div>
+
+      {/* Summary card */}
+      <div style={{ background: '#FFFDF8', border: '1px solid #E4D7BC', borderRadius: 16, padding: '16px 18px', marginBottom: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
+          <div style={{ background: '#FFF3E0', borderRadius: 12, padding: '12px 14px' }}>
+            <div style={{ fontSize: 11, color: '#8A5E00', marginBottom: 4 }}>📥 ซื้อรวม</div>
+            <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 17, color: '#4A3526' }}>{fmtKg2(totalKg)} กก.</div>
+            <div style={{ fontSize: 13, color: '#7A5A22', marginTop: 2 }}>฿{fmt(totalBaht)}</div>
+            {dayBills.length > 0 && <div style={{ fontSize: 10, color: '#B7A684', marginTop: 4 }}>{dayBills.length} บิล</div>}
+          </div>
+          <div style={{ background: nUnpaid > 0 ? '#FDECEA' : '#E6F4EA', borderRadius: 12, padding: '12px 14px' }}>
+            <div style={{ fontSize: 11, color: nUnpaid > 0 ? '#8A0000' : '#1B5E20', marginBottom: 4 }}>{nUnpaid > 0 ? '⏳ ค้างชำระ' : '✅ ชำระครบ'}</div>
+            <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 17, color: nUnpaid > 0 ? '#C0392B' : '#1B5E20' }}>{nUnpaid > 0 ? `${nUnpaid} บิล` : `${nPaid} บิล`}</div>
+            <div style={{ fontSize: 13, color: nUnpaid > 0 ? '#C0392B' : '#2E7D32', marginTop: 2 }}>{nUnpaid > 0 ? `จ่ายแล้ว ${nPaid} บิล` : 'จ่ายครบแล้ว'}</div>
+          </div>
         </div>
       </div>
 
-      {/* Summary bar */}
-      <div style={{ display: 'flex', gap: 6, padding: '12px 14px 0', overflowX: 'auto' }}>
-        {[
-          { key: 'all',         label: 'ทั้งหมด',   count: bills.length,       sum: sumBaht(bills),       color: '#9A8662' },
-          { key: 'unpaid',      label: 'ยังไม่โอน', count: unpaid.length,      sum: sumBaht(unpaid),      color: '#E07A5F' },
-          { key: 'transferred', label: 'โอนแล้ว',   count: transferred.length, sum: sumBaht(transferred), color: '#5A9A6A' },
-          { key: 'cash',        label: 'เงินสด',    count: cash.length,        sum: sumBaht(cash),        color: '#5A7FA8' },
-        ].map(({ key, label, count, sum, color }) => (
-          <button key={key} onClick={() => { setFilter(key); setView('orders'); }} style={{
-            flexShrink: 0, border: `1.5px solid ${color}`, borderRadius: 12, padding: '8px 12px',
-            background: filter === key && view === 'orders' ? color : '#FBF6EC', cursor: 'pointer', textAlign: 'left',
-          }}>
-            <div style={{ fontSize: 10, fontWeight: 600, color: filter === key && view === 'orders' ? '#fff' : '#7A6450', marginBottom: 2 }}>{label} ({count})</div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: filter === key && view === 'orders' ? '#fff' : '#2A2118' }}>฿{fmt(sum)}</div>
-          </button>
-        ))}
+      {/* Bill list header */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+        <span style={{ fontSize: 13, fontWeight: 600, color: '#4A3526' }}>รายการบิล</span>
+        <div style={{ flex: 1, height: 1, background: '#E4D7BC' }} />
       </div>
 
-      {/* ── DAILY VIEW ── */}
-      {view === 'daily' && (
-        <div style={{ padding: '12px 14px 8px' }}>
-          {dailyGroups.length === 0 && <div style={{ textAlign: 'center', color: '#A6925E', padding: '40px 0', fontSize: 14 }}>ไม่มีรายการ</div>}
-          {dailyGroups.map(({ dateText, bills: db }) => {
-            const totalKg   = db.reduce((s, b) => s + (parseFloat((b.kg || '0').replace(/,/g, '')) || 0), 0);
-            const totalBaht = sumBaht(db);
-            const nUnpaid   = db.filter(b => b.pay.status === 'unpaid').length;
-            const nTrans    = db.filter(b => b.pay.status === 'transferred').length;
-            const nCash     = db.filter(b => b.pay.status === 'cash').length;
-            return (
-              <div key={dateText} style={{ marginBottom: 16 }}>
-                {/* Date header */}
-                <div style={{ background: '#3F2D1E', borderRadius: '12px 12px 0 0', padding: '10px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 14, color: '#F6EEDD' }}>{dateText}</span>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: '#DC743C' }}>฿{fmt(totalBaht)}</span>
-                </div>
-                {/* Day stats */}
-                <div style={{ background: '#FBF6EC', padding: '8px 14px', display: 'flex', gap: 14, borderBottom: '1px solid #E4D7BC', flexWrap: 'wrap' }}>
-                  <span style={{ fontSize: 11, color: '#7A6450' }}>{db.length} บิล · {totalKg.toLocaleString('th-TH')} กก.</span>
-                  {nUnpaid > 0   && <span style={{ fontSize: 11, color: '#C0392B', fontWeight: 600 }}>ค้างโอน {nUnpaid}</span>}
-                  {nTrans > 0    && <span style={{ fontSize: 11, color: '#2E7D32', fontWeight: 600 }}>โอนแล้ว {nTrans}</span>}
-                  {nCash > 0     && <span style={{ fontSize: 11, color: '#1A4D80', fontWeight: 600 }}>เงินสด {nCash}</span>}
-                </div>
-                {/* Bills of that day */}
-                {db.map(b => {
-                  const st = STATUS[b.pay.status] || STATUS.unpaid;
-                  return (
-                    <div key={b.billNo} style={{ background: '#FFFDF8', borderLeft: `4px solid ${st.color}`, borderBottom: '1px solid #E4D7BC', padding: '10px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div>
-                        <div style={{ fontWeight: 700, fontSize: 14, color: '#2A2118' }}>{b.seller || '—'}</div>
-                        <div style={{ fontSize: 11, color: '#8A7A66', marginTop: 1 }}>{b.billNo} · {b.kg} กก.</div>
-                      </div>
-                      <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontWeight: 700, fontSize: 15, color: '#3F2D1E' }}>฿{b.baht}</div>
-                        <span style={{ fontSize: 10, padding: '1px 7px', borderRadius: 7, background: st.bg, color: st.text, fontWeight: 600 }}>{st.label}</span>
-                      </div>
-                    </div>
-                  );
-                })}
-                <div style={{ borderRadius: '0 0 12px 12px', overflow: 'hidden', border: '1px solid #E4D7BC', borderTop: 'none' }} />
-              </div>
-            );
-          })}
-        </div>
+      {dayBills.length === 0 && (
+        <div style={{ textAlign: 'center', color: '#B7A684', fontSize: 13, padding: '20px 0' }}>ไม่มีบิลวันนี้</div>
       )}
 
-      {/* ── ORDER VIEW ── */}
-      {view === 'orders' && (
-      <div style={{ padding: '12px 14px 8px' }}>
-        {displayed.length === 0 && (
-          <div style={{ textAlign: 'center', color: '#A6925E', padding: '40px 0', fontSize: 14 }}>ไม่มีรายการ</div>
-        )}
-
-        {displayed.map(b => {
-          const st = STATUS[b.pay.status] || STATUS.unpaid;
-          return (
-            <div key={b.billNo} style={{
-              background: '#FFFDF8', borderRadius: 14, marginBottom: 10,
-              border: '1px solid #E4D7BC', overflow: 'hidden',
-              borderLeft: `4px solid ${st.color}`,
-            }}>
-              {/* Customer row */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 14px 8px' }}>
-                <div style={{ flex: 1 }}>
+      {dayBills.map(b => {
+        const st = STATUS[b.pay.status] || STATUS.unpaid;
+        return (
+          <div key={b.billNo} style={{ background: '#FFFDF8', border: `1px solid #E4D7BC`, borderLeft: `4px solid ${st.color}`, borderRadius: 14, padding: '14px 16px', marginBottom: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+              {b.pay.slipUrl && (
+                <a href={b.pay.slipUrl} target="_blank" rel="noreferrer">
+                  <img src={b.pay.slipUrl} alt="สลิป" style={{ width: 52, height: 52, objectFit: 'cover', borderRadius: 8, border: '1px solid #C8E6C9', flexShrink: 0, display: 'block' }} />
+                </a>
+              )}
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
                   <div style={{ fontWeight: 700, fontSize: 15, color: '#2A2118' }}>{b.seller || '—'}</div>
-                  <div style={{ fontSize: 11, color: '#8A7A66', marginTop: 2 }}>{b.billNo} · {b.dateText} · {b.kg} กก.</div>
+                  <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 20, background: st.bg, color: st.text, fontWeight: 600 }}>{st.label}</span>
                 </div>
-                <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <div style={{ fontWeight: 700, fontSize: 16, color: '#3F2D1E' }}>฿{b.baht}</div>
-                    <button onClick={() => setDeleteBill(b)} style={{ border: 'none', background: 'none', padding: '2px 4px', cursor: 'pointer', fontSize: 14, color: '#C8B89A', lineHeight: 1 }} title="ลบบิล">🗑</button>
-                  </div>
-                  <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 8, display: 'inline-block',
-                    background: st.bg, color: st.text, fontWeight: 600 }}>
-                    {st.label}
-                  </span>
-                </div>
+                <div style={{ fontSize: 12, color: '#8A7A66' }}>{b.billNo} · {b.kg} กก.</div>
               </div>
-
-              {/* Action row */}
-              <div style={{ padding: '0 14px 12px', display: 'flex', gap: 8 }}>
-                {b.pay.status === 'unpaid' ? (
-                  <>
-                    <button onClick={() => setTransferBill(b)}
-                      style={{ flex: 1, border: 'none', borderRadius: 10, padding: '9px 0', background: '#5A9A6A', color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
-                      โอนแล้ว ✓
-                    </button>
-                    <button onClick={() => onPayment(b.billNo, 'cash')}
-                      style={{ flex: 1, border: 'none', borderRadius: 10, padding: '9px 0', background: '#5A7FA8', color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
-                      เงินสด ✓
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    {b.pay.slipUrl && <img src={b.pay.slipUrl} alt="สลิป" style={{ width: 38, height: 38, objectFit: 'cover', borderRadius: 6, border: '1px solid #C8E6C9', flexShrink: 0 }} />}
-                    <button onClick={() => setCancelBill(b)}
-                      style={{ flex: 1, border: '1px solid #D0C8C0', borderRadius: 10, padding: '8px 0', background: '#fff', color: '#8A7A66', fontSize: 12, cursor: 'pointer' }}>
-                      🔒 ยกเลิกการชำระ
-                    </button>
-                  </>
-                )}
+              <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+                <div style={{ fontWeight: 700, fontSize: 16, color: '#3F2D1E' }}>฿{b.baht}</div>
+                <button onClick={() => setDeleteBill(b)} style={{ border: 'none', background: 'none', padding: '2px 4px', cursor: 'pointer', fontSize: 14, color: '#C8B89A', lineHeight: 1 }}>🗑</button>
               </div>
             </div>
-          );
-        })}
-      </div>
-      )}
+            <div style={{ marginTop: 10 }}>
+              {b.pay.status === 'unpaid' ? (
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button onClick={() => setTransferBill(b)}
+                    style={{ flex: 1, border: 'none', borderRadius: 10, padding: '9px 0', background: '#5A9A6A', color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
+                    โอนแล้ว ✓
+                  </button>
+                  <button onClick={() => onPayment(b.billNo, 'cash')}
+                    style={{ flex: 1, border: 'none', borderRadius: 10, padding: '9px 0', background: '#5A7FA8', color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
+                    เงินสด ✓
+                  </button>
+                </div>
+              ) : (
+                <button onClick={() => setCancelBill(b)}
+                  style={{ width: '100%', border: '1px solid #D0C8C0', borderRadius: 10, padding: '8px 0', background: '#fff', color: '#8A7A66', fontSize: 12, cursor: 'pointer' }}>
+                  🔒 ยกเลิกการชำระ
+                </button>
+              )}
+            </div>
+          </div>
+        );
+      })}
 
       {transferBill && (
         <TransferSlipModal bill={transferBill}
