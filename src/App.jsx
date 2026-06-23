@@ -895,10 +895,27 @@ function ConfirmView({ session, verified, history, onConfirm, onGoSummary, custo
 }
 
 // ─── PrintView ────────────────────────────────────────────────────────────────
-function PrintView({ session, readonly, isHandoff, verified, history, payments, onGoSummary, onGoBack, onFinish, customLabel, vehiclePhotoUrl, onSaveSlip, onUploadEvidence, onSaveCustomerInfo, supervisors, customerInfo }) {
+function PrintView({ session, readonly, isHandoff, verified, history, payments, onGoSummary, onGoBack, onFinish, customLabel, vehiclePhotoUrl, onSaveSlip, onUploadEvidence, onReusePhoto, onSaveCustomerInfo, supervisors, customerInfo }) {
   const [qrDataUrl, setQrDataUrl] = useState('');
   const [copied, setCopied] = useState(false);
   const [uploading, setUploading] = useState(null); // null | 'receipt' | 'slip' | 'vehicle'
+
+  // Find photos from previous bills of the same customer
+  const priorPhotos = useMemo(() => {
+    const phone = session?.sellerPhone || session?.phone;
+    if (!phone || !history || !payments) return {};
+    const result = {};
+    for (const h of history) {
+      const hPhone = h.sellerPhone || h.phone;
+      if (hPhone === phone && h.billNo !== session?.billNo) {
+        const pay = payments[h.billNo];
+        if (pay?.vehicleUrl && !result.vehicleUrl) result.vehicleUrl = pay.vehicleUrl;
+        if (pay?.receiptUrl && !result.receiptUrl) result.receiptUrl = pay.receiptUrl;
+        if (pay?.slipUrl && !result.slipUrl) result.slipUrl = pay.slipUrl;
+      }
+    }
+    return result;
+  }, [session?.sellerPhone, session?.phone, session?.billNo, history, payments]);
   const [slipOcr, setSlipOcr] = useState(null); // null | { file, dataUrl, bankName, bankAccount, note, loading, slipData? }
   const receiptUpRef = useRef();
   const slipUpRef = useRef();
@@ -1064,8 +1081,13 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
                           <a href={pay.receiptUrl} target="_blank" rel="noreferrer"><img src={pay.receiptUrl} alt="ใบเสร็จ" style={{ width: '100%', maxHeight: 140, objectFit: 'cover', borderRadius: 10, border: '1px solid #C8E6C9', display: 'block' }} /></a>
                           {onUploadEvidence && <button onClick={() => receiptUpRef.current?.click()} style={{ position: 'absolute', top: 4, right: 4, ...upBtn }}>{uploading === 'receipt' ? '…' : 'เปลี่ยน'}</button>}
                         </div>
-                      : <div style={{ ...noPhoto, cursor: onUploadEvidence ? 'pointer' : 'default', border: onUploadEvidence ? '1.5px dashed #C9A24B' : noPhoto.border }} onClick={() => onUploadEvidence && receiptUpRef.current?.click()}>
-                          {uploading === 'receipt' ? 'กำลัง upload…' : onUploadEvidence ? <><span>📤</span><span style={{ fontSize: 10 }}>แตะเพื่ออัพโหลด</span></> : 'ไม่มีรูป'}
+                      : <div>
+                          <div style={{ ...noPhoto, cursor: onUploadEvidence ? 'pointer' : 'default', border: onUploadEvidence ? '1.5px dashed #C9A24B' : noPhoto.border }} onClick={() => onUploadEvidence && receiptUpRef.current?.click()}>
+                            {uploading === 'receipt' ? 'กำลัง upload…' : onUploadEvidence ? <><span>📤</span><span style={{ fontSize: 10 }}>แตะเพื่ออัพโหลด</span></> : 'ไม่มีรูป'}
+                          </div>
+                          {onReusePhoto && priorPhotos.receiptUrl && (
+                            <button onClick={() => onReusePhoto('receipt', priorPhotos.receiptUrl)} style={{ marginTop: 4, width: '100%', border: '1px solid #C9A24B', background: '#FFFDF8', color: '#8A5E00', borderRadius: 8, padding: '5px 0', fontSize: 11, cursor: 'pointer', fontFamily: 'Prompt' }}>📋 ใช้รูปเดิม</button>
+                          )}
                         </div>}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
@@ -1075,8 +1097,13 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
                           <a href={pay.slipUrl} target="_blank" rel="noreferrer"><img src={pay.slipUrl} alt="สลิป" style={{ width: '100%', maxHeight: 140, objectFit: 'cover', borderRadius: 10, border: '1px solid #C8E6C9', display: 'block' }} /></a>
                           {onUploadEvidence && <button onClick={() => slipUpRef.current?.click()} style={{ position: 'absolute', top: 4, right: 4, ...upBtn }}>{uploading === 'slip' ? '…' : 'เปลี่ยน'}</button>}
                         </div>
-                      : <div style={{ ...noPhoto, cursor: onUploadEvidence ? 'pointer' : 'default', border: onUploadEvidence ? '1.5px dashed #C9A24B' : noPhoto.border }} onClick={() => onUploadEvidence && slipUpRef.current?.click()}>
-                          {uploading === 'slip' ? 'กำลัง upload…' : onUploadEvidence ? <><span>📤</span><span style={{ fontSize: 10 }}>แตะเพื่ออัพโหลด</span></> : 'ไม่มีรูป'}
+                      : <div>
+                          <div style={{ ...noPhoto, cursor: onUploadEvidence ? 'pointer' : 'default', border: onUploadEvidence ? '1.5px dashed #C9A24B' : noPhoto.border }} onClick={() => onUploadEvidence && slipUpRef.current?.click()}>
+                            {uploading === 'slip' ? 'กำลัง upload…' : onUploadEvidence ? <><span>📤</span><span style={{ fontSize: 10 }}>แตะเพื่ออัพโหลด</span></> : 'ไม่มีรูป'}
+                          </div>
+                          {onReusePhoto && priorPhotos.slipUrl && (
+                            <button onClick={() => onReusePhoto('slip', priorPhotos.slipUrl)} style={{ marginTop: 4, width: '100%', border: '1px solid #C9A24B', background: '#FFFDF8', color: '#8A5E00', borderRadius: 8, padding: '5px 0', fontSize: 11, cursor: 'pointer', fontFamily: 'Prompt' }}>📋 ใช้รูปเดิม</button>
+                          )}
                         </div>}
                   </div>
                 </div>
@@ -1090,8 +1117,13 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
                           <a href={vUrl} target="_blank" rel="noreferrer"><img src={vUrl} alt="ทะเบียน" style={{ width: '100%', maxHeight: 160, objectFit: 'cover', borderRadius: 10, border: '1px solid #E4D7BC', display: 'block' }} /></a>
                           {onUploadEvidence && <button onClick={() => vehicleUpRef.current?.click()} style={{ position: 'absolute', top: 4, right: 4, ...upBtn }}>{uploading === 'vehicle' ? '…' : 'เปลี่ยน'}</button>}
                         </div>
-                      : <div style={{ ...noPhoto, cursor: onUploadEvidence ? 'pointer' : 'default', border: onUploadEvidence ? '1.5px dashed #C9A24B' : noPhoto.border }} onClick={() => onUploadEvidence && vehicleUpRef.current?.click()}>
-                          {uploading === 'vehicle' ? 'กำลัง upload…' : onUploadEvidence ? <><span>📤</span><span style={{ fontSize: 10 }}>แตะเพื่ออัพโหลด</span></> : 'ไม่มีรูป'}
+                      : <div>
+                          <div style={{ ...noPhoto, cursor: onUploadEvidence ? 'pointer' : 'default', border: onUploadEvidence ? '1.5px dashed #C9A24B' : noPhoto.border }} onClick={() => onUploadEvidence && vehicleUpRef.current?.click()}>
+                            {uploading === 'vehicle' ? 'กำลัง upload…' : onUploadEvidence ? <><span>📤</span><span style={{ fontSize: 10 }}>แตะเพื่ออัพโหลด</span></> : 'ไม่มีรูป'}
+                          </div>
+                          {onReusePhoto && priorPhotos.vehicleUrl && (
+                            <button onClick={() => onReusePhoto('vehicle', priorPhotos.vehicleUrl)} style={{ marginTop: 4, width: '100%', border: '1px solid #C9A24B', background: '#FFFDF8', color: '#8A5E00', borderRadius: 8, padding: '5px 0', fontSize: 11, cursor: 'pointer', fontFamily: 'Prompt' }}>📋 ใช้รูปเดิม</button>
+                          )}
                         </div>;
                   })()}
                 </div>
@@ -2754,6 +2786,19 @@ export default function App() {
     } catch { toast('อัพโหลดไม่สำเร็จ'); }
   }, [session, toast, pushPayment]);
 
+  const handleReusePhoto = useCallback((type, url) => {
+    if (!session || !url) return;
+    const urlKey = type === 'receipt' ? 'receiptUrl' : type === 'vehicle' ? 'vehicleUrl' : 'slipUrl';
+    const prev = storage.loadPayments();
+    const existing = prev[session.billNo] || { status: 'transferred', paidAt: Date.now() };
+    const updated = { ...existing, [urlKey]: url };
+    const next = { ...prev, [session.billNo]: updated };
+    storage.savePayments(next);
+    setPayments(next);
+    pushPayment(session.billNo, updated);
+    toast('คัดลอกรูปแล้ว ✓');
+  }, [session, toast, pushPayment]);
+
   const handleSaveCustomerInfo = useCallback((phone, info) => {
     if (!phone) return;
     const ciPrev = storage.loadCustomerInfo();
@@ -2965,6 +3010,7 @@ export default function App() {
           onGoSummary={() => setScreen('summary')} onGoBack={goBackFromBill} onFinish={finishBill}
           customLabel={session.customLabel || ''} vehiclePhotoUrl={session.vehicleDriveUrl || vehiclePhotoUrl}
           onSaveSlip={handleSaveSlip} onUploadEvidence={readonly ? handleUploadEvidence : undefined}
+          onReusePhoto={readonly ? handleReusePhoto : undefined}
           onSaveCustomerInfo={readonly ? handleSaveCustomerInfo : undefined}
           supervisors={supervisors} customerInfo={customerInfo} />
       )}
