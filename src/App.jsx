@@ -336,13 +336,13 @@ function HomeView({ session, history, payments, syncStatus, syncing, onNew, onRe
         )}
       </div>
 
-      <button onClick={onGoDashboard} style={{ width: '100%', border: '1.5px solid #C9A24B', background: 'linear-gradient(135deg,#FBF3E2,#F5E6C8)', borderRadius: 14, padding: '14px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
-        <span style={{ fontSize: 22 }}>📊</span>
+      <button onClick={onGoDashboard} style={{ width: '100%', border: '1.5px solid #5A7FA8', background: 'linear-gradient(135deg,#EEF3FA,#DDE8F5)', borderRadius: 14, padding: '14px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+        <span style={{ fontSize: 22 }}>🧾</span>
         <div style={{ textAlign: 'left' }}>
-          <div style={{ fontWeight: 700, fontSize: 15, color: '#4A3526' }}>Dashboard ยอดชำระ</div>
-          <div style={{ fontSize: 12, color: '#9A8662' }}>โอนแล้ว / ยังไม่โอน / เงินสด</div>
+          <div style={{ fontWeight: 700, fontSize: 15, color: '#1A3A5C' }}>ยอดซื้อ</div>
+          <div style={{ fontSize: 12, color: '#4A6A8A' }}>ประวัติรับซื้อ / สถานะชำระ</div>
         </div>
-        <span style={{ marginLeft: 'auto', color: '#C9A24B', fontSize: 18 }}>›</span>
+        <span style={{ marginLeft: 'auto', color: '#5A7FA8', fontSize: 18 }}>›</span>
       </button>
 
       <button onClick={onGoSales} style={{ width: '100%', border: '1.5px solid #6B8E4E', background: 'linear-gradient(135deg,#EDF5E7,#DFF0D4)', borderRadius: 14, padding: '14px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
@@ -1539,7 +1539,7 @@ function DashboardView({ history, payments, pin, onPayment, onDeleteBill, onGoHo
     <div style={{ minHeight: '100dvh', background: '#F5EFE3', paddingBottom: 32 }}>
       <div style={{ background: '#3F2D1E', padding: '18px 18px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <button onClick={onGoHome} style={{ border: 'none', background: 'none', color: '#F6EEDD', fontSize: 20, cursor: 'pointer', padding: 0 }}>‹</button>
-        <span style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 18, color: '#F6EEDD', flex: 1 }}>Dashboard</span>
+        <span style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 18, color: '#F6EEDD', flex: 1 }}>ยอดซื้อ</span>
         <div style={{ display: 'flex', gap: 0 }}>
           {[['orders','ออเดอร์'],['daily','รายวัน']].map(([v,l]) => (
             <button key={v} onClick={() => setView(v)} style={{
@@ -2964,7 +2964,7 @@ export default function App() {
       {screen === 'home' && (
         <HomeView session={session} history={history} payments={payments} verified={verified} supervisors={supervisors} syncStatus={syncStatus} syncing={syncing}
           onNew={startNew} onResume={() => setScreen('record')} onGoCustomers={() => setScreen('customers')}
-          onGoDashboard={() => setScreen('dashboard')}
+          onGoDashboard={() => setScreen('purchases')}
           onGoSales={() => setScreen('sales')}
           onGoSupervisors={() => setScreen('supervisors')}
           onOpenSheet={() => { setSheetModal(true); setSheetModalUrl(sheetUrl); }}
@@ -3011,7 +3011,7 @@ export default function App() {
           onSaveCustomerInfo={readonly ? handleSaveCustomerInfo : undefined}
           supervisors={supervisors} customerInfo={customerInfo} />
       )}
-      {screen === 'dashboard' && (
+      {screen === 'purchases' && (
         <DashboardView history={history} payments={payments} pin={pin} onPayment={handlePayment} onDeleteBill={handleDeleteBill} onGoHome={() => setScreen('home')} />
       )}
       {screen === 'sales' && (
