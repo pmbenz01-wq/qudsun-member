@@ -16,37 +16,44 @@ async function sbGet(table, qs = '') {
   return r.json();
 }
 
-async function sheetRead(token, range) {
-  const r = await fetch(`${BASE}/${SHEET_ID}/values/${encodeURIComponent(range)}`, {
+async function sheetWrite(token, sheetName, rows) {
+  // Use values.update (PUT) to write directly to a specific range — more reliable than append
+  if (!rows.length) return;
+  const numCols = rows[0].length;
+  const lastCol = String.fromCharCode(64 + numCols); // e.g. 8 cols → H
+  const range = `${sheetName}!A1:${lastCol}${rows.length}`;
+  const r = await fetch(
+    `${BASE}/${SHEET_ID}/values/${encodeURIComponent(range)}?valueInputOption=RAW`,
+    {
+      method: 'PUT',
+      headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
+      body: JSON.stringify({ values: rows }),
+    },
+  );
+  const d = await r.json();
+  if (d.error) throw new Error(`sheetWrite ${sheetName}: ${d.error.message}`);
+  return d;
+}
+
+async function ensureSheetExists(token, sheetName) {
+  const r = await fetch(`${BASE}/${SHEET_ID}?fields=sheets.properties`, {
     headers: { authorization: `Bearer ${token}` },
   });
   const d = await r.json();
-  return d.error ? null : (d.values || []);
-}
-
-async function sheetAppend(token, range, values) {
-  await fetch(
-    `${BASE}/${SHEET_ID}/values/${encodeURIComponent(range)}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`,
-    { method: 'POST', headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' }, body: JSON.stringify({ values }) },
-  );
-}
-
-async function sheetClear(token, sheetName) {
-  await fetch(`${BASE}/${SHEET_ID}/values/${encodeURIComponent(sheetName)}:clear`, {
-    method: 'POST', headers: { authorization: `Bearer ${token}` },
-  });
-}
-
-async function ensureSheet(token, sheetName, headers) {
-  const rows = await sheetRead(token, `${sheetName}!A1:Z1`);
-  if (rows === null) {
+  const exists = d.sheets?.some(s => s.properties.title === sheetName);
+  if (!exists) {
     await fetch(`${BASE}/${SHEET_ID}:batchUpdate`, {
       method: 'POST',
       headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
       body: JSON.stringify({ requests: [{ addSheet: { properties: { title: sheetName } } }] }),
     });
   }
-  await sheetAppend(token, `${sheetName}!A1`, [headers]);
+}
+
+async function writeSheet(token, sheetName, headers, dataRows) {
+  await ensureSheetExists(token, sheetName);
+  const all = [headers, ...dataRows];
+  await sheetWrite(token, sheetName, all);
 }
 
 export default async function handler(req, res) {
@@ -59,67 +66,50 @@ export default async function handler(req, res) {
 
     // 1. Bills
     const bills = await sbGet('qm_bills', 'deleted=eq.false&order=date.desc&limit=2000');
-    await sheetClear(token, 'Bills');
-    await ensureSheet(token, 'Bills', ['billNo', 'date', 'dateText', 'seller', 'phone', 'kg', 'baht', 'json']);
-    if (bills.length) {
-      await sheetAppend(token, 'Bills!A2', bills.map(b => [
-        b.bill_no ?? '', b.date ?? '', b.date_text ?? '',
-        b.seller ?? '', b.phone ?? '', b.kg ?? '', b.baht ?? '', b.json ?? '',
-      ]));
-    }
+    await writeSheet(token, 'Bills',
+      ['billNo', 'date', 'dateText', 'seller', 'phone', 'kg', 'baht', 'json'],
+      bills.map(b => [b.bill_no ?? '', b.date ?? '', b.date_text ?? '', b.seller ?? '', b.phone ?? '', b.kg ?? '', b.baht ?? '', b.json ?? '']),
+    );
     log.push(`Bills: ${bills.length}`);
 
     // 2. Payments
     const payments = await sbGet('qm_payments', 'select=*');
-    await sheetClear(token, 'Payments');
-    await ensureSheet(token, 'Payments', ['เลขที่บิล', 'สถานะ', 'เวลา', 'receiptUrl', 'slipUrl', 'vehicleUrl']);
-    if (payments.length) {
-      await sheetAppend(token, 'Payments!A2', payments.map(p => [
-        p.bill_no ?? '', p.status ?? '', p.paid_at ?? '',
-        p.receipt_url ?? '', p.slip_url ?? '', p.vehicle_url ?? '',
-      ]));
-    }
+    await writeSheet(token, 'Payments',
+      ['เลขที่บิล', 'สถานะ', 'เวลา', 'receiptUrl', 'slipUrl', 'vehicleUrl'],
+      payments.map(p => [p.bill_no ?? '', p.status ?? '', p.paid_at ?? '', p.receipt_url ?? '', p.slip_url ?? '', p.vehicle_url ?? '']),
+    );
     log.push(`Payments: ${payments.length}`);
 
     // 3. Sales
     const sales = await sbGet('qm_sales', 'deleted=eq.false&order=date.desc');
-    await sheetClear(token, 'Sales');
-    await ensureSheet(token, 'Sales', ['id', 'date', 'dateText', 'buyer', 'kg', 'baht', 'receiptUrl', 'note']);
-    if (sales.length) {
-      await sheetAppend(token, 'Sales!A2', sales.map(s => [
-        s.id ?? '', s.date ?? '', s.date_text ?? '',
-        s.buyer ?? '', s.kg ?? '', s.baht ?? '', s.receipt_url ?? '', s.note ?? '',
-      ]));
-    }
+    await writeSheet(token, 'Sales',
+      ['id', 'date', 'dateText', 'buyer', 'kg', 'baht', 'receiptUrl', 'note'],
+      sales.map(s => [s.id ?? '', s.date ?? '', '', s.buyer ?? '', s.kg ?? '', s.baht ?? '', s.receipt_url ?? '', s.note ?? '']),
+    );
     log.push(`Sales: ${sales.length}`);
 
     // 4. CustomerInfo
     const ci = await sbGet('qm_customer_info', 'select=*');
-    await sheetClear(token, 'CustomerInfo');
-    await ensureSheet(token, 'CustomerInfo', ['phone', 'bankName', 'bankAccount', 'note']);
-    if (ci.length) {
-      await sheetAppend(token, 'CustomerInfo!A2', ci.map(c => [
-        c.phone ?? '', c.bank_name ?? '', c.bank_account ?? '', c.note ?? '',
-      ]));
-    }
+    await writeSheet(token, 'CustomerInfo',
+      ['phone', 'bankName', 'bankAccount', 'note'],
+      ci.map(c => [c.phone ?? '', c.bank_name ?? '', c.bank_account ?? '', c.note ?? '']),
+    );
     log.push(`CustomerInfo: ${ci.length}`);
 
     // 5. Verified
     const verified = await sbGet('qm_verified', 'select=*');
-    await sheetClear(token, 'Verified');
-    await ensureSheet(token, 'Verified', ['phone', 'name']);
-    if (verified.length) {
-      await sheetAppend(token, 'Verified!A2', verified.map(v => [v.phone ?? '', v.name ?? '']));
-    }
+    await writeSheet(token, 'Verified',
+      ['phone', 'name'],
+      verified.map(v => [v.phone ?? '', v.name ?? '']),
+    );
     log.push(`Verified: ${verified.length}`);
 
     // 6. Plates
     const plates = await sbGet('qm_vehicle_plates', 'select=*');
-    await sheetClear(token, 'Plates');
-    await ensureSheet(token, 'Plates', ['phone', 'plate']);
-    if (plates.length) {
-      await sheetAppend(token, 'Plates!A2', plates.map(p => [p.phone ?? '', p.plate ?? '']));
-    }
+    await writeSheet(token, 'Plates',
+      ['phone', 'plate'],
+      plates.map(p => [p.phone ?? '', p.plate ?? '']),
+    );
     log.push(`Plates: ${plates.length}`);
 
     res.json({ ok: true, migrated: log });
