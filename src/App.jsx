@@ -2610,7 +2610,7 @@ export default function App() {
       const merged = { ...local, ...(sheetPayments.payments || {}) };
       storage.savePayments(merged); setPayments(merged);
     }
-    if (sheetSales.ok) { storage.saveSales(sheetSales.sales || []); setSales(sheetSales.sales || []); }
+    if (sheetSales.ok && sheetSales.sales?.length > 0) { storage.saveSales(sheetSales.sales); setSales(sheetSales.sales); }
     if (sheetCI.ok) { storage.saveCustomerInfo(sheetCI.info || {}); setCustomerInfo(sheetCI.info || {}); }
   }, []); // eslint-disable-line
 
@@ -2882,6 +2882,7 @@ export default function App() {
     const next = [sale, ...sales];
     storage.saveSales(next);
     setSales(next);
+    fetch('/api/sheets', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'addSale', ...sale }) }).catch(() => {});
     try { await db.upsertSale(sale); } catch {}
   }, [sales]);
 
@@ -2889,6 +2890,7 @@ export default function App() {
     const next = sales.filter(s => s.id !== id);
     storage.saveSales(next);
     setSales(next);
+    fetch('/api/sheets', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'deleteSale', id }) }).catch(() => {});
     try { await db.deleteSale(id); } catch {}
   }, [sales]);
 
@@ -2897,7 +2899,10 @@ export default function App() {
     storage.saveSales(next);
     setSales(next);
     const updated = next.find(s => s.id === id);
-    if (updated) try { await db.upsertSale(updated); } catch {}
+    if (updated) {
+      fetch('/api/sheets', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'addSale', ...updated }) }).catch(() => {});
+      try { await db.upsertSale(updated); } catch {}
+    }
   }, [sales]);
 
   const handleSaveSlip = useCallback((dataUrl) => {
