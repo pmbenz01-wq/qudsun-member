@@ -2604,7 +2604,12 @@ export default function App() {
       bills.forEach(c => { const ph = c.phone || c.data?.sellerPhone || ''; const sup = c.data?.supervisor || c.supervisor || ''; if (ph && sup) svMap[ph] = sup; });
       if (Object.keys(svMap).length) { const nSv = { ...storage.loadSupervisors(), ...svMap }; storage.saveSupervisors(nSv); setSupervisors(nSv); }
     }
-    if (sheetPayments.ok) { storage.savePayments(sheetPayments.payments || {}); setPayments(sheetPayments.payments || {}); }
+    if (sheetPayments.ok) {
+      // Merge: Sheets data takes priority, but keep any local-only entries not yet in Sheets
+      const local = storage.loadPayments();
+      const merged = { ...local, ...(sheetPayments.payments || {}) };
+      storage.savePayments(merged); setPayments(merged);
+    }
     if (sheetSales.ok) { storage.saveSales(sheetSales.sales || []); setSales(sheetSales.sales || []); }
     if (sheetCI.ok) { storage.saveCustomerInfo(sheetCI.info || {}); setCustomerInfo(sheetCI.info || {}); }
   }, []); // eslint-disable-line
@@ -2777,6 +2782,12 @@ export default function App() {
 
   const pushPayment = useCallback((billNo, pay) => {
     if (!pay) return;
+    // Write to Google Sheets (primary) and Supabase (backup) in parallel
+    fetch('/api/sheets', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ action: 'updatePayment', billNo, ...pay }),
+    }).catch(() => {});
     db.upsertPayment(billNo, pay).catch(() => {});
   }, []);
 
