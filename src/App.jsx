@@ -3106,10 +3106,10 @@ export default function App() {
 
       {screen === 'home' && (
         <HomeView session={session} history={history} payments={payments} verified={verified} supervisors={supervisors} syncStatus={syncStatus} syncing={syncing}
-          onNew={startNew} onResume={() => { setScreen('record'); if (session?.entries?.length > 0) { setActiveCat(session.entries[session.entries.length - 1].cat); } else { setActiveCat('AB'); } }} onGoCustomers={() => setScreen('customers')}
-          onGoDashboard={() => setScreen('purchases')}
-          onGoSales={() => setScreen('sales')}
-          onGoSupervisors={() => setScreen('supervisors')}
+          onNew={startNew} onResume={() => { setScreen('record'); if (session?.entries?.length > 0) { setActiveCat(session.entries[session.entries.length - 1].cat); } else { setActiveCat('AB'); } }} onGoCustomers={() => { setScreen('customers'); syncNow(true); }}
+          onGoDashboard={() => { setScreen('purchases'); syncNow(true); }}
+          onGoSales={() => { setScreen('sales'); syncNow(true); }}
+          onGoSupervisors={() => { setScreen('supervisors'); syncNow(true); }}
           onOpenSheet={() => { setSheetModal(true); setSheetModalUrl(sheetUrl); }}
           onSyncNow={() => syncNow(false)} onChangePin={changePin} onSetEmployeePin={setEmployeePinAction}
           onOpenHistory={openHistory} onPayment={handlePayment} onDeleteBill={handleDeleteBill} pin={pin} isEmployee={authRole === 'employee'} onLogout={handleLogout}
@@ -3117,7 +3117,7 @@ export default function App() {
       )}
       {screen === 'record' && session && (
         <RecordView session={session} activeCat={activeCat} input={input} onInput={setInput} onCommit={commitEntry}
-          onPickCat={setActiveCat} onGoHome={() => setScreen('home')} onGoSummary={() => setScreen('summary')}
+          onPickCat={setActiveCat} onGoHome={() => { setScreen('home'); syncNow(true); }} onGoSummary={() => setScreen('summary')}
           onEditSeller={() => {
             const ph = session.sellerPhone || '';
             const knownName = loadCustomers(history)[ph]?.name || verified[ph] || '';
@@ -3157,7 +3157,7 @@ export default function App() {
           supervisors={supervisors} customerInfo={customerInfo} />
       )}
       {screen === 'purchases' && (
-        <DashboardView history={history} payments={payments} pin={pin} onPayment={handlePayment} onDeleteBill={handleDeleteBill} onGoHome={() => setScreen('home')} />
+        <DashboardView history={history} payments={payments} pin={pin} onPayment={handlePayment} onDeleteBill={handleDeleteBill} onGoHome={() => { setScreen('home'); syncNow(true); }} />
       )}
       {screen === 'sales' && (
         <SalesView history={history} sales={sales} accounts={accounts} pin={pin} onGoHome={() => setScreen('home')} onAddSale={handleAddSale} onDeleteSale={handleDeleteSale} onUpdateSale={handleUpdateSale} onSaveAccount={handleSaveAccount} />
