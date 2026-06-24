@@ -286,7 +286,7 @@ function EmployeeManager({ employees, onSave, onCancel }) {
 }
 
 // ─── HomeView ─────────────────────────────────────────────────────────────────
-function HomeView({ session, history, payments, syncing, syncStatus, onSyncNow, onNew, onResume, onGoCustomers, onGoDashboard, onGoSupervisors, onGoSales, onChangePin, onSetEmployeePin, onOpenHistory, onPayment, onDeleteBill, pin, verified, supervisors, isEmployee, onLogout, onExport, onImport }) {
+function HomeView({ session, history, payments, syncing, syncStatus, onSyncNow, onOpenSheet, onNew, onResume, onGoCustomers, onGoDashboard, onGoSupervisors, onGoSales, onChangePin, onSetEmployeePin, onOpenHistory, onPayment, onDeleteBill, pin, verified, supervisors, isEmployee, onLogout, onExport, onImport }) {
   const customerCount = Object.keys(loadCustomers(history)).length;
   const supervisorCount = Object.values(supervisors || {}).filter(Boolean).reduce((set, n) => (set.add(n), set), new Set()).size;
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -464,6 +464,16 @@ function HomeView({ session, history, payments, syncing, syncStatus, onSyncNow, 
         <button onClick={onSetEmployeePin} style={{ border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 13, padding: '13px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10 }}>
           <span style={{ fontSize: 18 }}>🧑‍💼</span>
           <span style={{ fontSize: 14, color: '#4A3526', fontWeight: 500 }}>จัดการพนักงาน</span>
+        </button>
+        <button onClick={onOpenSheet} style={{ border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 13, padding: '13px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ fontSize: 18 }}>📊</span>
+          <div style={{ flex: 1, textAlign: 'left' }}>
+            <div style={{ fontSize: 14, color: '#4A3526', fontWeight: 500 }}>Google Sheet · ซิงก์อัตโนมัติ</div>
+            {syncStatus && <div style={{ fontSize: 12, color: syncStatus.startsWith('⚠') ? '#C0392B' : '#9A8662', marginTop: 2 }}>{syncStatus}</div>}
+          </div>
+          <button onClick={e => { e.stopPropagation(); onSyncNow(); }} disabled={syncing} style={{ border: '1px solid #D8C8A8', background: '#F3E9D2', borderRadius: 9, padding: '6px 10px', fontSize: 12, color: '#7A5A22', cursor: 'pointer', opacity: syncing ? 0.5 : 1 }}>
+            {syncing ? '…' : '↺ ซิงก์'}
+          </button>
         </button>
       </div>
     </div>
@@ -2361,6 +2371,23 @@ function VerifyModal({ tier, phone, draft, total, canSkip, isManage, onDraftChan
 }
 
 
+// ─── SheetModal ───────────────────────────────────────────────────────────────
+function SheetModal({ onSyncNow, syncStatus, syncing, onCancel }) {
+  return (
+    <div className="no-print" style={{ position: 'fixed', inset: 0, zIndex: 62, background: 'rgba(42,33,24,.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 18, animation: 'fadeIn .2s' }}>
+      <div style={{ background: '#FFFDF8', borderRadius: 20, padding: 24, width: '100%', maxWidth: 430, animation: 'popIn .25s' }}>
+        <div style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 18, color: '#4A3526', marginBottom: 10 }}>📊 Google Sheet</div>
+        <p style={{ fontSize: 13.5, color: '#7A6450', lineHeight: 1.8, margin: '0 0 6px' }}>ข้อมูลจะซิงก์จาก Supabase หรือ Google Sheet โดยอัตโนมัติ</p>
+        {syncStatus && <p style={{ fontSize: 13, color: syncStatus.startsWith('⚠') ? '#C0392B' : '#2E7D32', margin: '0 0 14px', background: syncStatus.startsWith('⚠') ? '#FFF0F0' : '#F0FFF4', padding: '6px 10px', borderRadius: 8 }}>{syncStatus}</p>}
+        <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
+          <button onClick={onCancel} style={{ flex: 1, border: '1px solid #E4D7BC', background: '#fff', borderRadius: 12, padding: 13, color: '#7A6450', fontSize: 14, cursor: 'pointer' }}>ปิด</button>
+          <button onClick={() => { onSyncNow(); }} disabled={syncing} style={{ flex: 1.4, border: 'none', borderRadius: 12, padding: 13, background: 'linear-gradient(135deg,#C9A24B,#A8763E)', color: '#fff', fontWeight: 600, fontSize: 14, cursor: 'pointer', opacity: syncing ? 0.6 : 1 }}>{syncing ? '…กำลังซิงก์' : '↺ ซิงก์ตอนนี้'}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Route wrapper: CustomerDetail ────────────────────────────────────────────
 function CustomerDetailRoute({ history, verified, supervisors, vehiclePlates, customerInfo, onGoBack, onOpenHistory, onSaveSupervisor, onSaveCustomerInfo, onOpenVerify }) {
   const { phone } = useParams();
@@ -2425,6 +2452,7 @@ export default function App() {
   const [isHandoff, setIsHandoff] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [syncStatus, setSyncStatus] = useState('');
+  const [sheetModal, setSheetModal] = useState(false);
   const [toastMsg, setToastMsg] = useState('');
   const [logOpen, setLogOpen] = useState(false);
   const [vehiclePlates, setVehiclePlates] = useState({});
@@ -2600,7 +2628,30 @@ export default function App() {
         setTimeout(() => syncNow(silent, attempt + 1), 5000 * attempt);
         return;
       }
-      setSyncStatus('⚠ ซิงก์ไม่สำเร็จ: ' + (err?.message || String(err)));
+      // Final fallback: load from Google Sheets
+      setSyncStatus('⏳ กำลังโหลดจาก Google Sheet...');
+      try {
+        const [sheetBills, sheetPayments, sheetSales, sheetCI] = await Promise.all([
+          fetch('/api/sheets').then(r => r.json()),
+          fetch('/api/sheets?action=getPayments').then(r => r.json()),
+          fetch('/api/sheets?action=getSales').then(r => r.json()),
+          fetch('/api/sheets?action=getCustomerInfo').then(r => r.json()),
+        ]);
+        if (sheetBills.ok && sheetBills.bills?.length > 0) {
+          const bills = sheetBills.bills.map(b => { try { return JSON.parse(b.json); } catch { return null; } }).filter(Boolean);
+          storage.saveHistory(bills); setHistory(bills);
+          const svMap = {};
+          bills.forEach(c => { const ph = c.phone || c.data?.sellerPhone || ''; const sup = c.data?.supervisor || c.supervisor || ''; if (ph && sup) svMap[ph] = sup; });
+          if (Object.keys(svMap).length) { const nSv = { ...storage.loadSupervisors(), ...svMap }; storage.saveSupervisors(nSv); setSupervisors(nSv); }
+        }
+        if (sheetPayments.ok) { storage.savePayments(sheetPayments.payments || {}); setPayments(sheetPayments.payments || {}); }
+        if (sheetSales.ok) { storage.saveSales(sheetSales.sales || []); setSales(sheetSales.sales || []); }
+        if (sheetCI.ok) { storage.saveCustomerInfo(sheetCI.info || {}); setCustomerInfo(sheetCI.info || {}); }
+        setSyncStatus('✓ โหลดจาก Google Sheet แล้ว');
+      } catch (e2) {
+        console.error('[syncNow] Google Sheet fallback failed:', e2);
+        setSyncStatus('⚠ ซิงก์ไม่สำเร็จ');
+      }
     }
     setSyncing(false);
   }, []); // eslint-disable-line
@@ -3121,7 +3172,7 @@ export default function App() {
 
       <Routes>
         <Route path="/" element={
-          <HomeView session={session} history={history} payments={payments} verified={verified} supervisors={supervisors} syncing={syncing} syncStatus={syncStatus} onSyncNow={() => syncNow(false)}
+          <HomeView session={session} history={history} payments={payments} verified={verified} supervisors={supervisors} syncing={syncing} syncStatus={syncStatus} onSyncNow={() => syncNow(false)} onOpenSheet={() => setSheetModal(true)}
             onNew={startNew} onResume={() => { navigate('/record'); if (session?.entries?.length > 0) { setActiveCat(session.entries[session.entries.length - 1].cat); } else { setActiveCat('AB'); } }}
             onGoCustomers={() => { navigate('/customers'); syncNow(true); }}
             onGoDashboard={() => { navigate('/purchases'); syncNow(true); }}
@@ -3242,6 +3293,7 @@ export default function App() {
 
       {pinEditorOpen && <PinEditor pinnedCats={pinnedCats} onSave={pins => { storage.savePinnedCats(pins); setPinnedCats(pins); setPinEditorOpen(false); toast('บันทึกหมวดปักหมุดแล้ว'); }} onCancel={() => setPinEditorOpen(false)} />}
       {employeeManagerOpen && <EmployeeManager employees={employees} onSave={list => { storage.saveEmployees(list); setEmployees(list); setEmployeeManagerOpen(false); toast('บันทึกรายชื่อพนักงานแล้ว'); }} onCancel={() => setEmployeeManagerOpen(false)} />}
+      {sheetModal && <SheetModal onSyncNow={() => { syncNow(false); }} syncStatus={syncStatus} syncing={syncing} onCancel={() => setSheetModal(false)} />}
 
       <Toast msg={toastMsg} />
     </div>
