@@ -323,13 +323,26 @@ function HomeView({ session, history, payments, syncStatus, syncing, onNew, onRe
           <div style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 18 }}>เปิดบิลใหม่</div>
           <div style={{ fontSize: 12, opacity: .7, marginTop: 2 }}>บันทึกรับซื้อทุเรียน</div>
         </button>
-        {session && (
-          <button onClick={onResume} style={{ flex: 1, border: '2px solid #C9A24B', borderRadius: 16, padding: '20px 14px', background: '#FFFDF8', color: '#4A3526', cursor: 'pointer', textAlign: 'left' }}>
-            <div style={{ fontSize: 24, marginBottom: 6 }}>↩</div>
-            <div style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 18 }}>ทำบิลต่อ</div>
-            <div style={{ fontSize: 12, color: '#A6925E', marginTop: 2 }}>{session.billNo}</div>
-          </button>
-        )}
+        {session && (() => {
+          const entries = session.entries || [];
+          const totalEntries = entries.length;
+          const totalKg = entries.reduce((s, e) => s + (parseFloat(e.kg) || 0), 0);
+          const cats = [...new Set(entries.map(e => e.cat))];
+          return (
+            <button onClick={onResume} style={{ flex: 1, border: '2px solid #C9A24B', borderRadius: 16, padding: '20px 14px', background: '#FFFDF8', color: '#4A3526', cursor: 'pointer', textAlign: 'left' }}>
+              <div style={{ fontSize: 24, marginBottom: 6 }}>↩</div>
+              <div style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 18 }}>ทำบิลต่อ</div>
+              <div style={{ fontSize: 12, color: '#A6925E', marginTop: 2 }}>{session.billNo}</div>
+              {totalEntries > 0 ? (
+                <div style={{ marginTop: 6, fontSize: 12, color: '#5C4326', background: '#FFF3D6', borderRadius: 8, padding: '4px 8px', display: 'inline-block' }}>
+                  {totalEntries} เข่ง · {totalKg % 1 === 0 ? totalKg : totalKg.toFixed(1)} กก.{cats.length > 0 ? ` · ${cats.join('/')}` : ''}
+                </div>
+              ) : (
+                <div style={{ marginTop: 6, fontSize: 11, color: '#B0956A' }}>ยังไม่มีเข่ง — กดเพื่อเริ่มบันทึก</div>
+              )}
+            </button>
+          );
+        })()}
       </div>
 
       <button onClick={onGoDashboard} style={{ width: '100%', border: '1.5px solid #5A7FA8', background: 'linear-gradient(135deg,#EEF3FA,#DDE8F5)', borderRadius: 14, padding: '14px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
