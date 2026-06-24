@@ -195,6 +195,18 @@ export const db = {
     if (error) throw error;
   },
 
+  // ─── Realtime ─────────────────────────────────────────────────────────────
+  subscribeChanges(onSync) {
+    const channel = supabase
+      .channel('qudsun-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'qm_bills' }, onSync)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'qm_payments' }, onSync)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'qm_verified' }, onSync)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'qm_customer_info' }, onSync)
+      .subscribe();
+    return () => supabase.removeChannel(channel);
+  },
+
   // ─── Storage ──────────────────────────────────────────────────────────────
   async uploadPhoto(base64DataUrl, path) {
     const res = await fetch('/api/upload', {

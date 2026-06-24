@@ -2541,10 +2541,11 @@ export default function App() {
       } catch {}
     }
     setTimeout(() => syncNow(true), 1500);
-    const autoSync = setInterval(() => syncNow(true), 30000);
+    const autoSync = setInterval(() => syncNow(true), 60000);
     const onVisible = () => { if (document.visibilityState === 'visible') syncNow(true); };
     document.addEventListener('visibilitychange', onVisible);
-    return () => { clearInterval(autoSync); document.removeEventListener('visibilitychange', onVisible); };
+    const unsubRealtime = db.subscribeChanges(() => syncNow(true));
+    return () => { clearInterval(autoSync); document.removeEventListener('visibilitychange', onVisible); unsubRealtime(); };
   }, []);
 
   // Supabase sync
