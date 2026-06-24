@@ -2562,8 +2562,8 @@ export default function App() {
   }, []);
 
   // Supabase sync — Supabase is the only source of truth, no localStorage merge
-  const syncNow = useCallback(async (silent) => {
-    setSyncing(true); if (!silent) setSyncStatus('กำลังซิงก์…');
+  const syncNow = useCallback(async (silent, attempt = 1) => {
+    setSyncing(true); if (!silent) setSyncStatus(attempt > 1 ? `กำลังเชื่อมต่อ... (ครั้งที่ ${attempt})` : 'กำลังซิงก์…');
     try {
       // Run sequentially to avoid connection pool exhaustion on free-tier Supabase
       const remoteBills = await db.getBills();
@@ -2594,7 +2594,12 @@ export default function App() {
 
       setSyncStatus('✓ ซิงก์แล้ว ' + new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }));
     } catch (err) {
-      console.error('[syncNow] failed:', err);
+      console.error(`[syncNow] attempt ${attempt} failed:`, err);
+      if (attempt < 3) {
+        setSyncStatus(`⏳ database กำลังเปิด... รอสักครู่ (${attempt}/3)`);
+        setTimeout(() => syncNow(silent, attempt + 1), 5000 * attempt);
+        return;
+      }
       setSyncStatus('⚠ ซิงก์ไม่สำเร็จ: ' + (err?.message || String(err)));
     }
     setSyncing(false);
