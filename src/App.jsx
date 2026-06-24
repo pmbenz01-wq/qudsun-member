@@ -2548,7 +2548,7 @@ export default function App() {
     return () => { clearInterval(autoSync); document.removeEventListener('visibilitychange', onVisible); unsubRealtime(); };
   }, []);
 
-  // Supabase sync
+  // Supabase sync — Supabase is the only source of truth, no localStorage merge
   const syncNow = useCallback(async (silent) => {
     setSyncing(true); if (!silent) setSyncStatus('กำลังซิงก์…');
     try {
@@ -2559,51 +2559,31 @@ export default function App() {
         db.getCustomerInfo(),
         db.getDeletedBillNos(),
       ]);
-      // Sync remote deletes to local so cross-device deletes propagate
+
+      // Push any local-only bills (created offline / not yet synced) up to Supabase
+      const remoteNos = new Set(remoteBills.map(c => c.billNo));
       remoteDeletedNos.forEach(no => storage.addDeletedBill(no));
       const deleted = storage.loadDeletedBills();
+      const localOnly = storage.loadHistory().filter(h => h?.billNo && !remoteNos.has(h.billNo) && !deleted.has(h.billNo));
+      localOnly.forEach(c => pushBill(c, true));
 
-      // Merge bills — remote (Supabase) is source of truth; local-only bills get added
-      const remoteNos = new Set(remoteBills.map(c => c.billNo));
-      const current = storage.loadHistory().filter(h => !deleted.has(h.billNo));
-      const localOnly = current.filter(c => c?.billNo && !remoteNos.has(c.billNo));
-      const byNo = {};
-      current.forEach(c => { if (c?.billNo) byNo[c.billNo] = c; });
-      remoteBills.forEach(c => { if (c?.billNo) byNo[c.billNo] = c; }); // remote wins
-      const merged = Object.values(byNo).sort((a, b) => (b.date || 0) - (a.date || 0)).slice(0, 300);
-      const svFromSync = {};
-      merged.forEach(c => { const ph = c.phone || c.sellerPhone || ''; const sup = (c.data && c.data.supervisor) || c.supervisor || ''; if (ph && sup) svFromSync[ph] = sup; });
-      if (Object.keys(svFromSync).length) { const nSv = { ...storage.loadSupervisors(), ...svFromSync }; storage.saveSupervisors(nSv); setSupervisors(nSv); }
-      storage.saveHistory(merged); setHistory(merged);
+      // Supabase wins — set state directly, no merge
+      storage.saveHistory(remoteBills); setHistory(remoteBills);
+      storage.savePayments(remotePayments); setPayments(remotePayments);
+      storage.saveVerified(remoteVerified); setVerified(remoteVerified);
+      storage.saveCustomerInfo(remoteCI); setCustomerInfo(remoteCI);
 
-      // Merge verified
-      if (remoteVerified && Object.keys(remoteVerified).length) {
-        const nv = { ...storage.loadVerified(), ...remoteVerified };
-        storage.saveVerified(nv); setVerified(nv);
-      }
-
-      // Merge payments
-      const localPm = storage.loadPayments();
-      const pm = { ...localPm };
-      for (const [bn, rp] of Object.entries(remotePayments)) {
-        const lp = localPm[bn] || {};
-        pm[bn] = { ...lp, ...rp, receiptUrl: rp.receiptUrl || lp.receiptUrl || null, slipUrl: rp.slipUrl || lp.slipUrl || null, vehicleUrl: rp.vehicleUrl || lp.vehicleUrl || null };
-      }
-      storage.savePayments(pm); setPayments(pm);
-
-      // Merge customer info
-      if (remoteCI && Object.keys(remoteCI).length) {
-        const ci = { ...storage.loadCustomerInfo(), ...remoteCI };
-        storage.saveCustomerInfo(ci); setCustomerInfo(ci);
-      }
+      // Rebuild supervisors from bills (no separate Supabase table)
+      const svMap = {};
+      remoteBills.forEach(c => { const ph = c.phone || c.sellerPhone || ''; const sup = (c.data && c.data.supervisor) || c.supervisor || ''; if (ph && sup) svMap[ph] = sup; });
+      if (Object.keys(svMap).length) { const nSv = { ...storage.loadSupervisors(), ...svMap }; storage.saveSupervisors(nSv); setSupervisors(nSv); }
 
       setSyncStatus('✓ ซิงก์แล้ว ' + new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }));
-      localOnly.forEach(c => pushBill(c, true));
     } catch {
       if (!silent) setSyncStatus('⚠ ซิงก์ไม่สำเร็จ');
     }
     setSyncing(false);
-  }, [toast]); // eslint-disable-line
+  }, []); // eslint-disable-line
 
   const pushBill = useCallback(async (card, quiet) => {
     if (!card) return;
