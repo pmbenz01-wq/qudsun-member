@@ -286,7 +286,7 @@ function EmployeeManager({ employees, onSave, onCancel }) {
 }
 
 // ─── HomeView ─────────────────────────────────────────────────────────────────
-function HomeView({ session, history, payments, syncStatus, syncing, onNew, onResume, onGoCustomers, onGoDashboard, onGoSupervisors, onGoSales, onOpenSheet, onSyncNow, onChangePin, onSetEmployeePin, onOpenHistory, onPayment, onDeleteBill, pin, verified, supervisors, isEmployee, onLogout, onExport, onImport }) {
+function HomeView({ session, history, payments, onNew, onResume, onGoCustomers, onGoDashboard, onGoSupervisors, onGoSales, onChangePin, onSetEmployeePin, onOpenHistory, onPayment, onDeleteBill, pin, verified, supervisors, isEmployee, onLogout, onExport, onImport }) {
   const customerCount = Object.keys(loadCustomers(history)).length;
   const supervisorCount = Object.values(supervisors || {}).filter(Boolean).reduce((set, n) => (set.add(n), set), new Set()).size;
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -458,16 +458,6 @@ function HomeView({ session, history, payments, syncStatus, syncing, onNew, onRe
         <button onClick={onSetEmployeePin} style={{ border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 13, padding: '13px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10 }}>
           <span style={{ fontSize: 18 }}>🧑‍💼</span>
           <span style={{ fontSize: 14, color: '#4A3526', fontWeight: 500 }}>จัดการพนักงาน</span>
-        </button>
-        <button onClick={onOpenSheet} style={{ border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 13, padding: '13px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: 18 }}>📊</span>
-          <div style={{ flex: 1, textAlign: 'left' }}>
-            <div style={{ fontSize: 14, color: '#4A3526', fontWeight: 500 }}>Google Sheet · ซิงก์อัตโนมัติ</div>
-            {syncStatus && <div style={{ fontSize: 12, color: '#9A8662', marginTop: 2 }}>{syncStatus}</div>}
-          </div>
-          <button onClick={e => { e.stopPropagation(); onSyncNow(); }} style={{ border: '1px solid #D8C8A8', background: '#F3E9D2', borderRadius: 9, padding: '6px 10px', fontSize: 12, color: '#7A5A22', cursor: 'pointer' }}>
-            {syncing ? '…' : '↺ ซิงก์'}
-          </button>
         </button>
       </div>
     </div>
@@ -2364,22 +2354,6 @@ function VerifyModal({ tier, phone, draft, total, canSkip, isManage, onDraftChan
   );
 }
 
-// ─── SheetModal ───────────────────────────────────────────────────────────────
-function SheetModal({ onSyncNow, syncStatus, onCancel }) {
-  return (
-    <div className="no-print" style={{ position: 'fixed', inset: 0, zIndex: 62, background: 'rgba(42,33,24,.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 18, animation: 'fadeIn .2s' }}>
-      <div style={{ background: '#FFFDF8', borderRadius: 20, padding: 24, width: '100%', maxWidth: 430, animation: 'popIn .25s' }}>
-        <div style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 18, color: '#4A3526', marginBottom: 10 }}>📊 Google Sheet</div>
-        <p style={{ fontSize: 13.5, color: '#7A6450', lineHeight: 1.8, margin: '0 0 6px' }}>ซิงก์อัตโนมัติผ่านเซิร์ฟเวอร์ — ไม่ต้องตั้งค่า URL</p>
-        {syncStatus && <p style={{ fontSize: 13, color: '#5A7A5A', margin: '0 0 14px' }}>{syncStatus}</p>}
-        <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
-          <button onClick={onCancel} style={{ flex: 1, border: '1px solid #E4D7BC', background: '#fff', borderRadius: 12, padding: 13, color: '#7A6450', fontSize: 14, cursor: 'pointer' }}>ปิด</button>
-          <button onClick={() => { onSyncNow(); onCancel(); }} style={{ flex: 1.4, border: 'none', borderRadius: 12, padding: 13, background: 'linear-gradient(135deg,#C9A24B,#A8763E)', color: '#fff', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>↺ ซิงก์ตอนนี้</button>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 // ─── Route wrapper: CustomerDetail ────────────────────────────────────────────
 function CustomerDetailRoute({ history, verified, supervisors, vehiclePlates, customerInfo, onGoBack, onOpenHistory, onSaveSupervisor, onSaveCustomerInfo, onOpenVerify }) {
@@ -2443,9 +2417,6 @@ export default function App() {
   const [custPhone, setCustPhone] = useState(null);
   const [readonly, setReadonly] = useState(false);
   const [isHandoff, setIsHandoff] = useState(false);
-  const [sheetUrl, setSheetUrl] = useState('');
-  const [sheetModal, setSheetModal] = useState(false);
-  const [sheetModalUrl, setSheetModalUrl] = useState('');
   const [syncing, setSyncing] = useState(false);
   const [syncStatus, setSyncStatus] = useState('');
   const [toastMsg, setToastMsg] = useState('');
@@ -2531,7 +2502,7 @@ export default function App() {
     const h = storage.loadHistory();
     const p = storage.loadPin();
     const v = storage.loadVerified();
-    const su = storage.loadSheet();
+
     const sv = storage.loadSupervisors();
     const ep = storage.loadEmployeePin();
     const emps = storage.loadEmployees();
@@ -2545,7 +2516,7 @@ export default function App() {
     setHistory(h); setPin(p); setVerified(v); setSupervisors(sv); setEmployeePin(ep); setPinnedCats(pc); setEmployees(emps); setVehiclePlates(vp); setPayments(pm); setCustomerInfo(ci); setSales(sl);
     if (savedRole) { setAuthRole(savedRole); setRecorderName(savedRecorder); }
     if (s) { setSession(s); if (s.vehiclePhotoKey) loadPhoto(s.vehiclePhotoKey).then(u => { if (u) setVehiclePhotoUrl(u); }); }
-    if (su) setSheetUrl(su);
+
     db.getPayments().then(remote => {
       const local = storage.loadPayments();
       const merged = { ...local };
@@ -3129,11 +3100,6 @@ export default function App() {
     localStorage.removeItem('qudsun_role'); localStorage.removeItem('qudsun_recorder');
   }, []);
 
-  const sheetSave = () => {
-    setSheetModal(false);
-    syncNow(false);
-  };
-
   if (!authRole) {
     return <LoginScreen onLogin={handleLogin} error={loginError} onErrorClear={() => setLoginError('')} />;
   }
@@ -3150,8 +3116,7 @@ export default function App() {
             onGoDashboard={() => { navigate('/purchases'); syncNow(true); }}
             onGoSales={() => { navigate('/sales'); syncNow(true); }}
             onGoSupervisors={() => { navigate('/supervisors'); syncNow(true); }}
-            onOpenSheet={() => { setSheetModal(true); setSheetModalUrl(sheetUrl); }}
-            onSyncNow={() => syncNow(false)} onChangePin={changePin} onSetEmployeePin={setEmployeePinAction}
+            onChangePin={changePin} onSetEmployeePin={setEmployeePinAction}
             onOpenHistory={openHistory} onPayment={handlePayment} onDeleteBill={handleDeleteBill} pin={pin} isEmployee={authRole === 'employee'} onLogout={handleLogout}
             onExport={handleExport} onImport={handleImport} />
         } />
@@ -3263,7 +3228,7 @@ export default function App() {
         canSkip={verifyPrompt.mode === 'bill'} isManage={verifyPrompt.mode === 'manage'}
         onDraftChange={v => setVerifyPrompt(p => ({ ...p, draft: v }))}
         onConfirm={handleVerifyConfirm} onSkip={() => commitFinish()} onCancel={() => setVerifyPrompt(null)} />}
-      {sheetModal && <SheetModal onSyncNow={() => syncNow(false)} syncStatus={syncStatus} onCancel={() => setSheetModal(false)} />}
+
       {pinEditorOpen && <PinEditor pinnedCats={pinnedCats} onSave={pins => { storage.savePinnedCats(pins); setPinnedCats(pins); setPinEditorOpen(false); toast('บันทึกหมวดปักหมุดแล้ว'); }} onCancel={() => setPinEditorOpen(false)} />}
       {employeeManagerOpen && <EmployeeManager employees={employees} onSave={list => { storage.saveEmployees(list); setEmployees(list); setEmployeeManagerOpen(false); toast('บันทึกรายชื่อพนักงานแล้ว'); }} onCancel={() => setEmployeeManagerOpen(false)} />}
 
