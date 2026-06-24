@@ -3334,7 +3334,7 @@ export default function App() {
         disabled={syncing}
         title="บันทึกทั้งหมดไป Google Sheet"
         style={{
-          position: 'fixed', top: 14, right: 14, zIndex: 999,
+          position: 'fixed', top: 'calc(env(safe-area-inset-top, 0px) + 14px)', right: 14, zIndex: 9999,
           background: syncing ? '#aaa' : 'linear-gradient(135deg,#2E7D32,#1B5E20)',
           color: '#fff', border: 'none', borderRadius: 50,
           width: 46, height: 46, fontSize: 20, cursor: syncing ? 'not-allowed' : 'pointer',
