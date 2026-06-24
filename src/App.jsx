@@ -3327,6 +3327,23 @@ export default function App() {
       {employeeManagerOpen && <EmployeeManager employees={employees} onSave={list => { storage.saveEmployees(list); setEmployees(list); setEmployeeManagerOpen(false); toast('บันทึกรายชื่อพนักงานแล้ว'); }} onCancel={() => setEmployeeManagerOpen(false)} />}
       {sheetModal && <SheetModal onSyncNow={() => { syncNow(false); }} onForcePush={handleForcePush} syncStatus={syncStatus} syncing={syncing} onCancel={() => setSheetModal(false)} />}
 
+      {/* Floating save button — top-right on every page */}
+      <button
+        className="no-print"
+        onClick={handleForcePush}
+        disabled={syncing}
+        title="บันทึกทั้งหมดไป Google Sheet"
+        style={{
+          position: 'fixed', top: 14, right: 14, zIndex: 999,
+          background: syncing ? '#aaa' : 'linear-gradient(135deg,#2E7D32,#1B5E20)',
+          color: '#fff', border: 'none', borderRadius: 50,
+          width: 46, height: 46, fontSize: 20, cursor: syncing ? 'not-allowed' : 'pointer',
+          boxShadow: '0 3px 12px rgba(0,0,0,.25)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}
+      >
+        {syncing ? '…' : '💾'}
+      </button>
+
       <Toast msg={toastMsg} />
     </div>
   );
