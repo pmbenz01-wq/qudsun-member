@@ -2567,12 +2567,7 @@ export default function App() {
       setCustomerInfo(merged);
     }).catch(() => {});
     db.getSales().then(remote => {
-      const local = storage.loadSales();
-      const remoteMap = new Map(remote.map(s => [s.id, s]));
-      const merged = [...remote];
-      for (const ls of local) { if (!remoteMap.has(ls.id)) merged.push(ls); }
-      merged.sort((a, b) => (b.date || 0) - (a.date || 0));
-      storage.saveSales(merged); setSales(merged);
+      storage.saveSales(remote); setSales(remote);
     }).catch(() => {});
     const m = (window.location.hash || '').match(/bill=([^&]+)/);
     if (m) {
@@ -2593,12 +2588,13 @@ export default function App() {
   const syncNow = useCallback(async (silent) => {
     setSyncing(true); if (!silent) setSyncStatus('กำลังซิงก์…');
     try {
-      const [remoteBills, remotePayments, remoteVerified, remoteCI, remoteDeletedNos] = await Promise.all([
+      const [remoteBills, remotePayments, remoteVerified, remoteCI, remoteDeletedNos, remoteSales] = await Promise.all([
         db.getBills(),
         db.getPayments(),
         db.getVerified(),
         db.getCustomerInfo(),
         db.getDeletedBillNos(),
+        db.getSales(),
       ]);
 
       // Push any local-only bills (created offline / not yet synced) up to Supabase
@@ -2613,6 +2609,7 @@ export default function App() {
       storage.savePayments(remotePayments); setPayments(remotePayments);
       storage.saveVerified(remoteVerified); setVerified(remoteVerified);
       storage.saveCustomerInfo(remoteCI); setCustomerInfo(remoteCI);
+      storage.saveSales(remoteSales); setSales(remoteSales);
 
       // Rebuild supervisors from bills (no separate Supabase table)
       const svMap = {};
