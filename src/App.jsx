@@ -2589,79 +2589,60 @@ export default function App() {
     return () => { clearInterval(autoSync); document.removeEventListener('visibilitychange', onVisible); unsubRealtime(); };
   }, []);
 
-  // Supabase sync — Supabase is the only source of truth, no localStorage merge
-  const syncNow = useCallback(async (silent, attempt = 1) => {
-    setSyncing(true); if (!silent) setSyncStatus(attempt > 1 ? `กำลังเชื่อมต่อ... (ครั้งที่ ${attempt})` : 'กำลังซิงก์…');
-    try {
-      // Run sequentially to avoid connection pool exhaustion on free-tier Supabase
-      const remoteBills = await db.getBills();
-      const remotePayments = await db.getPayments();
-      const remoteVerified = await db.getVerified();
-      const remoteCI = await db.getCustomerInfo();
-      const remoteDeletedNos = await db.getDeletedBillNos();
-      const remoteSales = await db.getSales();
-
-      // Push any local-only bills (created offline / not yet synced) up to Supabase
-      const remoteNos = new Set(remoteBills.map(c => c.billNo));
-      remoteDeletedNos.forEach(no => storage.addDeletedBill(no));
-      const deleted = storage.loadDeletedBills();
-      const localOnly = storage.loadHistory().filter(h => h?.billNo && !remoteNos.has(h.billNo) && !deleted.has(h.billNo));
-      localOnly.forEach(c => pushBill(c, true));
-
-      // Supabase wins — set state directly, no merge
-      storage.saveHistory(remoteBills); setHistory(remoteBills);
-      storage.savePayments(remotePayments); setPayments(remotePayments);
-      storage.saveVerified(remoteVerified); setVerified(remoteVerified);
-      storage.saveCustomerInfo(remoteCI); setCustomerInfo(remoteCI);
-      storage.saveSales(remoteSales); setSales(remoteSales);
-
-      // Rebuild supervisors from bills (no separate Supabase table)
+  // Helper: load all data from Google Sheets
+  const syncFromSheets = useCallback(async () => {
+    const [sheetBills, sheetPayments, sheetSales, sheetCI] = await Promise.all([
+      fetch('/api/sheets').then(r => r.json()),
+      fetch('/api/sheets?action=getPayments').then(r => r.json()),
+      fetch('/api/sheets?action=getSales').then(r => r.json()),
+      fetch('/api/sheets?action=getCustomerInfo').then(r => r.json()),
+    ]);
+    if (sheetBills.ok && sheetBills.bills?.length > 0) {
+      const bills = sheetBills.bills.map(b => { try { return JSON.parse(b.json); } catch { return null; } }).filter(Boolean);
+      storage.saveHistory(bills); setHistory(bills);
       const svMap = {};
-      remoteBills.forEach(c => { const ph = c.phone || c.sellerPhone || ''; const sup = (c.data && c.data.supervisor) || c.supervisor || ''; if (ph && sup) svMap[ph] = sup; });
+      bills.forEach(c => { const ph = c.phone || c.data?.sellerPhone || ''; const sup = c.data?.supervisor || c.supervisor || ''; if (ph && sup) svMap[ph] = sup; });
       if (Object.keys(svMap).length) { const nSv = { ...storage.loadSupervisors(), ...svMap }; storage.saveSupervisors(nSv); setSupervisors(nSv); }
+    }
+    if (sheetPayments.ok) { storage.savePayments(sheetPayments.payments || {}); setPayments(sheetPayments.payments || {}); }
+    if (sheetSales.ok) { storage.saveSales(sheetSales.sales || []); setSales(sheetSales.sales || []); }
+    if (sheetCI.ok) { storage.saveCustomerInfo(sheetCI.info || {}); setCustomerInfo(sheetCI.info || {}); }
+  }, []); // eslint-disable-line
 
+  // Google Sheets is primary DB — Supabase is backup
+  const syncNow = useCallback(async (silent) => {
+    setSyncing(true); if (!silent) setSyncStatus('กำลังซิงก์…');
+    try {
+      await syncFromSheets();
       setSyncStatus('✓ ซิงก์แล้ว ' + new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }));
+      // Background: also sync Supabase (best-effort, silent)
+      db.getBills().then(remoteBills => {
+        if (!remoteBills?.length) return;
+        const remoteNos = new Set(remoteBills.map(c => c.billNo));
+        const deleted = storage.loadDeletedBills();
+        const localOnly = storage.loadHistory().filter(h => h?.billNo && !remoteNos.has(h.billNo) && !deleted.has(h.billNo));
+        localOnly.forEach(c => pushBill(c, true));
+      }).catch(() => {});
     } catch (err) {
-      console.error(`[syncNow] attempt ${attempt} failed:`, err);
-      if (attempt < 3) {
-        setSyncStatus(`⏳ database กำลังเปิด... รอสักครู่ (${attempt}/3)`);
-        setTimeout(() => syncNow(silent, attempt + 1), 5000 * attempt);
-        return;
-      }
-      // Final fallback: load from Google Sheets
-      setSyncStatus('⏳ กำลังโหลดจาก Google Sheet...');
-      try {
-        const [sheetBills, sheetPayments, sheetSales, sheetCI] = await Promise.all([
-          fetch('/api/sheets').then(r => r.json()),
-          fetch('/api/sheets?action=getPayments').then(r => r.json()),
-          fetch('/api/sheets?action=getSales').then(r => r.json()),
-          fetch('/api/sheets?action=getCustomerInfo').then(r => r.json()),
-        ]);
-        if (sheetBills.ok && sheetBills.bills?.length > 0) {
-          const bills = sheetBills.bills.map(b => { try { return JSON.parse(b.json); } catch { return null; } }).filter(Boolean);
-          storage.saveHistory(bills); setHistory(bills);
-          const svMap = {};
-          bills.forEach(c => { const ph = c.phone || c.data?.sellerPhone || ''; const sup = c.data?.supervisor || c.supervisor || ''; if (ph && sup) svMap[ph] = sup; });
-          if (Object.keys(svMap).length) { const nSv = { ...storage.loadSupervisors(), ...svMap }; storage.saveSupervisors(nSv); setSupervisors(nSv); }
-        }
-        if (sheetPayments.ok) { storage.savePayments(sheetPayments.payments || {}); setPayments(sheetPayments.payments || {}); }
-        if (sheetSales.ok) { storage.saveSales(sheetSales.sales || []); setSales(sheetSales.sales || []); }
-        if (sheetCI.ok) { storage.saveCustomerInfo(sheetCI.info || {}); setCustomerInfo(sheetCI.info || {}); }
-        setSyncStatus('✓ โหลดจาก Google Sheet แล้ว');
-      } catch (e2) {
-        console.error('[syncNow] Google Sheet fallback failed:', e2);
-        setSyncStatus('⚠ ซิงก์ไม่สำเร็จ');
-      }
+      console.error('[syncNow] Google Sheets failed:', err);
+      setSyncStatus('⚠ ซิงก์ไม่สำเร็จ: ' + (err?.message || String(err)));
     }
     setSyncing(false);
   }, []); // eslint-disable-line
 
   const pushBill = useCallback(async (card, quiet) => {
     if (!card) return;
-    try {
-      await db.upsertBill(card);
+    const billPayload = { action: 'syncBill', bill: { ...card, json: JSON.stringify(card) } };
+    // Write to Google Sheets (primary) + Supabase (backup) in parallel
+    const [sheetsResult] = await Promise.allSettled([
+      fetch('/api/sheets', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(billPayload) }).then(r => r.json()),
+      db.upsertBill(card),
+    ]);
+    if (sheetsResult.status === 'fulfilled' && sheetsResult.value?.ok) {
       if (!quiet) setSyncStatus('✓ บันทึกแล้ว ' + new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }));
-    } catch { if (!quiet) setSyncStatus('⚠ อัปโหลดไม่สำเร็จ'); }
+    } else if (!quiet) {
+      setSyncStatus('⚠ อัปโหลดไม่สำเร็จ');
+    }
   }, []);
 
   const pushVerify = useCallback(async (phone, name) => {
