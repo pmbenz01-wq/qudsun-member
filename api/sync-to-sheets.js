@@ -85,6 +85,14 @@ export default async function handler(req, res) {
     const log = [];
     const errors = [];
 
+    // Clear all sheets first (batch clear — single API call)
+    await fetch(`${BASE}/${SHEET_ID}/values:batchClear`, {
+      method: 'POST',
+      headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
+      body: JSON.stringify({ ranges: ['Bills', 'Payments', 'Sales', 'CustomerInfo', 'Verified', 'Plates'] }),
+    });
+    log.push('Cleared all sheets');
+
     // Fetch ALL data from Supabase first (before any Sheets writes)
     const [bills, payments, sales, ci, verified, plates] = await Promise.allSettled([
       sbGet('qm_bills', 'deleted=eq.false&order=date.desc&limit=2000'),
