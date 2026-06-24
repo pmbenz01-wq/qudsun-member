@@ -285,9 +285,10 @@ function EmployeeManager({ employees, onSave, onCancel }) {
 }
 
 // ─── HomeView ─────────────────────────────────────────────────────────────────
-function HomeView({ session, history, payments, syncStatus, syncing, onNew, onResume, onGoCustomers, onGoDashboard, onGoSupervisors, onGoSales, onOpenSheet, onSyncNow, onChangePin, onSetEmployeePin, onOpenHistory, onPayment, verified, supervisors, isEmployee, onLogout, onExport, onImport }) {
+function HomeView({ session, history, payments, syncStatus, syncing, onNew, onResume, onGoCustomers, onGoDashboard, onGoSupervisors, onGoSales, onOpenSheet, onSyncNow, onChangePin, onSetEmployeePin, onOpenHistory, onPayment, onDeleteBill, pin, verified, supervisors, isEmployee, onLogout, onExport, onImport }) {
   const customerCount = Object.keys(loadCustomers(history)).length;
   const supervisorCount = Object.values(supervisors || {}).filter(Boolean).reduce((set, n) => (set.add(n), set), new Set()).size;
+  const [deleteTarget, setDeleteTarget] = useState(null);
   if (isEmployee) {
     return (
       <div style={{ flex: 1, maxWidth: 480, width: '100%', margin: '0 auto', padding: '32px 14px 40px', display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -411,11 +412,24 @@ function HomeView({ session, history, payments, syncStatus, syncing, onNew, onRe
                       </button>
                     </div>
                   )}
+                  {!isEmployee && onDeleteBill && (
+                    <div style={{ padding: '0 12px 10px', display: 'flex', justifyContent: 'flex-end' }}>
+                      <button onClick={() => setDeleteTarget(h)}
+                        style={{ border: '1px solid #E8C8C2', background: '#FDF0EE', borderRadius: 8, padding: '5px 12px', fontSize: 11, color: '#C0392B', cursor: 'pointer' }}>
+                        🗑 ลบบิล
+                      </button>
+                    </div>
+                  )}
                 </div>
               );
             })}
           </div>
         </>
+      )}
+      {deleteTarget && (
+        <DeleteBillModal bill={deleteTarget} pin={pin}
+          onConfirm={() => { onDeleteBill(deleteTarget.billNo); setDeleteTarget(null); }}
+          onClose={() => setDeleteTarget(null)} />
       )}
 
       <div style={{ marginTop: 24, display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -3033,7 +3047,7 @@ export default function App() {
           onGoSupervisors={() => setScreen('supervisors')}
           onOpenSheet={() => { setSheetModal(true); setSheetModalUrl(sheetUrl); }}
           onSyncNow={() => syncNow(false)} onChangePin={changePin} onSetEmployeePin={setEmployeePinAction}
-          onOpenHistory={openHistory} onPayment={handlePayment} isEmployee={authRole === 'employee'} onLogout={handleLogout}
+          onOpenHistory={openHistory} onPayment={handlePayment} onDeleteBill={handleDeleteBill} pin={pin} isEmployee={authRole === 'employee'} onLogout={handleLogout}
           onExport={handleExport} onImport={handleImport} />
       )}
       {screen === 'record' && session && (
