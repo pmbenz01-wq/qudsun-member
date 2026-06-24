@@ -10,10 +10,10 @@ export const db = {
   async getBills() {
     const { data, error } = await supabase
       .from('qm_bills')
-      .select('*')
+      .select('json')
       .eq('deleted', false)
       .order('date', { ascending: false })
-      .limit(300);
+      .limit(150);
     if (error) throw error;
     return data.map(row => {
       try { return JSON.parse(row.json); } catch { return null; }
@@ -47,7 +47,8 @@ export const db = {
     const { data, error } = await supabase
       .from('qm_bills')
       .select('bill_no')
-      .eq('deleted', true);
+      .eq('deleted', true)
+      .limit(500);
     if (error) throw error;
     return data.map(r => r.bill_no);
   },
