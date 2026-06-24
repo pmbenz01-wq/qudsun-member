@@ -97,14 +97,20 @@ function Toast({ msg }) {
 }
 
 // ─── Header ───────────────────────────────────────────────────────────────────
-function Header() {
+function Header({ onForcePush, syncing }) {
   return (
     <div className="no-print" style={{ background: '#FBF6EC', borderBottom: '1px solid #E4D7BC', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
       <img src="/logo.jpg" alt="Qudsun" style={{ width: 32, height: 32, borderRadius: 8, objectFit: 'cover' }} />
-      <div>
+      <div style={{ flex: 1 }}>
         <div style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 15, color: '#4A3526', letterSpacing: '.04em' }}>QUDSUN</div>
         <div style={{ fontSize: 10, color: '#A6925E', letterSpacing: '.1em' }}>ระบบรับซื้อทุเรียน</div>
       </div>
+      {onForcePush && (
+        <button onClick={onForcePush} disabled={syncing}
+          style={{ border: 'none', borderRadius: 10, padding: '7px 14px', background: syncing ? '#aaa' : 'linear-gradient(135deg,#2E7D32,#1B5E20)', color: '#fff', fontWeight: 600, fontSize: 13, cursor: syncing ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap' }}>
+          {syncing ? '…' : '💾 บันทึก'}
+        </button>
+      )}
     </div>
   );
 }
@@ -3200,7 +3206,7 @@ export default function App() {
 
   return (
     <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: '#EFE6D4' }}>
-      <Header />
+      <Header onForcePush={handleForcePush} syncing={syncing} />
 
       <Routes>
         <Route path="/" element={
@@ -3327,24 +3333,7 @@ export default function App() {
       {employeeManagerOpen && <EmployeeManager employees={employees} onSave={list => { storage.saveEmployees(list); setEmployees(list); setEmployeeManagerOpen(false); toast('บันทึกรายชื่อพนักงานแล้ว'); }} onCancel={() => setEmployeeManagerOpen(false)} />}
       {sheetModal && <SheetModal onSyncNow={() => { syncNow(false); }} onForcePush={handleForcePush} syncStatus={syncStatus} syncing={syncing} onCancel={() => setSheetModal(false)} />}
 
-      {/* Floating save button — top-right on every page */}
-      <button
-        className="no-print"
-        onClick={handleForcePush}
-        disabled={syncing}
-        title="บันทึกทั้งหมดไป Google Sheet"
-        style={{
-          position: 'fixed', top: 'calc(env(safe-area-inset-top, 0px) + 14px)', right: 14, zIndex: 9999,
-          background: syncing ? '#aaa' : 'linear-gradient(135deg,#2E7D32,#1B5E20)',
-          color: '#fff', border: 'none', borderRadius: 50,
-          width: 46, height: 46, fontSize: 20, cursor: syncing ? 'not-allowed' : 'pointer',
-          boxShadow: '0 3px 12px rgba(0,0,0,.25)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}
-      >
-        {syncing ? '…' : '💾'}
-      </button>
-
-      <Toast msg={toastMsg} />
+<Toast msg={toastMsg} />
     </div>
   );
 }
