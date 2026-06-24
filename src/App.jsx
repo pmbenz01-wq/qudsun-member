@@ -2819,6 +2819,8 @@ export default function App() {
     delete nextPay[billNo];
     storage.savePayments(nextPay);
     setPayments(nextPay);
+    fetch('/api/sheets', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'deleteBill', billNo }) }).catch(() => {});
+    fetch('/api/sheets', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'updatePayment', billNo, status: 'unpaid' }) }).catch(() => {});
     db.deleteBill(billNo).catch(() => {});
     db.deletePayment(billNo).catch(() => {});
   }, []);
@@ -2828,6 +2830,8 @@ export default function App() {
     const billsToDelete = storage.loadHistory().filter(h => String(h.phone || '').trim() === phone);
     billsToDelete.forEach(b => {
       storage.addDeletedBill(b.billNo);
+      fetch('/api/sheets', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'deleteBill', billNo: b.billNo }) }).catch(() => {});
+      fetch('/api/sheets', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'updatePayment', billNo: b.billNo, status: 'unpaid' }) }).catch(() => {});
       db.deleteBill(b.billNo).catch(() => {});
       db.deletePayment(b.billNo).catch(() => {});
     });
