@@ -2598,7 +2598,12 @@ export default function App() {
       fetch('/api/sheets?action=getCustomerInfo').then(r => r.json()),
     ]);
     if (sheetBills.ok && sheetBills.bills?.length > 0) {
-      const bills = sheetBills.bills.map(b => { try { return JSON.parse(b.json); } catch { return null; } }).filter(Boolean);
+      const bills = sheetBills.bills.map(b => {
+        // Try json field first (full object), fall back to individual columns
+        try { if (b.json) return JSON.parse(b.json); } catch {}
+        if (!b.billNo) return null;
+        return { billNo: b.billNo, date: b.date ? Number(b.date) : null, dateText: b.dateText || '', seller: b.seller || '', phone: b.phone || '', kg: b.kg || '', baht: b.baht || '', data: {} };
+      }).filter(Boolean);
       storage.saveHistory(bills); setHistory(bills);
       const svMap = {};
       bills.forEach(c => { const ph = c.phone || c.data?.sellerPhone || ''; const sup = c.data?.supervisor || c.supervisor || ''; if (ph && sup) svMap[ph] = sup; });
