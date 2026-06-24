@@ -85,75 +85,70 @@ export default async function handler(req, res) {
     const log = [];
     const errors = [];
 
-    // 1. Bills — upsert each bill by billNo
-    try {
-      const bills = await sbGet('qm_bills', 'deleted=eq.false&order=date.desc&limit=2000');
-      await ensureSheet(token, 'Bills', ['billNo', 'date', 'dateText', 'seller', 'phone', 'kg', 'baht', 'json']);
-      for (const b of bills) {
-        await upsertRow(token, 'Bills', 'billNo', b.bill_no, [
-          b.bill_no ?? '', b.date ?? '', b.date_text ?? '',
-          b.seller ?? '', b.phone ?? '', b.kg ?? '', b.baht ?? '', b.json ?? '',
-        ]);
-      }
-      log.push(`Bills: ${bills.length}`);
-    } catch (e) { errors.push(`Bills: ${e.message}`); }
+    // Fetch ALL data from Supabase first (before any Sheets writes)
+    const [bills, payments, sales, ci, verified, plates] = await Promise.allSettled([
+      sbGet('qm_bills', 'deleted=eq.false&order=date.desc&limit=2000'),
+      sbGet('qm_payments', 'select=*'),
+      sbGet('qm_sales', 'deleted=eq.false&order=date.desc'),
+      sbGet('qm_customer_info', 'select=*'),
+      sbGet('qm_verified', 'select=*'),
+      sbGet('qm_vehicle_plates', 'select=*'),
+    ]);
 
-    // 2. Payments — upsert each payment by billNo
-    try {
-      const payments = await sbGet('qm_payments', 'select=*');
-      await ensureSheet(token, 'Payments', ['เลขที่บิล', 'สถานะ', 'เวลา', 'receiptUrl', 'slipUrl', 'vehicleUrl']);
-      for (const p of payments) {
-        await upsertRow(token, 'Payments', 'billNo', p.bill_no, [
-          p.bill_no ?? '', p.status ?? '', p.paid_at ?? '',
-          p.receipt_url ?? '', p.slip_url ?? '', p.vehicle_url ?? '',
-        ]);
-      }
-      log.push(`Payments: ${payments.length}`);
-    } catch (e) { errors.push(`Payments: ${e.message}`); }
+    // Use batchUpdate to write ALL sheets in ONE API call (avoids rate limits)
+    const ranges = [];
 
-    // 3. Sales — clear then re-append all (avoid stale/duplicate rows)
-    try {
-      const sales = await sbGet('qm_sales', 'deleted=eq.false&order=date.desc');
-      await clear(token, 'Sales');
-      await append(token, 'Sales!A:H', [['id', 'date', 'dateText', 'buyer', 'kg', 'baht', 'receiptUrl', 'note']]);
-      for (const s of sales) {
-        const row = [s.id ?? '', s.date ?? '', '', s.buyer ?? '', s.kg ?? 0, s.baht ?? 0, s.receipt_url ?? '', s.note ?? ''];
-        await append(token, 'Sales!A:H', [row]);
-      }
-      log.push(`Sales: ${sales.length}`);
-    } catch (e) { errors.push(`Sales: ${e.message}`); }
+    if (bills.status === 'fulfilled') {
+      const rows = [['billNo', 'date', 'dateText', 'seller', 'phone', 'kg', 'baht', 'json'],
+        ...bills.value.map(b => [b.bill_no ?? '', b.date ?? '', b.date_text ?? '', b.seller ?? '', b.phone ?? '', b.kg ?? '', b.baht ?? '', b.json ?? ''])];
+      ranges.push({ range: `Bills!A1:H${rows.length}`, values: rows });
+      log.push(`Bills: ${bills.value.length}`);
+    } else { errors.push(`Bills: ${bills.reason?.message}`); }
 
-    // 4. CustomerInfo — upsert by phone
-    try {
-      const ci = await sbGet('qm_customer_info', 'select=*');
-      await ensureSheet(token, 'CustomerInfo', ['phone', 'bankName', 'bankAccount', 'note']);
-      for (const c of ci) {
-        await upsertRow(token, 'CustomerInfo', 'phone', c.phone, [
-          c.phone ?? '', c.bank_name ?? '', c.bank_account ?? '', c.note ?? '',
-        ]);
-      }
-      log.push(`CustomerInfo: ${ci.length}`);
-    } catch (e) { errors.push(`CustomerInfo: ${e.message}`); }
+    if (payments.status === 'fulfilled') {
+      const rows = [['เลขที่บิล', 'สถานะ', 'เวลา', 'receiptUrl', 'slipUrl', 'vehicleUrl'],
+        ...payments.value.map(p => [p.bill_no ?? '', p.status ?? '', p.paid_at ?? '', p.receipt_url ?? '', p.slip_url ?? '', p.vehicle_url ?? ''])];
+      ranges.push({ range: `Payments!A1:F${rows.length}`, values: rows });
+      log.push(`Payments: ${payments.value.length}`);
+    } else { errors.push(`Payments: ${payments.reason?.message}`); }
 
-    // 5. Verified — upsert by phone
-    try {
-      const verified = await sbGet('qm_verified', 'select=*');
-      await ensureSheet(token, 'Verified', ['phone', 'name']);
-      for (const v of verified) {
-        await upsertRow(token, 'Verified', 'phone', v.phone, [v.phone ?? '', v.name ?? '']);
-      }
-      log.push(`Verified: ${verified.length}`);
-    } catch (e) { errors.push(`Verified: ${e.message}`); }
+    if (sales.status === 'fulfilled') {
+      const rows = [['id', 'date', 'dateText', 'buyer', 'kg', 'baht', 'receiptUrl', 'note'],
+        ...sales.value.map(s => [s.id ?? '', s.date ?? '', '', s.buyer ?? '', s.kg ?? 0, s.baht ?? 0, s.receipt_url ?? '', s.note ?? ''])];
+      ranges.push({ range: `Sales!A1:H${rows.length}`, values: rows });
+      log.push(`Sales: ${sales.value.length}`);
+    } else { errors.push(`Sales: ${sales.reason?.message}`); }
 
-    // 6. Plates — upsert by phone
-    try {
-      const plates = await sbGet('qm_vehicle_plates', 'select=*');
-      await ensureSheet(token, 'Plates', ['phone', 'plate']);
-      for (const p of plates) {
-        await upsertRow(token, 'Plates', 'phone', p.phone, [p.phone ?? '', p.plate ?? '']);
-      }
-      log.push(`Plates: ${plates.length}`);
-    } catch (e) { errors.push(`Plates: ${e.message}`); }
+    if (ci.status === 'fulfilled') {
+      const rows = [['phone', 'bankName', 'bankAccount', 'note'],
+        ...ci.value.map(c => [c.phone ?? '', c.bank_name ?? '', c.bank_account ?? '', c.note ?? ''])];
+      ranges.push({ range: `CustomerInfo!A1:D${rows.length}`, values: rows });
+      log.push(`CustomerInfo: ${ci.value.length}`);
+    } else { errors.push(`CustomerInfo: ${ci.reason?.message}`); }
+
+    if (verified.status === 'fulfilled') {
+      const rows = [['phone', 'name'], ...verified.value.map(v => [v.phone ?? '', v.name ?? ''])];
+      ranges.push({ range: `Verified!A1:B${rows.length}`, values: rows });
+      log.push(`Verified: ${verified.value.length}`);
+    } else { errors.push(`Verified: ${verified.reason?.message}`); }
+
+    if (plates.status === 'fulfilled') {
+      const rows = [['phone', 'plate'], ...plates.value.map(p => [p.phone ?? '', p.plate ?? ''])];
+      ranges.push({ range: `Plates!A1:B${rows.length}`, values: rows });
+      log.push(`Plates: ${plates.value.length}`);
+    } else { errors.push(`Plates: ${plates.reason?.message}`); }
+
+    // Single batch write — all sheets at once
+    if (ranges.length > 0) {
+      const batchR = await fetch(`${BASE}/${SHEET_ID}/values:batchUpdate`, {
+        method: 'POST',
+        headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
+        body: JSON.stringify({ valueInputOption: 'RAW', data: ranges }),
+      });
+      const batchD = await batchR.json();
+      if (batchD.error) errors.push(`batchUpdate: ${batchD.error.message}`);
+      else log.push(`batchUpdate: wrote ${batchD.responses?.length ?? ranges.length} ranges`);
+    }
 
     res.json({ ok: errors.length === 0, migrated: log, errors });
   } catch (err) {
