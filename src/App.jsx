@@ -2542,7 +2542,9 @@ export default function App() {
     }
     setTimeout(() => syncNow(true), 1500);
     const autoSync = setInterval(() => syncNow(true), 30000);
-    return () => clearInterval(autoSync);
+    const onVisible = () => { if (document.visibilityState === 'visible') syncNow(true); };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => { clearInterval(autoSync); document.removeEventListener('visibilitychange', onVisible); };
   }, []);
 
   // Supabase sync
@@ -2557,13 +2559,13 @@ export default function App() {
         db.getCustomerInfo(),
       ]);
 
-      // Merge bills
+      // Merge bills — remote (Supabase) is source of truth; local-only bills get added
       const remoteNos = new Set(remoteBills.map(c => c.billNo));
       const current = storage.loadHistory().filter(h => !deleted.has(h.billNo));
       const localOnly = current.filter(c => c?.billNo && !remoteNos.has(c.billNo));
       const byNo = {};
-      remoteBills.forEach(c => { if (c?.billNo) byNo[c.billNo] = c; });
       current.forEach(c => { if (c?.billNo) byNo[c.billNo] = c; });
+      remoteBills.forEach(c => { if (c?.billNo) byNo[c.billNo] = c; }); // remote wins
       const merged = Object.values(byNo).sort((a, b) => (b.date || 0) - (a.date || 0)).slice(0, 300);
       const svFromSync = {};
       merged.forEach(c => { const ph = c.phone || c.sellerPhone || ''; const sup = (c.data && c.data.supervisor) || c.supervisor || ''; if (ph && sup) svFromSync[ph] = sup; });
