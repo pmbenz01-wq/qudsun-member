@@ -1968,7 +1968,7 @@ function SalesView({ history, sales, accounts, pin, onGoHome, onAddSale, onDelet
         </>
       )}
 
-      {addOpen && <AddSaleModal date={selectedDate} accounts={accounts || []} onSaveAccount={onSaveAccount} onSave={async (data) => { await onAddSale(data); setAddOpen(false); }} onClose={() => setAddOpen(false)} />}
+      {addOpen && <AddSaleModal date={todayStr} accounts={accounts || []} onSaveAccount={onSaveAccount} onSave={async (data) => { await onAddSale(data); setAddOpen(false); }} onClose={() => setAddOpen(false)} />}
 
       {deleteTarget && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
