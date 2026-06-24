@@ -2169,7 +2169,7 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
 }
 
 // ─── CustomerDetailView ───────────────────────────────────────────────────────
-function CustomerDetailView({ phone, history, verified, supervisors, vehiclePlates, customerInfo, onGoBack, onOpenHistory, onOpenVerify, onSaveSupervisor, onSaveCustomerInfo }) {
+function CustomerDetailView({ phone, history, verified, supervisors, vehiclePlates, customerInfo, payments, onPayment, onGoBack, onOpenHistory, onOpenVerify, onSaveSupervisor, onSaveCustomerInfo }) {
   const [editSupervisor, setEditSupervisor] = useState(false);
   const [supDraft, setSupDraft] = useState('');
   const [editInfo, setEditInfo] = useState(false);
@@ -2182,7 +2182,7 @@ function CustomerDetailView({ phone, history, verified, supervisors, vehiclePlat
   const verifiedName = verified[phone];
   const currentSupervisor = supervisors?.[phone] || '';
   const pct = stat.next ? Math.min(100, (stat.total / stat.next.min) * 100) : 100;
-  const bills = history.filter(h => String(h.phone || '').trim() === phone);
+  const bills = history.filter(h => String(h.phone || h.data?.sellerPhone || '').trim() === phone);
   const info = customerInfo?.[phone] || {};
   // collect unique plates from bills + vehiclePlates map
   const platesFromBills = [...new Set(bills.map(h => h.data?.vehiclePlate).filter(Boolean))];
@@ -2297,16 +2297,40 @@ function CustomerDetailView({ phone, history, verified, supervisors, vehiclePlat
         <div style={{ flex: 1, height: 1, background: '#E4D7BC' }} />
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {bills.map((h, i) => (
-          <button key={i} onClick={() => onOpenHistory(h)} style={{ textAlign: 'left', border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 13, padding: '12px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ width: 38, height: 38, borderRadius: 9, background: '#F0E4C8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, flexShrink: 0 }}>🧾</div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 600, fontSize: 14, color: '#4A3526' }}>{h.billNo}</div>
-              <div style={{ fontSize: 12, color: '#9A8662' }}>{h.dateText} · {h.kg} กก.</div>
+        {bills.map((h, i) => {
+          const pay = payments?.[h.billNo];
+          const status = pay?.status || 'unpaid';
+          const borderColor = status === 'transferred' ? '#5A9A6A' : status === 'cash' ? '#5A7FA8' : '#E4D7BC';
+          const statusLabel = status === 'transferred' ? '✓ โอนแล้ว' : status === 'cash' ? '✓ เงินสด' : null;
+          const statusColor = status === 'transferred' ? '#2E7D32' : status === 'cash' ? '#1A4D80' : null;
+          return (
+            <div key={i} style={{ border: `1.5px solid ${borderColor}`, background: '#FFFDF8', borderRadius: 13, overflow: 'hidden' }}>
+              <button onClick={() => onOpenHistory(h)} style={{ textAlign: 'left', background: 'none', border: 'none', width: '100%', padding: '12px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ width: 38, height: 38, borderRadius: 9, background: '#F0E4C8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, flexShrink: 0 }}>🧾</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ fontWeight: 600, fontSize: 14, color: '#4A3526' }}>{h.billNo}</span>
+                    {statusLabel && <span style={{ fontSize: 10, fontWeight: 700, color: statusColor }}>{statusLabel}</span>}
+                  </div>
+                  <div style={{ fontSize: 12, color: '#9A8662' }}>{h.dateText} · {h.kg} กก.</div>
+                </div>
+                <span style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 15, color: '#3F2D1E' }}>฿{h.baht}</span>
+              </button>
+              {status === 'unpaid' && onPayment && (
+                <div style={{ display: 'flex', gap: 8, padding: '0 12px 10px' }}>
+                  <button onClick={() => onPayment(h.billNo, 'transferred')}
+                    style={{ flex: 1, border: 'none', borderRadius: 9, padding: '8px 0', background: '#5A9A6A', color: '#fff', fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>
+                    โอนแล้ว ✓
+                  </button>
+                  <button onClick={() => onPayment(h.billNo, 'cash')}
+                    style={{ flex: 1, border: 'none', borderRadius: 9, padding: '8px 0', background: '#5A7FA8', color: '#fff', fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>
+                    เงินสด ✓
+                  </button>
+                </div>
+              )}
             </div>
-            <span style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 15, color: '#3F2D1E' }}>฿{h.baht}</span>
-          </button>
-        ))}
+          );
+        })}
         {bills.length === 0 && <div style={{ color: '#B7A684', fontSize: 14, textAlign: 'center', padding: '20px 0' }}>ยังไม่มีบิล</div>}
       </div>
     </div>
@@ -2389,13 +2413,13 @@ function SheetModal({ onSyncNow, syncStatus, syncing, onCancel }) {
 }
 
 // ─── Route wrapper: CustomerDetail ────────────────────────────────────────────
-function CustomerDetailRoute({ history, verified, supervisors, vehiclePlates, customerInfo, onGoBack, onOpenHistory, onSaveSupervisor, onSaveCustomerInfo, onOpenVerify }) {
+function CustomerDetailRoute({ history, verified, supervisors, vehiclePlates, customerInfo, payments, onPayment, onGoBack, onOpenHistory, onSaveSupervisor, onSaveCustomerInfo, onOpenVerify }) {
   const { phone } = useParams();
   const decodedPhone = decodeURIComponent(phone || '');
   if (!decodedPhone) return <Navigate to="/customers" replace />;
   return (
     <CustomerDetailView phone={decodedPhone} history={history} verified={verified} supervisors={supervisors}
-      vehiclePlates={vehiclePlates} customerInfo={customerInfo}
+      vehiclePlates={vehiclePlates} customerInfo={customerInfo} payments={payments} onPayment={onPayment}
       onGoBack={onGoBack} onOpenHistory={onOpenHistory}
       onSaveSupervisor={onSaveSupervisor}
       onSaveCustomerInfo={onSaveCustomerInfo}
@@ -3270,7 +3294,7 @@ export default function App() {
         } />
         <Route path="/customers/:phone" element={
           <CustomerDetailRoute history={history} verified={verified} supervisors={supervisors}
-            vehiclePlates={vehiclePlates} customerInfo={customerInfo}
+            vehiclePlates={vehiclePlates} customerInfo={customerInfo} payments={payments} onPayment={handlePayment}
             onGoBack={() => navigate('/customers')} onOpenHistory={card => openHistory(card, true)}
             onSaveSupervisor={(phone, name) => { const ns = { ...supervisors, [phone]: name }; storage.saveSupervisors(ns); setSupervisors(ns); }}
             onSaveCustomerInfo={(phone, info) => { const next = { ...storage.loadCustomerInfo(), [phone]: info }; storage.saveCustomerInfo(next); setCustomerInfo(next); db.upsertCustomerInfo(phone, info).catch(() => {}); }}
