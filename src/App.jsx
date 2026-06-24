@@ -286,7 +286,7 @@ function EmployeeManager({ employees, onSave, onCancel }) {
 }
 
 // ─── HomeView ─────────────────────────────────────────────────────────────────
-function HomeView({ session, history, payments, onNew, onResume, onGoCustomers, onGoDashboard, onGoSupervisors, onGoSales, onChangePin, onSetEmployeePin, onOpenHistory, onPayment, onDeleteBill, pin, verified, supervisors, isEmployee, onLogout, onExport, onImport }) {
+function HomeView({ session, history, payments, syncing, onNew, onResume, onGoCustomers, onGoDashboard, onGoSupervisors, onGoSales, onChangePin, onSetEmployeePin, onOpenHistory, onPayment, onDeleteBill, pin, verified, supervisors, isEmployee, onLogout, onExport, onImport }) {
   const customerCount = Object.keys(loadCustomers(history)).length;
   const supervisorCount = Object.values(supervisors || {}).filter(Boolean).reduce((set, n) => (set.add(n), set), new Set()).size;
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -369,7 +369,7 @@ function HomeView({ session, history, payments, onNew, onResume, onGoCustomers, 
           <span style={{ fontSize: 22 }}>👥</span>
           <div style={{ textAlign: 'left' }}>
             <div style={{ fontWeight: 600, fontSize: 15, color: '#4A3526' }}>ทะเบียนลูกค้า</div>
-            <div style={{ fontSize: 12, color: '#9A8662' }}>{customerCount} ราย</div>
+            <div style={{ fontSize: 12, color: '#9A8662' }}>{syncing && customerCount === 0 ? '…' : `${customerCount} ราย`}</div>
           </div>
           <span style={{ marginLeft: 'auto', color: '#C9A24B', fontSize: 18 }}>›</span>
         </button>
@@ -377,7 +377,7 @@ function HomeView({ session, history, payments, onNew, onResume, onGoCustomers, 
           <span style={{ fontSize: 22 }}>🧑‍💼</span>
           <div style={{ textAlign: 'left' }}>
             <div style={{ fontWeight: 600, fontSize: 15, color: '#4A3526' }}>ผู้ดูแล</div>
-            <div style={{ fontSize: 12, color: '#9A8662' }}>{supervisorCount} คน</div>
+            <div style={{ fontSize: 12, color: '#9A8662' }}>{syncing && supervisorCount === 0 ? '…' : `${supervisorCount} คน`}</div>
           </div>
           <span style={{ marginLeft: 'auto', color: '#C9A24B', fontSize: 18 }}>›</span>
         </button>
@@ -2547,7 +2547,7 @@ export default function App() {
         setIsHandoff(true); setSession(data); navigate('/print');
       } catch {}
     }
-    setTimeout(() => syncNow(true), 1500);
+    syncNow(true);
     const autoSync = setInterval(() => syncNow(true), 60000);
     const onVisible = () => { if (document.visibilityState === 'visible') syncNow(true); };
     document.addEventListener('visibilitychange', onVisible);
@@ -3110,7 +3110,7 @@ export default function App() {
 
       <Routes>
         <Route path="/" element={
-          <HomeView session={session} history={history} payments={payments} verified={verified} supervisors={supervisors} syncStatus={syncStatus} syncing={syncing}
+          <HomeView session={session} history={history} payments={payments} verified={verified} supervisors={supervisors} syncing={syncing}
             onNew={startNew} onResume={() => { navigate('/record'); if (session?.entries?.length > 0) { setActiveCat(session.entries[session.entries.length - 1].cat); } else { setActiveCat('AB'); } }}
             onGoCustomers={() => { navigate('/customers'); syncNow(true); }}
             onGoDashboard={() => { navigate('/purchases'); syncNow(true); }}
