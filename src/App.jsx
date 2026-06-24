@@ -2551,13 +2551,16 @@ export default function App() {
   const syncNow = useCallback(async (silent) => {
     setSyncing(true); if (!silent) setSyncStatus('กำลังซิงก์…');
     try {
-      const deleted = storage.loadDeletedBills();
-      const [remoteBills, remotePayments, remoteVerified, remoteCI] = await Promise.all([
+      const [remoteBills, remotePayments, remoteVerified, remoteCI, remoteDeletedNos] = await Promise.all([
         db.getBills(),
         db.getPayments(),
         db.getVerified(),
         db.getCustomerInfo(),
+        db.getDeletedBillNos(),
       ]);
+      // Sync remote deletes to local so cross-device deletes propagate
+      remoteDeletedNos.forEach(no => storage.addDeletedBill(no));
+      const deleted = storage.loadDeletedBills();
 
       // Merge bills — remote (Supabase) is source of truth; local-only bills get added
       const remoteNos = new Set(remoteBills.map(c => c.billNo));

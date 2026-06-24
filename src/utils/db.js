@@ -43,6 +43,15 @@ export const db = {
     if (error) throw error;
   },
 
+  async getDeletedBillNos() {
+    const { data, error } = await supabase
+      .from('qm_bills')
+      .select('bill_no')
+      .eq('deleted', true);
+    if (error) throw error;
+    return data.map(r => r.bill_no);
+  },
+
   // ─── Payments ─────────────────────────────────────────────────────────────
   async getPayments() {
     const { data, error } = await supabase.from('qm_payments').select('*');
