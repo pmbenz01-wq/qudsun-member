@@ -222,6 +222,42 @@ export default async function handler(req, res) {
         return res.json({ ok: true });
       }
 
+      if (action === 'forcePush') {
+        // Force-overwrite all Sheets with data from the app (bills, payments, sales)
+        const { bills = [], payments = {}, sales = [] } = body;
+        const ranges = [];
+
+        // Bills
+        const billRows = [['billNo', 'date', 'dateText', 'seller', 'phone', 'kg', 'baht', 'json'],
+          ...bills.map(b => [b.billNo ?? '', b.date ?? '', b.dateText ?? '', b.seller ?? '', b.phone ?? '', b.kg ?? '', b.baht ?? '', b.json ?? ''])];
+        ranges.push({ range: `Bills!A1:H${billRows.length}`, values: billRows });
+
+        // Payments
+        const payRows = [['เลขที่บิล', 'สถานะ', 'เวลา', 'receiptUrl', 'slipUrl', 'vehicleUrl'],
+          ...Object.entries(payments).map(([billNo, p]) => [billNo, p.status ?? '', p.paidAt ?? '', p.receiptUrl ?? '', p.slipUrl ?? '', p.vehicleUrl ?? ''])];
+        ranges.push({ range: `Payments!A1:F${payRows.length}`, values: payRows });
+
+        // Sales
+        const saleRows = [['id', 'date', 'dateText', 'buyer', 'kg', 'baht', 'receiptUrl', 'note'],
+          ...sales.map(s => [s.id ?? '', s.date ?? '', s.dateText ?? '', s.buyer ?? '', s.kg ?? 0, s.baht ?? 0, s.receiptUrl ?? '', s.note ?? ''])];
+        ranges.push({ range: `Sales!A1:H${saleRows.length}`, values: saleRows });
+
+        // Clear all 3 sheets then batch-write
+        await fetch(`${BASE}/${SHEET_ID}/values:batchClear`, {
+          method: 'POST',
+          headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
+          body: JSON.stringify({ ranges: ['Bills', 'Payments', 'Sales'] }),
+        });
+        const br = await fetch(`${BASE}/${SHEET_ID}/values:batchUpdate`, {
+          method: 'POST',
+          headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
+          body: JSON.stringify({ valueInputOption: 'RAW', data: ranges }),
+        });
+        const bd = await br.json();
+        if (bd.error) return res.json({ ok: false, error: bd.error.message });
+        return res.json({ ok: true, bills: bills.length, payments: Object.keys(payments).length, sales: sales.length });
+      }
+
       if (action === 'updateCustomerInfo') {
         await ensureSheet(token, 'CustomerInfo', ['phone', 'bankName', 'bankAccount', 'note']);
         const col = await read(token, 'CustomerInfo!A:A') ?? [];

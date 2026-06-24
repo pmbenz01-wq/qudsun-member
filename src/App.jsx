@@ -2372,16 +2372,19 @@ function VerifyModal({ tier, phone, draft, total, canSkip, isManage, onDraftChan
 
 
 // ─── SheetModal ───────────────────────────────────────────────────────────────
-function SheetModal({ onSyncNow, syncStatus, syncing, onCancel }) {
+function SheetModal({ onSyncNow, onForcePush, syncStatus, syncing, onCancel }) {
   return (
     <div className="no-print" style={{ position: 'fixed', inset: 0, zIndex: 62, background: 'rgba(42,33,24,.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 18, animation: 'fadeIn .2s' }}>
       <div style={{ background: '#FFFDF8', borderRadius: 20, padding: 24, width: '100%', maxWidth: 430, animation: 'popIn .25s' }}>
         <div style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 18, color: '#4A3526', marginBottom: 10 }}>📊 Google Sheet</div>
-        <p style={{ fontSize: 13.5, color: '#7A6450', lineHeight: 1.8, margin: '0 0 6px' }}>ข้อมูลจะซิงก์จาก Supabase หรือ Google Sheet โดยอัตโนมัติ</p>
+        <p style={{ fontSize: 13.5, color: '#7A6450', lineHeight: 1.8, margin: '0 0 6px' }}>ข้อมูลจะซิงก์จาก Google Sheet โดยอัตโนมัติ</p>
         {syncStatus && <p style={{ fontSize: 13, color: syncStatus.startsWith('⚠') ? '#C0392B' : '#2E7D32', margin: '0 0 14px', background: syncStatus.startsWith('⚠') ? '#FFF0F0' : '#F0FFF4', padding: '6px 10px', borderRadius: 8 }}>{syncStatus}</p>}
-        <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
-          <button onClick={onCancel} style={{ flex: 1, border: '1px solid #E4D7BC', background: '#fff', borderRadius: 12, padding: 13, color: '#7A6450', fontSize: 14, cursor: 'pointer' }}>ปิด</button>
-          <button onClick={() => { onSyncNow(); }} disabled={syncing} style={{ flex: 1.4, border: 'none', borderRadius: 12, padding: 13, background: 'linear-gradient(135deg,#C9A24B,#A8763E)', color: '#fff', fontWeight: 600, fontSize: 14, cursor: 'pointer', opacity: syncing ? 0.6 : 1 }}>{syncing ? '…กำลังซิงก์' : '↺ ซิงก์ตอนนี้'}</button>
+        <div style={{ display: 'flex', gap: 8, marginTop: 14, flexDirection: 'column' }}>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={onCancel} style={{ flex: 1, border: '1px solid #E4D7BC', background: '#fff', borderRadius: 12, padding: 13, color: '#7A6450', fontSize: 14, cursor: 'pointer' }}>ปิด</button>
+            <button onClick={() => { onSyncNow(); }} disabled={syncing} style={{ flex: 1.4, border: 'none', borderRadius: 12, padding: 13, background: 'linear-gradient(135deg,#C9A24B,#A8763E)', color: '#fff', fontWeight: 600, fontSize: 14, cursor: 'pointer', opacity: syncing ? 0.6 : 1 }}>{syncing ? '…กำลัง…' : '↺ ซิงก์ตอนนี้'}</button>
+          </div>
+          <button onClick={() => { onForcePush(); onCancel(); }} disabled={syncing} style={{ width: '100%', border: 'none', borderRadius: 12, padding: 13, background: syncing ? '#ccc' : 'linear-gradient(135deg,#2E7D32,#1B5E20)', color: '#fff', fontWeight: 600, fontSize: 14, cursor: syncing ? 'not-allowed' : 'pointer' }}>💾 บันทึกทั้งหมดไป Google Sheet</button>
         </div>
       </div>
     </div>
@@ -3085,6 +3088,34 @@ export default function App() {
     setReadonly(false); navigate(dest);
   }, [custPhone, navigate]);
 
+  const handleForcePush = useCallback(async () => {
+    setSyncing(true);
+    setSyncStatus('กำลังบันทึกทั้งหมด…');
+    try {
+      const bills = storage.loadHistory().filter(b => !b.deleted);
+      const payments = storage.loadPayments();
+      const sales = storage.loadSales ? storage.loadSales() : [];
+      const r = await fetch('/api/sheets', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ action: 'forcePush', bills, payments, sales }),
+      });
+      const d = await r.json();
+      if (d.ok) {
+        toast(`บันทึกสำเร็จ — บิล ${d.bills} รายการ, ยอดขาย ${d.sales} รายการ`);
+        setSyncStatus(`✓ บันทึกทั้งหมดแล้ว (${d.bills} บิล)`);
+      } else {
+        toast('บันทึกไม่สำเร็จ: ' + (d.error || 'ไม่ทราบสาเหตุ'));
+        setSyncStatus('⚠ บันทึกไม่สำเร็จ');
+      }
+    } catch (err) {
+      toast('บันทึกไม่สำเร็จ');
+      setSyncStatus('⚠ บันทึกไม่สำเร็จ');
+    } finally {
+      setSyncing(false);
+    }
+  }, [toast]);
+
   const handleExport = useCallback(() => {
     const data = { history: storage.loadHistory(), verified: storage.loadVerified(), supervisors: storage.loadSupervisors(), exportedAt: new Date().toISOString(), version: 1 };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -3294,7 +3325,7 @@ export default function App() {
 
       {pinEditorOpen && <PinEditor pinnedCats={pinnedCats} onSave={pins => { storage.savePinnedCats(pins); setPinnedCats(pins); setPinEditorOpen(false); toast('บันทึกหมวดปักหมุดแล้ว'); }} onCancel={() => setPinEditorOpen(false)} />}
       {employeeManagerOpen && <EmployeeManager employees={employees} onSave={list => { storage.saveEmployees(list); setEmployees(list); setEmployeeManagerOpen(false); toast('บันทึกรายชื่อพนักงานแล้ว'); }} onCancel={() => setEmployeeManagerOpen(false)} />}
-      {sheetModal && <SheetModal onSyncNow={() => { syncNow(false); }} syncStatus={syncStatus} syncing={syncing} onCancel={() => setSheetModal(false)} />}
+      {sheetModal && <SheetModal onSyncNow={() => { syncNow(false); }} onForcePush={handleForcePush} syncStatus={syncStatus} syncing={syncing} onCancel={() => setSheetModal(false)} />}
 
       <Toast msg={toastMsg} />
     </div>
