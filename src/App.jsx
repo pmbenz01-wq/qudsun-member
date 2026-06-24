@@ -2565,14 +2565,13 @@ export default function App() {
   const syncNow = useCallback(async (silent) => {
     setSyncing(true); if (!silent) setSyncStatus('กำลังซิงก์…');
     try {
-      const [remoteBills, remotePayments, remoteVerified, remoteCI, remoteDeletedNos, remoteSales] = await Promise.all([
-        db.getBills(),
-        db.getPayments(),
-        db.getVerified(),
-        db.getCustomerInfo(),
-        db.getDeletedBillNos(),
-        db.getSales(),
-      ]);
+      // Run sequentially to avoid connection pool exhaustion on free-tier Supabase
+      const remoteBills = await db.getBills();
+      const remotePayments = await db.getPayments();
+      const remoteVerified = await db.getVerified();
+      const remoteCI = await db.getCustomerInfo();
+      const remoteDeletedNos = await db.getDeletedBillNos();
+      const remoteSales = await db.getSales();
 
       // Push any local-only bills (created offline / not yet synced) up to Supabase
       const remoteNos = new Set(remoteBills.map(c => c.billNo));
