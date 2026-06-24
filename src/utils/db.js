@@ -96,6 +96,11 @@ export const db = {
     if (error) throw error;
   },
 
+  async deleteVerified(phone) {
+    const { error } = await supabase.from('qm_verified').delete().eq('phone', phone);
+    if (error) throw error;
+  },
+
   // ─── Customer Info ────────────────────────────────────────────────────────
   async getCustomerInfo() {
     const { data, error } = await supabase.from('qm_customer_info').select('*');
@@ -118,6 +123,11 @@ export const db = {
       bank_account: info.bankAccount || null,
       note: info.note || null,
     }, { onConflict: 'phone' });
+    if (error) throw error;
+  },
+
+  async deleteCustomerInfo(phone) {
+    const { error } = await supabase.from('qm_customer_info').delete().eq('phone', phone);
     if (error) throw error;
   },
 

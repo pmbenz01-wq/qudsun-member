@@ -1984,9 +1984,10 @@ function SalesView({ history, sales, accounts, pin, onGoHome, onAddSale, onDelet
 }
 
 // ─── CustomersView ────────────────────────────────────────────────────────────
-function CustomersView({ history, verified, onGoHome, onOpenCustomer }) {
+function CustomersView({ history, verified, onGoHome, onOpenCustomer, onDeleteCustomer, pin, isEmployee }) {
   const customers = loadCustomers(history);
   const list = Object.values(customers).sort((a, b) => b.totalKg - a.totalKg);
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   return (
     <div style={{ flex: 1, maxWidth: 720, width: '100%', margin: '0 auto', padding: '14px 14px 40px' }}>
@@ -2012,32 +2013,50 @@ function CustomersView({ history, verified, onGoHome, onOpenCustomer }) {
           const rawTier = stat.tier;
           const pct = stat.next ? Math.min(100, (stat.total / stat.next.min) * 100) : 100;
           return (
-            <button key={c.phone} onClick={() => onOpenCustomer(c.phone)} style={{ textAlign: 'left', border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 14, padding: '14px 16px', cursor: 'pointer' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                <div style={{ width: 40, height: 40, borderRadius: 10, background: '#F0E4C8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>👤</div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 600, fontSize: 15, color: '#4A3526' }}>{c.name || '—'}</div>
-                  <div style={{ fontSize: 12, color: '#9A8662' }}>{c.phone}</div>
+            <div key={c.phone} style={{ border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 14, overflow: 'hidden' }}>
+              <button onClick={() => onOpenCustomer(c.phone)} style={{ textAlign: 'left', background: 'none', border: 'none', width: '100%', padding: '14px 16px', cursor: 'pointer' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 10, background: '#F0E4C8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>👤</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 600, fontSize: 15, color: '#4A3526' }}>{c.name || '—'}</div>
+                    <div style={{ fontSize: 12, color: '#9A8662' }}>{c.phone}</div>
+                  </div>
+                  <TierBadge tier={tier} />
                 </div>
-                <TierBadge tier={tier} />
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#9A8662', marginBottom: 6 }}>
-                <span><b style={{ color: '#4A3526', fontFamily: 'Prompt' }}>{fmtKg(c.totalKg)}</b> กก. · {c.billCount} บิล</span>
-                {stat.next && <span>→ {stat.next.label}: {fmtKg(stat.next.min - c.totalKg)} กก.</span>}
-              </div>
-              <div style={{ height: 5, background: '#EFE4CD', borderRadius: 3, overflow: 'hidden' }}>
-                <div style={{ width: `${pct}%`, height: '100%', background: rawTier.dot, borderRadius: 3 }} />
-              </div>
-            </button>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#9A8662', marginBottom: 6 }}>
+                  <span><b style={{ color: '#4A3526', fontFamily: 'Prompt' }}>{fmtKg(c.totalKg)}</b> กก. · {c.billCount} บิล</span>
+                  {stat.next && <span>→ {stat.next.label}: {fmtKg(stat.next.min - c.totalKg)} กก.</span>}
+                </div>
+                <div style={{ height: 5, background: '#EFE4CD', borderRadius: 3, overflow: 'hidden' }}>
+                  <div style={{ width: `${pct}%`, height: '100%', background: rawTier.dot, borderRadius: 3 }} />
+                </div>
+              </button>
+              {!isEmployee && onDeleteCustomer && (
+                <div style={{ padding: '0 14px 10px', display: 'flex', justifyContent: 'flex-end' }}>
+                  <button onClick={() => setDeleteTarget({ type: 'customer', phone: c.phone, name: c.name, kg: fmtKg(c.totalKg), bills: c.billCount })}
+                    style={{ border: '1px solid #E8C8C2', background: '#FDF0EE', borderRadius: 8, padding: '5px 12px', fontSize: 11, color: '#C0392B', cursor: 'pointer' }}>
+                    🗑 ลบลูกค้า
+                  </button>
+                </div>
+              )}
+            </div>
           );
         })}
       </div>
+      {deleteTarget && (
+        <DeleteBillModal
+          bill={{ seller: deleteTarget.name || deleteTarget.phone, billNo: `${deleteTarget.bills ?? ''} บิล · ${deleteTarget.kg ?? ''} กก.`, baht: '' }}
+          pin={pin}
+          onConfirm={() => { onDeleteCustomer(deleteTarget.phone); setDeleteTarget(null); }}
+          onClose={() => setDeleteTarget(null)} />
+      )}
     </div>
   );
 }
 
 // ─── SupervisorsView ──────────────────────────────────────────────────────────
-function SupervisorsView({ supervisors, history, onGoHome, onOpenSupervisor }) {
+function SupervisorsView({ supervisors, history, onGoHome, onOpenSupervisor, onDeleteSupervisor, pin, isEmployee }) {
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const supMap = {};
   Object.entries(supervisors || {}).forEach(([phone, name]) => {
     if (!name) return;
@@ -2059,17 +2078,34 @@ function SupervisorsView({ supervisors, history, onGoHome, onOpenSupervisor }) {
         {list.map(([name, phones]) => {
           const totalKg = phones.reduce((s, p) => s + (customers[p]?.totalKg || 0), 0);
           return (
-            <button key={name} onClick={() => onOpenSupervisor(name)} style={{ textAlign: 'left', border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 14, padding: '14px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ width: 44, height: 44, borderRadius: 12, background: 'linear-gradient(135deg,#5C4326,#3F2D1E)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>🧑‍💼</div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 600, fontSize: 15, color: '#4A3526' }}>{name}</div>
-                <div style={{ fontSize: 12, color: '#9A8662', marginTop: 2 }}>{phones.length} ลูกค้า · รวม {fmtKg(totalKg)} กก.</div>
-              </div>
-              <span style={{ color: '#C9A24B', fontSize: 18 }}>›</span>
-            </button>
+            <div key={name} style={{ border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 14, overflow: 'hidden' }}>
+              <button onClick={() => onOpenSupervisor(name)} style={{ textAlign: 'left', background: 'none', border: 'none', width: '100%', padding: '14px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ width: 44, height: 44, borderRadius: 12, background: 'linear-gradient(135deg,#5C4326,#3F2D1E)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>🧑‍💼</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 600, fontSize: 15, color: '#4A3526' }}>{name}</div>
+                  <div style={{ fontSize: 12, color: '#9A8662', marginTop: 2 }}>{phones.length} ลูกค้า · รวม {fmtKg(totalKg)} กก.</div>
+                </div>
+                <span style={{ color: '#C9A24B', fontSize: 18 }}>›</span>
+              </button>
+              {!isEmployee && onDeleteSupervisor && (
+                <div style={{ padding: '0 14px 10px', display: 'flex', justifyContent: 'flex-end' }}>
+                  <button onClick={() => setDeleteTarget({ name, phones: phones.length })}
+                    style={{ border: '1px solid #E8C8C2', background: '#FDF0EE', borderRadius: 8, padding: '5px 12px', fontSize: 11, color: '#C0392B', cursor: 'pointer' }}>
+                    🗑 ลบผู้ดูแล
+                  </button>
+                </div>
+              )}
+            </div>
           );
         })}
       </div>
+      {deleteTarget && (
+        <DeleteBillModal
+          bill={{ seller: deleteTarget.name, billNo: `ดูแล ${deleteTarget.phones} ลูกค้า`, baht: '' }}
+          pin={pin}
+          onConfirm={() => { onDeleteSupervisor(deleteTarget.name); setDeleteTarget(null); }}
+          onClose={() => setDeleteTarget(null)} />
+      )}
     </div>
   );
 }
@@ -2738,6 +2774,49 @@ export default function App() {
     db.deletePayment(billNo).catch(() => {});
   }, []);
 
+  const handleDeleteCustomer = useCallback((phone) => {
+    // Delete all bills for this phone
+    const billsToDelete = storage.loadHistory().filter(h => String(h.phone || '').trim() === phone);
+    billsToDelete.forEach(b => {
+      storage.addDeletedBill(b.billNo);
+      db.deleteBill(b.billNo).catch(() => {});
+      db.deletePayment(b.billNo).catch(() => {});
+    });
+    const nextHistory = storage.loadHistory().filter(h => String(h.phone || '').trim() !== phone);
+    storage.saveHistory(nextHistory);
+    setHistory(nextHistory);
+    // Clear payments
+    const nextPay = { ...storage.loadPayments() };
+    billsToDelete.forEach(b => delete nextPay[b.billNo]);
+    storage.savePayments(nextPay);
+    setPayments(nextPay);
+    // Clear verified
+    const nextVerified = { ...storage.loadVerified() };
+    delete nextVerified[phone];
+    storage.saveVerified(nextVerified);
+    setVerified(nextVerified);
+    db.deleteVerified(phone).catch(() => {});
+    // Clear customerInfo
+    const nextInfo = { ...storage.loadCustomerInfo() };
+    delete nextInfo[phone];
+    storage.saveCustomerInfo(nextInfo);
+    setCustomerInfo(nextInfo);
+    db.deleteCustomerInfo(phone).catch(() => {});
+    // Clear supervisor assignment
+    const nextSup = { ...storage.loadSupervisors() };
+    delete nextSup[phone];
+    storage.saveSupervisors(nextSup);
+    setSupervisors(nextSup);
+  }, []);
+
+  const handleDeleteSupervisor = useCallback((name) => {
+    const nextSup = Object.fromEntries(
+      Object.entries(storage.loadSupervisors()).filter(([, n]) => n !== name)
+    );
+    storage.saveSupervisors(nextSup);
+    setSupervisors(nextSup);
+  }, []);
+
   const handleSaveAccount = useCallback((acct) => {
     if (!acct) return;
     setAccounts(prev => {
@@ -3099,12 +3178,14 @@ export default function App() {
       )}
       {screen === 'customers' && (
         <CustomersView history={history} verified={verified} onGoHome={() => setScreen('home')}
-          onOpenCustomer={phone => { setCustPhone(phone); setScreen('customerDetail'); }} />
+          onOpenCustomer={phone => { setCustPhone(phone); setScreen('customerDetail'); }}
+          onDeleteCustomer={handleDeleteCustomer} pin={pin} isEmployee={authRole === 'employee'} />
       )}
       {screen === 'supervisors' && (
         <SupervisorsView supervisors={supervisors} history={history}
           onGoHome={() => setScreen('home')}
-          onOpenSupervisor={name => { setActiveSupervisor(name); setScreen('supervisorDetail'); }} />
+          onOpenSupervisor={name => { setActiveSupervisor(name); setScreen('supervisorDetail'); }}
+          onDeleteSupervisor={handleDeleteSupervisor} pin={pin} isEmployee={authRole === 'employee'} />
       )}
       {screen === 'supervisorDetail' && activeSupervisor && (
         <SupervisorDetailView supervisorName={activeSupervisor} supervisors={supervisors} history={history} verified={verified}
