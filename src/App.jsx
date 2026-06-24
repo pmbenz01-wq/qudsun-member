@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { useNavigate, useLocation, useParams, Routes, Route, Navigate } from 'react-router-dom';
 import QRCode from 'qrcode';
 import { CATS, TIERS, REQUIRE_NAME } from './utils/constants.js';
 import {
@@ -2380,9 +2381,36 @@ function SheetModal({ onSyncNow, syncStatus, onCancel }) {
   );
 }
 
+// ─── Route wrapper: CustomerDetail ────────────────────────────────────────────
+function CustomerDetailRoute({ history, verified, supervisors, vehiclePlates, customerInfo, onGoBack, onOpenHistory, onSaveSupervisor, onSaveCustomerInfo, onOpenVerify }) {
+  const { phone } = useParams();
+  const decodedPhone = decodeURIComponent(phone || '');
+  if (!decodedPhone) return <Navigate to="/customers" replace />;
+  return (
+    <CustomerDetailView phone={decodedPhone} history={history} verified={verified} supervisors={supervisors}
+      vehiclePlates={vehiclePlates} customerInfo={customerInfo}
+      onGoBack={onGoBack} onOpenHistory={onOpenHistory}
+      onSaveSupervisor={onSaveSupervisor}
+      onSaveCustomerInfo={onSaveCustomerInfo}
+      onOpenVerify={onOpenVerify} />
+  );
+}
+
+// ─── Route wrapper: SupervisorDetail ──────────────────────────────────────────
+function SupervisorDetailRoute({ supervisors, history, verified, onGoBack, onOpenCustomer }) {
+  const { name } = useParams();
+  const decodedName = decodeURIComponent(name || '');
+  if (!decodedName) return <Navigate to="/supervisors" replace />;
+  return (
+    <SupervisorDetailView supervisorName={decodedName} supervisors={supervisors} history={history} verified={verified}
+      onGoBack={onGoBack} onOpenCustomer={onOpenCustomer} />
+  );
+}
+
 // ─── App (root) ───────────────────────────────────────────────────────────────
 export default function App() {
-  const [screen, setScreen] = useState('home');
+  const navigate = useNavigate();
+  const location = useLocation();
   const [session, setSession] = useState(null);
   const [history, setHistory] = useState([]);
   const [activeCat, setActiveCat] = useState('รวม');
@@ -2546,11 +2574,11 @@ export default function App() {
       merged.sort((a, b) => (b.date || 0) - (a.date || 0));
       storage.saveSales(merged); setSales(merged);
     }).catch(() => {});
-    const m = (location.hash || '').match(/bill=([^&]+)/);
+    const m = (window.location.hash || '').match(/bill=([^&]+)/);
     if (m) {
       try {
         const data = decodeBill(m[1]);
-        setIsHandoff(true); setSession(data); setScreen('print');
+        setIsHandoff(true); setSession(data); navigate('/print');
       } catch {}
     }
     setTimeout(() => syncNow(true), 1500);
@@ -2652,7 +2680,7 @@ export default function App() {
     const vehiclePlate = (sellerPhone && vp[sellerPhone]) ? vp[sellerPhone] : '';
     const sess = { id: t, billNo: newBillNo(), createdAt: t, date: t, seller, sellerPhone, supervisor, recorder, vehiclePlate, vehiclePhotoKey: null, prices: Object.fromEntries(CATS.map(c => [c.key, 0])), entries: [], log: [{ t, kind: 'open', text: 'เปิดใบรับซื้อใหม่' }], confirmed: false, confirmedAt: null, customLabel: '' };
     setVehiclePhotoUrl(null);
-    setSession(sess); persistSession(sess); setScreen('record'); setActiveCat('AB'); setInput('');
+    setSession(sess); persistSession(sess); navigate('/record'); setActiveCat('AB'); setInput('');
   }, [persistSession]);
 
   const startNew = useCallback(() => {
@@ -2970,8 +2998,8 @@ export default function App() {
       addLog(s, 'confirm', 'ลูกค้ายืนยันยอด ฿' + fmtBaht(grandBaht(s)));
       return s;
     });
-    setScreen('print');
-  }, [updateSession]);
+    navigate('/print');
+  }, [updateSession, navigate]);
 
   const commitFinish = useCallback((sessOverride) => {
     const s = sessOverride || session;
@@ -2979,10 +3007,10 @@ export default function App() {
     const card = { billNo: s.billNo, seller: s.seller || '-', phone: s.sellerPhone || '', date: s.date, dateText: dateStr(s.date), kg: fmtKg(grandKg(s)), baht: fmtBaht(grandBaht(s)), data: s };
     const hist = [card, ...history].slice(0, 60);
     storage.saveHistory(hist); storage.saveSession(null);
-    setHistory(hist); setSession(null); setScreen('home'); setVerifyPrompt(null);
+    setHistory(hist); setSession(null); navigate('/'); setVerifyPrompt(null);
     toast('บันทึกบิลเรียบร้อย');
     pushBill(card);
-  }, [session, history, toast, pushBill]);
+  }, [session, history, toast, pushBill, navigate]);
 
   const finishBill = useCallback(() => {
     const s = session; if (!s) return;
@@ -3012,19 +3040,19 @@ export default function App() {
 
   const openHistory = useCallback((card, fromCust = false) => {
     savedSession.current = session;
-    setIsHandoff(false); setSession(card.data); setScreen('print'); setReadonly(true);
+    setIsHandoff(false); setSession(card.data); navigate('/print'); setReadonly(true);
     if (!fromCust) setCustPhone(null);
     setVehiclePhotoUrl(null);
     if (card.data?.vehiclePhotoKey) {
       loadPhoto(card.data.vehiclePhotoKey).then(u => { if (u) setVehiclePhotoUrl(u); });
     }
-  }, [session]);
+  }, [session, navigate]);
 
   const goBackFromBill = useCallback(() => {
-    const back = custPhone ? 'customerDetail' : 'home';
+    const dest = custPhone ? '/customers/' + encodeURIComponent(custPhone) : '/';
     setSession(savedSession.current || null); savedSession.current = null;
-    setReadonly(false); setScreen(back);
-  }, [custPhone]);
+    setReadonly(false); navigate(dest);
+  }, [custPhone, navigate]);
 
   const handleExport = useCallback(() => {
     const data = { history: storage.loadHistory(), verified: storage.loadVerified(), supervisors: storage.loadSupervisors(), exportedAt: new Date().toISOString(), version: 1 };
@@ -3117,91 +3145,95 @@ export default function App() {
     <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: '#EFE6D4' }}>
       <Header />
 
-      {screen === 'home' && (
-        <HomeView session={session} history={history} payments={payments} verified={verified} supervisors={supervisors} syncStatus={syncStatus} syncing={syncing}
-          onNew={startNew} onResume={() => { setScreen('record'); if (session?.entries?.length > 0) { setActiveCat(session.entries[session.entries.length - 1].cat); } else { setActiveCat('AB'); } }} onGoCustomers={() => { setScreen('customers'); syncNow(true); }}
-          onGoDashboard={() => { setScreen('purchases'); syncNow(true); }}
-          onGoSales={() => { setScreen('sales'); syncNow(true); }}
-          onGoSupervisors={() => { setScreen('supervisors'); syncNow(true); }}
-          onOpenSheet={() => { setSheetModal(true); setSheetModalUrl(sheetUrl); }}
-          onSyncNow={() => syncNow(false)} onChangePin={changePin} onSetEmployeePin={setEmployeePinAction}
-          onOpenHistory={openHistory} onPayment={handlePayment} onDeleteBill={handleDeleteBill} pin={pin} isEmployee={authRole === 'employee'} onLogout={handleLogout}
-          onExport={handleExport} onImport={handleImport} />
-      )}
-      {screen === 'record' && session && (
-        <RecordView session={session} activeCat={activeCat} input={input} onInput={setInput} onCommit={commitEntry}
-          onPickCat={setActiveCat} onGoHome={() => { setScreen('home'); syncNow(true); }} onGoSummary={() => setScreen('summary')}
-          onEditSeller={() => {
-            const ph = session.sellerPhone || '';
-            const knownName = loadCustomers(history)[ph]?.name || verified[ph] || '';
-            const knownSup = supervisors[ph] || '';
-            setSellerDraft(session.seller || '');
-            setSellerPhoneDraft(ph);
-            setSupervisorDraft(session.supervisor || knownSup);
-            setSellerNameLocked(!!knownName);
-            setSellerSupervisorLocked(!!knownSup);
-            setSellerOpen(true);
-          }}
-          onEditEntry={openEditEntry} verified={verified} history={history}
-          customLabel={session.customLabel || ''}
-          onCustomLabelChange={label => updateSession(prev => ({ ...prev, customLabel: label }))}
-          pinnedCats={pinnedCats} onOpenPinEditor={() => setPinEditorOpen(true)}
-          vehiclePhotoUrl={vehiclePhotoUrl} onVehiclePlate={handleVehiclePlate} onVehiclePhoto={handleVehiclePhoto} />
-      )}
-      {screen === 'summary' && session && (
-        <SummaryView session={session} logOpen={logOpen}
-          onGoRecord={() => setScreen('record')} onGoConfirm={() => setScreen('confirm')}
-          onSetPrice={openSetPrice} onToggleLog={() => setLogOpen(v => !v)}
-          customLabel={session.customLabel || ''} />
-      )}
-      {screen === 'confirm' && session && (
-        <ConfirmView session={session} verified={verified} history={history}
-          onConfirm={doConfirm} onGoSummary={() => setScreen('summary')}
-          customLabel={session.customLabel || ''} />
-      )}
-      {screen === 'print' && session && (
-        <PrintView session={session} readonly={readonly} isHandoff={isHandoff} verified={verified} history={history} payments={payments}
-          onGoSummary={() => setScreen('summary')} onGoBack={goBackFromBill} onFinish={finishBill}
-          customLabel={session.customLabel || ''} vehiclePhotoUrl={session.vehicleDriveUrl || vehiclePhotoUrl}
-          onSaveSlip={handleSaveSlip} onUploadEvidence={readonly ? handleUploadEvidence : undefined}
-          onReusePhoto={readonly ? handleReusePhoto : undefined}
-          onBulkUpload={readonly ? handleBulkUpload : undefined}
-          onSaveCustomerInfo={readonly ? handleSaveCustomerInfo : undefined}
-          supervisors={supervisors} customerInfo={customerInfo} />
-      )}
-      {screen === 'purchases' && (
-        <DashboardView history={history} payments={payments} pin={pin} onPayment={handlePayment} onDeleteBill={handleDeleteBill} onGoHome={() => { setScreen('home'); syncNow(true); }} />
-      )}
-      {screen === 'sales' && (
-        <SalesView history={history} sales={sales} accounts={accounts} pin={pin} onGoHome={() => setScreen('home')} onAddSale={handleAddSale} onDeleteSale={handleDeleteSale} onUpdateSale={handleUpdateSale} onSaveAccount={handleSaveAccount} />
-      )}
-      {screen === 'customers' && (
-        <CustomersView history={history} verified={verified} onGoHome={() => setScreen('home')}
-          onOpenCustomer={phone => { setCustPhone(phone); setScreen('customerDetail'); }}
-          onDeleteCustomer={handleDeleteCustomer} pin={pin} isEmployee={authRole === 'employee'} />
-      )}
-      {screen === 'supervisors' && (
-        <SupervisorsView supervisors={supervisors} history={history}
-          onGoHome={() => setScreen('home')}
-          onOpenSupervisor={name => { setActiveSupervisor(name); setScreen('supervisorDetail'); }}
-          onDeleteSupervisor={handleDeleteSupervisor} pin={pin} isEmployee={authRole === 'employee'} />
-      )}
-      {screen === 'supervisorDetail' && activeSupervisor && (
-        <SupervisorDetailView supervisorName={activeSupervisor} supervisors={supervisors} history={history} verified={verified}
-          onGoBack={() => setScreen('supervisors')}
-          onOpenCustomer={phone => { setCustPhone(phone); setScreen('customerDetail'); }} />
-      )}
-      {screen === 'customerDetail' && custPhone && (
-        <CustomerDetailView phone={custPhone} history={history} verified={verified} supervisors={supervisors}
-          vehiclePlates={vehiclePlates} customerInfo={customerInfo}
-          onGoBack={() => setScreen('customers')} onOpenHistory={card => openHistory(card, true)}
-          onSaveSupervisor={(phone, name) => { const ns = { ...supervisors, [phone]: name }; storage.saveSupervisors(ns); setSupervisors(ns); }}
-          onSaveCustomerInfo={(phone, info) => { const next = { ...storage.loadCustomerInfo(), [phone]: info }; storage.saveCustomerInfo(next); setCustomerInfo(next); db.upsertCustomerInfo(phone, info).catch(() => {}); }}
-          onOpenVerify={phone => {
-            const stat = customerStat(phone, history, verified);
-            setVerifyPrompt({ phone, tier: tierOf(stat.total), draft: stat.name || '', newTotal: stat.total, mode: 'manage' });
-          }} />
-      )}
+      <Routes>
+        <Route path="/" element={
+          <HomeView session={session} history={history} payments={payments} verified={verified} supervisors={supervisors} syncStatus={syncStatus} syncing={syncing}
+            onNew={startNew} onResume={() => { navigate('/record'); if (session?.entries?.length > 0) { setActiveCat(session.entries[session.entries.length - 1].cat); } else { setActiveCat('AB'); } }}
+            onGoCustomers={() => { navigate('/customers'); syncNow(true); }}
+            onGoDashboard={() => { navigate('/purchases'); syncNow(true); }}
+            onGoSales={() => { navigate('/sales'); syncNow(true); }}
+            onGoSupervisors={() => { navigate('/supervisors'); syncNow(true); }}
+            onOpenSheet={() => { setSheetModal(true); setSheetModalUrl(sheetUrl); }}
+            onSyncNow={() => syncNow(false)} onChangePin={changePin} onSetEmployeePin={setEmployeePinAction}
+            onOpenHistory={openHistory} onPayment={handlePayment} onDeleteBill={handleDeleteBill} pin={pin} isEmployee={authRole === 'employee'} onLogout={handleLogout}
+            onExport={handleExport} onImport={handleImport} />
+        } />
+        <Route path="/record" element={session ? (
+          <RecordView session={session} activeCat={activeCat} input={input} onInput={setInput} onCommit={commitEntry}
+            onPickCat={setActiveCat} onGoHome={() => { navigate('/'); syncNow(true); }} onGoSummary={() => navigate('/summary')}
+            onEditSeller={() => {
+              const ph = session.sellerPhone || '';
+              const knownName = loadCustomers(history)[ph]?.name || verified[ph] || '';
+              const knownSup = supervisors[ph] || '';
+              setSellerDraft(session.seller || '');
+              setSellerPhoneDraft(ph);
+              setSupervisorDraft(session.supervisor || knownSup);
+              setSellerNameLocked(!!knownName);
+              setSellerSupervisorLocked(!!knownSup);
+              setSellerOpen(true);
+            }}
+            onEditEntry={openEditEntry} verified={verified} history={history}
+            customLabel={session.customLabel || ''}
+            onCustomLabelChange={label => updateSession(prev => ({ ...prev, customLabel: label }))}
+            pinnedCats={pinnedCats} onOpenPinEditor={() => setPinEditorOpen(true)}
+            vehiclePhotoUrl={vehiclePhotoUrl} onVehiclePlate={handleVehiclePlate} onVehiclePhoto={handleVehiclePhoto} />
+        ) : <Navigate to="/" replace />} />
+        <Route path="/summary" element={session ? (
+          <SummaryView session={session} logOpen={logOpen}
+            onGoRecord={() => navigate('/record')} onGoConfirm={() => navigate('/confirm')}
+            onSetPrice={openSetPrice} onToggleLog={() => setLogOpen(v => !v)}
+            customLabel={session.customLabel || ''} />
+        ) : <Navigate to="/" replace />} />
+        <Route path="/confirm" element={session ? (
+          <ConfirmView session={session} verified={verified} history={history}
+            onConfirm={doConfirm} onGoSummary={() => navigate('/summary')}
+            customLabel={session.customLabel || ''} />
+        ) : <Navigate to="/" replace />} />
+        <Route path="/print" element={session ? (
+          <PrintView session={session} readonly={readonly} isHandoff={isHandoff} verified={verified} history={history} payments={payments}
+            onGoSummary={() => navigate('/summary')} onGoBack={goBackFromBill} onFinish={finishBill}
+            customLabel={session.customLabel || ''} vehiclePhotoUrl={session.vehicleDriveUrl || vehiclePhotoUrl}
+            onSaveSlip={handleSaveSlip} onUploadEvidence={readonly ? handleUploadEvidence : undefined}
+            onReusePhoto={readonly ? handleReusePhoto : undefined}
+            onBulkUpload={readonly ? handleBulkUpload : undefined}
+            onSaveCustomerInfo={readonly ? handleSaveCustomerInfo : undefined}
+            supervisors={supervisors} customerInfo={customerInfo} />
+        ) : <Navigate to="/" replace />} />
+        <Route path="/purchases" element={
+          <DashboardView history={history} payments={payments} pin={pin} onPayment={handlePayment} onDeleteBill={handleDeleteBill} onGoHome={() => { navigate('/'); syncNow(true); }} />
+        } />
+        <Route path="/sales" element={
+          <SalesView history={history} sales={sales} accounts={accounts} pin={pin} onGoHome={() => navigate('/')} onAddSale={handleAddSale} onDeleteSale={handleDeleteSale} onUpdateSale={handleUpdateSale} onSaveAccount={handleSaveAccount} />
+        } />
+        <Route path="/customers" element={
+          <CustomersView history={history} verified={verified} onGoHome={() => navigate('/')}
+            onOpenCustomer={phone => { setCustPhone(phone); navigate('/customers/' + encodeURIComponent(phone)); }}
+            onDeleteCustomer={handleDeleteCustomer} pin={pin} isEmployee={authRole === 'employee'} />
+        } />
+        <Route path="/customers/:phone" element={
+          <CustomerDetailRoute history={history} verified={verified} supervisors={supervisors}
+            vehiclePlates={vehiclePlates} customerInfo={customerInfo}
+            onGoBack={() => navigate('/customers')} onOpenHistory={card => openHistory(card, true)}
+            onSaveSupervisor={(phone, name) => { const ns = { ...supervisors, [phone]: name }; storage.saveSupervisors(ns); setSupervisors(ns); }}
+            onSaveCustomerInfo={(phone, info) => { const next = { ...storage.loadCustomerInfo(), [phone]: info }; storage.saveCustomerInfo(next); setCustomerInfo(next); db.upsertCustomerInfo(phone, info).catch(() => {}); }}
+            onOpenVerify={phone => {
+              const stat = customerStat(phone, history, verified);
+              setVerifyPrompt({ phone, tier: tierOf(stat.total), draft: stat.name || '', newTotal: stat.total, mode: 'manage' });
+            }} />
+        } />
+        <Route path="/supervisors" element={
+          <SupervisorsView supervisors={supervisors} history={history}
+            onGoHome={() => navigate('/')}
+            onOpenSupervisor={name => { setActiveSupervisor(name); navigate('/supervisors/' + encodeURIComponent(name)); }}
+            onDeleteSupervisor={handleDeleteSupervisor} pin={pin} isEmployee={authRole === 'employee'} />
+        } />
+        <Route path="/supervisors/:name" element={
+          <SupervisorDetailRoute supervisors={supervisors} history={history} verified={verified}
+            onGoBack={() => navigate('/supervisors')}
+            onOpenCustomer={phone => { setCustPhone(phone); navigate('/customers/' + encodeURIComponent(phone)); }} />
+        } />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
 
       {pinPrompt && <PinModal title={pinPrompt.title} error={pinError} value={pinValue} onKey={handlePinKey} onCancel={() => { setPinPrompt(null); setPinValue(''); setPinError(''); }} />}
       {numpad && <NumModal title={numpad.title} unit={numpad.unit} value={numpad.value || ''} onChange={v => setNumpad(n => ({ ...n, value: v }))} onSave={numSave} onCancel={() => setNumpad(null)} onDelete={numDelete} saveLabel={numpad.saveLabel} canDelete={numpad.canDelete} />}
