@@ -3,5 +3,5 @@
   "outputDirectory": "dist",
   "framework": "vite",
   "rewrites": [{"source":"/((?!api/).*)", "destination": "/index.html"}],
-  "crons": [{"path": "/api/keepalive", "schedule": "*/5 * * * *"}]
+  "crons": [{"path": "/api/keepalive", "schedule": "0 6 * * *"}]
 }
