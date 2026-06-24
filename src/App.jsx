@@ -286,7 +286,7 @@ function EmployeeManager({ employees, onSave, onCancel }) {
 }
 
 // ─── HomeView ─────────────────────────────────────────────────────────────────
-function HomeView({ session, history, payments, syncing, onNew, onResume, onGoCustomers, onGoDashboard, onGoSupervisors, onGoSales, onChangePin, onSetEmployeePin, onOpenHistory, onPayment, onDeleteBill, pin, verified, supervisors, isEmployee, onLogout, onExport, onImport }) {
+function HomeView({ session, history, payments, syncing, syncStatus, onSyncNow, onNew, onResume, onGoCustomers, onGoDashboard, onGoSupervisors, onGoSales, onChangePin, onSetEmployeePin, onOpenHistory, onPayment, onDeleteBill, pin, verified, supervisors, isEmployee, onLogout, onExport, onImport }) {
   const customerCount = Object.keys(loadCustomers(history)).length;
   const supervisorCount = Object.values(supervisors || {}).filter(Boolean).reduce((set, n) => (set.add(n), set), new Set()).size;
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -318,6 +318,12 @@ function HomeView({ session, history, payments, syncing, onNew, onResume, onGoCu
 
   return (
     <div style={{ flex: 1, maxWidth: 720, width: '100%', margin: '0 auto', padding: '16px 14px 40px' }}>
+      {syncStatus && (
+        <div onClick={onSyncNow} style={{ marginBottom: 10, padding: '8px 14px', borderRadius: 10, background: syncStatus.startsWith('⚠') ? '#FFF0F0' : '#F0FFF4', border: `1px solid ${syncStatus.startsWith('⚠') ? '#FFBBBB' : '#B8E6C8'}`, fontSize: 12, color: syncStatus.startsWith('⚠') ? '#C0392B' : '#2E7D32', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>{syncStatus}</span>
+          <span style={{ fontSize: 11, opacity: 0.7 }}>{syncing ? '…' : 'กดซิงก์อีกครั้ง'}</span>
+        </div>
+      )}
       <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
         <button onClick={onNew} style={{ flex: 1, border: 'none', borderRadius: 16, padding: '20px 14px', background: 'linear-gradient(135deg,#5C4326,#3F2D1E)', color: '#F6EEDD', cursor: 'pointer', textAlign: 'left' }}>
           <div style={{ fontSize: 24, marginBottom: 6 }}>＋</div>
@@ -2547,7 +2553,7 @@ export default function App() {
         setIsHandoff(true); setSession(data); navigate('/print');
       } catch {}
     }
-    syncNow(true);
+    syncNow(false);
     const autoSync = setInterval(() => syncNow(true), 60000);
     const onVisible = () => { if (document.visibilityState === 'visible') syncNow(true); };
     document.addEventListener('visibilitychange', onVisible);
@@ -2588,8 +2594,9 @@ export default function App() {
       if (Object.keys(svMap).length) { const nSv = { ...storage.loadSupervisors(), ...svMap }; storage.saveSupervisors(nSv); setSupervisors(nSv); }
 
       setSyncStatus('✓ ซิงก์แล้ว ' + new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }));
-    } catch {
-      if (!silent) setSyncStatus('⚠ ซิงก์ไม่สำเร็จ');
+    } catch (err) {
+      console.error('[syncNow] failed:', err);
+      setSyncStatus('⚠ ซิงก์ไม่สำเร็จ: ' + (err?.message || String(err)));
     }
     setSyncing(false);
   }, []); // eslint-disable-line
@@ -3110,7 +3117,7 @@ export default function App() {
 
       <Routes>
         <Route path="/" element={
-          <HomeView session={session} history={history} payments={payments} verified={verified} supervisors={supervisors} syncing={syncing}
+          <HomeView session={session} history={history} payments={payments} verified={verified} supervisors={supervisors} syncing={syncing} syncStatus={syncStatus} onSyncNow={() => syncNow(false)}
             onNew={startNew} onResume={() => { navigate('/record'); if (session?.entries?.length > 0) { setActiveCat(session.entries[session.entries.length - 1].cat); } else { setActiveCat('AB'); } }}
             onGoCustomers={() => { navigate('/customers'); syncNow(true); }}
             onGoDashboard={() => { navigate('/purchases'); syncNow(true); }}
