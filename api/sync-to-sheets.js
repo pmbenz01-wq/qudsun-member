@@ -108,7 +108,20 @@ export default async function handler(req, res) {
 
     if (bills.status === 'fulfilled') {
       const rows = [['billNo', 'date', 'dateText', 'seller', 'phone', 'kg', 'baht', 'json'],
-        ...bills.value.map(b => [b.bill_no ?? '', b.date ?? '', b.date_text ?? '', b.seller ?? '', b.phone ?? '', b.kg ?? '', b.baht ?? '', b.json ?? ''])];
+        ...bills.value.map(b => {
+          // Strip base64 images from json to stay under Google Sheets 50k char cell limit
+          let safeJson = '';
+          try {
+            if (b.json) {
+              const parsed = JSON.parse(b.json);
+              if (parsed?.data) { delete parsed.data.receiptUrl; delete parsed.data.slipUrl; delete parsed.data.vehicleUrl; }
+              if (parsed?.receiptUrl) delete parsed.receiptUrl;
+              const s = JSON.stringify(parsed);
+              safeJson = s.length <= 49000 ? s : '';
+            }
+          } catch {}
+          return [b.bill_no ?? '', b.date ?? '', b.date_text ?? '', b.seller ?? '', b.phone ?? '', b.kg ?? '', b.baht ?? '', safeJson];
+        })];
       ranges.push({ range: `Bills!A1:H${rows.length}`, values: rows });
       log.push(`Bills: ${bills.value.length}`);
     } else { errors.push(`Bills: ${bills.reason?.message}`); }
