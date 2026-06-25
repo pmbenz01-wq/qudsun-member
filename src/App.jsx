@@ -5,7 +5,7 @@ import { CATS, TIERS, REQUIRE_NAME } from './utils/constants.js';
 import {
   fmtKg, fmtBaht, fmtPrice, timeStr, dateStr,
   catLabel, catAccent, tierOf, tierBadge,
-  agg, grandKg, grandBaht, billLink, billCode, newBillNo,
+  agg, grandKg, grandBaht, billLink, billCode, newBillNo, newSaleBillNo,
   loadCustomers, customerStat, decodeBill
 } from './utils/helpers.js';
 import { storage } from './utils/storage.js';
@@ -287,7 +287,7 @@ function EmployeeManager({ employees, onSave, onCancel }) {
 }
 
 // ─── HomeView ─────────────────────────────────────────────────────────────────
-function HomeView({ session, history, payments, syncing, syncStatus, onSyncNow, onOpenSheet, onNew, onResume, onGoCustomers, onGoDashboard, onGoSupervisors, onGoSales, onChangePin, onSetEmployeePin, onOpenHistory, onPayment, onDeleteBill, pin, verified, supervisors, isEmployee, onLogout, onExport, onImport }) {
+function HomeView({ session, history, payments, syncing, syncStatus, onSyncNow, onOpenSheet, onNew, onResume, onGoCustomers, onGoDashboard, onGoSupervisors, onGoSales, onNewSale, onChangePin, onSetEmployeePin, onOpenHistory, onPayment, onDeleteBill, pin, verified, supervisors, isEmployee, onLogout, onExport, onImport }) {
   const customerCount = Object.keys(loadCustomers(history)).length;
   const supervisorCount = Object.values(supervisors || {}).filter(Boolean).reduce((set, n) => (set.add(n), set), new Set()).size;
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -325,33 +325,41 @@ function HomeView({ session, history, payments, syncing, syncStatus, onSyncNow, 
           <span style={{ fontSize: 11, opacity: 0.7 }}>{syncing ? '…' : 'กดซิงก์อีกครั้ง'}</span>
         </div>
       )}
-      <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
-        <button onClick={onNew} style={{ flex: 1, border: 'none', borderRadius: 16, padding: '20px 14px', background: 'linear-gradient(135deg,#5C4326,#3F2D1E)', color: '#F6EEDD', cursor: 'pointer', textAlign: 'left' }}>
-          <div style={{ fontSize: 24, marginBottom: 6 }}>＋</div>
-          <div style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 18 }}>เปิดบิลใหม่</div>
-          <div style={{ fontSize: 12, opacity: .7, marginTop: 2 }}>บันทึกรับซื้อทุเรียน</div>
+      {/* Primary action: Buy or Sell */}
+      <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
+        <button onClick={onNew} style={{ flex: 1, border: 'none', borderRadius: 18, padding: '22px 14px', background: 'linear-gradient(135deg,#5C4326,#3F2D1E)', color: '#F6EEDD', cursor: 'pointer', textAlign: 'left' }}>
+          <div style={{ fontSize: 28, marginBottom: 6 }}>📥</div>
+          <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 19 }}>รับซื้อ</div>
+          <div style={{ fontSize: 12, opacity: .7, marginTop: 3 }}>บันทึกรับซื้อทุเรียน</div>
         </button>
-        {session && (() => {
-          const entries = session.entries || [];
-          const totalEntries = entries.length;
-          const totalKg = entries.reduce((s, e) => s + (parseFloat(e.kg) || 0), 0);
-          const cats = [...new Set(entries.map(e => e.cat))];
-          return (
-            <button onClick={onResume} style={{ flex: 1, border: '2px solid #C9A24B', borderRadius: 16, padding: '20px 14px', background: '#FFFDF8', color: '#4A3526', cursor: 'pointer', textAlign: 'left' }}>
-              <div style={{ fontSize: 24, marginBottom: 6 }}>↩</div>
-              <div style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 18 }}>ทำบิลต่อ</div>
-              <div style={{ fontSize: 12, color: '#A6925E', marginTop: 2 }}>{session.billNo}</div>
-              {totalEntries > 0 ? (
-                <div style={{ marginTop: 6, fontSize: 12, color: '#5C4326', background: '#FFF3D6', borderRadius: 8, padding: '4px 8px', display: 'inline-block' }}>
-                  {totalEntries} เข่ง · {totalKg % 1 === 0 ? totalKg : totalKg.toFixed(1)} กก.{cats.length > 0 ? ` · ${cats.join('/')}` : ''}
-                </div>
-              ) : (
-                <div style={{ marginTop: 6, fontSize: 11, color: '#B0956A' }}>ยังไม่มีเข่ง — กดเพื่อเริ่มบันทึก</div>
-              )}
-            </button>
-          );
-        })()}
+        <button onClick={onNewSale} style={{ flex: 1, border: 'none', borderRadius: 18, padding: '22px 14px', background: 'linear-gradient(135deg,#2E5C1A,#4A7A2E)', color: '#F0FAE8', cursor: 'pointer', textAlign: 'left' }}>
+          <div style={{ fontSize: 28, marginBottom: 6 }}>📤</div>
+          <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 19 }}>ขาย</div>
+          <div style={{ fontSize: 12, opacity: .75, marginTop: 3 }}>ออกใบเสร็จขายทุเรียน</div>
+        </button>
       </div>
+
+      {/* Resume in-progress buy bill */}
+      {session && (() => {
+        const entries = session.entries || [];
+        const totalEntries = entries.length;
+        const totalKg = entries.reduce((s, e) => s + (parseFloat(e.kg) || 0), 0);
+        const cats = [...new Set(entries.map(e => e.cat))];
+        return (
+          <button onClick={onResume} style={{ width: '100%', border: '2px solid #C9A24B', borderRadius: 14, padding: '14px 16px', background: '#FFFDF8', color: '#4A3526', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+            <span style={{ fontSize: 22 }}>↩</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 15 }}>ทำบิลรับซื้อต่อ</div>
+              <div style={{ fontSize: 12, color: '#A6925E', marginTop: 1 }}>
+                {session.billNo}
+                {totalEntries > 0 ? ` · ${totalEntries} เข่ง · ${totalKg % 1 === 0 ? totalKg : totalKg.toFixed(1)} กก.` : ' · ยังไม่มีเข่ง'}
+              </div>
+            </div>
+            <span style={{ color: '#C9A24B', fontSize: 18 }}>›</span>
+          </button>
+        );
+      })()}
+
 
       <button onClick={onGoDashboard} style={{ width: '100%', border: '1.5px solid #5A7FA8', background: 'linear-gradient(135deg,#EEF3FA,#DDE8F5)', borderRadius: 14, padding: '14px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
         <span style={{ fontSize: 22 }}>🧾</span>
@@ -1929,7 +1937,7 @@ function AddSaleModal({ date, accounts, onSave, onClose, onSaveAccount }) {
   );
 }
 
-function SalesView({ history, sales, accounts, pin, onGoHome, onAddSale, onDeleteSale, onUpdateSale, onSaveAccount, onOpenHistory }) {
+function SalesView({ history, sales, accounts, pin, onGoHome, onAddSale, onDeleteSale, onUpdateSale, onSaveAccount, onOpenHistory, onNewSaleSession }) {
   const todayStr = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
   const [startDate, setStartDate] = useState(todayStr);
   const [endDate, setEndDate] = useState(todayStr);
@@ -2022,7 +2030,8 @@ function SalesView({ history, sales, accounts, pin, onGoHome, onAddSale, onDelet
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
         <span style={{ fontSize: 13, fontWeight: 600, color: '#4A3526' }}>รายการขาย</span>
         <div style={{ flex: 1, height: 1, background: '#E4D7BC' }} />
-        <button onClick={() => setAddOpen(true)} style={{ border: 'none', background: '#6B8E4E', color: '#fff', borderRadius: 10, padding: '7px 14px', fontSize: 13, cursor: 'pointer', fontFamily: 'Prompt' }}>+ เพิ่ม</button>
+        {onNewSaleSession && <button onClick={onNewSaleSession} style={{ border: 'none', background: 'linear-gradient(135deg,#4A7A2E,#2E5C1A)', color: '#fff', borderRadius: 10, padding: '7px 14px', fontSize: 13, cursor: 'pointer', fontFamily: 'Prompt', fontWeight: 600 }}>🧾 ใบขายใหม่</button>}
+        <button onClick={() => setAddOpen(true)} style={{ border: '1px solid #6B8E4E', background: '#fff', color: '#4A6E30', borderRadius: 10, padding: '7px 14px', fontSize: 13, cursor: 'pointer', fontFamily: 'Prompt' }}>+ เพิ่ม</button>
       </div>
 
       {outSales.length === 0 && (
@@ -2140,6 +2149,281 @@ function SalesView({ history, sales, accounts, pin, onGoHome, onAddSale, onDelet
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// ─── Sale New View ────────────────────────────────────────────────────────────
+function SaleNewView({ onStart, onGoBack }) {
+  const [customerName, setCustomerName] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
+  const [prices, setPrices] = useState(Object.fromEntries(CATS.map(c => [c.key, ''])));
+  const [showPrices, setShowPrices] = useState(false);
+  const inp = { width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 10, padding: '12px 14px', fontSize: 15, fontFamily: 'Prompt', background: '#fff', boxSizing: 'border-box' };
+  return (
+    <div style={{ flex: 1, padding: '16px 16px 32px', maxWidth: 520, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
+      <button onClick={onGoBack} style={{ border: 'none', background: 'none', fontSize: 15, color: '#8A7A66', cursor: 'pointer', padding: '4px 0 14px', display: 'flex', alignItems: 'center', gap: 6 }}>‹ กลับ</button>
+      <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 20, color: '#3F2D1E', marginBottom: 4 }}>ใบเสร็จขายใหม่</div>
+      <div style={{ fontSize: 13, color: '#9A8662', marginBottom: 20 }}>กรอกข้อมูลลูกค้าแล้วเริ่มบันทึกเข่ง</div>
+
+      <div style={{ background: '#FFFDF8', border: '1px solid #E4D7BC', borderRadius: 14, padding: '16px 16px 20px', marginBottom: 14 }}>
+        <div style={{ fontWeight: 600, fontSize: 14, color: '#5A4A38', marginBottom: 12 }}>ข้อมูลลูกค้า</div>
+        <div style={{ marginBottom: 10 }}>
+          <div style={{ fontSize: 12, color: '#9A8662', marginBottom: 4 }}>ชื่อลูกค้า</div>
+          <input value={customerName} onChange={e => setCustomerName(e.target.value)} placeholder="ชื่อ (ไม่บังคับ)" style={inp} />
+        </div>
+        <div>
+          <div style={{ fontSize: 12, color: '#9A8662', marginBottom: 4 }}>เบอร์โทร</div>
+          <input value={customerPhone} onChange={e => setCustomerPhone(e.target.value)} placeholder="0812345678 (ไม่บังคับ)" type="tel" style={inp} />
+        </div>
+      </div>
+
+      <button onClick={() => setShowPrices(v => !v)} style={{ width: '100%', border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 12, padding: '12px 16px', fontSize: 14, color: '#7A5A22', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: showPrices ? 0 : 14 }}>
+        <span>⚙ ตั้งราคา/กก. (ไม่บังคับ)</span>
+        <span>{showPrices ? '▲' : '▼'}</span>
+      </button>
+      {showPrices && (
+        <div style={{ background: '#FFFDF8', border: '1px solid #E4D7BC', borderRadius: '0 0 14px 14px', borderTop: 'none', padding: '12px 16px 16px', marginBottom: 14 }}>
+          {CATS.map(c => (
+            <div key={c.key} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+              <span style={{ flex: 1, fontSize: 14, color: '#4A3526' }}>{c.label}</span>
+              <input value={prices[c.key]} onChange={e => setPrices(p => ({ ...p, [c.key]: e.target.value }))}
+                type="number" placeholder="0" inputMode="numeric"
+                style={{ width: 80, border: '1.5px solid #E4D7BC', borderRadius: 8, padding: '8px 10px', fontSize: 14, textAlign: 'right', fontFamily: 'Prompt' }} />
+              <span style={{ fontSize: 12, color: '#9A8662', width: 24 }}>฿</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <button onClick={() => onStart({ customerName: customerName.trim(), customerPhone: customerPhone.trim(), prices: Object.fromEntries(CATS.map(c => [c.key, Number(prices[c.key]) || 0])) })}
+        style={{ width: '100%', border: 'none', borderRadius: 14, padding: 18, background: 'linear-gradient(135deg,#4A7A2E,#2E5C1A)', color: '#fff', fontWeight: 700, fontSize: 17, cursor: 'pointer', fontFamily: 'Prompt' }}>
+        เริ่มบันทึกเข่ง →
+      </button>
+    </div>
+  );
+}
+
+// ─── Sale Record View ─────────────────────────────────────────────────────────
+function SaleRecordView({ saleSession, activeCat, input, onInput, onCommit, onPickCat, onGoBack, onGoSummary, onEditEntry }) {
+  const catTotals = {};
+  (saleSession?.entries || []).forEach(e => { catTotals[e.cat] = (catTotals[e.cat] || 0) + e.kg; });
+  const totalKg = (saleSession?.entries || []).reduce((s, e) => s + e.kg, 0);
+
+  return (
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', maxWidth: 520, margin: '0 auto', width: '100%' }}>
+      <div style={{ padding: '10px 16px 0' }}>
+        <button onClick={onGoBack} style={{ border: 'none', background: 'none', fontSize: 14, color: '#8A7A66', cursor: 'pointer', padding: '4px 0 8px' }}>‹ กลับ</button>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
+          <div>
+            <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 17, color: '#3F2D1E' }}>บันทึกใบขาย</div>
+            <div style={{ fontSize: 12, color: '#9A8662' }}>{saleSession?.customerName || 'ไม่ระบุชื่อ'} {saleSession?.customerPhone ? `· ${saleSession.customerPhone}` : ''}</div>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: 12, color: '#9A8662' }}>รวม</div>
+            <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 18, color: '#3F2D1E' }}>{fmtKg(totalKg)} <span style={{ fontSize: 12, fontWeight: 400 }}>กก.</span></div>
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
+          {CATS.map(c => (
+            <button key={c.key} onClick={() => onPickCat(c.key)}
+              style={{ border: `2px solid ${activeCat === c.key ? '#4A7A2E' : '#E4D7BC'}`, background: activeCat === c.key ? '#E8F5E0' : '#fff', borderRadius: 10, padding: '7px 12px', fontSize: 13, fontFamily: 'Prompt', color: activeCat === c.key ? '#2E5C1A' : '#7A6450', cursor: 'pointer', fontWeight: activeCat === c.key ? 700 : 400 }}>
+              {c.label}{catTotals[c.key] ? ` · ${fmtKg(catTotals[c.key])}` : ''}
+            </button>
+          ))}
+        </div>
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 8, background: '#F5FAF0', borderRadius: 14, padding: 14, marginBottom: 12, border: '1.5px solid #C8DFB0' }}>
+          <span style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 40, color: '#2E5C1A' }}>{input || '0'}</span>
+          <span style={{ fontSize: 15, color: '#6A9A4E' }}>กก.</span>
+        </div>
+        <Keypad value={input} onChange={onInput} />
+        <button onClick={onCommit} style={{ width: '100%', marginTop: 10, border: 'none', borderRadius: 12, padding: 16, background: '#4A7A2E', color: '#fff', fontWeight: 700, fontSize: 16, cursor: 'pointer', fontFamily: 'Prompt' }}>
+          ✓ บันทึกเข่ง
+        </button>
+      </div>
+      <div style={{ flex: 1, padding: '10px 16px 0', overflowY: 'auto' }}>
+        {(saleSession?.entries || []).length === 0 ? (
+          <div style={{ textAlign: 'center', color: '#B7A684', fontSize: 13, padding: '24px 0' }}>ยังไม่มีรายการ — กดบันทึกเข่งด้านบน</div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {[...(saleSession?.entries || [])].reverse().map((e, i, arr) => {
+              const catObj = CATS.find(c => c.key === e.cat);
+              return (
+                <div key={e.id} onClick={() => onEditEntry(e)} style={{ display: 'flex', alignItems: 'center', background: '#FFFDF8', border: '1px solid #E4D7BC', borderRadius: 10, padding: '10px 14px', cursor: 'pointer' }}>
+                  <div style={{ flex: 1 }}>
+                    <span style={{ fontSize: 12, color: '#9A8662' }}>#{arr.length - i} · </span>
+                    <span style={{ fontWeight: 600, color: '#4A3526' }}>{catObj?.label || e.cat}</span>
+                  </div>
+                  <span style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 16, color: '#2E5C1A' }}>{fmtKg(e.kg)} กก.</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+      {(saleSession?.entries || []).length > 0 && (
+        <div style={{ padding: '12px 16px 24px' }}>
+          <button onClick={onGoSummary} style={{ width: '100%', border: 'none', borderRadius: 14, padding: 16, background: 'linear-gradient(135deg,#5C4326,#3F2D1E)', color: '#F6EEDD', fontWeight: 700, fontSize: 17, cursor: 'pointer', fontFamily: 'Prompt' }}>
+            สรุปและปริ้น →
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Sale Print View ──────────────────────────────────────────────────────────
+const QUDSUN_BANK = { bank: 'ธ.ไทยพาณิชย์ (SCB)', account: '408-426694-9', name: 'ภัทรกฤช จันพิทักษ์' };
+
+function SalePrintView({ saleSession, onGoBack, onFinish, onEditPrice }) {
+  const entries = saleSession?.entries || [];
+  const prices = saleSession?.prices || {};
+  const rows = CATS.filter(c => entries.some(e => e.cat === c.key));
+  const aggData = {};
+  CATS.forEach(c => { aggData[c.key] = { kg: 0, count: 0 }; });
+  entries.forEach(e => { if (aggData[e.cat]) { aggData[e.cat].kg += e.kg; aggData[e.cat].count++; } });
+  const totalKg = entries.reduce((s, e) => s + e.kg, 0);
+  const totalBaht = entries.reduce((s, e) => s + e.kg * (prices[e.cat] || 0), 0);
+  const customLabel = saleSession?.customLabel || '';
+  const grouped = {};
+  entries.forEach(e => { if (!grouped[e.cat]) grouped[e.cat] = []; grouped[e.cat].push(e); });
+
+  return (
+    <div style={{ flex: 1, padding: '16px 12px 32px', maxWidth: 520, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
+      <div className="no-print" style={{ marginBottom: 14 }}>
+        <button onClick={onGoBack} style={{ border: 'none', background: 'none', fontSize: 14, color: '#8A7A66', cursor: 'pointer', padding: '4px 0 10px' }}>‹ กลับแก้ไข</button>
+        <button onClick={() => window.print()} style={{ width: '100%', border: 'none', borderRadius: 15, padding: 18, background: 'linear-gradient(135deg,#4A7A2E,#2E5C1A)', color: '#fff', fontWeight: 700, fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+          🖨 ปริ้นใบเสร็จ
+        </button>
+        <p style={{ textAlign: 'center', fontSize: 12, color: '#9A8662', margin: '8px 0 12px' }}>ขนาดกระดาษ A5 (ครึ่ง A4)</p>
+        <button onClick={onFinish} style={{ width: '100%', border: '1px solid #4A7A2E', background: '#F0FAE8', borderRadius: 12, padding: 14, fontSize: 15, fontFamily: 'Prompt', fontWeight: 600, color: '#2E5C1A', cursor: 'pointer' }}>
+          ✓ บันทึกบิลขาย
+        </button>
+      </div>
+
+      <div className="bill-doc-wrapper" style={{ maxWidth: 420, margin: '0 auto' }}>
+      <div className="bill-doc" style={{ background: '#fff', border: '1px solid #E4D7BC', borderRadius: 6, boxShadow: '0 10px 30px rgba(95,70,40,.14)', padding: '22px 22px 18px', color: '#2A2118', fontSize: 13 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, borderBottom: '2px solid #2A2118', paddingBottom: 12 }}>
+          <img src="/logo.jpg" style={{ width: 72, height: 72, borderRadius: 8, objectFit: 'cover' }} alt="Qudsun" />
+          <div style={{ flex: 1 }}>
+            <div style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 19, letterSpacing: '.04em' }}>ทุเรียนคัดสรร <span style={{ color: '#8A6A2E' }}>QUDSUN</span></div>
+            <div style={{ fontSize: 12.5, color: '#5A4A38', marginTop: 2 }}>Premium Durian Selection</div>
+          </div>
+          <div style={{ textAlign: 'right', minWidth: 130 }}>
+            <div style={{ fontWeight: 700, fontSize: 15, color: '#4A7A2E' }}>ใบเสร็จรับเงิน</div>
+            <div style={{ fontSize: 12, color: '#5A4A38', marginBottom: 6 }}>เลขที่ {saleSession?.billNo}</div>
+            <div style={{ fontSize: 12, color: '#3A2A18', lineHeight: 1.8 }}>
+              <div>{saleSession ? dateStr(saleSession.date) : ''}</div>
+              {(saleSession?.customerName || saleSession?.customerPhone) && (
+                <div style={{ fontSize: 11.5, color: '#5A4A38', marginTop: 2 }}>
+                  <b>{saleSession.customerName || '—'}</b>{saleSession.customerPhone ? ` · ${saleSession.customerPhone}` : ''}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {entries.length > 0 && (() => {
+          return (
+            <>
+              <style>{`
+                @media print {
+                  .sale-entries-root { margin-top: 6px !important; margin-bottom: 6px !important; }
+                  .sale-entries-group { margin-bottom: 4px !important; }
+                  .sale-entry-label { font-size: 7px !important; margin-bottom: 2px !important; }
+                  .sale-entry-grid { gap: 1px !important; }
+                  .sale-entry-chip { padding: 3px 6px !important; border-radius: 2px !important; line-height: 1 !important; }
+                  .sale-entry-kg { font-size: 11px !important; }
+                }
+              `}</style>
+              <div className="sale-entries-root" style={{ marginTop: 10, marginBottom: 10, display: 'flex', flexWrap: 'wrap', gap: '6px 14px', alignItems: 'flex-start' }}>
+                {Object.entries(grouped).map(([catKey, ents]) => {
+                  const catObj = CATS.find(c => c.key === catKey);
+                  const label = catKey === 'custom' ? (customLabel || 'หมวดพิเศษ') : (catObj?.label || catKey);
+                  return (
+                    <div key={catKey} className="sale-entries-group" style={{ marginBottom: 0 }}>
+                      <div className="sale-entry-label" style={{ fontSize: 15, color: '#5A7A38', fontWeight: 600, marginBottom: 5 }}>{label} — {ents.length} เข่ง</div>
+                      <div className="sale-entry-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, max-content)', gap: 5 }}>
+                        {ents.map((e, i) => (
+                          <div key={e.id || i} className="sale-entry-chip" style={{ border: '1px solid #C8DFB0', borderRadius: 6, padding: '7px 12px', background: '#F5FAF0', textAlign: 'center', lineHeight: 1.15 }}>
+                            <span className="sale-entry-kg" style={{ fontWeight: 700, fontSize: 20, color: '#2E5C1A' }}>{fmtKg(e.kg)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          );
+        })()}
+
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+          <thead>
+            <tr style={{ background: '#EAF4E0' }}>
+              <th style={{ textAlign: 'left', padding: '7px 8px', border: '1px solid #C8DFB0' }}>หมวด</th>
+              <th style={{ textAlign: 'right', padding: '7px 8px', border: '1px solid #C8DFB0' }}>น้ำหนัก</th>
+              <th style={{ textAlign: 'right', padding: '7px 8px', border: '1px solid #C8DFB0' }}>ราคา/กก.</th>
+              <th style={{ textAlign: 'right', padding: '7px 8px', border: '1px solid #C8DFB0' }}>รวม (฿)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map(c => {
+              const d = aggData[c.key];
+              const price = prices[c.key] || 0;
+              return (
+                <tr key={c.key}>
+                  <td style={{ padding: '6px 8px', border: '1px solid #C8DFB0' }}>
+                    <div>{c.key === 'custom' ? (customLabel || 'หมวดพิเศษ') : c.label}</div>
+                    {d.count > 0 && <div style={{ fontSize: 11, color: '#6A9A4E', marginTop: 1 }}>{d.count} เข่ง</div>}
+                  </td>
+                  <td style={{ padding: '6px 8px', border: '1px solid #C8DFB0', textAlign: 'right' }}>{fmtKg(d.kg)}</td>
+                  <td style={{ padding: '6px 8px', border: '1px solid #C8DFB0', textAlign: 'right' }}>{price ? fmtPrice(price) : '—'}</td>
+                  <td style={{ padding: '6px 8px', border: '1px solid #C8DFB0', textAlign: 'right' }}>{price ? fmtBaht(d.kg * price) : '—'}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+          <tfoot>
+            <tr style={{ background: '#2A2118', color: '#fff' }}>
+              <td style={{ padding: 8, fontWeight: 700 }}>
+                <div>รวม</div>
+                <div style={{ fontSize: 11, opacity: .75, fontWeight: 400, marginTop: 1 }}>{entries.length} เข่ง</div>
+              </td>
+              <td style={{ padding: 8, textAlign: 'right', fontWeight: 700 }}>{fmtKg(totalKg)}</td>
+              <td style={{ padding: 8 }} />
+              <td style={{ padding: 8, textAlign: 'right', fontWeight: 700 }}>{totalBaht > 0 ? fmtBaht(totalBaht) : '—'}</td>
+            </tr>
+          </tfoot>
+        </table>
+
+        <div style={{ marginTop: 12, background: '#F5FAF0', border: '1px solid #C8DFB0', borderRadius: 8, padding: '10px 12px', display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 11, color: '#6A9A4E', fontWeight: 600, marginBottom: 2 }}>โอนเงินมาที่</div>
+            <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 14, color: '#2A2118', letterSpacing: '.04em' }}>{QUDSUN_BANK.account}</div>
+            <div style={{ fontSize: 12, color: '#5A4A38' }}>{QUDSUN_BANK.bank} · {QUDSUN_BANK.name}</div>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 36, gap: 20 }}>
+          <div style={{ flex: 1, textAlign: 'center' }}>
+            <div style={{ height: 48 }} />
+            <div style={{ borderTop: '1px dotted #2A2118', paddingTop: 8, fontSize: 12 }}>ลายเซ็นผู้ขาย</div>
+          </div>
+          <div style={{ flex: 1, textAlign: 'center' }}>
+            <div style={{ height: 48 }} />
+            <div style={{ borderTop: '1px dotted #2A2118', paddingTop: 8, fontSize: 12 }}>ลายเซ็นผู้ซื้อ</div>
+          </div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 14 }}>
+          <div>
+            <div style={{ fontSize: 11.5, color: '#8A7A66' }}>ขอบคุณที่ไว้วางใจ · ทุเรียนคัดสรร Qudsun</div>
+            <div style={{ fontSize: 11.5, color: '#8A7A66', marginTop: 2 }}>โทร. 094-149-1914 (วิน) · 082-691-4414 (เบนซ์)</div>
+          </div>
+          <img src="/qr-bill.png" alt="QR" style={{ width: 88, height: 88, objectFit: 'contain' }} onError={e => { e.target.style.display = 'none'; }} />
+        </div>
+      </div>
+      </div>
     </div>
   );
 }
@@ -2626,6 +2910,10 @@ export default function App() {
   const [vehiclePhotoUrl, setVehiclePhotoUrl] = useState(null);
   const [sales, setSales] = useState([]);
   const [accounts, setAccounts] = useState(() => storage.loadAccounts());
+  const [saleSession, setSaleSession] = useState(() => storage.loadSaleSession());
+  const [saleActiveCat, setSaleActiveCat] = useState('AB');
+  const [saleInput, setSaleInput] = useState('');
+  const [saleNumpad, setSaleNumpad] = useState(null);
   const savedSession = useRef(null);
   const pendingPhotoDataUrl = useRef(null);
 
@@ -3199,6 +3487,57 @@ export default function App() {
     db.upsertCustomerInfo(phone, ciNext[phone]).catch(() => {});
   }, []);
 
+  // ── Sale session handlers ────────────────────────────────────────────────────
+  const persistSaleSession = useCallback((s) => { storage.saveSaleSession(s); }, []);
+
+  const createSaleSession = useCallback(({ customerName, customerPhone, prices }) => {
+    const t = Date.now();
+    const ss = { id: t, billNo: newSaleBillNo(), createdAt: t, date: t, customerName, customerPhone, prices, entries: [], customLabel: '' };
+    setSaleSession(ss); persistSaleSession(ss); setSaleActiveCat('AB'); setSaleInput(''); navigate('/sale/record');
+  }, [persistSaleSession, navigate]);
+
+  const commitSaleEntry = useCallback(() => {
+    const kg = parseFloat(saleInput);
+    if (!kg || kg <= 0) { toast('ใส่น้ำหนักก่อนนะ'); return; }
+    setSaleSession(prev => {
+      const s = { ...prev, entries: [...(prev.entries || []), { id: Date.now() + '-' + Math.random().toString(36).slice(2, 6), cat: saleActiveCat, kg, t: Date.now() }] };
+      return s;
+    });
+    setSaleInput(''); toast('บันทึก ' + fmtKg(kg) + ' กก. แล้ว');
+  }, [saleInput, saleActiveCat, toast]);
+
+  useEffect(() => { if (saleSession) persistSaleSession(saleSession); }, [saleSession, persistSaleSession]);
+
+  const finishSaleSession = useCallback(async () => {
+    if (!saleSession) return;
+    let dbOk = false;
+    try { await db.upsertSaleSession(saleSession); dbOk = true; } catch (err) {
+      toast('บันทึกไม่สำเร็จ — กรุณาลองอีกครั้ง'); return;
+    }
+    if (dbOk) {
+      storage.saveSaleSession(null); setSaleSession(null);
+      toast('บันทึกบิลขายเรียบร้อย'); navigate('/sales');
+    }
+  }, [saleSession, toast, navigate]);
+
+  const editSaleEntry = useCallback((entry) => {
+    setSaleNumpad({ entryId: entry.id, catKey: entry.cat, title: 'แก้ไขเข่ง — ' + (CATS.find(c => c.key === entry.cat)?.label || entry.cat), value: String(entry.kg), canDelete: true });
+  }, []);
+
+  const saleNumSave = useCallback(() => {
+    if (!saleNumpad) return;
+    const kg = parseFloat(saleNumpad.value);
+    if (!kg || kg <= 0) return;
+    setSaleSession(prev => ({ ...prev, entries: (prev.entries || []).map(e => e.id === saleNumpad.entryId ? { ...e, kg } : e) }));
+    setSaleNumpad(null);
+  }, [saleNumpad]);
+
+  const saleNumDelete = useCallback(() => {
+    if (!saleNumpad) return;
+    setSaleSession(prev => ({ ...prev, entries: (prev.entries || []).filter(e => e.id !== saleNumpad.entryId) }));
+    setSaleNumpad(null);
+  }, [saleNumpad]);
+
   const doConfirm = useCallback(() => {
     updateSession(prev => {
       const s = { ...prev, confirmed: true, confirmedAt: Date.now() };
@@ -3382,6 +3721,7 @@ export default function App() {
             onGoCustomers={() => { navigate('/customers'); syncNow(true); }}
             onGoDashboard={() => { navigate('/purchases'); syncNow(true); }}
             onGoSales={() => { navigate('/sales'); syncNow(true); }}
+            onNewSale={() => navigate('/sale/new')}
             onGoSupervisors={() => { navigate('/supervisors'); syncNow(true); }}
             onChangePin={changePin} onSetEmployeePin={setEmployeePinAction}
             onOpenHistory={openHistory} onPayment={handlePayment} onDeleteBill={handleDeleteBill} pin={pin} isEmployee={authRole === 'employee'} onLogout={handleLogout}
@@ -3432,8 +3772,19 @@ export default function App() {
           <DashboardView history={history} payments={payments} pin={pin} onPayment={handlePayment} onDeleteBill={handleDeleteBill} onGoHome={() => { navigate('/'); syncNow(true); }} onOpenHistory={openHistory} />
         } />
         <Route path="/sales" element={
-          <SalesView history={history} sales={sales} accounts={accounts} pin={pin} onGoHome={() => navigate('/')} onAddSale={handleAddSale} onDeleteSale={handleDeleteSale} onUpdateSale={handleUpdateSale} onSaveAccount={handleSaveAccount} onOpenHistory={openHistory} />
+          <SalesView history={history} sales={sales} accounts={accounts} pin={pin} onGoHome={() => navigate('/')} onAddSale={handleAddSale} onDeleteSale={handleDeleteSale} onUpdateSale={handleUpdateSale} onSaveAccount={handleSaveAccount} onOpenHistory={openHistory}
+            onNewSaleSession={() => navigate('/sale/new')} />
         } />
+        <Route path="/sale/new" element={
+          <SaleNewView onStart={createSaleSession} onGoBack={() => navigate('/sales')} />
+        } />
+        <Route path="/sale/record" element={saleSession ? (
+          <SaleRecordView saleSession={saleSession} activeCat={saleActiveCat} input={saleInput} onInput={setSaleInput} onCommit={commitSaleEntry}
+            onPickCat={setSaleActiveCat} onGoBack={() => navigate('/sale/new')} onGoSummary={() => navigate('/sale/print')} onEditEntry={editSaleEntry} />
+        ) : <Navigate to="/sale/new" replace />} />
+        <Route path="/sale/print" element={saleSession ? (
+          <SalePrintView saleSession={saleSession} onGoBack={() => navigate('/sale/record')} onFinish={finishSaleSession} />
+        ) : <Navigate to="/sale/new" replace />} />
         <Route path="/customers" element={
           <CustomersView history={history} verified={verified} onGoHome={() => navigate('/')}
             onOpenCustomer={phone => { setCustPhone(phone); navigate('/customers/' + encodeURIComponent(phone)); }}
@@ -3466,6 +3817,7 @@ export default function App() {
 
       {pinPrompt && <PinModal title={pinPrompt.title} error={pinError} value={pinValue} onKey={handlePinKey} onCancel={() => { setPinPrompt(null); setPinValue(''); setPinError(''); }} />}
       {numpad && <NumModal title={numpad.title} unit={numpad.unit} value={numpad.value || ''} onChange={v => setNumpad(n => ({ ...n, value: v }))} onSave={numSave} onCancel={() => setNumpad(null)} onDelete={numDelete} saveLabel={numpad.saveLabel} canDelete={numpad.canDelete} />}
+      {saleNumpad && <NumModal title={saleNumpad.title} unit="กก." value={saleNumpad.value || ''} onChange={v => setSaleNumpad(n => ({ ...n, value: v }))} onSave={saleNumSave} onCancel={() => setSaleNumpad(null)} onDelete={saleNumDelete} saveLabel="บันทึก" canDelete={saleNumpad.canDelete} />}
       {sellerOpen && <SellerModal
         name={sellerDraft} phone={sellerPhoneDraft} supervisor={supervisorDraft}
         nameLocked={sellerNameLocked} supervisorLocked={sellerSupervisorLocked}

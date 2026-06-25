@@ -196,6 +196,39 @@ export const db = {
     if (error) throw error;
   },
 
+  // ─── Sale Sessions ────────────────────────────────────────────────────────
+  async getSaleSessions() {
+    const { data, error } = await supabase
+      .from('qm_sale_sessions')
+      .select('json')
+      .eq('deleted', false)
+      .order('date', { ascending: false })
+      .limit(150);
+    if (error) throw error;
+    return data.map(row => { try { return JSON.parse(row.json); } catch { return null; } }).filter(Boolean);
+  },
+
+  async upsertSaleSession(s) {
+    const totalKg = (s.entries || []).reduce((sum, e) => sum + (e.kg || 0), 0);
+    const totalBaht = (s.entries || []).reduce((sum, e) => sum + (e.kg || 0) * ((s.prices || {})[e.cat] || 0), 0);
+    const { error } = await supabase.from('qm_sale_sessions').upsert({
+      bill_no: s.billNo,
+      date: new Date(s.date).toISOString(),
+      customer: s.customerName || '',
+      phone: s.customerPhone || '',
+      kg: totalKg,
+      baht: totalBaht,
+      json: JSON.stringify(s),
+      deleted: false,
+    }, { onConflict: 'bill_no' });
+    if (error) throw error;
+  },
+
+  async deleteSaleSession(billNo) {
+    const { error } = await supabase.from('qm_sale_sessions').update({ deleted: true }).eq('bill_no', billNo);
+    if (error) throw error;
+  },
+
   // ─── Realtime ─────────────────────────────────────────────────────────────
   subscribeChanges(onSync) {
     const channel = supabase

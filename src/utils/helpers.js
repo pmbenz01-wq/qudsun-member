@@ -89,6 +89,11 @@ export function newBillNo() {
   return 'QD' + new Date(t).toISOString().slice(2, 10).replace(/-/g, '') + '-' + String(Math.floor(Math.random() * 900) + 100);
 }
 
+export function newSaleBillNo() {
+  const t = Date.now();
+  return 'QS' + new Date(t).toISOString().slice(2, 10).replace(/-/g, '') + '-' + String(Math.floor(Math.random() * 900) + 100);
+}
+
 export function loadCustomers(history) {
   const map = {};
   (history || []).forEach(h => {

@@ -14,6 +14,7 @@ const KEYS = {
   customerInfo:  'qudsun_customer_info',
   sales:         'qudsun_sales',
   saleAccounts:  'qudsun_sale_accounts',
+  saleSession:   'qudsun_sale_session',
 };
 
 const DEFAULT_PINS = ['AB', 'etc', 'taksai', 'hongyen', 'sutthai'];
@@ -59,4 +60,6 @@ export const storage = {
   saveSales: arr => { try { localStorage.setItem(KEYS.sales, JSON.stringify(arr)); } catch {} },
   loadAccounts: () => { try { const v = JSON.parse(localStorage.getItem(KEYS.saleAccounts) || '[]'); return Array.isArray(v) ? v : []; } catch { return []; } },
   saveAccounts: arr => { try { localStorage.setItem(KEYS.saleAccounts, JSON.stringify(arr)); } catch {} },
+  loadSaleSession: () => { try { return JSON.parse(localStorage.getItem(KEYS.saleSession) || 'null'); } catch { return null; } },
+  saveSaleSession: s => { try { if (s) localStorage.setItem(KEYS.saleSession, JSON.stringify(s)); else localStorage.removeItem(KEYS.saleSession); } catch {} },
 };
