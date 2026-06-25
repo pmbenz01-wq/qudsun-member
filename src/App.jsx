@@ -1857,6 +1857,7 @@ function SalesView({ history, sales, accounts, pin, onGoHome, onAddSale, onDelet
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deletePinVal, setDeletePinVal] = useState('');
   const [deletePinErr, setDeletePinErr] = useState('');
+  const [expandedId, setExpandedId] = useState(null);
 
   const toDateStr = ts => { const d = new Date(ts); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
 
@@ -1864,7 +1865,7 @@ function SalesView({ history, sales, accounts, pin, onGoHome, onAddSale, onDelet
   const inKg = inBills.reduce((sum, h) => sum + (grandKg(h.data) || 0), 0);
   const inBaht = inBills.reduce((sum, h) => sum + (grandBaht(h.data) || 0), 0);
 
-  const outSales = (sales || []).filter(s => { if (!s.date) return false; const ds = toDateStr(s.date); return ds >= startDate && ds <= endDate; });
+  const outSales = (sales || []).filter(s => { if (!s.date) return false; const ds = toDateStr(s.date); return ds >= startDate && ds <= endDate; }).sort((a, b) => b.date - a.date);
   const outKg = outSales.reduce((sum, s) => sum + (Number(s.kg) || 0), 0);
   const outBaht = outSales.reduce((sum, s) => sum + (Number(s.baht) || 0), 0);
 
@@ -1929,26 +1930,45 @@ function SalesView({ history, sales, accounts, pin, onGoHome, onAddSale, onDelet
         const st = s.note || 'cash';
         const nextSt = st === 'cash' ? 'transferred' : st === 'transferred' ? 'pending' : 'cash';
         const stMap = {
-          cash:        { label: '💵 เงินสด',       bg: '#E8F5E9', color: '#2E7D32', border: '#E4D7BC' },
+          cash:        { label: '💵 เงินสด',       bg: '#E8F5E9', color: '#2E7D32', border: '#C8E6C9' },
           transferred: { label: '✅ โอนแล้ว',       bg: '#E3F2FD', color: '#1565C0', border: '#90CAF9' },
           pending:     { label: '⏳ ยังไม่ได้โอน', bg: '#FFF3E0', color: '#E65100', border: '#FFB74D' },
         };
         const badge = stMap[st] || stMap.cash;
+        const expanded = expandedId === s.id;
+        const timeStr = s.date ? new Date(s.date).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) + ' น.' : '';
         return (
-          <div key={s.id} style={{ background: '#FFFDF8', border: `1px solid ${badge.border}`, borderRadius: 14, padding: '14px 16px', marginBottom: 10, display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-            {s.receiptUrl && <a href={s.receiptUrl} target="_blank" rel="noreferrer"><img src={s.receiptUrl} alt="ใบเสร็จ" style={{ width: 52, height: 52, objectFit: 'cover', borderRadius: 8, border: '1px solid #E4D7BC', flexShrink: 0, display: 'block' }} /></a>}
-            <div style={{ flex: 1 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
-                <div style={{ fontWeight: 700, fontSize: 15, color: '#1B5E20' }}>{fmtKg(Number(s.kg))} กก. · ฿{fmtBaht(Number(s.baht))}</div>
-                <button onClick={() => onUpdateSale(s.id, { note: nextSt })}
-                  style={{ border: 'none', borderRadius: 20, padding: '3px 10px', fontSize: 11, fontFamily: 'Prompt', fontWeight: 600, cursor: 'pointer', background: badge.bg, color: badge.color }}>
-                  {badge.label}
-                </button>
+          <div key={s.id} style={{ background: '#FFFDF8', border: `1px solid ${badge.border}`, borderRadius: 14, marginBottom: 10, overflow: 'hidden' }}>
+            <button onClick={() => setExpandedId(expanded ? null : s.id)}
+              style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', padding: '14px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                  <span style={{ fontWeight: 700, fontSize: 15, color: '#1B5E20' }}>{fmtKg(Number(s.kg))} กก. · ฿{fmtBaht(Number(s.baht))}</span>
+                  <span style={{ borderRadius: 20, padding: '2px 9px', fontSize: 11, fontFamily: 'Prompt', fontWeight: 600, background: badge.bg, color: badge.color }}>{badge.label}</span>
+                </div>
+                <div style={{ fontSize: 11.5, color: '#9A8662', marginTop: 3 }}>
+                  {timeStr}{s.buyer ? ` · ${s.buyer}` : ''}
+                </div>
               </div>
-              {s.buyer && <div style={{ fontSize: 12, color: '#7A6450' }}>บัญชี {s.buyer}</div>}
-            </div>
-            <button onClick={() => { setDeleteTarget(s.id); setDeletePinVal(''); setDeletePinErr(''); }}
-              style={{ border: 'none', background: 'none', color: '#C8A080', fontSize: 20, cursor: 'pointer', lineHeight: 1 }}>×</button>
+              <span style={{ color: '#C9A24B', fontSize: 16, transition: 'transform .2s', display: 'inline-block', transform: expanded ? 'rotate(90deg)' : 'none' }}>›</span>
+            </button>
+            {expanded && (
+              <div style={{ padding: '0 16px 14px', borderTop: '1px solid #F0E8D8' }}>
+                {s.receiptUrl && (
+                  <a href={s.receiptUrl} target="_blank" rel="noreferrer">
+                    <img src={s.receiptUrl} alt="ใบเสร็จ" style={{ width: '100%', maxHeight: 180, objectFit: 'contain', borderRadius: 10, border: '1px solid #E4D7BC', background: '#f5f5f5', display: 'block', marginBottom: 10, marginTop: 10 }} />
+                  </a>
+                )}
+                <div style={{ display: 'flex', gap: 8, marginTop: s.receiptUrl ? 0 : 10 }}>
+                  <button onClick={() => onUpdateSale(s.id, { note: nextSt })}
+                    style={{ flex: 1, border: `1px solid ${badge.border}`, borderRadius: 9, padding: '8px 0', background: badge.bg, color: badge.color, fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>
+                    เปลี่ยนเป็น: {stMap[nextSt]?.label}
+                  </button>
+                  <button onClick={() => { setDeleteTarget(s.id); setDeletePinVal(''); setDeletePinErr(''); setExpandedId(null); }}
+                    style={{ border: '1px solid #E8C8C2', background: '#FDF0EE', borderRadius: 9, padding: '8px 14px', fontSize: 12, color: '#C0392B', cursor: 'pointer' }}>🗑 ลบ</button>
+                </div>
+              </div>
+            )}
           </div>
         );
       })}
@@ -2919,8 +2939,8 @@ export default function App() {
   }, []);
 
   const handleAddSale = useCallback(async ({ account, kg, baht, receiptUrl, status, date }) => {
-    const ts = date ? new Date(date + 'T12:00:00').getTime() : Date.now();
-    const sale = { id: String(Date.now()) + '_' + Math.random().toString(36).slice(2), date: ts, buyer: account || '', kg: Number(kg) || 0, baht: Number(baht) || 0, note: status || 'cash', receiptUrl: receiptUrl || '' };
+    const ts = Date.now(); // use actual creation time, not forced noon
+    const sale = { id: String(ts) + '_' + Math.random().toString(36).slice(2), date: ts, buyer: account || '', kg: Number(kg) || 0, baht: Number(baht) || 0, note: status || 'cash', receiptUrl: receiptUrl || '' };
     const next = [sale, ...sales];
     storage.saveSales(next);
     setSales(next);
