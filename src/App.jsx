@@ -1278,20 +1278,20 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, borderBottom: '2px solid #2A2118', paddingBottom: 12 }}>
           <img src="/logo.jpg" style={{ width: 72, height: 72, borderRadius: 8, objectFit: 'cover' }} alt="Qudsun" />
           <div style={{ flex: 1 }}>
-            <div style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 17, letterSpacing: '.04em' }}>ทุเรียนคัดสรร <span style={{ color: '#8A6A2E' }}>QUDSUN</span></div>
-            <div style={{ fontSize: 11, color: '#5A4A38', marginTop: 2 }}>Premium Durian Selection</div>
+            <div style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 19, letterSpacing: '.04em' }}>ทุเรียนคัดสรร <span style={{ color: '#8A6A2E' }}>QUDSUN</span></div>
+            <div style={{ fontSize: 12.5, color: '#5A4A38', marginTop: 2 }}>Premium Durian Selection</div>
           </div>
           <div style={{ textAlign: 'right', minWidth: 130 }}>
-            <div style={{ fontWeight: 700, fontSize: 13 }}>ใบรับซื้อทุเรียน</div>
-            <div style={{ fontSize: 10.5, color: '#5A4A38', marginBottom: 6 }}>เลขที่ {session?.billNo}</div>
-            <div style={{ fontSize: 10.5, color: '#3A2A18', lineHeight: 1.8 }}>
+            <div style={{ fontWeight: 700, fontSize: 15 }}>ใบรับซื้อทุเรียน</div>
+            <div style={{ fontSize: 12, color: '#5A4A38', marginBottom: 6 }}>เลขที่ {session?.billNo}</div>
+            <div style={{ fontSize: 12, color: '#3A2A18', lineHeight: 1.8 }}>
               <div>{session ? dateStr(session.date) : ''}</div>
               {tier ? (() => {
                 const g = TIER_GRAD[tier.key] || TIER_GRAD.silver;
                 return (
                   <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: g.bg, color: g.color, borderRadius: 5, padding: '4px 10px', boxShadow: '0 1px 3px rgba(0,0,0,.18)', marginTop: 2, whiteSpace: 'nowrap' }}>
                     <span style={{ width: 8, height: 8, borderRadius: '50%', background: g.color, opacity: .7, flexShrink: 0 }} />
-                    <span style={{ fontWeight: 700, fontSize: 10.5 }}>{session?.seller || '—'}{session?.sellerPhone ? ` · ${session.sellerPhone}` : ''}</span>
+                    <span style={{ fontWeight: 700, fontSize: 12 }}>{session?.seller || '—'}{session?.sellerPhone ? ` · ${session.sellerPhone}` : ''}</span>
                   </div>
                 );
               })() : <span><b>{session?.seller || '—'}</b>{session?.sellerPhone ? ` · ${session.sellerPhone}` : ''}</span>}
@@ -1336,7 +1336,7 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
             </>
           );
         })()}
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11.5 }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
           <thead>
             <tr style={{ background: '#F0E9DA' }}>
               <th style={{ textAlign: 'left', padding: '7px 8px', border: '1px solid #C9BBA0' }}>หมวด</th>
@@ -1353,7 +1353,7 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
                 <tr key={c.key}>
                   <td style={{ padding: '6px 8px', border: '1px solid #C9BBA0' }}>
                     <div>{c.key === 'custom' ? (customLabel || 'หมวดพิเศษ') : c.label}</div>
-                    {d.count > 0 && <div style={{ fontSize: 9.5, color: '#8A7A66', marginTop: 1 }}>{d.count} เข่ง</div>}
+                    {d.count > 0 && <div style={{ fontSize: 11, color: '#8A7A66', marginTop: 1 }}>{d.count} เข่ง</div>}
                   </td>
                   <td style={{ padding: '6px 8px', border: '1px solid #C9BBA0', textAlign: 'right' }}>{fmtKg(d.kg)}</td>
                   <td style={{ padding: '6px 8px', border: '1px solid #C9BBA0', textAlign: 'right' }}>{fmtPrice(price)}</td>
@@ -1366,7 +1366,7 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
             <tr style={{ background: '#2A2118', color: '#fff' }}>
               <td style={{ padding: 8, fontWeight: 700 }}>
                 <div>รวม</div>
-                <div style={{ fontSize: 9.5, opacity: .75, fontWeight: 400, marginTop: 1 }}>{(session?.entries || []).length} เข่ง</div>
+                <div style={{ fontSize: 11, opacity: .75, fontWeight: 400, marginTop: 1 }}>{(session?.entries || []).length} เข่ง</div>
               </td>
               <td style={{ padding: 8, textAlign: 'right', fontWeight: 700 }}>{fmtKg(totalKg)}</td>
               <td style={{ padding: 8 }} />
@@ -1386,8 +1386,8 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
         </div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 14 }}>
           <div>
-            <div style={{ fontSize: 10, color: '#8A7A66' }}>ขอบคุณที่ไว้วางใจ · ทุเรียนคัดสรร Qudsun</div>
-            <div style={{ fontSize: 10, color: '#8A7A66', marginTop: 2 }}>โทร. 094-149-1914 (วิน) · 082-691-4414 (เบนซ์)</div>
+            <div style={{ fontSize: 11.5, color: '#8A7A66' }}>ขอบคุณที่ไว้วางใจ · ทุเรียนคัดสรร Qudsun</div>
+            <div style={{ fontSize: 11.5, color: '#8A7A66', marginTop: 2 }}>โทร. 094-149-1914 (วิน) · 082-691-4414 (เบนซ์)</div>
           </div>
           <img src="/qr-bill.png" alt="QR" style={{ width: 52, height: 52, objectFit: 'contain' }} onError={e => { e.target.style.display = 'none'; }} />
         </div>
