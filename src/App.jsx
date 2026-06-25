@@ -1873,7 +1873,7 @@ function SalesView({ history, sales, accounts, pin, onGoHome, onAddSale, onDelet
     reader.onload = async (ev) => {
       const dataUrl = ev.target.result;
       try {
-        const res = await fetch('/api/drive', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ base64: dataUrl, filename: `sale_receipt_${Date.now()}.jpg`, folder: 'QudsunSaleReceipts' }) });
+        const res = await fetch('/api/drive', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ base64: dataUrl, filename: `sale_bill_${Date.now()}.jpg`, folder: 'QudsunSaleBills' }) });
         const data = await res.json();
         const url = data.ok && data.fileId ? `https://drive.google.com/uc?id=${data.fileId}` : dataUrl;
         await onUpdateSale(saleId, { receiptUrl: url });
