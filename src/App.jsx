@@ -287,7 +287,7 @@ function EmployeeManager({ employees, onSave, onCancel }) {
 }
 
 // ─── HomeView ─────────────────────────────────────────────────────────────────
-function HomeView({ session, history, payments, syncing, syncStatus, onSyncNow, onOpenSheet, onNew, onResume, onGoCustomers, onGoDashboard, onGoSupervisors, onGoSales, onNewSale, onChangePin, onSetEmployeePin, onOpenHistory, onPayment, onDeleteBill, pin, verified, supervisors, isEmployee, onLogout, onExport, onImport }) {
+function HomeView({ session, history, payments, syncing, syncStatus, onSyncNow, onOpenSheet, onNew, onResume, onGoCustomers, onGoDashboard, onGoSupervisors, onGoSales, onNewSale, saleSession, onResumeSale, onChangePin, onSetEmployeePin, onOpenHistory, onPayment, onDeleteBill, pin, verified, supervisors, isEmployee, onLogout, onExport, onImport }) {
   const customerCount = Object.keys(loadCustomers(history)).length;
   const supervisorCount = Object.values(supervisors || {}).filter(Boolean).reduce((set, n) => (set.add(n), set), new Set()).size;
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -344,18 +344,34 @@ function HomeView({ session, history, payments, syncing, syncStatus, onSyncNow, 
         const entries = session.entries || [];
         const totalEntries = entries.length;
         const totalKg = entries.reduce((s, e) => s + (parseFloat(e.kg) || 0), 0);
-        const cats = [...new Set(entries.map(e => e.cat))];
         return (
-          <button onClick={onResume} style={{ width: '100%', border: '2px solid #C9A24B', borderRadius: 14, padding: '14px 16px', background: '#FFFDF8', color: '#4A3526', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+          <button onClick={onResume} style={{ width: '100%', border: '2px solid #C9A24B', borderRadius: 14, padding: '14px 16px', background: '#FFFDF8', color: '#4A3526', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
             <span style={{ fontSize: 22 }}>↩</span>
             <div style={{ flex: 1 }}>
               <div style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 15 }}>ทำบิลรับซื้อต่อ</div>
               <div style={{ fontSize: 12, color: '#A6925E', marginTop: 1 }}>
-                {session.billNo}
-                {totalEntries > 0 ? ` · ${totalEntries} เข่ง · ${totalKg % 1 === 0 ? totalKg : totalKg.toFixed(1)} กก.` : ' · ยังไม่มีเข่ง'}
+                {session.billNo}{totalEntries > 0 ? ` · ${totalEntries} เข่ง · ${totalKg % 1 === 0 ? totalKg : totalKg.toFixed(1)} กก.` : ' · ยังไม่มีเข่ง'}
               </div>
             </div>
             <span style={{ color: '#C9A24B', fontSize: 18 }}>›</span>
+          </button>
+        );
+      })()}
+      {/* Resume in-progress sale bill */}
+      {saleSession && (() => {
+        const entries = saleSession.entries || [];
+        const totalKg = entries.reduce((s, e) => s + (parseFloat(e.kg) || 0), 0);
+        return (
+          <button onClick={onResumeSale} style={{ width: '100%', border: '2px solid #4A7A2E', borderRadius: 14, padding: '14px 16px', background: '#F5FAF0', color: '#2E5C1A', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+            <span style={{ fontSize: 22 }}>↩</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 15 }}>ทำบิลขายต่อ</div>
+              <div style={{ fontSize: 12, color: '#6A9A4E', marginTop: 1 }}>
+                {saleSession.billNo}{entries.length > 0 ? ` · ${entries.length} เข่ง · ${totalKg % 1 === 0 ? totalKg : totalKg.toFixed(1)} กก.` : ' · ยังไม่มีเข่ง'}
+                {saleSession.customerName ? ` · ${saleSession.customerName}` : ''}
+              </div>
+            </div>
+            <span style={{ color: '#4A7A2E', fontSize: 18 }}>›</span>
           </button>
         );
       })()}
@@ -2205,7 +2221,7 @@ function SaleNewView({ onStart, onGoBack }) {
 }
 
 // ─── Sale Record View ─────────────────────────────────────────────────────────
-function SaleRecordView({ saleSession, activeCat, input, onInput, onCommit, onPickCat, onGoBack, onGoSummary, onEditEntry, pinnedCats, onOpenPinEditor, onCustomLabelChange }) {
+function SaleRecordView({ saleSession, activeCat, input, onInput, onCommit, onPickCat, onGoBack, onGoSummary, onEditEntry, pinnedCats, onOpenPinEditor, onCustomLabelChange, onEditCustomer }) {
   const entries = saleSession?.entries || [];
   const aggData = {};
   CATS.forEach(c => { aggData[c.key] = { kg: 0, count: 0 }; });
@@ -2216,6 +2232,7 @@ function SaleRecordView({ saleSession, activeCat, input, onInput, onCommit, onPi
   const mainCats = CATS.filter(c => c.key !== 'custom');
   const customCat = CATS.find(c => c.key === 'custom');
   const recent = entries.filter(e => e.cat === activeCat).slice().reverse();
+  const hasCustomer = saleSession?.customerName || saleSession?.customerPhone;
 
   return (
     <div style={{ flex: 1, maxWidth: 880, width: '100%', margin: '0 auto', padding: '14px 14px 130px' }}>
@@ -2228,14 +2245,14 @@ function SaleRecordView({ saleSession, activeCat, input, onInput, onCommit, onPi
         </div>
       </div>
 
-      {/* Customer chip */}
+      {/* Customer chip — tappable */}
       <div style={{ display: 'flex', gap: 6, marginBottom: 12, flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: (saleSession?.customerName || saleSession?.customerPhone) ? '#F0EAFA' : '#F5F5F5', border: `1px solid ${(saleSession?.customerName || saleSession?.customerPhone) ? '#C9B8E8' : '#D0C8C0'}`, borderRadius: 20, padding: '5px 12px' }}>
+        <div onClick={onEditCustomer} style={{ display: 'flex', alignItems: 'center', gap: 5, background: hasCustomer ? '#F0EAFA' : '#F5F5F5', border: `1px solid ${hasCustomer ? '#C9B8E8' : '#D0C8C0'}`, borderRadius: 20, padding: '5px 12px', cursor: 'pointer' }}>
           <span style={{ fontSize: 13 }}>🛒</span>
-          <span style={{ fontSize: 13, fontWeight: 600, color: (saleSession?.customerName || saleSession?.customerPhone) ? '#5A3E8A' : '#9A8878' }}>
-            {saleSession?.customerName || saleSession?.customerPhone || 'ไม่ระบุชื่อลูกค้า'}
+          <span style={{ fontSize: 13, fontWeight: 600, color: hasCustomer ? '#5A3E8A' : '#9A8878' }}>
+            {saleSession?.customerName || saleSession?.customerPhone || '+ เพิ่มลูกค้า'}
           </span>
-          {saleSession?.customerPhone && saleSession?.customerName && (
+          {hasCustomer && saleSession?.customerName && saleSession?.customerPhone && (
             <span style={{ fontSize: 12, color: '#9A8878' }}>· {saleSession.customerPhone}</span>
           )}
         </div>
@@ -2365,6 +2382,87 @@ function SaleRecordView({ saleSession, activeCat, input, onInput, onCommit, onPi
         </button>
         <button onClick={onGoSummary} style={{ flex: 1, border: 'none', borderRadius: 13, padding: 15, background: '#3F2D1E', color: '#F6EEDD', fontWeight: 600, fontSize: 16, cursor: 'pointer' }}>ดูสรุป & ตั้งราคา →</button>
       </div>
+    </div>
+  );
+}
+
+// ─── Sale Customer Modal ──────────────────────────────────────────────────────
+function SaleCustomerModal({ customerName, customerPhone, onSave, onCancel }) {
+  const [name, setName] = useState(customerName || '');
+  const [phone, setPhone] = useState(customerPhone || '');
+  const inp = { width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 10, padding: '12px 14px', fontSize: 15, fontFamily: 'Prompt', background: '#fff', boxSizing: 'border-box', outline: 'none' };
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.45)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+      <div style={{ background: '#FFFDF8', borderRadius: '18px 18px 0 0', padding: '22px 18px 36px', width: '100%', maxWidth: 520 }}>
+        <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 17, marginBottom: 16, color: '#3F2D1E' }}>ข้อมูลลูกค้า</div>
+        <div style={{ marginBottom: 12 }}>
+          <div style={{ fontSize: 12, color: '#9A8662', marginBottom: 4 }}>ชื่อลูกค้า</div>
+          <input value={name} onChange={e => setName(e.target.value)} placeholder="ชื่อ (ไม่บังคับ)" style={inp} autoFocus />
+        </div>
+        <div style={{ marginBottom: 18 }}>
+          <div style={{ fontSize: 12, color: '#9A8662', marginBottom: 4 }}>เบอร์โทร</div>
+          <input value={phone} onChange={e => setPhone(e.target.value)} placeholder="0812345678 (ไม่บังคับ)" type="tel" style={inp} />
+        </div>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button onClick={onCancel} style={{ flex: 1, border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 12, padding: 14, fontSize: 15, color: '#9A8662', cursor: 'pointer' }}>ยกเลิก</button>
+          <button onClick={() => onSave(name.trim(), phone.trim())} style={{ flex: 2, border: 'none', borderRadius: 12, padding: 14, background: 'linear-gradient(135deg,#4A7A2E,#2E5C1A)', color: '#fff', fontWeight: 700, fontSize: 15, cursor: 'pointer' }}>บันทึก</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Sale Summary View ────────────────────────────────────────────────────────
+function SaleSummaryView({ saleSession, onGoRecord, onGoPrint, onSetPrice, customLabel }) {
+  const aggData = {};
+  CATS.forEach(c => { aggData[c.key] = { kg: 0, count: 0 }; });
+  (saleSession?.entries || []).forEach(e => { if (aggData[e.cat]) { aggData[e.cat].kg += e.kg; aggData[e.cat].count++; } });
+  const rows = CATS.filter(c => aggData[c.key].count > 0);
+  const prices = saleSession?.prices || {};
+  const totalKg = (saleSession?.entries || []).reduce((s, e) => s + e.kg, 0);
+  const totalBaht = rows.reduce((s, c) => s + aggData[c.key].kg * (prices[c.key] || 0), 0);
+
+  return (
+    <div style={{ flex: 1, maxWidth: 820, width: '100%', margin: '0 auto', padding: '16px 14px 120px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+        <button onClick={onGoRecord} style={{ border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 10, padding: '8px 12px', fontSize: 13, color: '#7A6450', cursor: 'pointer' }}>‹ กลับไปจด</button>
+        <h2 style={{ fontFamily: 'Prompt', fontWeight: 400, fontSize: 20, color: '#4A3526', margin: 0 }}>สรุปยอดขาย · ตั้งราคา</h2>
+      </div>
+      <p style={{ margin: '0 0 14px', fontSize: 13, color: '#9A8662' }}>แตะช่อง "ราคา" เพื่อใส่ราคาขายของแต่ละหมวด · ยอดรวมคำนวณให้อัตโนมัติ</p>
+
+      <div style={{ background: '#FFFDF8', border: '1px solid #E4D7BC', borderRadius: 16, overflow: 'hidden', boxShadow: '0 4px 14px rgba(95,70,40,.06)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1.3fr .7fr 1fr 1.1fr 1.2fr', background: '#EAF4E0', padding: '11px 14px', fontSize: 12, fontWeight: 600, color: '#3A6020' }}>
+          <span>หมวด</span><span style={{ textAlign: 'center' }}>เข่ง</span><span style={{ textAlign: 'right' }}>น้ำหนัก</span><span style={{ textAlign: 'right' }}>ราคา/กก.</span><span style={{ textAlign: 'right' }}>ยอด (฿)</span>
+        </div>
+        {rows.map(c => {
+          const d = aggData[c.key];
+          const price = prices[c.key] || 0;
+          return (
+            <div key={c.key} style={{ display: 'grid', gridTemplateColumns: '1.3fr .7fr 1fr 1.1fr 1.2fr', alignItems: 'center', padding: '12px 14px', borderTop: '1px solid #D8ECC8' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 7, fontWeight: 600, fontSize: 14, color: '#4A3526' }}>
+                <span style={{ width: 9, height: 9, borderRadius: '50%', background: c.accent, display: 'inline-block', flexShrink: 0 }} />{c.key === 'custom' ? (customLabel || 'หมวดพิเศษ') : c.label}
+              </span>
+              <span style={{ textAlign: 'center', fontSize: 13, color: '#9A8662' }}>{d.count}</span>
+              <span style={{ textAlign: 'right', fontFamily: 'Prompt', fontSize: 14 }}>{fmtKg(d.kg)}</span>
+              <button onClick={() => onSetPrice(c.key)} style={{ textAlign: 'right', border: price ? '1px solid #C8DFB0' : '1.5px dashed #4A7A2E', background: price ? '#F5FAF0' : '#EEFAE6', borderRadius: 8, padding: '5px 8px', fontSize: 13, color: price ? '#2E5C1A' : '#4A7A2E', cursor: 'pointer', fontFamily: 'Prompt' }}>
+                {price ? fmtPrice(price) : 'ตั้งราคา'}
+              </button>
+              <span style={{ textAlign: 'right', fontFamily: 'Prompt', fontWeight: 500, fontSize: 14, color: '#3F2D1E' }}>{price ? fmtBaht(d.kg * price) : '—'}</span>
+            </div>
+          );
+        })}
+        {rows.length === 0 && <div style={{ padding: '20px 14px', textAlign: 'center', color: '#B7A684', fontSize: 14 }}>ยังไม่มีรายการ — กลับไปบันทึกเข่งก่อน</div>}
+        <div style={{ display: 'grid', gridTemplateColumns: '1.3fr .7fr 1fr 1.1fr 1.2fr', alignItems: 'center', padding: 14, background: '#2E5C1A', color: '#F0FAE8' }}>
+          <span style={{ fontWeight: 600, gridColumn: 'span 2' }}>รวมทั้งสิ้น</span>
+          <span style={{ textAlign: 'right', fontFamily: 'Prompt', fontWeight: 500 }}>{fmtKg(totalKg)}</span>
+          <span style={{ textAlign: 'right', fontSize: 12, opacity: .65 }}>บาท</span>
+          <span style={{ textAlign: 'right', fontFamily: 'Prompt', fontWeight: 600, fontSize: 18 }}>{fmtBaht(totalBaht)}</span>
+        </div>
+      </div>
+
+      <button onClick={onGoPrint} style={{ width: '100%', marginTop: 18, border: 'none', borderRadius: 15, padding: 18, background: 'linear-gradient(135deg,#4A7A2E,#2E5C1A)', color: '#fff', fontWeight: 700, fontSize: 18, cursor: 'pointer', boxShadow: '0 8px 18px rgba(46,92,26,.3)' }}>
+        ดูใบเสร็จ & ปริ้น →
+      </button>
     </div>
   );
 }
@@ -3011,6 +3109,7 @@ export default function App() {
   const [saleActiveCat, setSaleActiveCat] = useState('AB');
   const [saleInput, setSaleInput] = useState('');
   const [saleNumpad, setSaleNumpad] = useState(null);
+  const [saleCustomerModal, setSaleCustomerModal] = useState(false);
   const savedSession = useRef(null);
   const pendingPhotoDataUrl = useRef(null);
 
@@ -3587,11 +3686,11 @@ export default function App() {
   // ── Sale session handlers ────────────────────────────────────────────────────
   const persistSaleSession = useCallback((s) => { storage.saveSaleSession(s); }, []);
 
-  const createSaleSession = useCallback(({ customerName, customerPhone, prices }) => {
+  const createSaleSession = useCallback(() => {
     const t = Date.now();
-    const ss = { id: t, billNo: newSaleBillNo(), createdAt: t, date: t, customerName, customerPhone, prices, entries: [], customLabel: '' };
-    setSaleSession(ss); persistSaleSession(ss); setSaleActiveCat('AB'); setSaleInput(''); navigate('/sale/record');
-  }, [persistSaleSession, navigate]);
+    const ss = { id: t, billNo: newSaleBillNo(), createdAt: t, date: t, customerName: '', customerPhone: '', prices: Object.fromEntries(CATS.map(c => [c.key, 0])), entries: [], customLabel: '' };
+    setSaleSession(ss); setSaleActiveCat('AB'); setSaleInput(''); navigate('/sale/record');
+  }, [navigate]);
 
   const commitSaleEntry = useCallback(() => {
     const kg = parseFloat(saleInput);
@@ -3616,11 +3715,20 @@ export default function App() {
     setSaleNumpad({ entryId: entry.id, catKey: entry.cat, title: 'แก้ไขเข่ง — ' + (CATS.find(c => c.key === entry.cat)?.label || entry.cat), value: String(entry.kg), canDelete: true });
   }, []);
 
+  const setSalePrice = useCallback((catKey) => {
+    const cur = saleSession?.prices?.[catKey] || 0;
+    setSaleNumpad({ priceKey: catKey, title: 'ราคา — ' + (CATS.find(c => c.key === catKey)?.label || catKey), value: cur ? String(cur) : '', unit: '฿/กก.', canDelete: false });
+  }, [saleSession]);
+
   const saleNumSave = useCallback(() => {
     if (!saleNumpad) return;
-    const kg = parseFloat(saleNumpad.value);
-    if (!kg || kg <= 0) return;
-    setSaleSession(prev => ({ ...prev, entries: (prev.entries || []).map(e => e.id === saleNumpad.entryId ? { ...e, kg } : e) }));
+    const val = parseFloat(saleNumpad.value);
+    if (saleNumpad.priceKey) {
+      if (val >= 0) setSaleSession(prev => ({ ...prev, prices: { ...(prev.prices || {}), [saleNumpad.priceKey]: val } }));
+      setSaleNumpad(null); return;
+    }
+    if (!val || val <= 0) return;
+    setSaleSession(prev => ({ ...prev, entries: (prev.entries || []).map(e => e.id === saleNumpad.entryId ? { ...e, kg: val } : e) }));
     setSaleNumpad(null);
   }, [saleNumpad]);
 
@@ -3813,7 +3921,9 @@ export default function App() {
             onGoCustomers={() => { navigate('/customers'); syncNow(true); }}
             onGoDashboard={() => { navigate('/purchases'); syncNow(true); }}
             onGoSales={() => { navigate('/sales'); syncNow(true); }}
-            onNewSale={() => navigate('/sale/new')}
+            onNewSale={createSaleSession}
+            saleSession={saleSession}
+            onResumeSale={() => navigate('/sale/record')}
             onGoSupervisors={() => { navigate('/supervisors'); syncNow(true); }}
             onChangePin={changePin} onSetEmployeePin={setEmployeePinAction}
             onOpenHistory={openHistory} onPayment={handlePayment} onDeleteBill={handleDeleteBill} pin={pin} isEmployee={authRole === 'employee'} onLogout={handleLogout}
@@ -3865,20 +3975,23 @@ export default function App() {
         } />
         <Route path="/sales" element={
           <SalesView history={history} sales={sales} accounts={accounts} pin={pin} onGoHome={() => navigate('/')} onAddSale={handleAddSale} onDeleteSale={handleDeleteSale} onUpdateSale={handleUpdateSale} onSaveAccount={handleSaveAccount} onOpenHistory={openHistory}
-            onNewSaleSession={() => navigate('/sale/new')} />
-        } />
-        <Route path="/sale/new" element={
-          <SaleNewView onStart={createSaleSession} onGoBack={() => navigate('/sales')} />
+            onNewSaleSession={createSaleSession} />
         } />
         <Route path="/sale/record" element={saleSession ? (
           <SaleRecordView saleSession={saleSession} activeCat={saleActiveCat} input={saleInput} onInput={setSaleInput} onCommit={commitSaleEntry}
-            onPickCat={setSaleActiveCat} onGoBack={() => navigate('/sale/new')} onGoSummary={() => navigate('/sale/print')} onEditEntry={editSaleEntry}
+            onPickCat={setSaleActiveCat} onGoBack={() => navigate('/')} onGoSummary={() => navigate('/sale/summary')} onEditEntry={editSaleEntry}
             pinnedCats={pinnedCats} onOpenPinEditor={() => setPinEditorOpen(true)}
-            onCustomLabelChange={label => setSaleSession(prev => ({ ...prev, customLabel: label }))} />
-        ) : <Navigate to="/sale/new" replace />} />
+            onCustomLabelChange={label => setSaleSession(prev => ({ ...prev, customLabel: label }))}
+            onEditCustomer={() => setSaleCustomerModal(true)} />
+        ) : <Navigate to="/" replace />} />
+        <Route path="/sale/summary" element={saleSession ? (
+          <SaleSummaryView saleSession={saleSession} customLabel={saleSession?.customLabel || ''}
+            onGoRecord={() => navigate('/sale/record')} onGoPrint={() => navigate('/sale/print')}
+            onSetPrice={setSalePrice} />
+        ) : <Navigate to="/" replace />} />
         <Route path="/sale/print" element={saleSession ? (
-          <SalePrintView saleSession={saleSession} onGoBack={() => navigate('/sale/record')} onFinish={finishSaleSession} />
-        ) : <Navigate to="/sale/new" replace />} />
+          <SalePrintView saleSession={saleSession} onGoBack={() => navigate('/sale/summary')} onFinish={finishSaleSession} />
+        ) : <Navigate to="/" replace />} />
         <Route path="/customers" element={
           <CustomersView history={history} verified={verified} onGoHome={() => navigate('/')}
             onOpenCustomer={phone => { setCustPhone(phone); navigate('/customers/' + encodeURIComponent(phone)); }}
@@ -3911,7 +4024,8 @@ export default function App() {
 
       {pinPrompt && <PinModal title={pinPrompt.title} error={pinError} value={pinValue} onKey={handlePinKey} onCancel={() => { setPinPrompt(null); setPinValue(''); setPinError(''); }} />}
       {numpad && <NumModal title={numpad.title} unit={numpad.unit} value={numpad.value || ''} onChange={v => setNumpad(n => ({ ...n, value: v }))} onSave={numSave} onCancel={() => setNumpad(null)} onDelete={numDelete} saveLabel={numpad.saveLabel} canDelete={numpad.canDelete} />}
-      {saleNumpad && <NumModal title={saleNumpad.title} unit="กก." value={saleNumpad.value || ''} onChange={v => setSaleNumpad(n => ({ ...n, value: v }))} onSave={saleNumSave} onCancel={() => setSaleNumpad(null)} onDelete={saleNumDelete} saveLabel="บันทึก" canDelete={saleNumpad.canDelete} />}
+      {saleNumpad && <NumModal title={saleNumpad.title} unit={saleNumpad.unit || 'กก.'} value={saleNumpad.value || ''} onChange={v => setSaleNumpad(n => ({ ...n, value: v }))} onSave={saleNumSave} onCancel={() => setSaleNumpad(null)} onDelete={saleNumDelete} saveLabel="บันทึก" canDelete={saleNumpad.canDelete} />}
+      {saleCustomerModal && <SaleCustomerModal customerName={saleSession?.customerName} customerPhone={saleSession?.customerPhone} onSave={(name, phone) => { setSaleSession(prev => ({ ...prev, customerName: name, customerPhone: phone })); setSaleCustomerModal(false); }} onCancel={() => setSaleCustomerModal(false)} />}
       {sellerOpen && <SellerModal
         name={sellerDraft} phone={sellerPhoneDraft} supervisor={supervisorDraft}
         nameLocked={sellerNameLocked} supervisorLocked={sellerSupervisorLocked}
