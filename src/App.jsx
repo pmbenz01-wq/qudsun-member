@@ -1298,6 +1298,44 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
             </div>
           </div>
         </div>
+        {(() => {
+          const entries = session?.entries || [];
+          if (entries.length === 0) return null;
+          const grouped = {};
+          entries.forEach(e => { if (!grouped[e.cat]) grouped[e.cat] = []; grouped[e.cat].push(e); });
+          return (
+            <>
+              <style>{`
+                @media print {
+                  .bill-entries-root { margin-top: 6px !important; margin-bottom: 6px !important; }
+                  .bill-entries-group { margin-bottom: 3px !important; }
+                  .bill-entry-label { font-size: 7px !important; margin-bottom: 2px !important; }
+                  .bill-entry-grid { gap: 1px !important; }
+                  .bill-entry-chip { padding: 1px 3px !important; border-radius: 2px !important; line-height: 1 !important; }
+                  .bill-entry-kg { font-size: 7px !important; }
+                }
+              `}</style>
+              <div className="bill-entries-root" style={{ marginTop: 10, marginBottom: 10, display: 'flex', flexWrap: 'wrap', gap: '6px 14px', alignItems: 'flex-start' }}>
+                {Object.entries(grouped).map(([catKey, ents]) => {
+                  const catObj = CATS.find(c => c.key === catKey);
+                  const label = catKey === 'custom' ? (customLabel || 'หมวดพิเศษ') : (catObj?.label || catKey);
+                  return (
+                    <div key={catKey} className="bill-entries-group" style={{ marginBottom: 0 }}>
+                      <div className="bill-entry-label" style={{ fontSize: 9.5, color: '#8A7A66', fontWeight: 600, marginBottom: 3, letterSpacing: '.03em' }}>{label} — {ents.length} เข่ง</div>
+                      <div className="bill-entry-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, max-content)', gap: 2 }}>
+                        {ents.map((e, i) => (
+                          <div key={e.id || i} className="bill-entry-chip" style={{ border: '0.5px solid #D8C8A8', borderRadius: 3, padding: '3px 5px', background: '#FFFDF8', textAlign: 'center', lineHeight: 1.15 }}>
+                            <span className="bill-entry-kg" style={{ fontWeight: 700, fontSize: 10, color: '#2A2118' }}>{fmtKg(e.kg)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          );
+        })()}
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11.5 }}>
           <thead>
             <tr style={{ background: '#F0E9DA' }}>
@@ -1336,45 +1374,7 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
             </tr>
           </tfoot>
         </table>
-        {(() => {
-          const entries = session?.entries || [];
-          if (entries.length === 0) return null;
-          const grouped = {};
-          entries.forEach(e => { if (!grouped[e.cat]) grouped[e.cat] = []; grouped[e.cat].push(e); });
-          return (
-            <>
-              <style>{`
-                @media print {
-                  .bill-entries-root { margin-top: 8px !important; }
-                  .bill-entries-group { margin-bottom: 4px !important; }
-                  .bill-entry-label { font-size: 7px !important; margin-bottom: 2px !important; }
-                  .bill-entry-grid { gap: 1px !important; }
-                  .bill-entry-chip { padding: 1px 3px !important; border-radius: 2px !important; line-height: 1 !important; }
-                  .bill-entry-kg { font-size: 6px !important; }
-                }
-              `}</style>
-              <div className="bill-entries-root" style={{ marginTop: 12, display: 'flex', flexWrap: 'wrap', gap: '8px 14px', alignItems: 'flex-start' }}>
-                {Object.entries(grouped).map(([catKey, ents]) => {
-                  const catObj = CATS.find(c => c.key === catKey);
-                  const label = catKey === 'custom' ? (customLabel || 'หมวดพิเศษ') : (catObj?.label || catKey);
-                  return (
-                    <div key={catKey} className="bill-entries-group" style={{ marginBottom: 0 }}>
-                      <div className="bill-entry-label" style={{ fontSize: 8.5, color: '#8A7A66', fontWeight: 600, marginBottom: 3, letterSpacing: '.03em' }}>{label} — {ents.length} เข่ง</div>
-                      <div className="bill-entry-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, max-content)', gap: 2 }}>
-                        {ents.map((e, i) => (
-                          <div key={e.id || i} className="bill-entry-chip" style={{ border: '0.5px solid #D8C8A8', borderRadius: 3, padding: '2px 4px', background: '#FFFDF8', textAlign: 'center', lineHeight: 1.15 }}>
-                            <span className="bill-entry-kg" style={{ fontWeight: 700, fontSize: 8.5, color: '#2A2118' }}>{fmtKg(e.kg)}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </>
-          );
-        })()}
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 24, gap: 20 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 18, gap: 20 }}>
           <div style={{ flex: 1, textAlign: 'center' }}><div style={{ borderTop: '1px dotted #2A2118', paddingTop: 6, fontSize: 11 }}>ลายเซ็นผู้ขาย</div></div>
           <div style={{ flex: 1, textAlign: 'center' }}><div style={{ borderTop: '1px dotted #2A2118', paddingTop: 6, fontSize: 11 }}>ลายเซ็นผู้ซื้อ</div></div>
         </div>
