@@ -1349,10 +1349,8 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
                   .bill-entries-group { margin-bottom: 4px !important; }
                   .bill-entry-label { font-size: 7px !important; margin-bottom: 2px !important; }
                   .bill-entry-grid { gap: 1px !important; }
-                  .bill-entry-chip { padding: 1px 2px !important; border-radius: 2px !important; line-height: 1 !important; }
-                  .bill-entry-num { font-size: 5px !important; }
+                  .bill-entry-chip { padding: 1px 3px !important; border-radius: 2px !important; line-height: 1 !important; }
                   .bill-entry-kg { font-size: 6px !important; }
-                  .bill-entry-unit { font-size: 5px !important; }
                 }
               `}</style>
               <div className="bill-entries-root" style={{ marginTop: 12 }}>
@@ -1365,9 +1363,7 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
                       <div className="bill-entry-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, max-content)', gap: 2 }}>
                         {ents.map((e, i) => (
                           <div key={e.id || i} className="bill-entry-chip" style={{ border: '0.5px solid #D8C8A8', borderRadius: 3, padding: '2px 4px', background: '#FFFDF8', textAlign: 'center', lineHeight: 1.15 }}>
-                            <span className="bill-entry-num" style={{ fontSize: 7, color: '#B7A684' }}>#{i + 1} </span>
                             <span className="bill-entry-kg" style={{ fontWeight: 700, fontSize: 8.5, color: '#2A2118' }}>{fmtKg(e.kg)}</span>
-                            <span className="bill-entry-unit" style={{ fontSize: 7, color: '#8A7A66' }}>กก</span>
                           </div>
                         ))}
                       </div>
