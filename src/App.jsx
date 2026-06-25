@@ -1342,26 +1342,40 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
           const grouped = {};
           entries.forEach(e => { if (!grouped[e.cat]) grouped[e.cat] = []; grouped[e.cat].push(e); });
           return (
-            <div style={{ marginTop: 14 }}>
-              {Object.entries(grouped).map(([catKey, ents]) => {
-                const catObj = CATS.find(c => c.key === catKey);
-                const label = catKey === 'custom' ? (customLabel || 'หมวดพิเศษ') : (catObj?.label || catKey);
-                return (
-                  <div key={catKey} style={{ marginBottom: 10 }}>
-                    <div style={{ fontSize: 9.5, color: '#8A7A66', fontWeight: 600, marginBottom: 5, letterSpacing: '.04em' }}>{label} — {ents.length} เข่ง</div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 3 }}>
-                      {ents.map((e, i) => (
-                        <div key={e.id || i} style={{ border: '1px solid #D8C8A8', borderRadius: 4, padding: '3px 4px', background: '#FFFDF8', textAlign: 'center' }}>
-                          <span style={{ fontSize: 8, color: '#B7A684' }}>#{i + 1} </span>
-                          <span style={{ fontWeight: 700, fontSize: 9.5, color: '#2A2118' }}>{fmtKg(e.kg)}</span>
-                          <span style={{ fontSize: 8, color: '#8A7A66' }}>กก</span>
-                        </div>
-                      ))}
+            <>
+              <style>{`
+                @media print {
+                  .bill-entries-root { margin-top: 8px !important; }
+                  .bill-entries-group { margin-bottom: 4px !important; }
+                  .bill-entry-label { font-size: 7px !important; margin-bottom: 2px !important; }
+                  .bill-entry-grid { gap: 1px !important; }
+                  .bill-entry-chip { padding: 1px 2px !important; border-radius: 2px !important; line-height: 1 !important; }
+                  .bill-entry-num { font-size: 5px !important; }
+                  .bill-entry-kg { font-size: 6px !important; }
+                  .bill-entry-unit { font-size: 5px !important; }
+                }
+              `}</style>
+              <div className="bill-entries-root" style={{ marginTop: 12 }}>
+                {Object.entries(grouped).map(([catKey, ents]) => {
+                  const catObj = CATS.find(c => c.key === catKey);
+                  const label = catKey === 'custom' ? (customLabel || 'หมวดพิเศษ') : (catObj?.label || catKey);
+                  return (
+                    <div key={catKey} className="bill-entries-group" style={{ marginBottom: 7 }}>
+                      <div className="bill-entry-label" style={{ fontSize: 8.5, color: '#8A7A66', fontWeight: 600, marginBottom: 3, letterSpacing: '.03em' }}>{label} — {ents.length} เข่ง</div>
+                      <div className="bill-entry-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, max-content)', gap: 2 }}>
+                        {ents.map((e, i) => (
+                          <div key={e.id || i} className="bill-entry-chip" style={{ border: '0.5px solid #D8C8A8', borderRadius: 3, padding: '2px 4px', background: '#FFFDF8', textAlign: 'center', lineHeight: 1.15 }}>
+                            <span className="bill-entry-num" style={{ fontSize: 7, color: '#B7A684' }}>#{i + 1} </span>
+                            <span className="bill-entry-kg" style={{ fontWeight: 700, fontSize: 8.5, color: '#2A2118' }}>{fmtKg(e.kg)}</span>
+                            <span className="bill-entry-unit" style={{ fontSize: 7, color: '#8A7A66' }}>กก</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            </>
           );
         })()}
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 24, gap: 20 }}>
