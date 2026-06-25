@@ -1272,7 +1272,6 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
           <thead>
             <tr style={{ background: '#F0E9DA' }}>
               <th style={{ textAlign: 'left', padding: '7px 8px', border: '1px solid #C9BBA0' }}>หมวด</th>
-              <th style={{ textAlign: 'center', padding: '7px 6px', border: '1px solid #C9BBA0' }}>เข่ง</th>
               <th style={{ textAlign: 'right', padding: '7px 8px', border: '1px solid #C9BBA0' }}>น้ำหนัก</th>
               <th style={{ textAlign: 'right', padding: '7px 8px', border: '1px solid #C9BBA0' }}>ราคา/กก.</th>
               <th style={{ textAlign: 'right', padding: '7px 8px', border: '1px solid #C9BBA0' }}>รวม (฿)</th>
@@ -1285,7 +1284,6 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
               return (
                 <tr key={c.key}>
                   <td style={{ padding: '6px 8px', border: '1px solid #C9BBA0' }}>{c.key === 'custom' ? (customLabel || 'หมวดพิเศษ') : c.label}</td>
-                  <td style={{ padding: '6px 6px', border: '1px solid #C9BBA0', textAlign: 'center' }}>{d.count}</td>
                   <td style={{ padding: '6px 8px', border: '1px solid #C9BBA0', textAlign: 'right' }}>{fmtKg(d.kg)}</td>
                   <td style={{ padding: '6px 8px', border: '1px solid #C9BBA0', textAlign: 'right' }}>{fmtPrice(price)}</td>
                   <td style={{ padding: '6px 8px', border: '1px solid #C9BBA0', textAlign: 'right' }}>{price ? fmtBaht(d.kg * price) : '—'}</td>
@@ -1296,7 +1294,6 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
           <tfoot>
             <tr style={{ background: '#2A2118', color: '#fff' }}>
               <td style={{ padding: 8, fontWeight: 700 }}>รวม</td>
-              <td style={{ padding: 8, textAlign: 'center' }}>{(session?.entries || []).length}</td>
               <td style={{ padding: 8, textAlign: 'right', fontWeight: 700 }}>{fmtKg(totalKg)}</td>
               <td style={{ padding: 8 }} />
               <td style={{ padding: 8, textAlign: 'right', fontWeight: 700 }}>{fmtBaht(totalBaht)}</td>
