@@ -2205,69 +2205,166 @@ function SaleNewView({ onStart, onGoBack }) {
 }
 
 // ─── Sale Record View ─────────────────────────────────────────────────────────
-function SaleRecordView({ saleSession, activeCat, input, onInput, onCommit, onPickCat, onGoBack, onGoSummary, onEditEntry }) {
-  const catTotals = {};
-  (saleSession?.entries || []).forEach(e => { catTotals[e.cat] = (catTotals[e.cat] || 0) + e.kg; });
-  const totalKg = (saleSession?.entries || []).reduce((s, e) => s + e.kg, 0);
+function SaleRecordView({ saleSession, activeCat, input, onInput, onCommit, onPickCat, onGoBack, onGoSummary, onEditEntry, pinnedCats, onOpenPinEditor, onCustomLabelChange }) {
+  const entries = saleSession?.entries || [];
+  const aggData = {};
+  CATS.forEach(c => { aggData[c.key] = { kg: 0, count: 0 }; });
+  entries.forEach(e => { if (aggData[e.cat]) { aggData[e.cat].kg += e.kg; aggData[e.cat].count++; } });
+  const totalKg = entries.reduce((s, e) => s + e.kg, 0);
+  const totalCount = entries.length;
+  const customLabel = saleSession?.customLabel || '';
+  const mainCats = CATS.filter(c => c.key !== 'custom');
+  const customCat = CATS.find(c => c.key === 'custom');
+  const recent = entries.filter(e => e.cat === activeCat).slice().reverse();
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', maxWidth: 520, margin: '0 auto', width: '100%' }}>
-      <div style={{ padding: '10px 16px 0' }}>
-        <button onClick={onGoBack} style={{ border: 'none', background: 'none', fontSize: 14, color: '#8A7A66', cursor: 'pointer', padding: '4px 0 8px' }}>‹ กลับ</button>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
-          <div>
-            <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 17, color: '#3F2D1E' }}>บันทึกใบขาย</div>
-            <div style={{ fontSize: 12, color: '#9A8662' }}>{saleSession?.customerName || 'ไม่ระบุชื่อ'} {saleSession?.customerPhone ? `· ${saleSession.customerPhone}` : ''}</div>
-          </div>
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: 12, color: '#9A8662' }}>รวม</div>
-            <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 18, color: '#3F2D1E' }}>{fmtKg(totalKg)} <span style={{ fontSize: 12, fontWeight: 400 }}>กก.</span></div>
-          </div>
+    <div style={{ flex: 1, maxWidth: 880, width: '100%', margin: '0 auto', padding: '14px 14px 130px' }}>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+        <button onClick={onGoBack} style={{ border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 10, padding: '8px 12px', fontSize: 13, color: '#7A6450', cursor: 'pointer' }}>‹ หน้าหลัก</button>
+        <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.2 }}>
+          <span style={{ fontWeight: 600, fontSize: 14, color: '#4A3526' }}>{saleSession?.billNo}</span>
+          <span style={{ fontSize: 12, color: '#9A8662' }}>{saleSession ? dateStr(saleSession.date) : ''}</span>
         </div>
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
-          {CATS.map(c => (
-            <button key={c.key} onClick={() => onPickCat(c.key)}
-              style={{ border: `2px solid ${activeCat === c.key ? '#4A7A2E' : '#E4D7BC'}`, background: activeCat === c.key ? '#E8F5E0' : '#fff', borderRadius: 10, padding: '7px 12px', fontSize: 13, fontFamily: 'Prompt', color: activeCat === c.key ? '#2E5C1A' : '#7A6450', cursor: 'pointer', fontWeight: activeCat === c.key ? 700 : 400 }}>
-              {c.label}{catTotals[c.key] ? ` · ${fmtKg(catTotals[c.key])}` : ''}
-            </button>
-          ))}
-        </div>
-        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 8, background: '#F5FAF0', borderRadius: 14, padding: 14, marginBottom: 12, border: '1.5px solid #C8DFB0' }}>
-          <span style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 40, color: '#2E5C1A' }}>{input || '0'}</span>
-          <span style={{ fontSize: 15, color: '#6A9A4E' }}>กก.</span>
-        </div>
-        <Keypad value={input} onChange={onInput} />
-        <button onClick={onCommit} style={{ width: '100%', marginTop: 10, border: 'none', borderRadius: 12, padding: 16, background: '#4A7A2E', color: '#fff', fontWeight: 700, fontSize: 16, cursor: 'pointer', fontFamily: 'Prompt' }}>
-          ✓ บันทึกเข่ง
-        </button>
       </div>
-      <div style={{ flex: 1, padding: '10px 16px 0', overflowY: 'auto' }}>
-        {(saleSession?.entries || []).length === 0 ? (
-          <div style={{ textAlign: 'center', color: '#B7A684', fontSize: 13, padding: '24px 0' }}>ยังไม่มีรายการ — กดบันทึกเข่งด้านบน</div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {[...(saleSession?.entries || [])].reverse().map((e, i, arr) => {
-              const catObj = CATS.find(c => c.key === e.cat);
+
+      {/* Customer chip */}
+      <div style={{ display: 'flex', gap: 6, marginBottom: 12, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: (saleSession?.customerName || saleSession?.customerPhone) ? '#F0EAFA' : '#F5F5F5', border: `1px solid ${(saleSession?.customerName || saleSession?.customerPhone) ? '#C9B8E8' : '#D0C8C0'}`, borderRadius: 20, padding: '5px 12px' }}>
+          <span style={{ fontSize: 13 }}>🛒</span>
+          <span style={{ fontSize: 13, fontWeight: 600, color: (saleSession?.customerName || saleSession?.customerPhone) ? '#5A3E8A' : '#9A8878' }}>
+            {saleSession?.customerName || saleSession?.customerPhone || 'ไม่ระบุชื่อลูกค้า'}
+          </span>
+          {saleSession?.customerPhone && saleSession?.customerName && (
+            <span style={{ fontSize: 12, color: '#9A8878' }}>· {saleSession.customerPhone}</span>
+          )}
+        </div>
+      </div>
+
+      {/* Total bar */}
+      <div style={{ background: 'linear-gradient(135deg,#2E5C1A,#4A7A2E)', color: '#F0FAE8', borderRadius: 16, padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, boxShadow: '0 8px 20px rgba(46,92,26,.22)' }}>
+        <div>
+          <span style={{ fontSize: 12, opacity: .7, letterSpacing: '.08em', display: 'block' }}>รวมน้ำหนักทั้งหมด</span>
+          <span style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 30, lineHeight: 1.1 }}>{fmtKg(totalKg)} <span style={{ fontSize: 15, opacity: .7 }}>กก.</span></span>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <span style={{ fontSize: 12, opacity: .7, display: 'block' }}>จำนวนเข่ง</span>
+          <span style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 22 }}>{totalCount}</span>
+        </div>
+      </div>
+
+      {/* Pinned cats */}
+      {pinnedCats && pinnedCats.length > 0 && (
+        <div style={{ marginBottom: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+            <span style={{ fontSize: 11, color: '#A6925E', fontWeight: 600, letterSpacing: '.1em' }}>⭐ ปักหมุด</span>
+            <div style={{ flex: 1, height: 1, background: '#E4D7BC' }} />
+            <button onClick={onOpenPinEditor} style={{ border: '1px solid #E4D7BC', background: '#FBF6EC', borderRadius: 8, padding: '3px 8px', fontSize: 11, color: '#9A8662', cursor: 'pointer' }}>จัดการ</button>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(pinnedCats.length, 5)},1fr)`, gap: 7 }}>
+            {pinnedCats.map(key => {
+              const cat = CATS.find(c => c.key === key);
+              if (!cat) return null;
+              const d = aggData[key] || { kg: 0, count: 0 };
+              const active = activeCat === key;
               return (
-                <div key={e.id} onClick={() => onEditEntry(e)} style={{ display: 'flex', alignItems: 'center', background: '#FFFDF8', border: '1px solid #E4D7BC', borderRadius: 10, padding: '10px 14px', cursor: 'pointer' }}>
-                  <div style={{ flex: 1 }}>
-                    <span style={{ fontSize: 12, color: '#9A8662' }}>#{arr.length - i} · </span>
-                    <span style={{ fontWeight: 600, color: '#4A3526' }}>{catObj?.label || e.cat}</span>
-                  </div>
-                  <span style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 16, color: '#2E5C1A' }}>{fmtKg(e.kg)} กก.</span>
-                </div>
+                <button key={key} onClick={() => onPickCat(key)} style={{ border: active ? `2px solid ${cat.accent}` : '1.5px solid #D8C8A8', background: active ? '#FFFDF8' : '#F6F0E4', borderRadius: 12, padding: '10px 4px', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: active ? `0 4px 12px ${cat.accent}40` : 'none' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: cat.accent, display: 'inline-block', flexShrink: 0 }} />
+                    <span style={{ fontWeight: 700, fontSize: 13, color: '#4A3526' }}>{cat.label || cat.key}</span>
+                  </span>
+                  <span style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 16, marginTop: 3 }}>{fmtKg(d.kg)}</span>
+                  <span style={{ fontSize: 10, opacity: .7 }}>{d.count} เข่ง</span>
+                </button>
               );
             })}
           </div>
-        )}
-      </div>
-      {(saleSession?.entries || []).length > 0 && (
-        <div style={{ padding: '12px 16px 24px' }}>
-          <button onClick={onGoSummary} style={{ width: '100%', border: 'none', borderRadius: 14, padding: 16, background: 'linear-gradient(135deg,#5C4326,#3F2D1E)', color: '#F6EEDD', fontWeight: 700, fontSize: 17, cursor: 'pointer', fontFamily: 'Prompt' }}>
-            สรุปและปริ้น →
-          </button>
         </div>
       )}
+
+      {(!pinnedCats || pinnedCats.length === 0) && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 8, marginBottom: 8 }}>
+          {mainCats.map(c => {
+            const d = aggData[c.key];
+            const active = activeCat === c.key;
+            return (
+              <button key={c.key} onClick={() => onPickCat(c.key)} style={{ border: active ? `2px solid ${c.accent}` : '1px solid #E4D7BC', background: active ? '#FFFDF8' : '#FBF6EC', borderRadius: 12, padding: '10px 4px', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: active ? `0 4px 12px ${c.accent}40` : 'none' }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'center' }}>
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: c.accent, display: 'inline-block', flexShrink: 0 }} />
+                  <span style={{ fontWeight: 600, fontSize: 13 }}>{c.label}</span>
+                </span>
+                <span style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 16, marginTop: 3 }}>{fmtKg(d.kg)}</span>
+                <span style={{ fontSize: 10, opacity: .7 }}>{d.count} เข่ง</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Custom cat row */}
+      {(() => {
+        const d = aggData['custom'];
+        const active = activeCat === 'custom';
+        return (
+          <button onClick={() => onPickCat('custom')} style={{ width: '100%', border: active ? `2px solid ${customCat.accent}` : '1px solid #E4D7BC', background: active ? '#FFFDF8' : '#FBF6EC', borderRadius: 12, padding: '10px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, boxShadow: active ? `0 4px 12px ${customCat.accent}40` : 'none' }}>
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: customCat.accent, display: 'inline-block', flexShrink: 0 }} />
+            <input
+              value={customLabel}
+              onChange={e => onCustomLabelChange(e.target.value)}
+              onFocus={() => onPickCat('custom')}
+              onClick={e => e.stopPropagation()}
+              placeholder="พิมชื่อหมวดเอง…"
+              style={{ flex: 1, border: 'none', background: 'transparent', fontSize: 13, fontWeight: 600, color: '#4A3526', outline: 'none', cursor: 'text', fontFamily: 'inherit', minWidth: 0 }}
+            />
+            <div style={{ textAlign: 'right', flexShrink: 0 }}>
+              <div style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 16 }}>{fmtKg(d.kg)}</div>
+              <div style={{ fontSize: 10, opacity: .7 }}>{d.count} เข่ง</div>
+            </div>
+          </button>
+        );
+      })()}
+
+      {/* Input + Keypad */}
+      <div style={{ background: '#FFFDF8', border: '1px solid #E4D7BC', borderRadius: 18, padding: 16, boxShadow: '0 4px 14px rgba(95,70,40,.06)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 7, fontWeight: 600, color: '#4A3526' }}>
+            <span style={{ width: 11, height: 11, borderRadius: '50%', background: catAccent(activeCat), display: 'inline-block' }} />
+            กำลังจด: {activeCat === 'custom' ? (customLabel || 'หมวดพิเศษ') : catLabel(activeCat)}
+          </span>
+          <span style={{ fontSize: 12, color: '#9A8662' }}>เคาะตัวเลข แล้วกด "บันทึกเข่ง"</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 8, background: '#FBF6EC', borderRadius: 14, padding: 14, marginBottom: 14, minHeight: 60 }}>
+          <span style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 42, color: '#3F2D1E', lineHeight: 1 }}>{input || '0'}</span>
+          <span style={{ fontSize: 16, color: '#A6925E' }}>กก.</span>
+        </div>
+        <Keypad value={input} onChange={onInput} onConfirm={onCommit} />
+      </div>
+
+      {/* Recent entries for active cat */}
+      {recent.length > 0 && (
+        <div style={{ marginTop: 16 }}>
+          <span style={{ fontSize: 12, color: '#A6925E', letterSpacing: '.08em' }}>เข่งล่าสุด ({activeCat === 'custom' ? (customLabel || 'หมวดพิเศษ') : catLabel(activeCat)}) — แตะเพื่อแก้/ลบ</span>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
+            {recent.map(e => (
+              <button key={e.id} onClick={() => onEditEntry(e)} style={{ border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 10, padding: '8px 12px', fontSize: 14, color: '#4A3526', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ fontFamily: 'Prompt', fontWeight: 500 }}>{fmtKg(e.kg)}</span>
+                <span style={{ fontSize: 11, color: '#B7A684' }}>กก. · {timeStr(e.t)}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Fixed bottom bar */}
+      <div className="no-print" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 25, background: '#FBF6EC', borderTop: '1px solid #E4D7BC', padding: 'calc(env(safe-area-inset-bottom) + 10px) 14px 10px', display: 'flex', gap: 10 }}>
+        <button
+          onClick={onCommit}
+          disabled={!input || parseFloat(input) <= 0}
+          style={{ flex: 1, border: 'none', borderRadius: 13, padding: 15, background: (!input || parseFloat(input) <= 0) ? '#D9CDB8' : 'linear-gradient(135deg,#C9A24B,#A8763E)', color: (!input || parseFloat(input) <= 0) ? '#A89880' : '#fff', fontWeight: 700, fontSize: 16, cursor: (!input || parseFloat(input) <= 0) ? 'not-allowed' : 'pointer', transition: 'background .2s' }}>
+          ＋ บันทึกเข่งนี้
+        </button>
+        <button onClick={onGoSummary} style={{ flex: 1, border: 'none', borderRadius: 13, padding: 15, background: '#3F2D1E', color: '#F6EEDD', fontWeight: 600, fontSize: 16, cursor: 'pointer' }}>ดูสรุป & ตั้งราคา →</button>
+      </div>
     </div>
   );
 }
@@ -3775,7 +3872,9 @@ export default function App() {
         } />
         <Route path="/sale/record" element={saleSession ? (
           <SaleRecordView saleSession={saleSession} activeCat={saleActiveCat} input={saleInput} onInput={setSaleInput} onCommit={commitSaleEntry}
-            onPickCat={setSaleActiveCat} onGoBack={() => navigate('/sale/new')} onGoSummary={() => navigate('/sale/print')} onEditEntry={editSaleEntry} />
+            onPickCat={setSaleActiveCat} onGoBack={() => navigate('/sale/new')} onGoSummary={() => navigate('/sale/print')} onEditEntry={editSaleEntry}
+            pinnedCats={pinnedCats} onOpenPinEditor={() => setPinEditorOpen(true)}
+            onCustomLabelChange={label => setSaleSession(prev => ({ ...prev, customLabel: label }))} />
         ) : <Navigate to="/sale/new" replace />} />
         <Route path="/sale/print" element={saleSession ? (
           <SalePrintView saleSession={saleSession} onGoBack={() => navigate('/sale/record')} onFinish={finishSaleSession} />
