@@ -1353,12 +1353,12 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
                   .bill-entry-kg { font-size: 6px !important; }
                 }
               `}</style>
-              <div className="bill-entries-root" style={{ marginTop: 12 }}>
+              <div className="bill-entries-root" style={{ marginTop: 12, display: 'flex', flexWrap: 'wrap', gap: '8px 14px', alignItems: 'flex-start' }}>
                 {Object.entries(grouped).map(([catKey, ents]) => {
                   const catObj = CATS.find(c => c.key === catKey);
                   const label = catKey === 'custom' ? (customLabel || 'หมวดพิเศษ') : (catObj?.label || catKey);
                   return (
-                    <div key={catKey} className="bill-entries-group" style={{ marginBottom: 7 }}>
+                    <div key={catKey} className="bill-entries-group" style={{ marginBottom: 0 }}>
                       <div className="bill-entry-label" style={{ fontSize: 8.5, color: '#8A7A66', fontWeight: 600, marginBottom: 3, letterSpacing: '.03em' }}>{label} — {ents.length} เข่ง</div>
                       <div className="bill-entry-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, max-content)', gap: 2 }}>
                         {ents.map((e, i) => (
