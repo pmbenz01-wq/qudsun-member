@@ -1308,11 +1308,11 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
               <style>{`
                 @media print {
                   .bill-entries-root { margin-top: 6px !important; margin-bottom: 6px !important; }
-                  .bill-entries-group { margin-bottom: 3px !important; }
-                  .bill-entry-label { font-size: 7px !important; margin-bottom: 2px !important; }
-                  .bill-entry-grid { gap: 1px !important; }
-                  .bill-entry-chip { padding: 1px 3px !important; border-radius: 2px !important; line-height: 1 !important; }
-                  .bill-entry-kg { font-size: 7px !important; }
+                  .bill-entries-group { margin-bottom: 4px !important; }
+                  .bill-entry-label { font-size: 9px !important; margin-bottom: 3px !important; }
+                  .bill-entry-grid { gap: 2px !important; }
+                  .bill-entry-chip { padding: 3px 6px !important; border-radius: 3px !important; line-height: 1.1 !important; }
+                  .bill-entry-kg { font-size: 11px !important; }
                 }
               `}</style>
               <div className="bill-entries-root" style={{ marginTop: 10, marginBottom: 10, display: 'flex', flexWrap: 'wrap', gap: '6px 14px', alignItems: 'flex-start' }}>
