@@ -1321,11 +1321,11 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
                   const label = catKey === 'custom' ? (customLabel || 'หมวดพิเศษ') : (catObj?.label || catKey);
                   return (
                     <div key={catKey} className="bill-entries-group" style={{ marginBottom: 0 }}>
-                      <div className="bill-entry-label" style={{ fontSize: 9.5, color: '#8A7A66', fontWeight: 600, marginBottom: 3, letterSpacing: '.03em' }}>{label} — {ents.length} เข่ง</div>
-                      <div className="bill-entry-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, max-content)', gap: 2 }}>
+                      <div className="bill-entry-label" style={{ fontSize: 11, color: '#8A7A66', fontWeight: 600, marginBottom: 4, letterSpacing: '.03em' }}>{label} — {ents.length} เข่ง</div>
+                      <div className="bill-entry-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, max-content)', gap: 3 }}>
                         {ents.map((e, i) => (
-                          <div key={e.id || i} className="bill-entry-chip" style={{ border: '0.5px solid #D8C8A8', borderRadius: 3, padding: '3px 5px', background: '#FFFDF8', textAlign: 'center', lineHeight: 1.15 }}>
-                            <span className="bill-entry-kg" style={{ fontWeight: 700, fontSize: 10, color: '#2A2118' }}>{fmtKg(e.kg)}</span>
+                          <div key={e.id || i} className="bill-entry-chip" style={{ border: '1px solid #D8C8A8', borderRadius: 4, padding: '4px 7px', background: '#FFFDF8', textAlign: 'center', lineHeight: 1.15 }}>
+                            <span className="bill-entry-kg" style={{ fontWeight: 700, fontSize: 12, color: '#2A2118' }}>{fmtKg(e.kg)}</span>
                           </div>
                         ))}
                       </div>
