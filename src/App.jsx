@@ -1862,6 +1862,28 @@ function SalesView({ history, sales, accounts, pin, onGoHome, onAddSale, onDelet
   const [deletePinVal, setDeletePinVal] = useState('');
   const [deletePinErr, setDeletePinErr] = useState('');
   const [expandedId, setExpandedId] = useState(null);
+  const [uploadingSaleId, setUploadingSaleId] = useState(null);
+  const receiptInputRef = useRef();
+  const uploadTargetRef = useRef(null);
+
+  const handleSaleReceiptUpload = (file, saleId) => {
+    if (!file) return;
+    setUploadingSaleId(saleId);
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      const dataUrl = ev.target.result;
+      try {
+        const res = await fetch('/api/drive', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ base64: dataUrl, filename: `sale_receipt_${Date.now()}.jpg`, folder: 'QudsunSaleReceipts' }) });
+        const data = await res.json();
+        const url = data.ok && data.fileId ? `https://drive.google.com/uc?id=${data.fileId}` : dataUrl;
+        await onUpdateSale(saleId, { receiptUrl: url });
+      } catch {
+        await onUpdateSale(saleId, { receiptUrl: dataUrl });
+      }
+      setUploadingSaleId(null);
+    };
+    reader.readAsDataURL(file);
+  };
 
   const toDateStr = ts => { const d = new Date(ts); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
 
@@ -1958,16 +1980,29 @@ function SalesView({ history, sales, accounts, pin, onGoHome, onAddSale, onDelet
             </button>
             {expanded && (
               <div style={{ padding: '0 16px 14px', borderTop: '1px solid #F0E8D8' }}>
-                {s.receiptUrl && (
+                {s.receiptUrl ? (
                   <a href={s.receiptUrl} target="_blank" rel="noreferrer">
                     <img src={s.receiptUrl} alt="ใบเสร็จ" style={{ width: '100%', maxHeight: 180, objectFit: 'contain', borderRadius: 10, border: '1px solid #E4D7BC', background: '#f5f5f5', display: 'block', marginBottom: 10, marginTop: 10 }} />
                   </a>
+                ) : (
+                  <div style={{ marginTop: 10, marginBottom: 10 }}>
+                    <button onClick={() => { uploadTargetRef.current = s.id; receiptInputRef.current?.click(); }}
+                      disabled={uploadingSaleId === s.id}
+                      style={{ width: '100%', border: '1.5px dashed #C9A24B', borderRadius: 10, padding: '10px 0', background: '#FFFBF0', color: '#7A5A22', fontSize: 13, cursor: 'pointer', fontFamily: 'Prompt' }}>
+                      {uploadingSaleId === s.id ? '⏳ กำลังอัปโหลด...' : '📎 อัปโหลดใบเสร็จ'}
+                    </button>
+                  </div>
                 )}
-                <div style={{ display: 'flex', gap: 8, marginTop: s.receiptUrl ? 0 : 10 }}>
+                <div style={{ display: 'flex', gap: 8, marginTop: s.receiptUrl ? 10 : 0 }}>
                   <button onClick={() => onUpdateSale(s.id, { note: nextSt })}
                     style={{ flex: 1, border: `1px solid ${badge.border}`, borderRadius: 9, padding: '8px 0', background: badge.bg, color: badge.color, fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>
                     เปลี่ยนเป็น: {stMap[nextSt]?.label}
                   </button>
+                  {s.receiptUrl && (
+                    <button onClick={() => { uploadTargetRef.current = s.id; receiptInputRef.current?.click(); }}
+                      disabled={uploadingSaleId === s.id}
+                      style={{ border: '1px solid #C9A24B', background: '#FFFBF0', borderRadius: 9, padding: '8px 10px', fontSize: 12, color: '#7A5A22', cursor: 'pointer' }}>📎</button>
+                  )}
                   <button onClick={() => { setDeleteTarget(s.id); setDeletePinVal(''); setDeletePinErr(''); setExpandedId(null); }}
                     style={{ border: '1px solid #E8C8C2', background: '#FDF0EE', borderRadius: 9, padding: '8px 14px', fontSize: 12, color: '#C0392B', cursor: 'pointer' }}>🗑 ลบ</button>
                 </div>
@@ -2001,6 +2036,9 @@ function SalesView({ history, sales, accounts, pin, onGoHome, onAddSale, onDelet
           ))}
         </>
       )}
+
+      <input ref={receiptInputRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }}
+        onChange={e => { const f = e.target.files?.[0]; if (f && uploadTargetRef.current) handleSaleReceiptUpload(f, uploadTargetRef.current); e.target.value = ''; }} />
 
       {addOpen && <AddSaleModal date={todayStr} accounts={accounts || []} onSaveAccount={onSaveAccount} onSave={async (data) => { await onAddSale(data); setAddOpen(false); }} onClose={() => setAddOpen(false)} />}
 
