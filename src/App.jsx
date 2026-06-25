@@ -1279,31 +1279,6 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
         </button>
         <p style={{ textAlign: 'center', fontSize: 12, color: '#9A8662', margin: '8px 0 0' }}>เครื่องนี้ต้องต่อกับเครื่องปริ้น · ขนาดกระดาษ A5 (ครึ่ง A4)</p>
 
-        <div style={{ marginTop: 20, background: '#FFFDF8', border: '1px solid #E4D7BC', borderRadius: 16, padding: 18 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-            <span style={{ fontSize: 18 }}>📡</span>
-            <span style={{ fontWeight: 600, color: '#4A3526' }}>เครื่องปริ้นไม่ได้ต่อ Wi-Fi?</span>
-          </div>
-          <p style={{ margin: '0 0 14px', fontSize: 13, color: '#9A8662', lineHeight: 1.6 }}>
-            ถ้ากดจดบนแท็บเล็ต/มือถือ แต่เครื่องปริ้นต่ออยู่กับคอมหลัก — ที่เครื่องคอมเปิดเว็บนี้ แล้ว<b>สแกน QR</b> หรือพิมพ์<b>รหัสบิล</b> ด้านล่าง บิลจะเด้งขึ้นพร้อมปุ่มปริ้นทันที
-          </p>
-          <div style={{ display: 'flex', gap: 18, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
-            <div style={{ background: '#fff', padding: 10, borderRadius: 12, border: '1px solid #E4D7BC' }}>
-              {qrDataUrl
-                ? <img src={qrDataUrl} alt="QR บิล" style={{ width: 160, height: 160, display: 'block', imageRendering: 'pixelated' }} />
-                : <div style={{ width: 160, height: 160, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#B7A684', fontSize: 12, textAlign: 'center' }}>กำลังสร้าง QR…</div>
-              }
-            </div>
-            <div style={{ flex: 1, minWidth: 200 }}>
-              <span style={{ fontSize: 12, color: '#A6925E', display: 'block' }}>รหัสบิล (พิมพ์ที่เครื่องคอม)</span>
-              <div style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 26, letterSpacing: '.18em', color: '#3F2D1E', margin: '4px 0 12px' }}>{code}</div>
-              <button onClick={doCopy} style={{ border: '1px solid #D8C8A8', background: '#FBF6EC', borderRadius: 10, padding: '10px 14px', fontSize: 13, color: '#7A5A22', cursor: 'pointer' }}>
-                {copied ? '✓ คัดลอกแล้ว' : '📋 คัดลอกลิงก์'}
-              </button>
-            </div>
-          </div>
-        </div>
-
         <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
           {readonly ? (
             <button onClick={onGoBack} style={{ width: '100%', border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 12, padding: 14, fontSize: 15, color: '#7A6450', cursor: 'pointer' }}>‹ กลับ</button>
