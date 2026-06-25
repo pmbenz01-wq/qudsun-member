@@ -1283,7 +1283,10 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
               const price = session?.prices[c.key] || 0;
               return (
                 <tr key={c.key}>
-                  <td style={{ padding: '6px 8px', border: '1px solid #C9BBA0' }}>{c.key === 'custom' ? (customLabel || 'หมวดพิเศษ') : c.label}</td>
+                  <td style={{ padding: '6px 8px', border: '1px solid #C9BBA0' }}>
+                    <div>{c.key === 'custom' ? (customLabel || 'หมวดพิเศษ') : c.label}</div>
+                    {d.count > 0 && <div style={{ fontSize: 9.5, color: '#8A7A66', marginTop: 1 }}>{d.count} เข่ง</div>}
+                  </td>
                   <td style={{ padding: '6px 8px', border: '1px solid #C9BBA0', textAlign: 'right' }}>{fmtKg(d.kg)}</td>
                   <td style={{ padding: '6px 8px', border: '1px solid #C9BBA0', textAlign: 'right' }}>{fmtPrice(price)}</td>
                   <td style={{ padding: '6px 8px', border: '1px solid #C9BBA0', textAlign: 'right' }}>{price ? fmtBaht(d.kg * price) : '—'}</td>
@@ -1293,7 +1296,10 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
           </tbody>
           <tfoot>
             <tr style={{ background: '#2A2118', color: '#fff' }}>
-              <td style={{ padding: 8, fontWeight: 700 }}>รวม</td>
+              <td style={{ padding: 8, fontWeight: 700 }}>
+                <div>รวม</div>
+                <div style={{ fontSize: 9.5, opacity: .75, fontWeight: 400, marginTop: 1 }}>{(session?.entries || []).length} เข่ง</div>
+              </td>
               <td style={{ padding: 8, textAlign: 'right', fontWeight: 700 }}>{fmtKg(totalKg)}</td>
               <td style={{ padding: 8 }} />
               <td style={{ padding: 8, textAlign: 'right', fontWeight: 700 }}>{fmtBaht(totalBaht)}</td>
