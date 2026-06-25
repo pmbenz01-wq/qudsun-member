@@ -1230,19 +1230,10 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
             📥 บิลนี้รับเข้ามาจากแท็บเล็ต — พร้อมสั่งปริ้นจากเครื่องนี้ได้เลย
           </div>
         )}
-        <button onClick={handleShareBill} disabled={sharing} style={{ width: '100%', border: 'none', borderRadius: 15, padding: 18, background: sharing ? '#C8B89A' : 'linear-gradient(135deg,#00B900,#009000)', color: '#fff', fontWeight: 700, fontSize: 18, cursor: sharing ? 'default' : 'pointer', boxShadow: '0 8px 18px rgba(0,180,0,.22)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
-          {sharing ? '⏳ กำลังสร้าง PDF...' : '📤 ส่งบิลเพื่อปริ้น'}
+        <button onClick={() => window.print()} style={{ width: '100%', border: 'none', borderRadius: 15, padding: 18, background: 'linear-gradient(135deg,#5C4326,#3F2D1E)', color: '#F6EEDD', fontWeight: 700, fontSize: 18, cursor: 'pointer', boxShadow: '0 8px 18px rgba(63,45,30,.26)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+          🖨 ปริ้นบิลจากเครื่องนี้
         </button>
-        <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-          <button onClick={() => window.print()} style={{ flex: 1, border: '1px solid #C8B89A', borderRadius: 12, padding: '11px 0', background: 'transparent', color: '#8A7A66', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
-            🖨 ปริ้นจากเครื่องนี้
-          </button>
-          <a href="https://line.me/R/ti/p/@245mycrd" target="_blank" rel="noreferrer"
-            style={{ flex: 1, border: '1px solid #00B900', borderRadius: 12, padding: '11px 0', background: '#F0FFF0', color: '#007700', fontWeight: 600, fontSize: 13, cursor: 'pointer', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-            📱 เปิดแชท Epson
-          </a>
-        </div>
-        <p style={{ textAlign: 'center', fontSize: 12, color: '#9A8662', margin: '8px 0 0' }}>กดส่งบิล → share sheet → เลือก LINE → ส่งไปแชท Epson</p>
+        <p style={{ textAlign: 'center', fontSize: 12, color: '#9A8662', margin: '8px 0 0' }}>เครื่องนี้ต้องต่อกับเครื่องปริ้น · ขนาดกระดาษ A5 (ครึ่ง A4)</p>
 
         <div style={{ marginTop: 20, background: '#FFFDF8', border: '1px solid #E4D7BC', borderRadius: 16, padding: 18 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
