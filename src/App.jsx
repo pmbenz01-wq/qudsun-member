@@ -1260,8 +1260,7 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
                 const g = TIER_GRAD[tier.key] || TIER_GRAD.silver;
                 return (
                   <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: g.bg, color: g.color, borderRadius: 5, padding: '4px 10px', boxShadow: '0 1px 3px rgba(0,0,0,.18)', marginTop: 2, whiteSpace: 'nowrap' }}>
-                    <span style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 9, letterSpacing: '.14em', textTransform: 'uppercase', opacity: .85 }}>{tier.label}</span>
-                    <span style={{ width: 1, height: 10, background: 'currentColor', opacity: .3 }} />
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: g.color, opacity: .7, flexShrink: 0 }} />
                     <span style={{ fontWeight: 700, fontSize: 10.5 }}>{session?.seller || '—'}{session?.sellerPhone ? ` · ${session.sellerPhone}` : ''}</span>
                   </div>
                 );
