@@ -662,8 +662,8 @@ function RecordView({ session, activeCat, input, onInput, onCommit, onPickCat, o
           </span>
         </div>
         <div onClick={() => setVehicleModalOpen(true)} style={{ display: 'flex', alignItems: 'center', gap: 5, background: vehiclePlate ? '#FFF3E0' : '#F5F5F5', border: `1px solid ${vehiclePlate ? '#FFB74D' : '#D0C8C0'}`, borderRadius: 20, padding: '5px 12px', cursor: 'pointer' }}>
-          {vehiclePhotoUrl
-            ? <img src={vehiclePhotoUrl} style={{ width: 22, height: 22, borderRadius: 4, objectFit: 'cover', flexShrink: 0 }} alt="" />
+          {(vehiclePhotoUrl || session?.vehicleSupaUrl)
+            ? <img src={vehiclePhotoUrl || session?.vehicleSupaUrl} style={{ width: 22, height: 22, borderRadius: 4, objectFit: 'cover', flexShrink: 0 }} alt="" />
             : <span style={{ fontSize: 13 }}>🚗</span>
           }
           <span style={{ fontSize: 13, fontWeight: 600, color: vehiclePlate ? '#BF360C' : '#9A8878' }}>
@@ -674,7 +674,7 @@ function RecordView({ session, activeCat, input, onInput, onCommit, onPickCat, o
       {vehicleModalOpen && (
         <VehicleModal
           plate={vehiclePlate}
-          photoUrl={vehiclePhotoUrl}
+          photoUrl={vehiclePhotoUrl || session?.vehicleSupaUrl}
           onSave={onVehiclePlate}
           onPhoto={file => { onVehiclePhoto(file); }}
           onClose={() => setVehicleModalOpen(false)}
@@ -1155,7 +1155,7 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
                 <div>
                   <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 4 }}>🚗 ทะเบียนรถ {session?.vehiclePlate ? `· ${session.vehiclePlate}` : ''}</div>
                   {(() => {
-                    const vUrl = pay?.vehicleUrl || vehiclePhotoUrl;
+                    const vUrl = pay?.vehicleUrl || session?.vehicleSupaUrl || vehiclePhotoUrl;
                     return vUrl
                       ? <div style={{ position: 'relative' }}>
                           <a href={vUrl} target="_blank" rel="noreferrer"><img src={vUrl} alt="ทะเบียน" style={{ width: '100%', maxHeight: 160, objectFit: 'cover', borderRadius: 10, border: '1px solid #E4D7BC', display: 'block' }} /></a>
@@ -2551,6 +2551,12 @@ export default function App() {
       pendingPhotoDataUrl.current = dataUrl;
       updateSession(prev => ({ ...prev, vehiclePhotoKey: key }));
       toast('บันทึกภาพแล้ว');
+      // upload to Supabase immediately so other devices can see it in history
+      try {
+        const path = `vehicle/${session.billNo || key}_${Date.now()}.jpg`;
+        const url = await db.uploadPhoto(dataUrl, path);
+        if (url) updateSession(prev => ({ ...prev, vehicleSupaUrl: url }));
+      } catch {}
     } catch { toast('ถ่ายภาพไม่สำเร็จ'); }
   }, [session, updateSession, toast]);
 
