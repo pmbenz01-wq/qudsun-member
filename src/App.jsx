@@ -1591,7 +1591,7 @@ function DeleteBillModal({ bill, pin, onConfirm, onClose }) {
   );
 }
 
-function DashboardView({ history, payments, pin, onPayment, onDeleteBill, onGoHome }) {
+function DashboardView({ history, payments, pin, onPayment, onDeleteBill, onGoHome, onOpenHistory }) {
   const todayStr = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
   const [startDate, setStartDate] = useState(todayStr);
   const [endDate, setEndDate] = useState(todayStr);
@@ -1666,27 +1666,31 @@ function DashboardView({ history, payments, pin, onPayment, onDeleteBill, onGoHo
 
       {dayBills.map(b => {
         const st = STATUS[b.pay.status] || STATUS.unpaid;
+        const billTime = b.date ? new Date(b.date).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) + ' น.' : '';
         return (
-          <div key={b.billNo} style={{ background: '#FFFDF8', border: `1px solid #E4D7BC`, borderLeft: `4px solid ${st.color}`, borderRadius: 14, padding: '14px 16px', marginBottom: 10 }}>
+          <div key={b.billNo} style={{ background: '#FFFDF8', border: `1px solid #E4D7BC`, borderLeft: `4px solid ${st.color}`, borderRadius: 14, marginBottom: 10, overflow: 'hidden' }}>
+            <div style={{ padding: '14px 16px' }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
               {b.pay.slipUrl && (
-                <a href={b.pay.slipUrl} target="_blank" rel="noreferrer">
+                <a href={b.pay.slipUrl} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()}>
                   <img src={b.pay.slipUrl} alt="สลิป" style={{ width: 52, height: 52, objectFit: 'cover', borderRadius: 8, border: '1px solid #C8E6C9', flexShrink: 0, display: 'block' }} />
                 </a>
               )}
-              <div style={{ flex: 1 }}>
+              <button onClick={() => onOpenHistory && onOpenHistory(b)}
+                style={{ flex: 1, textAlign: 'left', background: 'none', border: 'none', padding: 0, cursor: onOpenHistory ? 'pointer' : 'default' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
                   <div style={{ fontWeight: 700, fontSize: 15, color: '#2A2118' }}>{b.seller || '—'}</div>
                   <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 20, background: st.bg, color: st.text, fontWeight: 600 }}>{st.label}</span>
                 </div>
-                <div style={{ fontSize: 12, color: '#8A7A66' }}>{b.billNo} · {b.kg} กก.</div>
-              </div>
+                <div style={{ fontSize: 12, color: '#8A7A66' }}>{b.billNo} · {b.kg} กก.{billTime ? ` · ${billTime}` : ''}</div>
+              </button>
               <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
                 <div style={{ fontWeight: 700, fontSize: 16, color: '#3F2D1E' }}>฿{b.baht}</div>
                 <button onClick={() => setDeleteBill(b)} style={{ border: 'none', background: 'none', padding: '2px 4px', cursor: 'pointer', fontSize: 14, color: '#C8B89A', lineHeight: 1 }}>🗑</button>
               </div>
             </div>
-            <div style={{ marginTop: 10 }}>
+            </div>
+            <div style={{ padding: '0 16px 14px' }}>
               {b.pay.status === 'unpaid' ? (
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button onClick={() => setTransferBill(b)}
@@ -3311,7 +3315,7 @@ export default function App() {
             supervisors={supervisors} customerInfo={customerInfo} />
         ) : <Navigate to="/" replace />} />
         <Route path="/purchases" element={
-          <DashboardView history={history} payments={payments} pin={pin} onPayment={handlePayment} onDeleteBill={handleDeleteBill} onGoHome={() => { navigate('/'); syncNow(true); }} />
+          <DashboardView history={history} payments={payments} pin={pin} onPayment={handlePayment} onDeleteBill={handleDeleteBill} onGoHome={() => { navigate('/'); syncNow(true); }} onOpenHistory={openHistory} />
         } />
         <Route path="/sales" element={
           <SalesView history={history} sales={sales} accounts={accounts} pin={pin} onGoHome={() => navigate('/')} onAddSale={handleAddSale} onDeleteSale={handleDeleteSale} onUpdateSale={handleUpdateSale} onSaveAccount={handleSaveAccount} onOpenHistory={openHistory} />
