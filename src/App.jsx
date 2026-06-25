@@ -1389,7 +1389,7 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
             <div style={{ fontSize: 11.5, color: '#8A7A66' }}>ขอบคุณที่ไว้วางใจ · ทุเรียนคัดสรร Qudsun</div>
             <div style={{ fontSize: 11.5, color: '#8A7A66', marginTop: 2 }}>โทร. 094-149-1914 (วิน) · 082-691-4414 (เบนซ์)</div>
           </div>
-          <img src="/qr-bill.png" alt="QR" style={{ width: 52, height: 52, objectFit: 'contain' }} onError={e => { e.target.style.display = 'none'; }} />
+          <img src="/qr-bill.png" alt="QR" style={{ width: 88, height: 88, objectFit: 'contain' }} onError={e => { e.target.style.display = 'none'; }} />
         </div>
       </div>
       </div>
