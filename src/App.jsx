@@ -1336,7 +1336,35 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
             </tr>
           </tfoot>
         </table>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 36, gap: 20 }}>
+        {(() => {
+          const entries = session?.entries || [];
+          if (entries.length === 0) return null;
+          const grouped = {};
+          entries.forEach(e => { if (!grouped[e.cat]) grouped[e.cat] = []; grouped[e.cat].push(e); });
+          return (
+            <div style={{ marginTop: 14 }}>
+              {Object.entries(grouped).map(([catKey, ents]) => {
+                const catObj = CATS.find(c => c.key === catKey);
+                const label = catKey === 'custom' ? (customLabel || 'หมวดพิเศษ') : (catObj?.label || catKey);
+                return (
+                  <div key={catKey} style={{ marginBottom: 10 }}>
+                    <div style={{ fontSize: 9.5, color: '#8A7A66', fontWeight: 600, marginBottom: 5, letterSpacing: '.04em' }}>{label} — {ents.length} เข่ง</div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                      {ents.map((e, i) => (
+                        <div key={e.id || i} style={{ border: '1px solid #D8C8A8', borderRadius: 8, padding: '5px 9px', background: '#FFFDF8', minWidth: 72 }}>
+                          <span style={{ fontWeight: 700, fontSize: 12, color: '#2A2118' }}>{fmtKg(e.kg)}</span>
+                          <span style={{ fontSize: 10, color: '#8A7A66' }}> กก.</span>
+                          {e.t ? <div style={{ fontSize: 9, color: '#B7A684', marginTop: 1 }}>{new Date(e.t).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}</div> : null}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })()}
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 24, gap: 20 }}>
           <div style={{ flex: 1, textAlign: 'center' }}><div style={{ borderTop: '1px dotted #2A2118', paddingTop: 6, fontSize: 11 }}>ลายเซ็นผู้ขาย</div></div>
           <div style={{ flex: 1, textAlign: 'center' }}><div style={{ borderTop: '1px dotted #2A2118', paddingTop: 6, fontSize: 11 }}>ลายเซ็นผู้ซื้อ</div></div>
         </div>
