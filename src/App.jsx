@@ -3730,13 +3730,22 @@ export default function App() {
     if (!saleSession) return;
     const totalKg = (saleSession.entries || []).reduce((s, e) => s + e.kg, 0);
     const totalBaht = (saleSession.entries || []).reduce((s, e) => s + e.kg * ((saleSession.prices || {})[e.cat] || 0), 0);
+
+    // Save to saleHistory (home page chat-style display)
     const summary = { billNo: saleSession.billNo, date: saleSession.date, customerName: saleSession.customerName || '', customerPhone: saleSession.customerPhone || '', kg: totalKg, baht: totalBaht };
     const nextSh = [summary, ...saleHistory];
     storage.saveSaleHistory(nextSh); setSaleHistory(nextSh);
+
+    // Also add to sales array so SalesView KPIs + list show this bill
+    const saleRecord = { id: saleSession.billNo, date: saleSession.date, buyer: saleSession.customerName || saleSession.billNo, kg: totalKg, baht: totalBaht, note: 'pending', receiptUrl: '' };
+    const nextSales = [saleRecord, ...sales];
+    storage.saveSales(nextSales); setSales(nextSales);
+    db.upsertSale(saleRecord).catch(() => {});
+
     storage.saveSaleSession(null); setSaleSession(null);
     toast('บันทึกบิลขายเรียบร้อย'); navigate('/');
     db.upsertSaleSession(saleSession).catch(() => {});
-  }, [saleSession, saleHistory, toast, navigate]);
+  }, [saleSession, saleHistory, sales, toast, navigate]);
 
   const editSaleEntry = useCallback((entry) => {
     setSaleNumpad({ entryId: entry.id, catKey: entry.cat, title: 'แก้ไขเข่ง — ' + (CATS.find(c => c.key === entry.cat)?.label || entry.cat), value: String(entry.kg), canDelete: true });
