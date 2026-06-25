@@ -1274,7 +1274,7 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
 
       {/* The Bill A5 */}
       <div className="bill-doc-wrapper" style={{ maxWidth: 420, margin: '0 auto' }}>
-      <div className="bill-doc" style={{ background: '#fff', border: '1px solid #E4D7BC', borderRadius: 6, boxShadow: '0 10px 30px rgba(95,70,40,.14)', padding: '22px 22px 18px', color: '#2A2118', fontSize: 12 }}>
+      <div className="bill-doc" style={{ background: '#fff', border: '1px solid #E4D7BC', borderRadius: 6, boxShadow: '0 10px 30px rgba(95,70,40,.14)', padding: '22px 22px 18px', color: '#2A2118', fontSize: 13 }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, borderBottom: '2px solid #2A2118', paddingBottom: 12 }}>
           <img src="/logo.jpg" style={{ width: 72, height: 72, borderRadius: 8, objectFit: 'cover' }} alt="Qudsun" />
           <div style={{ flex: 1 }}>
@@ -1321,11 +1321,11 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
                   const label = catKey === 'custom' ? (customLabel || 'หมวดพิเศษ') : (catObj?.label || catKey);
                   return (
                     <div key={catKey} className="bill-entries-group" style={{ marginBottom: 0 }}>
-                      <div className="bill-entry-label" style={{ fontSize: 14, color: '#8A7A66', fontWeight: 600, marginBottom: 5, letterSpacing: '.03em' }}>{label} — {ents.length} เข่ง</div>
-                      <div className="bill-entry-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, max-content)', gap: 4 }}>
+                      <div className="bill-entry-label" style={{ fontSize: 12, color: '#8A7A66', fontWeight: 600, marginBottom: 4, letterSpacing: '.03em' }}>{label} — {ents.length} เข่ง</div>
+                      <div className="bill-entry-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, max-content)', gap: 3 }}>
                         {ents.map((e, i) => (
-                          <div key={e.id || i} className="bill-entry-chip" style={{ border: '1px solid #D8C8A8', borderRadius: 5, padding: '5px 9px', background: '#FFFDF8', textAlign: 'center', lineHeight: 1.15 }}>
-                            <span className="bill-entry-kg" style={{ fontWeight: 700, fontSize: 16, color: '#2A2118' }}>{fmtKg(e.kg)}</span>
+                          <div key={e.id || i} className="bill-entry-chip" style={{ border: '1px solid #D8C8A8', borderRadius: 4, padding: '4px 8px', background: '#FFFDF8', textAlign: 'center', lineHeight: 1.15 }}>
+                            <span className="bill-entry-kg" style={{ fontWeight: 700, fontSize: 14, color: '#2A2118' }}>{fmtKg(e.kg)}</span>
                           </div>
                         ))}
                       </div>
@@ -1374,9 +1374,15 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
             </tr>
           </tfoot>
         </table>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 18, gap: 20 }}>
-          <div style={{ flex: 1, textAlign: 'center' }}><div style={{ borderTop: '1px dotted #2A2118', paddingTop: 6, fontSize: 11 }}>ลายเซ็นผู้ขาย</div></div>
-          <div style={{ flex: 1, textAlign: 'center' }}><div style={{ borderTop: '1px dotted #2A2118', paddingTop: 6, fontSize: 11 }}>ลายเซ็นผู้ซื้อ</div></div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 36, gap: 20 }}>
+          <div style={{ flex: 1, textAlign: 'center' }}>
+            <div style={{ height: 48 }} />
+            <div style={{ borderTop: '1px dotted #2A2118', paddingTop: 8, fontSize: 12 }}>ลายเซ็นผู้ขาย</div>
+          </div>
+          <div style={{ flex: 1, textAlign: 'center' }}>
+            <div style={{ height: 48 }} />
+            <div style={{ borderTop: '1px dotted #2A2118', paddingTop: 8, fontSize: 12 }}>ลายเซ็นผู้ซื้อ</div>
+          </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 14 }}>
           <div>
