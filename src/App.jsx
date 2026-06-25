@@ -1849,7 +1849,7 @@ function AddSaleModal({ date, accounts, onSave, onClose, onSaveAccount }) {
   );
 }
 
-function SalesView({ history, sales, accounts, pin, onGoHome, onAddSale, onDeleteSale, onUpdateSale, onSaveAccount }) {
+function SalesView({ history, sales, accounts, pin, onGoHome, onAddSale, onDeleteSale, onUpdateSale, onSaveAccount, onOpenHistory }) {
   const todayStr = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
   const [startDate, setStartDate] = useState(todayStr);
   const [endDate, setEndDate] = useState(todayStr);
@@ -1961,16 +1961,19 @@ function SalesView({ history, sales, accounts, pin, onGoHome, onAddSale, onDelet
             <div style={{ flex: 1, height: 1, background: '#E4D7BC' }} />
           </div>
           {inBills.map(h => (
-            <div key={h.billNo} style={{ background: '#FFF8EE', border: '1px solid #E8D8B4', borderRadius: 14, padding: '12px 16px', marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <button key={h.billNo} onClick={() => onOpenHistory && onOpenHistory(h)}
+              style={{ width: '100%', textAlign: 'left', background: '#FFF8EE', border: '1px solid #E8D8B4', borderRadius: 14, padding: '12px 16px', marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: onOpenHistory ? 'pointer' : 'default' }}>
               <div>
                 <div style={{ fontWeight: 600, fontSize: 14, color: '#3F2D1E' }}>{h.seller || h.billNo}</div>
                 <div style={{ fontSize: 11.5, color: '#9A8662', marginTop: 2 }}>{h.billNo}</div>
+                {h.date && <div style={{ fontSize: 11, color: '#B7A684', marginTop: 1 }}>{new Date(h.date).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} น.</div>}
               </div>
               <div style={{ textAlign: 'right' }}>
                 <div style={{ fontWeight: 700, fontSize: 14, color: '#7A5A22' }}>฿{h.baht}</div>
                 <div style={{ fontSize: 11.5, color: '#9A8662' }}>{h.kg}</div>
+                {onOpenHistory && <div style={{ fontSize: 11, color: '#C9A24B', marginTop: 2 }}>ดูบิล ›</div>}
               </div>
-            </div>
+            </button>
           ))}
         </>
       )}
@@ -3291,7 +3294,7 @@ export default function App() {
           <DashboardView history={history} payments={payments} pin={pin} onPayment={handlePayment} onDeleteBill={handleDeleteBill} onGoHome={() => { navigate('/'); syncNow(true); }} />
         } />
         <Route path="/sales" element={
-          <SalesView history={history} sales={sales} accounts={accounts} pin={pin} onGoHome={() => navigate('/')} onAddSale={handleAddSale} onDeleteSale={handleDeleteSale} onUpdateSale={handleUpdateSale} onSaveAccount={handleSaveAccount} />
+          <SalesView history={history} sales={sales} accounts={accounts} pin={pin} onGoHome={() => navigate('/')} onAddSale={handleAddSale} onDeleteSale={handleDeleteSale} onUpdateSale={handleUpdateSale} onSaveAccount={handleSaveAccount} onOpenHistory={openHistory} />
         } />
         <Route path="/customers" element={
           <CustomersView history={history} verified={verified} onGoHome={() => navigate('/')}
