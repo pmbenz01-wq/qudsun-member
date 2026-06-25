@@ -3508,16 +3508,11 @@ export default function App() {
 
   useEffect(() => { if (saleSession) persistSaleSession(saleSession); }, [saleSession, persistSaleSession]);
 
-  const finishSaleSession = useCallback(async () => {
+  const finishSaleSession = useCallback(() => {
     if (!saleSession) return;
-    let dbOk = false;
-    try { await db.upsertSaleSession(saleSession); dbOk = true; } catch (err) {
-      toast('บันทึกไม่สำเร็จ — กรุณาลองอีกครั้ง'); return;
-    }
-    if (dbOk) {
-      storage.saveSaleSession(null); setSaleSession(null);
-      toast('บันทึกบิลขายเรียบร้อย'); navigate('/sales');
-    }
+    storage.saveSaleSession(null); setSaleSession(null);
+    toast('บันทึกบิลขายเรียบร้อย'); navigate('/sales');
+    db.upsertSaleSession(saleSession).catch(() => {});
   }, [saleSession, toast, navigate]);
 
   const editSaleEntry = useCallback((entry) => {
