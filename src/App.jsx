@@ -287,7 +287,7 @@ function EmployeeManager({ employees, onSave, onCancel }) {
 }
 
 // ─── HomeView ─────────────────────────────────────────────────────────────────
-function HomeView({ session, history, payments, syncing, syncStatus, onSyncNow, onOpenSheet, onNew, onResume, onGoCustomers, onGoDashboard, onGoSupervisors, onGoSales, onNewSale, saleSession, onResumeSale, onChangePin, onSetEmployeePin, onOpenHistory, onPayment, onDeleteBill, pin, verified, supervisors, isEmployee, onLogout, onExport, onImport }) {
+function HomeView({ session, history, saleHistory, payments, syncing, syncStatus, onSyncNow, onOpenSheet, onNew, onResume, onGoCustomers, onGoDashboard, onGoSupervisors, onGoSales, onNewSale, saleSession, onResumeSale, onChangePin, onSetEmployeePin, onOpenHistory, onPayment, onDeleteBill, pin, verified, supervisors, isEmployee, onLogout, onExport, onImport }) {
   const customerCount = Object.keys(loadCustomers(history)).length;
   const supervisorCount = Object.values(supervisors || {}).filter(Boolean).reduce((set, n) => (set.add(n), set), new Set()).size;
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -414,59 +414,79 @@ function HomeView({ session, history, payments, syncing, syncStatus, onSyncNow, 
         </button>
       </div>
 
-      {history.length > 0 && (
+      {(history.length > 0 || (saleHistory || []).length > 0) && (
         <>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '20px 0 12px' }}>
             <span style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 13, letterSpacing: '.14em', color: '#A6925E' }}>ประวัติบิล</span>
             <div style={{ flex: 1, height: 1, background: '#E4D7BC' }} />
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {history.slice(0, 20).map((h, i) => {
-              const stat = h.phone ? customerStat(h.phone, history, verified) : null;
-              const tier = stat ? stat.effectiveTier : null;
-              const pay = payments?.[h.billNo];
-              const status = pay?.status || 'unpaid';
-              const borderColor = status === 'transferred' ? '#5A9A6A' : status === 'cash' ? '#5A7FA8' : '#E05050';
-              const statusLabel = status === 'transferred' ? '✓ โอนแล้ว' : status === 'cash' ? '✓ เงินสด' : null;
-              const statusColor = status === 'transferred' ? '#2E7D32' : status === 'cash' ? '#1A4D80' : null;
-              return (
-                <div key={i} style={{ border: `1.5px solid ${borderColor}`, background: '#FFFDF8', borderRadius: 13, overflow: 'hidden' }}>
-                  <button onClick={() => onOpenHistory(h)} style={{ textAlign: 'left', background: 'none', border: 'none', width: '100%', padding: '12px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <div style={{ width: 38, height: 38, borderRadius: 9, background: '#F0E4C8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, flexShrink: 0 }}>🧾</div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <span style={{ fontWeight: 600, fontSize: 14, color: '#4A3526' }}>{h.billNo}</span>
-                        {statusLabel && <span style={{ fontSize: 10, fontWeight: 700, color: statusColor }}>{statusLabel}</span>}
+            {[
+              ...history.slice(0, 30).map(h => ({ _type: 'buy', _date: h.date || 0, ...h })),
+              ...(saleHistory || []).slice(0, 30).map(s => ({ _type: 'sell', _date: s.date || 0, ...s })),
+            ].sort((a, b) => b._date - a._date).slice(0, 30).map((item, i) => {
+              if (item._type === 'buy') {
+                const h = item;
+                const stat = h.phone ? customerStat(h.phone, history, verified) : null;
+                const tier = stat ? stat.effectiveTier : null;
+                const pay = payments?.[h.billNo];
+                const status = pay?.status || 'unpaid';
+                const borderColor = status === 'transferred' ? '#5A9A6A' : status === 'cash' ? '#5A7FA8' : '#E05050';
+                const statusLabel = status === 'transferred' ? '✓ โอนแล้ว' : status === 'cash' ? '✓ เงินสด' : null;
+                const statusColor = status === 'transferred' ? '#2E7D32' : status === 'cash' ? '#1A4D80' : null;
+                return (
+                  <div key={'b-' + i} style={{ display: 'flex', justifyContent: 'flex-start' }}>
+                    <div style={{ width: '83%', border: `1.5px solid ${borderColor}`, background: '#FFFDF8', borderRadius: '4px 13px 13px 13px', overflow: 'hidden' }}>
+                      <button onClick={() => onOpenHistory(h)} style={{ textAlign: 'left', background: 'none', border: 'none', width: '100%', padding: '12px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <div style={{ width: 38, height: 38, borderRadius: 9, background: '#F0E4C8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, flexShrink: 0 }}>🧾</div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span style={{ fontWeight: 600, fontSize: 14, color: '#4A3526' }}>{h.billNo}</span>
+                            {statusLabel && <span style={{ fontSize: 10, fontWeight: 700, color: statusColor }}>{statusLabel}</span>}
+                          </div>
+                          <div style={{ fontSize: 12, color: '#9A8662', marginTop: 1 }}>
+                            {h.dateText} · {h.seller || '—'} · {h.kg} กก.
+                          </div>
+                          {tier && tier.key !== 'silver' && <TierBadge tier={tier} />}
+                        </div>
+                        <span style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 15, color: '#3F2D1E', whiteSpace: 'nowrap' }}>฿{h.baht}</span>
+                      </button>
+                      {status === 'unpaid' && onPayment && (
+                        <div style={{ display: 'flex', gap: 8, padding: '0 12px 10px' }}>
+                          <button onClick={() => onPayment(h.billNo, 'transferred')} style={{ flex: 1, border: 'none', borderRadius: 9, padding: '8px 0', background: '#5A9A6A', color: '#fff', fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>โอนแล้ว ✓</button>
+                          <button onClick={() => onPayment(h.billNo, 'cash')} style={{ flex: 1, border: 'none', borderRadius: 9, padding: '8px 0', background: '#5A7FA8', color: '#fff', fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>เงินสด ✓</button>
+                        </div>
+                      )}
+                      {!isEmployee && onDeleteBill && (
+                        <div style={{ padding: '0 12px 10px', display: 'flex', justifyContent: 'flex-end' }}>
+                          <button onClick={() => setDeleteTarget(h)} style={{ border: '1px solid #E8C8C2', background: '#FDF0EE', borderRadius: 8, padding: '5px 12px', fontSize: 11, color: '#C0392B', cursor: 'pointer' }}>🗑 ลบบิล</button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              } else {
+                const s = item;
+                const fmtTs = ts => { const d = new Date(ts); return `${d.getDate()} ${['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'][d.getMonth()]} ${d.getFullYear() + 543}`; };
+                return (
+                  <div key={'s-' + i} style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    <div style={{ width: '83%', border: '1.5px solid #6BBF70', background: '#F2FBF2', borderRadius: '13px 4px 13px 13px', overflow: 'hidden' }}>
+                      <div style={{ padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span style={{ fontWeight: 600, fontSize: 14, color: '#1B5E20' }}>{s.billNo}</span>
+                            <span style={{ fontSize: 10, fontWeight: 700, color: '#4CAF50' }}>📤 ขาย</span>
+                          </div>
+                          <div style={{ fontSize: 12, color: '#5A8A5A', marginTop: 1 }}>
+                            {s.date ? fmtTs(s.date) : ''}{s.customerName ? ` · ${s.customerName}` : ''} · {fmtKg(s.kg)} กก.
+                          </div>
+                        </div>
+                        <span style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 15, color: '#1B5E20', whiteSpace: 'nowrap' }}>฿{fmtBaht(s.baht)}</span>
                       </div>
-                      <div style={{ fontSize: 12, color: '#9A8662', marginTop: 1 }}>
-                        {h.dateText} · {h.seller || '—'} · {h.kg} กก.
-                      </div>
-                      {tier && tier.key !== 'silver' && <TierBadge tier={tier} />}
                     </div>
-                    <span style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 15, color: '#3F2D1E', whiteSpace: 'nowrap' }}>฿{h.baht}</span>
-                  </button>
-                  {status === 'unpaid' && onPayment && (
-                    <div style={{ display: 'flex', gap: 8, padding: '0 12px 10px' }}>
-                      <button onClick={() => onPayment(h.billNo, 'transferred')}
-                        style={{ flex: 1, border: 'none', borderRadius: 9, padding: '8px 0', background: '#5A9A6A', color: '#fff', fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>
-                        โอนแล้ว ✓
-                      </button>
-                      <button onClick={() => onPayment(h.billNo, 'cash')}
-                        style={{ flex: 1, border: 'none', borderRadius: 9, padding: '8px 0', background: '#5A7FA8', color: '#fff', fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>
-                        เงินสด ✓
-                      </button>
-                    </div>
-                  )}
-                  {!isEmployee && onDeleteBill && (
-                    <div style={{ padding: '0 12px 10px', display: 'flex', justifyContent: 'flex-end' }}>
-                      <button onClick={() => setDeleteTarget(h)}
-                        style={{ border: '1px solid #E8C8C2', background: '#FDF0EE', borderRadius: 8, padding: '5px 12px', fontSize: 11, color: '#C0392B', cursor: 'pointer' }}>
-                        🗑 ลบบิล
-                      </button>
-                    </div>
-                  )}
-                </div>
-              );
+                  </div>
+                );
+              }
             })}
           </div>
         </>
@@ -3106,6 +3126,7 @@ export default function App() {
   const [sales, setSales] = useState([]);
   const [accounts, setAccounts] = useState(() => storage.loadAccounts());
   const [saleSession, setSaleSession] = useState(() => storage.loadSaleSession());
+  const [saleHistory, setSaleHistory] = useState([]);
   const [saleActiveCat, setSaleActiveCat] = useState('AB');
   const [saleInput, setSaleInput] = useState('');
   const [saleNumpad, setSaleNumpad] = useState(null);
@@ -3202,7 +3223,8 @@ export default function App() {
     const pm = storage.loadPayments();
     const ci = storage.loadCustomerInfo();
     const sl = storage.loadSales();
-    setHistory(h); setPin(p); setVerified(v); setSupervisors(sv); setEmployeePin(ep); setPinnedCats(pc); setEmployees(emps); setVehiclePlates(vp); setPayments(pm); setCustomerInfo(ci); setSales(sl);
+    const sh = storage.loadSaleHistory();
+    setHistory(h); setPin(p); setVerified(v); setSupervisors(sv); setEmployeePin(ep); setPinnedCats(pc); setEmployees(emps); setVehiclePlates(vp); setPayments(pm); setCustomerInfo(ci); setSales(sl); setSaleHistory(sh);
     if (savedRole) { setAuthRole(savedRole); setRecorderName(savedRecorder); }
     if (s) { setSession(s); if (s.vehiclePhotoKey) loadPhoto(s.vehiclePhotoKey).then(u => { if (u) setVehiclePhotoUrl(u); }); }
 
@@ -3706,10 +3728,15 @@ export default function App() {
 
   const finishSaleSession = useCallback(() => {
     if (!saleSession) return;
+    const totalKg = (saleSession.entries || []).reduce((s, e) => s + e.kg, 0);
+    const totalBaht = (saleSession.entries || []).reduce((s, e) => s + e.kg * ((saleSession.prices || {})[e.cat] || 0), 0);
+    const summary = { billNo: saleSession.billNo, date: saleSession.date, customerName: saleSession.customerName || '', customerPhone: saleSession.customerPhone || '', kg: totalKg, baht: totalBaht };
+    const nextSh = [summary, ...saleHistory];
+    storage.saveSaleHistory(nextSh); setSaleHistory(nextSh);
     storage.saveSaleSession(null); setSaleSession(null);
-    toast('บันทึกบิลขายเรียบร้อย'); navigate('/sales');
+    toast('บันทึกบิลขายเรียบร้อย'); navigate('/');
     db.upsertSaleSession(saleSession).catch(() => {});
-  }, [saleSession, toast, navigate]);
+  }, [saleSession, saleHistory, toast, navigate]);
 
   const editSaleEntry = useCallback((entry) => {
     setSaleNumpad({ entryId: entry.id, catKey: entry.cat, title: 'แก้ไขเข่ง — ' + (CATS.find(c => c.key === entry.cat)?.label || entry.cat), value: String(entry.kg), canDelete: true });
@@ -3916,7 +3943,7 @@ export default function App() {
 
       <Routes>
         <Route path="/" element={
-          <HomeView session={session} history={history} payments={payments} verified={verified} supervisors={supervisors} syncing={syncing} syncStatus={syncStatus} onSyncNow={() => syncNow(false)} onOpenSheet={() => setSheetModal(true)}
+          <HomeView session={session} history={history} saleHistory={saleHistory} payments={payments} verified={verified} supervisors={supervisors} syncing={syncing} syncStatus={syncStatus} onSyncNow={() => syncNow(false)} onOpenSheet={() => setSheetModal(true)}
             onNew={startNew} onResume={() => { navigate('/record'); if (session?.entries?.length > 0) { setActiveCat(session.entries[session.entries.length - 1].cat); } else { setActiveCat('AB'); } }}
             onGoCustomers={() => { navigate('/customers'); syncNow(true); }}
             onGoDashboard={() => { navigate('/purchases'); syncNow(true); }}
