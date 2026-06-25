@@ -970,6 +970,7 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
       const blob = pdf.output('blob');
       const fileName = `บิล_${session?.billNo || 'Qudsun'}.pdf`;
       const file = new File([blob], fileName, { type: 'application/pdf' });
+      const EPSON_LINE = 'https://line.me/R/ti/p/@245mycrd';
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({ files: [file], title: fileName });
       } else {
@@ -977,6 +978,7 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
         const a = document.createElement('a');
         a.href = url; a.download = fileName; a.click();
         setTimeout(() => URL.revokeObjectURL(url), 2000);
+        setTimeout(() => window.open(EPSON_LINE, '_blank'), 800);
       }
     } catch (e) { if (e?.name !== 'AbortError') console.error(e); }
     setSharing(false);
@@ -1231,10 +1233,16 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
         <button onClick={handleShareBill} disabled={sharing} style={{ width: '100%', border: 'none', borderRadius: 15, padding: 18, background: sharing ? '#C8B89A' : 'linear-gradient(135deg,#00B900,#009000)', color: '#fff', fontWeight: 700, fontSize: 18, cursor: sharing ? 'default' : 'pointer', boxShadow: '0 8px 18px rgba(0,180,0,.22)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
           {sharing ? '⏳ กำลังสร้าง PDF...' : '📤 ส่งบิลเพื่อปริ้น'}
         </button>
-        <button onClick={() => window.print()} style={{ width: '100%', border: '1px solid #C8B89A', borderRadius: 12, padding: '12px 0', background: 'transparent', color: '#8A7A66', fontWeight: 600, fontSize: 14, cursor: 'pointer', marginTop: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-          🖨 ปริ้นจากเครื่องนี้โดยตรง
-        </button>
-        <p style={{ textAlign: 'center', fontSize: 12, color: '#9A8662', margin: '8px 0 0' }}>กดส่งบิล → เลือก LINE → ส่งไปแชท Epson Printer → ปริ้นได้เลย</p>
+        <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+          <button onClick={() => window.print()} style={{ flex: 1, border: '1px solid #C8B89A', borderRadius: 12, padding: '11px 0', background: 'transparent', color: '#8A7A66', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
+            🖨 ปริ้นจากเครื่องนี้
+          </button>
+          <a href="https://line.me/R/ti/p/@245mycrd" target="_blank" rel="noreferrer"
+            style={{ flex: 1, border: '1px solid #00B900', borderRadius: 12, padding: '11px 0', background: '#F0FFF0', color: '#007700', fontWeight: 600, fontSize: 13, cursor: 'pointer', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+            📱 เปิดแชท Epson
+          </a>
+        </div>
+        <p style={{ textAlign: 'center', fontSize: 12, color: '#9A8662', margin: '8px 0 0' }}>กดส่งบิล → share sheet → เลือก LINE → ส่งไปแชท Epson</p>
 
         <div style={{ marginTop: 20, background: '#FFFDF8', border: '1px solid #E4D7BC', borderRadius: 16, padding: 18 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
