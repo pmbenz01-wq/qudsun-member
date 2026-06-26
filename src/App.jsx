@@ -2521,30 +2521,13 @@ function SalePrintView({ saleSession, onGoBack, onFinish, onEditPrice }) {
           return (
             <>
               <style>{`
-                @page { size: A5; margin: 7mm 8mm; }
                 @media print {
-                  .no-print { display: none !important; }
-                  .bill-doc-wrapper { max-width: 100% !important; margin: 0 !important; }
-                  .bill-doc { box-shadow: none !important; border: none !important; padding: 0 !important; font-size: 10pt !important; }
-                  .bill-doc-logo { width: 44px !important; height: 44px !important; }
-                  .bill-doc-title { font-size: 13pt !important; }
-                  .bill-doc-header { padding-bottom: 6px !important; margin-bottom: 4px !important; }
-                  .sale-entries-root { margin-top: 4px !important; margin-bottom: 4px !important; gap: 3px 8px !important; }
-                  .sale-entries-group { margin-bottom: 2px !important; }
-                  .sale-entry-label { font-size: 7pt !important; margin-bottom: 1px !important; }
-                  .sale-entry-grid { gap: 1px !important; grid-template-columns: repeat(6, max-content) !important; }
-                  .sale-entry-chip { padding: 2px 5px !important; border-radius: 2px !important; line-height: 1 !important; }
-                  .sale-entry-kg { font-size: 9pt !important; }
-                  .bill-doc table { font-size: 9pt !important; }
-                  .bill-doc td, .bill-doc th { padding: 4px 6px !important; }
-                  .bill-doc-bank { padding: 6px 8px !important; margin-top: 6px !important; }
-                  .bill-doc-bank .bank-label { font-size: 7pt !important; }
-                  .bill-doc-bank .bank-acct { font-size: 11pt !important; }
-                  .bill-doc-sign { margin-top: 12px !important; }
-                  .bill-doc-sign-line { height: 24px !important; }
-                  .bill-doc-footer { margin-top: 8px !important; }
-                  .bill-doc-footer .footer-text { font-size: 7pt !important; }
-                  .bill-doc-qr { width: 56px !important; height: 56px !important; }
+                  .sale-entries-root { margin-top: 6px !important; margin-bottom: 6px !important; }
+                  .sale-entries-group { margin-bottom: 4px !important; }
+                  .sale-entry-label { font-size: 9px !important; margin-bottom: 3px !important; }
+                  .sale-entry-grid { gap: 2px !important; }
+                  .sale-entry-chip { padding: 3px 6px !important; border-radius: 3px !important; line-height: 1.1 !important; }
+                  .sale-entry-kg { font-size: 11px !important; }
                 }
               `}</style>
               <div className="sale-entries-root" style={{ marginTop: 10, marginBottom: 10, display: 'flex', flexWrap: 'wrap', gap: '6px 14px', alignItems: 'flex-start' }}>
