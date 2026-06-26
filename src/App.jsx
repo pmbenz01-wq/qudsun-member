@@ -1294,10 +1294,10 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
       {/* The Bill A5 */}
       <div className="bill-doc-wrapper" style={{ maxWidth: 420, margin: '0 auto' }}>
       <div className="bill-doc" style={{ background: '#fff', border: '1px solid #E4D7BC', borderRadius: 6, boxShadow: '0 10px 30px rgba(95,70,40,.14)', padding: '22px 22px 18px', color: '#2A2118', fontSize: 13 }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, borderBottom: '2px solid #2A2118', paddingBottom: 12 }}>
-          <img src="/logo.jpg" style={{ width: 72, height: 72, borderRadius: 8, objectFit: 'cover' }} alt="Qudsun" />
+        <div className="bill-doc-header" style={{ display: 'flex', alignItems: 'flex-start', gap: 12, borderBottom: '2px solid #2A2118', paddingBottom: 12 }}>
+          <img src="/logo.jpg" className="bill-doc-logo" style={{ width: 72, height: 72, borderRadius: 8, objectFit: 'cover' }} alt="Qudsun" />
           <div style={{ flex: 1 }}>
-            <div style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 19, letterSpacing: '.04em' }}>ทุเรียนคัดสรร <span style={{ color: '#8A6A2E' }}>QUDSUN</span></div>
+            <div className="bill-doc-title" style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 19, letterSpacing: '.04em' }}>ทุเรียนคัดสรร <span style={{ color: '#8A6A2E' }}>QUDSUN</span></div>
             <div style={{ fontSize: 12.5, color: '#5A4A38', marginTop: 2 }}>Premium Durian Selection</div>
           </div>
           <div style={{ textAlign: 'right', minWidth: 130 }}>
@@ -2497,10 +2497,10 @@ function SalePrintView({ saleSession, onGoBack, onFinish, onEditPrice }) {
 
       <div className="bill-doc-wrapper" style={{ maxWidth: 420, margin: '0 auto' }}>
       <div className="bill-doc" style={{ background: '#fff', border: '1px solid #E4D7BC', borderRadius: 6, boxShadow: '0 10px 30px rgba(95,70,40,.14)', padding: '22px 22px 18px', color: '#2A2118', fontSize: 13 }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, borderBottom: '2px solid #2A2118', paddingBottom: 12 }}>
-          <img src="/logo.jpg" style={{ width: 72, height: 72, borderRadius: 8, objectFit: 'cover' }} alt="Qudsun" />
+        <div className="bill-doc-header" style={{ display: 'flex', alignItems: 'flex-start', gap: 12, borderBottom: '2px solid #2A2118', paddingBottom: 12 }}>
+          <img src="/logo.jpg" className="bill-doc-logo" style={{ width: 72, height: 72, borderRadius: 8, objectFit: 'cover' }} alt="Qudsun" />
           <div style={{ flex: 1 }}>
-            <div style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 19, letterSpacing: '.04em' }}>ทุเรียนคัดสรร <span style={{ color: '#8A6A2E' }}>QUDSUN</span></div>
+            <div className="bill-doc-title" style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 19, letterSpacing: '.04em' }}>ทุเรียนคัดสรร <span style={{ color: '#8A6A2E' }}>QUDSUN</span></div>
             <div style={{ fontSize: 12.5, color: '#5A4A38', marginTop: 2 }}>Premium Durian Selection</div>
           </div>
           <div style={{ textAlign: 'right', minWidth: 130 }}>
@@ -2521,13 +2521,30 @@ function SalePrintView({ saleSession, onGoBack, onFinish, onEditPrice }) {
           return (
             <>
               <style>{`
+                @page { size: A5; margin: 7mm 8mm; }
                 @media print {
-                  .sale-entries-root { margin-top: 6px !important; margin-bottom: 6px !important; }
-                  .sale-entries-group { margin-bottom: 4px !important; }
-                  .sale-entry-label { font-size: 7px !important; margin-bottom: 2px !important; }
-                  .sale-entry-grid { gap: 1px !important; }
-                  .sale-entry-chip { padding: 3px 6px !important; border-radius: 2px !important; line-height: 1 !important; }
-                  .sale-entry-kg { font-size: 11px !important; }
+                  .no-print { display: none !important; }
+                  .bill-doc-wrapper { max-width: 100% !important; margin: 0 !important; }
+                  .bill-doc { box-shadow: none !important; border: none !important; padding: 0 !important; font-size: 10pt !important; }
+                  .bill-doc-logo { width: 44px !important; height: 44px !important; }
+                  .bill-doc-title { font-size: 13pt !important; }
+                  .bill-doc-header { padding-bottom: 6px !important; margin-bottom: 4px !important; }
+                  .sale-entries-root { margin-top: 4px !important; margin-bottom: 4px !important; gap: 3px 8px !important; }
+                  .sale-entries-group { margin-bottom: 2px !important; }
+                  .sale-entry-label { font-size: 7pt !important; margin-bottom: 1px !important; }
+                  .sale-entry-grid { gap: 1px !important; grid-template-columns: repeat(6, max-content) !important; }
+                  .sale-entry-chip { padding: 2px 5px !important; border-radius: 2px !important; line-height: 1 !important; }
+                  .sale-entry-kg { font-size: 9pt !important; }
+                  .bill-doc table { font-size: 9pt !important; }
+                  .bill-doc td, .bill-doc th { padding: 4px 6px !important; }
+                  .bill-doc-bank { padding: 6px 8px !important; margin-top: 6px !important; }
+                  .bill-doc-bank .bank-label { font-size: 7pt !important; }
+                  .bill-doc-bank .bank-acct { font-size: 11pt !important; }
+                  .bill-doc-sign { margin-top: 12px !important; }
+                  .bill-doc-sign-line { height: 24px !important; }
+                  .bill-doc-footer { margin-top: 8px !important; }
+                  .bill-doc-footer .footer-text { font-size: 7pt !important; }
+                  .bill-doc-qr { width: 56px !important; height: 56px !important; }
                 }
               `}</style>
               <div className="sale-entries-root" style={{ marginTop: 10, marginBottom: 10, display: 'flex', flexWrap: 'wrap', gap: '6px 14px', alignItems: 'flex-start' }}>
@@ -2591,30 +2608,30 @@ function SalePrintView({ saleSession, onGoBack, onFinish, onEditPrice }) {
           </tfoot>
         </table>
 
-        <div style={{ marginTop: 12, background: '#F5FAF0', border: '1px solid #C8DFB0', borderRadius: 8, padding: '10px 12px', display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div className="bill-doc-bank" style={{ marginTop: 12, background: '#F5FAF0', border: '1px solid #C8DFB0', borderRadius: 8, padding: '10px 12px', display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 11, color: '#6A9A4E', fontWeight: 600, marginBottom: 2 }}>โอนเงินมาที่</div>
-            <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 14, color: '#2A2118', letterSpacing: '.04em' }}>{QUDSUN_BANK.account}</div>
+            <div className="bank-label" style={{ fontSize: 11, color: '#6A9A4E', fontWeight: 600, marginBottom: 2 }}>โอนเงินมาที่</div>
+            <div className="bank-acct" style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 14, color: '#2A2118', letterSpacing: '.04em' }}>{QUDSUN_BANK.account}</div>
             <div style={{ fontSize: 12, color: '#5A4A38' }}>{QUDSUN_BANK.bank} · {QUDSUN_BANK.name}</div>
           </div>
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 36, gap: 20 }}>
+        <div className="bill-doc-sign" style={{ display: 'flex', justifyContent: 'space-between', marginTop: 36, gap: 20 }}>
           <div style={{ flex: 1, textAlign: 'center' }}>
-            <div style={{ height: 48 }} />
+            <div className="bill-doc-sign-line" style={{ height: 48 }} />
             <div style={{ borderTop: '1px dotted #2A2118', paddingTop: 8, fontSize: 12 }}>ลายเซ็นผู้ขาย</div>
           </div>
           <div style={{ flex: 1, textAlign: 'center' }}>
-            <div style={{ height: 48 }} />
+            <div className="bill-doc-sign-line" style={{ height: 48 }} />
             <div style={{ borderTop: '1px dotted #2A2118', paddingTop: 8, fontSize: 12 }}>ลายเซ็นผู้ซื้อ</div>
           </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 14 }}>
+        <div className="bill-doc-footer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 14 }}>
           <div>
-            <div style={{ fontSize: 11.5, color: '#8A7A66' }}>ขอบคุณที่ไว้วางใจ · ทุเรียนคัดสรร Qudsun</div>
-            <div style={{ fontSize: 11.5, color: '#8A7A66', marginTop: 2 }}>โทร. 094-149-1914 (วิน) · 082-691-4414 (เบนซ์)</div>
+            <div className="footer-text" style={{ fontSize: 11.5, color: '#8A7A66' }}>ขอบคุณที่ไว้วางใจ · ทุเรียนคัดสรร Qudsun</div>
+            <div className="footer-text" style={{ fontSize: 11.5, color: '#8A7A66', marginTop: 2 }}>โทร. 094-149-1914 (วิน) · 082-691-4414 (เบนซ์)</div>
           </div>
-          <img src="/qr-bill.png" alt="QR" style={{ width: 88, height: 88, objectFit: 'contain' }} onError={e => { e.target.style.display = 'none'; }} />
+          <img src="/qr-bill.png" alt="QR" className="bill-doc-qr" style={{ width: 88, height: 88, objectFit: 'contain' }} onError={e => { e.target.style.display = 'none'; }} />
         </div>
       </div>
       </div>
