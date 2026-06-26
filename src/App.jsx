@@ -471,7 +471,7 @@ function HomeView({ session, history, saleHistory, payments, syncing, syncStatus
                 return (
                   <div key={'s-' + i} style={{ display: 'flex', justifyContent: 'flex-end' }}>
                     <div style={{ width: '83%', border: '1.5px solid #6BBF70', background: '#F2FBF2', borderRadius: '13px 4px 13px 13px', overflow: 'hidden' }}>
-                      <div style={{ padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <button onClick={onGoSales} style={{ textAlign: 'left', background: 'none', border: 'none', width: '100%', padding: '12px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                             <span style={{ fontWeight: 600, fontSize: 14, color: '#1B5E20' }}>{s.billNo}</span>
@@ -482,7 +482,7 @@ function HomeView({ session, history, saleHistory, payments, syncing, syncStatus
                           </div>
                         </div>
                         <span style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 15, color: '#1B5E20', whiteSpace: 'nowrap' }}>฿{fmtBaht(s.baht)}</span>
-                      </div>
+                      </button>
                     </div>
                   </div>
                 );
@@ -3224,7 +3224,37 @@ export default function App() {
       setCustomerInfo(merged);
     }).catch(() => {});
     db.getSales().then(remote => {
-      storage.saveSales(remote); setSales(remote);
+      const local = storage.loadSales();
+      const remoteIds = new Set(remote.map(s => s.id));
+      const localOnly = local.filter(s => !remoteIds.has(s.id));
+      const merged = [...remote, ...localOnly];
+      storage.saveSales(merged); setSales(merged);
+    }).catch(() => {});
+    db.getVerified().then(remote => {
+      const merged = { ...remote, ...storage.loadVerified() };
+      storage.saveVerified(merged); setVerified(merged);
+    }).catch(() => {});
+    db.getBills().then(remoteBills => {
+      if (!remoteBills?.length) return;
+      const remoteNos = new Set(remoteBills.map(b => b.billNo));
+      const deleted = storage.loadDeletedBills();
+      const local = storage.loadHistory();
+      const localOnly = local.filter(h => h?.billNo && !remoteNos.has(h.billNo) && !deleted.has(h.billNo));
+      const merged = [...remoteBills, ...localOnly];
+      storage.saveHistory(merged); setHistory(merged);
+    }).catch(() => {});
+    db.getSaleSessions().then(remoteSessions => {
+      if (!remoteSessions?.length) return;
+      const summaries = remoteSessions.map(s => {
+        const totalKg = (s.entries || []).reduce((sum, e) => sum + (e.kg || 0), 0);
+        const totalBaht = (s.entries || []).reduce((sum, e) => sum + (e.kg || 0) * ((s.prices || {})[e.cat] || 0), 0);
+        return { billNo: s.billNo, date: s.date, customerName: s.customerName || '', customerPhone: s.customerPhone || '', kg: totalKg || s.kg || 0, baht: totalBaht || s.baht || 0 };
+      });
+      const local = storage.loadSaleHistory();
+      const remoteNos = new Set(summaries.map(s => s.billNo));
+      const localOnly = local.filter(s => s.billNo && !remoteNos.has(s.billNo));
+      const merged = [...summaries, ...localOnly].sort((a, b) => (b.date || 0) - (a.date || 0));
+      storage.saveSaleHistory(merged); setSaleHistory(merged);
     }).catch(() => {});
     const m = (window.location.hash || '').match(/bill=([^&]+)/);
     if (m) {
@@ -3250,12 +3280,17 @@ export default function App() {
       fetch('/api/sheets?action=getCustomerInfo').then(r => r.json()),
     ]);
     if (sheetBills.ok && sheetBills.bills?.length > 0) {
-      const bills = sheetBills.bills.map(b => {
+      const sheetParsed = sheetBills.bills.map(b => {
         // Try json field first (full object), fall back to individual columns
         try { if (b.json) return JSON.parse(b.json); } catch {}
         if (!b.billNo) return null;
         return { billNo: b.billNo, date: b.date ? Number(b.date) : null, dateText: b.dateText || '', seller: b.seller || '', phone: b.phone || '', kg: b.kg || '', baht: b.baht || '', data: {} };
       }).filter(Boolean);
+      // Merge: keep local-only bills (recorded offline / not yet in Sheets), exclude deleted
+      const sheetNos = new Set(sheetParsed.map(b => b.billNo));
+      const deleted = storage.loadDeletedBills();
+      const localOnly = storage.loadHistory().filter(h => h?.billNo && !sheetNos.has(h.billNo) && !deleted.has(h.billNo));
+      const bills = [...sheetParsed, ...localOnly];
       storage.saveHistory(bills); setHistory(bills);
       const svMap = {};
       bills.forEach(c => { const ph = c.phone || c.data?.sellerPhone || ''; const sup = c.data?.supervisor || c.supervisor || ''; if (ph && sup) svMap[ph] = sup; });
@@ -3267,7 +3302,13 @@ export default function App() {
       const merged = { ...local, ...(sheetPayments.payments || {}) };
       storage.savePayments(merged); setPayments(merged);
     }
-    if (sheetSales.ok && sheetSales.sales?.length > 0) { storage.saveSales(sheetSales.sales); setSales(sheetSales.sales); }
+    if (sheetSales.ok) {
+      const sheetSalesData = sheetSales.sales || [];
+      const sheetIds = new Set(sheetSalesData.map(s => s.id));
+      const localOnly = storage.loadSales().filter(s => s.id && !sheetIds.has(s.id));
+      const merged = [...sheetSalesData, ...localOnly];
+      if (merged.length > 0) { storage.saveSales(merged); setSales(merged); }
+    }
     if (sheetCI.ok) { storage.saveCustomerInfo(sheetCI.info || {}); setCustomerInfo(sheetCI.info || {}); }
   }, []); // eslint-disable-line
 
