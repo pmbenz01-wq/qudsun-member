@@ -1352,22 +1352,6 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
           <div style={{ flex: 1 }}>
             <div className="bill-doc-title" style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 19, letterSpacing: '.04em' }}>ทุเรียนคัดสรร <span style={{ color: '#8A6A2E' }}>QUDSUN</span></div>
             <div style={{ fontSize: 12.5, color: '#5A4A38', marginTop: 2 }}>Premium Durian Selection</div>
-          </div>
-          <div style={{ textAlign: 'right', minWidth: 130 }}>
-            <div style={{ fontWeight: 700, fontSize: 15 }}>ใบรับซื้อทุเรียน</div>
-            <div style={{ fontSize: 12, color: '#5A4A38', marginBottom: 6 }}>เลขที่ {session?.billNo}</div>
-            <div style={{ fontSize: 12, color: '#3A2A18', lineHeight: 1.8 }}>
-              <div>{session ? dateStr(session.date) : ''}</div>
-              {tier ? (() => {
-                const g = TIER_GRAD[tier.key] || TIER_GRAD.silver;
-                return (
-                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: g.bg, color: g.color, borderRadius: 5, padding: '4px 10px', boxShadow: '0 1px 3px rgba(0,0,0,.18)', marginTop: 2, whiteSpace: 'nowrap' }}>
-                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: g.color, opacity: .7, flexShrink: 0 }} />
-                    <span style={{ fontWeight: 700, fontSize: 12 }}>{session?.seller || '—'}{session?.sellerPhone ? ` · ${session.sellerPhone}` : ''}</span>
-                  </div>
-                );
-              })() : <span><b>{session?.seller || '—'}</b>{session?.sellerPhone ? ` · ${session.sellerPhone}` : ''}</span>}
-            </div>
             {(() => {
               const plate = session?.vehiclePlate || '';
               const recorder = session?.recorder || '';
@@ -1386,6 +1370,22 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
                 </div>
               );
             })()}
+          </div>
+          <div style={{ textAlign: 'right', minWidth: 130 }}>
+            <div style={{ fontWeight: 700, fontSize: 15 }}>ใบรับซื้อทุเรียน</div>
+            <div style={{ fontSize: 12, color: '#5A4A38', marginBottom: 6 }}>เลขที่ {session?.billNo}</div>
+            <div style={{ fontSize: 12, color: '#3A2A18', lineHeight: 1.8 }}>
+              <div>{session ? dateStr(session.date) : ''}</div>
+              {tier ? (() => {
+                const g = TIER_GRAD[tier.key] || TIER_GRAD.silver;
+                return (
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: g.bg, color: g.color, borderRadius: 5, padding: '4px 10px', boxShadow: '0 1px 3px rgba(0,0,0,.18)', marginTop: 2, whiteSpace: 'nowrap' }}>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: g.color, opacity: .7, flexShrink: 0 }} />
+                    <span style={{ fontWeight: 700, fontSize: 12 }}>{session?.seller || '—'}{session?.sellerPhone ? ` · ${session.sellerPhone}` : ''}</span>
+                  </div>
+                );
+              })() : <span><b>{session?.seller || '—'}</b>{session?.sellerPhone ? ` · ${session.sellerPhone}` : ''}</span>}
+            </div>
           </div>
         </div>
         {(() => {
