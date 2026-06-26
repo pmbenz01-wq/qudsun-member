@@ -2252,9 +2252,10 @@ function SalesView({ history, sales, accounts, pin, onGoHome, onAddSale, onDelet
 }
 
 // ─── Sale New View ────────────────────────────────────────────────────────────
-function SaleNewView({ onStart, onGoBack }) {
+function SaleNewView({ onStart, onGoBack, defaultRecorder }) {
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
+  const [recorder, setRecorder] = useState(defaultRecorder || '');
   const [prices, setPrices] = useState(Object.fromEntries(CATS.map(c => [c.key, ''])));
   const [showPrices, setShowPrices] = useState(false);
   const inp = { width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 10, padding: '12px 14px', fontSize: 15, fontFamily: 'Prompt', background: '#fff', boxSizing: 'border-box' };
@@ -2270,9 +2271,13 @@ function SaleNewView({ onStart, onGoBack }) {
           <div style={{ fontSize: 12, color: '#9A8662', marginBottom: 4 }}>ชื่อลูกค้า</div>
           <input value={customerName} onChange={e => setCustomerName(e.target.value)} placeholder="ชื่อ (ไม่บังคับ)" style={inp} />
         </div>
-        <div>
+        <div style={{ marginBottom: 10 }}>
           <div style={{ fontSize: 12, color: '#9A8662', marginBottom: 4 }}>เบอร์โทร</div>
           <input value={customerPhone} onChange={e => setCustomerPhone(e.target.value)} placeholder="0812345678 (ไม่บังคับ)" type="tel" style={inp} />
+        </div>
+        <div>
+          <div style={{ fontSize: 12, color: '#9A8662', marginBottom: 4 }}>ผู้จด</div>
+          <input value={recorder} onChange={e => setRecorder(e.target.value)} placeholder="ชื่อผู้จด (ไม่บังคับ)" style={inp} />
         </div>
       </div>
 
@@ -2294,7 +2299,7 @@ function SaleNewView({ onStart, onGoBack }) {
         </div>
       )}
 
-      <button onClick={() => onStart({ customerName: customerName.trim(), customerPhone: customerPhone.trim(), prices: Object.fromEntries(CATS.map(c => [c.key, Number(prices[c.key]) || 0])) })}
+      <button onClick={() => onStart({ customerName: customerName.trim(), customerPhone: customerPhone.trim(), recorder: recorder.trim(), prices: Object.fromEntries(CATS.map(c => [c.key, Number(prices[c.key]) || 0])) })}
         style={{ width: '100%', border: 'none', borderRadius: 14, padding: 18, background: 'linear-gradient(135deg,#4A7A2E,#2E5C1A)', color: '#fff', fontWeight: 700, fontSize: 17, cursor: 'pointer', fontFamily: 'Prompt' }}>
         เริ่มบันทึกเข่ง →
       </button>
@@ -2469,9 +2474,10 @@ function SaleRecordView({ saleSession, activeCat, input, onInput, onCommit, onPi
 }
 
 // ─── Sale Customer Modal ──────────────────────────────────────────────────────
-function SaleCustomerModal({ customerName, customerPhone, onSave, onCancel }) {
+function SaleCustomerModal({ customerName, customerPhone, recorder: initRecorder, onSave, onCancel }) {
   const [name, setName] = useState(customerName || '');
   const [phone, setPhone] = useState(customerPhone || '');
+  const [recorder, setRecorder] = useState(initRecorder || '');
   const inp = { width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 10, padding: '12px 14px', fontSize: 15, fontFamily: 'Prompt', background: '#fff', boxSizing: 'border-box', outline: 'none' };
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.45)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
@@ -2481,13 +2487,17 @@ function SaleCustomerModal({ customerName, customerPhone, onSave, onCancel }) {
           <div style={{ fontSize: 12, color: '#9A8662', marginBottom: 4 }}>ชื่อลูกค้า</div>
           <input value={name} onChange={e => setName(e.target.value)} placeholder="ชื่อ (ไม่บังคับ)" style={inp} autoFocus />
         </div>
-        <div style={{ marginBottom: 18 }}>
+        <div style={{ marginBottom: 12 }}>
           <div style={{ fontSize: 12, color: '#9A8662', marginBottom: 4 }}>เบอร์โทร</div>
           <input value={phone} onChange={e => setPhone(e.target.value)} placeholder="0812345678 (ไม่บังคับ)" type="tel" style={inp} />
         </div>
+        <div style={{ marginBottom: 18 }}>
+          <div style={{ fontSize: 12, color: '#9A8662', marginBottom: 4 }}>ผู้จด</div>
+          <input value={recorder} onChange={e => setRecorder(e.target.value)} placeholder="ชื่อผู้จด (ไม่บังคับ)" style={inp} />
+        </div>
         <div style={{ display: 'flex', gap: 10 }}>
           <button onClick={onCancel} style={{ flex: 1, border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 12, padding: 14, fontSize: 15, color: '#9A8662', cursor: 'pointer' }}>ยกเลิก</button>
-          <button onClick={() => onSave(name.trim(), phone.trim())} style={{ flex: 2, border: 'none', borderRadius: 12, padding: 14, background: 'linear-gradient(135deg,#4A7A2E,#2E5C1A)', color: '#fff', fontWeight: 700, fontSize: 15, cursor: 'pointer' }}>บันทึก</button>
+          <button onClick={() => onSave(name.trim(), phone.trim(), recorder.trim())} style={{ flex: 2, border: 'none', borderRadius: 12, padding: 14, background: 'linear-gradient(135deg,#4A7A2E,#2E5C1A)', color: '#fff', fontWeight: 700, fontSize: 15, cursor: 'pointer' }}>บันทึก</button>
         </div>
       </div>
     </div>
@@ -2585,6 +2595,11 @@ function SalePrintView({ saleSession, onGoBack, onFinish, onEditPrice }) {
           <div style={{ flex: 1 }}>
             <div className="bill-doc-title" style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 19, letterSpacing: '.04em' }}>ทุเรียนคัดสรร <span style={{ color: '#8A6A2E' }}>QUDSUN</span></div>
             <div style={{ fontSize: 12.5, color: '#5A4A38', marginTop: 2 }}>Premium Durian Selection</div>
+            {saleSession?.recorder && (
+              <div style={{ marginTop: 5, display: 'flex', flexDirection: 'column', gap: 1, fontSize: 11 }}>
+                <div><span style={{ color: '#9A8662' }}>ผู้จด: </span><b>{saleSession.recorder}</b></div>
+              </div>
+            )}
           </div>
           <div style={{ textAlign: 'right', minWidth: 130 }}>
             <div style={{ fontWeight: 700, fontSize: 15, color: '#4A7A2E' }}>ใบเสร็จรับเงิน</div>
@@ -4211,7 +4226,7 @@ export default function App() {
       {pinPrompt && <PinModal title={pinPrompt.title} error={pinError} value={pinValue} onKey={handlePinKey} onCancel={() => { setPinPrompt(null); setPinValue(''); setPinError(''); }} />}
       {numpad && <NumModal title={numpad.title} unit={numpad.unit} value={numpad.value || ''} onChange={v => setNumpad(n => ({ ...n, value: v }))} onSave={numSave} onCancel={() => setNumpad(null)} onDelete={numDelete} saveLabel={numpad.saveLabel} canDelete={numpad.canDelete} />}
       {saleNumpad && <NumModal title={saleNumpad.title} unit={saleNumpad.unit || 'กก.'} value={saleNumpad.value || ''} onChange={v => setSaleNumpad(n => ({ ...n, value: v }))} onSave={saleNumSave} onCancel={() => setSaleNumpad(null)} onDelete={saleNumDelete} saveLabel="บันทึก" canDelete={saleNumpad.canDelete} />}
-      {saleCustomerModal && <SaleCustomerModal customerName={saleSession?.customerName} customerPhone={saleSession?.customerPhone} onSave={(name, phone) => { setSaleSession(prev => ({ ...prev, customerName: name, customerPhone: phone })); setSaleCustomerModal(false); }} onCancel={() => setSaleCustomerModal(false)} />}
+      {saleCustomerModal && <SaleCustomerModal customerName={saleSession?.customerName} customerPhone={saleSession?.customerPhone} recorder={saleSession?.recorder} onSave={(name, phone, rec) => { setSaleSession(prev => ({ ...prev, customerName: name, customerPhone: phone, recorder: rec })); setSaleCustomerModal(false); }} onCancel={() => setSaleCustomerModal(false)} />}
       {sellerOpen && <SellerModal
         name={sellerDraft} phone={sellerPhoneDraft} supervisor={supervisorDraft}
         nameLocked={sellerNameLocked} supervisorLocked={sellerSupervisorLocked}
