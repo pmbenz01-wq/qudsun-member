@@ -686,7 +686,6 @@ function RecordView({ session, activeCat, input, onInput, onCommit, onPickCat, o
   const totalKg = grandKg(session);
   const totalCount = (session?.entries || []).length;
   const recent = (session?.entries || []).filter(e => e.cat === activeCat).reverse();
-  const sellerPhone = session?.sellerPhone || '';
   const stat = sellerPhone ? customerStat(sellerPhone, history, verified) : null;
   const tier = stat ? stat.effectiveTier : null;
   const sellerText = (session?.seller || session?.sellerPhone) ? `${session.seller || ''}${session.sellerPhone ? (session.seller ? ' · ' : '') + session.sellerPhone : ''}` : 'ผู้ขาย —';
