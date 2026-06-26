@@ -739,8 +739,8 @@ function RecordView({ session, activeCat, input, onInput, onCommit, onPickCat, o
             {vehiclePlate || '+ ทะเบียนรถ'}
           </span>
         </div>
-        {sellerPhone && onSaveCustomerInfo && (
-          <div onClick={() => setBankModalOpen(true)} style={{ display: 'flex', alignItems: 'center', gap: 5, background: bankInfo.bankAccount ? '#E8EEF8' : '#F5F5F5', border: `1px solid ${bankInfo.bankAccount ? '#90CAF9' : '#D0C8C0'}`, borderRadius: 20, padding: '5px 12px', cursor: 'pointer' }}>
+        {onSaveCustomerInfo && (
+          <div onClick={() => sellerPhone ? setBankModalOpen(true) : alert('เพิ่มลูกค้าก่อนบันทึกข้อมูลธนาคาร')} style={{ display: 'flex', alignItems: 'center', gap: 5, background: bankInfo.bankAccount ? '#E8EEF8' : '#F5F5F5', border: `1px solid ${bankInfo.bankAccount ? '#90CAF9' : '#D0C8C0'}`, borderRadius: 20, padding: '5px 12px', cursor: 'pointer' }}>
             <span style={{ fontSize: 13 }}>🏦</span>
             <span style={{ fontSize: 13, fontWeight: 600, color: bankInfo.bankAccount ? '#1A4D80' : '#9A8878' }}>
               {bankInfo.bankAccount ? `${bankInfo.bankName || ''} ${bankInfo.bankAccount}`.trim() : '+ ธนาคาร'}
