@@ -120,6 +120,7 @@ export const db = {
       map[row.phone] = {
         bankName: row.bank_name || '',
         bankAccount: row.bank_account || '',
+        fullName: row.full_name || '',
         note: row.note || '',
       };
     }
@@ -131,6 +132,7 @@ export const db = {
       phone,
       bank_name: info.bankName || null,
       bank_account: info.bankAccount || null,
+      full_name: info.fullName || null,
       note: info.note || null,
     }, { onConflict: 'phone' });
     if (error) throw error;

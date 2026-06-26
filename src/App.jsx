@@ -656,10 +656,19 @@ function VehicleModal({ plate, photoUrl, onSave, onPhoto, onClose }) {
   );
 }
 
-function BankModal({ bankName, bankAccount, onSave, onClose }) {
+const THAI_BANKS = [
+  'กสิกรไทย (KBank)', 'ไทยพาณิชย์ (SCB)', 'กรุงเทพ (BBL)', 'กรุงไทย (KTB)',
+  'กรุงศรีอยุธยา (BAY)', 'ออมสิน (GSB)', 'ทหารไทยธนชาต (TTB)', 'เกียรตินาคินภัทร (KKP)',
+  'ซีไอเอ็มบีไทย (CIMB)', 'ยูโอบี (UOB)', 'แลนด์ แอนด์ เฮ้าส์ (LH)', 'ธอส. (GHB)',
+  'พร้อมเพย์',
+];
+
+function BankModal({ bankName, bankAccount, fullName, onSave, onClose }) {
   const [name, setName] = useState(bankName || '');
   const [acct, setAcct] = useState(bankAccount || '');
+  const [fName, setFName] = useState(fullName || '');
   const inp = { width: '100%', boxSizing: 'border-box', border: '1.5px solid #D8C8A8', borderRadius: 12, padding: '12px 14px', fontSize: 15, fontFamily: 'Prompt', color: '#2A2118', background: '#FBF6EC', marginBottom: 10 };
+  const selStyle = { ...inp, appearance: 'none', WebkitAppearance: 'none', backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'10\' height=\'6\'%3E%3Cpath fill=\'%239A8662\' d=\'M5 6L0 0h10z\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 14px center', paddingRight: 36, color: name ? '#2A2118' : '#9A8662' };
   return (
     <div className="no-print" style={{ position: 'fixed', inset: 0, zIndex: 70, background: 'rgba(42,33,24,.55)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', padding: '0 0 env(safe-area-inset-bottom)', animation: 'fadeIn .2s' }}>
       <div style={{ background: '#FFFDF8', borderRadius: '20px 20px 0 0', padding: '20px 18px 28px', width: '100%', maxWidth: 480, boxShadow: '0 -8px 30px rgba(42,33,24,.18)' }}>
@@ -667,9 +676,13 @@ function BankModal({ bankName, bankAccount, onSave, onClose }) {
           <span style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 17, color: '#3F2D1E' }}>🏦 ข้อมูลธนาคาร</span>
           <button onClick={onClose} style={{ border: 'none', background: 'none', fontSize: 20, cursor: 'pointer', color: '#9A8662' }}>✕</button>
         </div>
-        <input value={name} onChange={e => setName(e.target.value)} placeholder="ชื่อธนาคาร เช่น กสิกรไทย, SCB" style={inp} />
-        <input value={acct} onChange={e => setAcct(e.target.value.replace(/\D/g, ''))} placeholder="เลขบัญชี" inputMode="numeric" style={{ ...inp, fontFamily: 'Prompt', letterSpacing: '.06em', fontSize: 16 }} />
-        <button onClick={() => { onSave(name.trim(), acct.trim()); onClose(); }} style={{ width: '100%', border: 'none', borderRadius: 13, padding: 15, background: 'linear-gradient(135deg,#5A7FA8,#3A5F88)', color: '#fff', fontWeight: 700, fontSize: 16, cursor: 'pointer', boxShadow: '0 6px 16px rgba(58,95,136,.28)' }}>
+        <input value={fName} onChange={e => setFName(e.target.value)} placeholder="ชื่อ-นามสกุลเจ้าของบัญชี" style={inp} />
+        <select value={name} onChange={e => setName(e.target.value)} style={selStyle}>
+          <option value="">เลือกธนาคาร</option>
+          {THAI_BANKS.map(b => <option key={b} value={b}>{b}</option>)}
+        </select>
+        <input value={acct} onChange={e => setAcct(e.target.value.replace(/\D/g, ''))} placeholder="เลขบัญชี / เบอร์พร้อมเพย์" inputMode="numeric" style={{ ...inp, fontFamily: 'Prompt', letterSpacing: '.06em', fontSize: 16 }} />
+        <button onClick={() => { onSave(name.trim(), acct.trim(), fName.trim()); onClose(); }} style={{ width: '100%', border: 'none', borderRadius: 13, padding: 15, background: 'linear-gradient(135deg,#5A7FA8,#3A5F88)', color: '#fff', fontWeight: 700, fontSize: 16, cursor: 'pointer', boxShadow: '0 6px 16px rgba(58,95,136,.28)' }}>
           บันทึกข้อมูลธนาคาร
         </button>
       </div>
@@ -760,7 +773,8 @@ function RecordView({ session, activeCat, input, onInput, onCommit, onPickCat, o
         <BankModal
           bankName={bankInfo.bankName || ''}
           bankAccount={bankInfo.bankAccount || ''}
-          onSave={(bName, bAcct) => onSaveCustomerInfo(sellerPhone, { ...bankInfo, bankName: bName, bankAccount: bAcct })}
+          fullName={bankInfo.fullName || ''}
+          onSave={(bName, bAcct, bFull) => onSaveCustomerInfo(sellerPhone, { ...bankInfo, bankName: bName, bankAccount: bAcct, fullName: bFull })}
           onClose={() => setBankModalOpen(false)}
         />
       )}
@@ -2831,7 +2845,7 @@ function CustomerDetailView({ phone, history, verified, supervisors, vehiclePlat
   const [editSupervisor, setEditSupervisor] = useState(false);
   const [supDraft, setSupDraft] = useState('');
   const [editInfo, setEditInfo] = useState(false);
-  const [infoDraft, setInfoDraft] = useState({ bankName: '', bankAccount: '', note: '' });
+  const [infoDraft, setInfoDraft] = useState({ bankName: '', bankAccount: '', fullName: '', note: '' });
   const stat = customerStat(phone, history, verified);
   if (!stat) return null;
   const tier = stat.effectiveTier;
@@ -2927,13 +2941,14 @@ function CustomerDetailView({ phone, history, verified, supervisors, vehiclePlat
       <div style={{ background: '#FBF6EC', border: '1px solid #E4D7BC', borderRadius: 14, padding: '14px 16px', marginBottom: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: editInfo ? 10 : 0 }}>
           <div style={{ fontSize: 13, color: '#4A3526', fontWeight: 600 }}>🏦 บัญชีธนาคาร</div>
-          <button onClick={() => { setEditInfo(v => !v); setInfoDraft({ bankName: info.bankName || '', bankAccount: info.bankAccount || '', note: info.note || '' }); }} style={{ border: '1px solid #D8C8A8', background: '#F3E9D2', borderRadius: 9, padding: '5px 10px', fontSize: 12, color: '#7A5A22', cursor: 'pointer' }}>
+          <button onClick={() => { setEditInfo(v => !v); setInfoDraft({ bankName: info.bankName || '', bankAccount: info.bankAccount || '', fullName: info.fullName || '', note: info.note || '' }); }} style={{ border: '1px solid #D8C8A8', background: '#F3E9D2', borderRadius: 9, padding: '5px 10px', fontSize: 12, color: '#7A5A22', cursor: 'pointer' }}>
             {editInfo ? 'ยกเลิก' : 'แก้ไข'}
           </button>
         </div>
         {!editInfo && (
           info.bankAccount
             ? <div style={{ fontSize: 13, color: '#3F2D1E', marginTop: 6 }}>
+                {info.fullName && <div style={{ fontWeight: 600, marginBottom: 2 }}>{info.fullName}</div>}
                 {info.bankName && <span style={{ color: '#7A5A22', marginRight: 6 }}>{info.bankName}</span>}
                 <span style={{ fontFamily: 'Prompt', fontWeight: 600, letterSpacing: '.06em' }}>{info.bankAccount}</span>
                 {info.note && <div style={{ fontSize: 11, color: '#9A8662', marginTop: 3 }}>{info.note}</div>}
@@ -2942,8 +2957,12 @@ function CustomerDetailView({ phone, history, verified, supervisors, vehiclePlat
         )}
         {editInfo && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <input value={infoDraft.bankName} onChange={e => setInfoDraft(d => ({ ...d, bankName: e.target.value }))} placeholder="ชื่อธนาคาร เช่น กสิกร" style={{ border: '1.5px solid #E4D7BC', borderRadius: 10, padding: '10px 12px', fontSize: 14, color: '#3F2D1E', outline: 'none' }} />
-            <input value={infoDraft.bankAccount} onChange={e => setInfoDraft(d => ({ ...d, bankAccount: e.target.value }))} placeholder="เลขบัญชี" style={{ border: '1.5px solid #E4D7BC', borderRadius: 10, padding: '10px 12px', fontSize: 14, fontFamily: 'Prompt', letterSpacing: '.06em', color: '#3F2D1E', outline: 'none' }} />
+            <input value={infoDraft.fullName} onChange={e => setInfoDraft(d => ({ ...d, fullName: e.target.value }))} placeholder="ชื่อ-นามสกุลเจ้าของบัญชี" style={{ border: '1.5px solid #E4D7BC', borderRadius: 10, padding: '10px 12px', fontSize: 14, color: '#3F2D1E', outline: 'none' }} />
+            <select value={infoDraft.bankName} onChange={e => setInfoDraft(d => ({ ...d, bankName: e.target.value }))} style={{ border: '1.5px solid #E4D7BC', borderRadius: 10, padding: '10px 12px', fontSize: 14, color: infoDraft.bankName ? '#3F2D1E' : '#9A8662', outline: 'none', appearance: 'none', WebkitAppearance: 'none', background: '#FBF6EC url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'10\' height=\'6\'%3E%3Cpath fill=\'%239A8662\' d=\'M5 6L0 0h10z\'/%3E%3C/svg%3E") no-repeat right 12px center', paddingRight: 32 }}>
+              <option value="">เลือกธนาคาร</option>
+              {THAI_BANKS.map(b => <option key={b} value={b}>{b}</option>)}
+            </select>
+            <input value={infoDraft.bankAccount} onChange={e => setInfoDraft(d => ({ ...d, bankAccount: e.target.value }))} placeholder="เลขบัญชี / เบอร์พร้อมเพย์" style={{ border: '1.5px solid #E4D7BC', borderRadius: 10, padding: '10px 12px', fontSize: 14, fontFamily: 'Prompt', letterSpacing: '.06em', color: '#3F2D1E', outline: 'none' }} />
             <input value={infoDraft.note} onChange={e => setInfoDraft(d => ({ ...d, note: e.target.value }))} placeholder="หมายเหตุ (ไม่บังคับ)" style={{ border: '1.5px solid #E4D7BC', borderRadius: 10, padding: '10px 12px', fontSize: 13, color: '#3F2D1E', outline: 'none' }} />
             <button onClick={() => { onSaveCustomerInfo(phone, infoDraft); setEditInfo(false); }} style={{ border: 'none', background: '#3F2D1E', color: '#F6EEDD', borderRadius: 10, padding: '12px 0', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>บันทึก</button>
           </div>
