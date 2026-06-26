@@ -656,9 +656,33 @@ function VehicleModal({ plate, photoUrl, onSave, onPhoto, onClose }) {
   );
 }
 
-function RecordView({ session, activeCat, input, onInput, onCommit, onPickCat, onGoHome, onGoSummary, onEditSeller, onEditEntry, verified, history, customLabel, onCustomLabelChange, pinnedCats, onOpenPinEditor, vehiclePhotoUrl, onVehiclePlate, onVehiclePhoto }) {
+function BankModal({ bankName, bankAccount, onSave, onClose }) {
+  const [name, setName] = useState(bankName || '');
+  const [acct, setAcct] = useState(bankAccount || '');
+  const inp = { width: '100%', boxSizing: 'border-box', border: '1.5px solid #D8C8A8', borderRadius: 12, padding: '12px 14px', fontSize: 15, fontFamily: 'Prompt', color: '#2A2118', background: '#FBF6EC', marginBottom: 10 };
+  return (
+    <div className="no-print" style={{ position: 'fixed', inset: 0, zIndex: 70, background: 'rgba(42,33,24,.55)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', padding: '0 0 env(safe-area-inset-bottom)', animation: 'fadeIn .2s' }}>
+      <div style={{ background: '#FFFDF8', borderRadius: '20px 20px 0 0', padding: '20px 18px 28px', width: '100%', maxWidth: 480, boxShadow: '0 -8px 30px rgba(42,33,24,.18)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+          <span style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 17, color: '#3F2D1E' }}>🏦 ข้อมูลธนาคาร</span>
+          <button onClick={onClose} style={{ border: 'none', background: 'none', fontSize: 20, cursor: 'pointer', color: '#9A8662' }}>✕</button>
+        </div>
+        <input value={name} onChange={e => setName(e.target.value)} placeholder="ชื่อธนาคาร เช่น กสิกรไทย, SCB" style={inp} />
+        <input value={acct} onChange={e => setAcct(e.target.value.replace(/\D/g, ''))} placeholder="เลขบัญชี" inputMode="numeric" style={{ ...inp, fontFamily: 'Prompt', letterSpacing: '.06em', fontSize: 16 }} />
+        <button onClick={() => { onSave(name.trim(), acct.trim()); onClose(); }} style={{ width: '100%', border: 'none', borderRadius: 13, padding: 15, background: 'linear-gradient(135deg,#5A7FA8,#3A5F88)', color: '#fff', fontWeight: 700, fontSize: 16, cursor: 'pointer', boxShadow: '0 6px 16px rgba(58,95,136,.28)' }}>
+          บันทึกข้อมูลธนาคาร
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function RecordView({ session, activeCat, input, onInput, onCommit, onPickCat, onGoHome, onGoSummary, onEditSeller, onEditEntry, verified, history, customLabel, onCustomLabelChange, pinnedCats, onOpenPinEditor, vehiclePhotoUrl, onVehiclePlate, onVehiclePhoto, customerInfo, onSaveCustomerInfo }) {
   const aggData = agg(session);
   const [vehicleModalOpen, setVehicleModalOpen] = useState(false);
+  const [bankModalOpen, setBankModalOpen] = useState(false);
+  const sellerPhone = session?.sellerPhone || '';
+  const bankInfo = (customerInfo || {})[sellerPhone] || {};
   const totalKg = grandKg(session);
   const totalCount = (session?.entries || []).length;
   const recent = (session?.entries || []).filter(e => e.cat === activeCat).reverse();
@@ -715,6 +739,14 @@ function RecordView({ session, activeCat, input, onInput, onCommit, onPickCat, o
             {vehiclePlate || '+ ทะเบียนรถ'}
           </span>
         </div>
+        {sellerPhone && onSaveCustomerInfo && (
+          <div onClick={() => setBankModalOpen(true)} style={{ display: 'flex', alignItems: 'center', gap: 5, background: bankInfo.bankAccount ? '#E8EEF8' : '#F5F5F5', border: `1px solid ${bankInfo.bankAccount ? '#90CAF9' : '#D0C8C0'}`, borderRadius: 20, padding: '5px 12px', cursor: 'pointer' }}>
+            <span style={{ fontSize: 13 }}>🏦</span>
+            <span style={{ fontSize: 13, fontWeight: 600, color: bankInfo.bankAccount ? '#1A4D80' : '#9A8878' }}>
+              {bankInfo.bankAccount ? `${bankInfo.bankName || ''} ${bankInfo.bankAccount}`.trim() : '+ ธนาคาร'}
+            </span>
+          </div>
+        )}
       </div>
       {vehicleModalOpen && (
         <VehicleModal
@@ -723,6 +755,14 @@ function RecordView({ session, activeCat, input, onInput, onCommit, onPickCat, o
           onSave={onVehiclePlate}
           onPhoto={file => { onVehiclePhoto(file); }}
           onClose={() => setVehicleModalOpen(false)}
+        />
+      )}
+      {bankModalOpen && (
+        <BankModal
+          bankName={bankInfo.bankName || ''}
+          bankAccount={bankInfo.bankAccount || ''}
+          onSave={(bName, bAcct) => onSaveCustomerInfo(sellerPhone, { ...bankInfo, bankName: bName, bankAccount: bAcct })}
+          onClose={() => setBankModalOpen(false)}
         />
       )}
 
@@ -4032,7 +4072,9 @@ export default function App() {
             customLabel={session.customLabel || ''}
             onCustomLabelChange={label => updateSession(prev => ({ ...prev, customLabel: label }))}
             pinnedCats={pinnedCats} onOpenPinEditor={() => setPinEditorOpen(true)}
-            vehiclePhotoUrl={vehiclePhotoUrl} onVehiclePlate={handleVehiclePlate} onVehiclePhoto={handleVehiclePhoto} />
+            vehiclePhotoUrl={vehiclePhotoUrl} onVehiclePlate={handleVehiclePlate} onVehiclePhoto={handleVehiclePhoto}
+            customerInfo={customerInfo}
+            onSaveCustomerInfo={(phone, info) => { const next = { ...storage.loadCustomerInfo(), [phone]: info }; storage.saveCustomerInfo(next); setCustomerInfo(next); db.upsertCustomerInfo(phone, info).catch(() => {}); }} />
         ) : <Navigate to="/" replace />} />
         <Route path="/summary" element={session ? (
           <SummaryView session={session} logOpen={logOpen}
