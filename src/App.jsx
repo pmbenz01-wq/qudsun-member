@@ -287,10 +287,11 @@ function EmployeeManager({ employees, onSave, onCancel }) {
 }
 
 // ─── HomeView ─────────────────────────────────────────────────────────────────
-function HomeView({ session, history, saleHistory, payments, syncing, syncStatus, onSyncNow, onOpenSheet, onNew, onResume, onGoCustomers, onGoDashboard, onGoSupervisors, onGoSales, onNewSale, saleSession, onResumeSale, onChangePin, onSetEmployeePin, onOpenHistory, onOpenSaleHistory, onPayment, onDeleteBill, pin, verified, supervisors, isEmployee, onLogout, onExport, onImport }) {
+function HomeView({ session, history, saleHistory, payments, syncing, syncStatus, onSyncNow, onOpenSheet, onNew, onResume, onGoCustomers, onGoDashboard, onGoSupervisors, onGoSales, onNewSale, saleSession, onResumeSale, onChangePin, onSetEmployeePin, onOpenHistory, onOpenSaleHistory, onPayment, onDeleteBill, onDeleteSaleBill, pin, verified, supervisors, isEmployee, onLogout, onExport, onImport }) {
   const customerCount = Object.keys(loadCustomers(history)).length;
   const supervisorCount = Object.values(supervisors || {}).filter(Boolean).reduce((set, n) => (set.add(n), set), new Set()).size;
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleteSaleTarget, setDeleteSaleTarget] = useState(null);
   if (isEmployee) {
     return (
       <div style={{ flex: 1, maxWidth: 480, width: '100%', margin: '0 auto', padding: '32px 14px 40px', display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -483,6 +484,11 @@ function HomeView({ session, history, saleHistory, payments, syncing, syncStatus
                         </div>
                         <span style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 15, color: '#1B5E20', whiteSpace: 'nowrap' }}>฿{fmtBaht(s.baht)}</span>
                       </button>
+                      {!isEmployee && onDeleteSaleBill && (
+                        <div style={{ padding: '0 12px 10px', display: 'flex', justifyContent: 'flex-end' }}>
+                          <button onClick={() => setDeleteSaleTarget(s)} style={{ border: '1px solid #A8D5A2', background: '#E8F5E9', borderRadius: 8, padding: '5px 12px', fontSize: 11, color: '#2E7D32', cursor: 'pointer' }}>🗑 ลบบิล</button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 );
@@ -495,6 +501,11 @@ function HomeView({ session, history, saleHistory, payments, syncing, syncStatus
         <DeleteBillModal bill={deleteTarget} pin={pin}
           onConfirm={() => { onDeleteBill(deleteTarget.billNo); setDeleteTarget(null); }}
           onClose={() => setDeleteTarget(null)} />
+      )}
+      {deleteSaleTarget && (
+        <DeleteBillModal bill={{ seller: deleteSaleTarget.customerName || deleteSaleTarget.billNo, billNo: deleteSaleTarget.billNo, baht: deleteSaleTarget.baht }} pin={pin}
+          onConfirm={() => { onDeleteSaleBill(deleteSaleTarget.billNo); setDeleteSaleTarget(null); }}
+          onClose={() => setDeleteSaleTarget(null)} />
       )}
 
       <div style={{ marginTop: 24, display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -3657,6 +3668,14 @@ export default function App() {
     db.deletePayment(billNo).catch(() => {});
   }, []);
 
+  const handleDeleteSaleBill = useCallback((billNo) => {
+    const nextSh = storage.loadSaleHistory().filter(s => s.billNo !== billNo);
+    storage.saveSaleHistory(nextSh);
+    setSaleHistory(nextSh);
+    setSaleSessions(prev => prev.filter(s => s.billNo !== billNo));
+    setSales(prev => prev.filter(s => s.id !== billNo));
+  }, []);
+
   const handleDeleteCustomer = useCallback((phone) => {
     // Delete all bills for this phone
     const billsToDelete = storage.loadHistory().filter(h => String(h.phone || '').trim() === phone);
@@ -4122,7 +4141,7 @@ export default function App() {
             onResumeSale={() => navigate('/sale/record')}
             onGoSupervisors={() => { navigate('/supervisors'); syncNow(true); }}
             onChangePin={changePin} onSetEmployeePin={setEmployeePinAction}
-            onOpenHistory={openHistory} onOpenSaleHistory={openSaleHistoryDetail} onPayment={handlePayment} onDeleteBill={handleDeleteBill} pin={pin} isEmployee={authRole === 'employee'} onLogout={handleLogout}
+            onOpenHistory={openHistory} onOpenSaleHistory={openSaleHistoryDetail} onPayment={handlePayment} onDeleteBill={handleDeleteBill} onDeleteSaleBill={handleDeleteSaleBill} pin={pin} isEmployee={authRole === 'employee'} onLogout={handleLogout}
             onExport={handleExport} onImport={handleImport} />
         } />
         <Route path="/record" element={session ? (
