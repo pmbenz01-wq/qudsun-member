@@ -3260,6 +3260,21 @@ export default function App() {
       const merged = [...summaries, ...localOnly].sort((a, b) => (b.date || 0) - (a.date || 0));
       storage.saveSaleHistory(merged); setSaleHistory(merged);
     }).catch(() => {});
+    // Sync accounts + employees from Supabase app settings
+    db.getSetting('accounts').then(remote => {
+      if (!Array.isArray(remote)) return;
+      const local = storage.loadAccounts();
+      const merged = [...new Set([...remote, ...local])];
+      storage.saveAccounts(merged); setAccounts(merged);
+    }).catch(() => {});
+    db.getSetting('employees').then(remote => {
+      if (!Array.isArray(remote) || !remote.length) return;
+      const local = storage.loadEmployees();
+      const remotePins = new Set(remote.map(e => e.pin));
+      const localOnly = local.filter(e => e.pin && !remotePins.has(e.pin));
+      const merged = [...remote, ...localOnly];
+      storage.saveEmployees(merged); setEmployees(merged);
+    }).catch(() => {});
     const m = (window.location.hash || '').match(/bill=([^&]+)/);
     if (m) {
       try {
@@ -3578,6 +3593,7 @@ export default function App() {
       if (prev.includes(acct)) return prev;
       const next = [acct, ...prev];
       storage.saveAccounts(next);
+      db.saveSetting('accounts', next).catch(() => {});
       return next;
     });
   }, []);
@@ -4113,7 +4129,7 @@ export default function App() {
         onConfirm={handleVerifyConfirm} onSkip={() => commitFinish()} onCancel={() => setVerifyPrompt(null)} />}
 
       {pinEditorOpen && <PinEditor pinnedCats={pinnedCats} onSave={pins => { storage.savePinnedCats(pins); setPinnedCats(pins); setPinEditorOpen(false); toast('บันทึกหมวดปักหมุดแล้ว'); }} onCancel={() => setPinEditorOpen(false)} />}
-      {employeeManagerOpen && <EmployeeManager employees={employees} onSave={list => { storage.saveEmployees(list); setEmployees(list); setEmployeeManagerOpen(false); toast('บันทึกรายชื่อพนักงานแล้ว'); }} onCancel={() => setEmployeeManagerOpen(false)} />}
+      {employeeManagerOpen && <EmployeeManager employees={employees} onSave={list => { storage.saveEmployees(list); setEmployees(list); db.saveSetting('employees', list).catch(() => {}); setEmployeeManagerOpen(false); toast('บันทึกรายชื่อพนักงานแล้ว'); }} onCancel={() => setEmployeeManagerOpen(false)} />}
       {sheetModal && <SheetModal onSyncNow={() => { syncNow(false); }} syncStatus={syncStatus} syncing={syncing} onCancel={() => setSheetModal(false)} />}
 
 <Toast msg={toastMsg} />

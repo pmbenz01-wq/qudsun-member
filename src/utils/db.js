@@ -229,6 +229,21 @@ export const db = {
     if (error) throw error;
   },
 
+  // ─── App Settings (accounts, employees) ──────────────────────────────────
+  async getSetting(key) {
+    const { data, error } = await supabase.from('qm_app_settings').select('value').eq('key', key).maybeSingle();
+    if (error) throw error;
+    return data?.value ?? null;
+  },
+
+  async saveSetting(key, value) {
+    const { error } = await supabase.from('qm_app_settings').upsert(
+      { key, value, updated_at: new Date().toISOString() },
+      { onConflict: 'key' }
+    );
+    if (error) throw error;
+  },
+
   // ─── Realtime ─────────────────────────────────────────────────────────────
   subscribeChanges(onSync) {
     const channel = supabase
