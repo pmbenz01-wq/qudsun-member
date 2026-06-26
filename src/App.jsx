@@ -1368,26 +1368,26 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
                 );
               })() : <span><b>{session?.seller || '—'}</b>{session?.sellerPhone ? ` · ${session.sellerPhone}` : ''}</span>}
             </div>
+            {(() => {
+              const plate = session?.vehiclePlate || '';
+              const recorder = session?.recorder || '';
+              const supervisor = session?.supervisor || (supervisors || {})[session?.sellerPhone || ''] || '';
+              const items = [
+                plate && { label: 'ทะเบียน', value: plate },
+                recorder && { label: 'ผู้จด', value: recorder },
+                supervisor && { label: 'ผู้ดูแล', value: supervisor },
+              ].filter(Boolean);
+              if (!items.length) return null;
+              return (
+                <div style={{ marginTop: 5, display: 'flex', flexDirection: 'column', gap: 1, fontSize: 11 }}>
+                  {items.map(it => (
+                    <div key={it.label}><span style={{ color: '#9A8662' }}>{it.label}: </span><b>{it.value}</b></div>
+                  ))}
+                </div>
+              );
+            })()}
           </div>
         </div>
-        {(() => {
-          const plate = session?.vehiclePlate || '';
-          const recorder = session?.recorder || '';
-          const supervisor = session?.supervisor || (supervisors || {})[session?.sellerPhone || ''] || '';
-          const items = [
-            plate && { label: '🚗 ทะเบียน', value: plate },
-            recorder && { label: '✍️ ผู้จด', value: recorder },
-            supervisor && { label: '👤 ผู้ดูแล', value: supervisor },
-          ].filter(Boolean);
-          if (!items.length) return null;
-          return (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 18px', marginTop: 8, paddingBottom: 8, borderBottom: '1px dotted #C9BBA0', fontSize: 12 }}>
-              {items.map(it => (
-                <span key={it.label}><span style={{ color: '#9A8662' }}>{it.label}: </span><b>{it.value}</b></span>
-              ))}
-            </div>
-          );
-        })()}
         {(() => {
           const entries = session?.entries || [];
           if (entries.length === 0) return null;
