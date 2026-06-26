@@ -287,7 +287,7 @@ function EmployeeManager({ employees, onSave, onCancel }) {
 }
 
 // ─── HomeView ─────────────────────────────────────────────────────────────────
-function HomeView({ session, history, saleHistory, payments, syncing, syncStatus, onSyncNow, onOpenSheet, onNew, onResume, onGoCustomers, onGoDashboard, onGoSupervisors, onGoSales, onNewSale, saleSession, onResumeSale, onChangePin, onSetEmployeePin, onOpenHistory, onPayment, onDeleteBill, pin, verified, supervisors, isEmployee, onLogout, onExport, onImport }) {
+function HomeView({ session, history, saleHistory, payments, syncing, syncStatus, onSyncNow, onOpenSheet, onNew, onResume, onGoCustomers, onGoDashboard, onGoSupervisors, onGoSales, onNewSale, saleSession, onResumeSale, onChangePin, onSetEmployeePin, onOpenHistory, onOpenSaleHistory, onPayment, onDeleteBill, pin, verified, supervisors, isEmployee, onLogout, onExport, onImport }) {
   const customerCount = Object.keys(loadCustomers(history)).length;
   const supervisorCount = Object.values(supervisors || {}).filter(Boolean).reduce((set, n) => (set.add(n), set), new Set()).size;
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -471,7 +471,7 @@ function HomeView({ session, history, saleHistory, payments, syncing, syncStatus
                 return (
                   <div key={'s-' + i} style={{ display: 'flex', justifyContent: 'flex-end' }}>
                     <div style={{ width: '83%', border: '1.5px solid #6BBF70', background: '#F2FBF2', borderRadius: '13px 4px 13px 13px', overflow: 'hidden' }}>
-                      <button onClick={onGoSales} style={{ textAlign: 'left', background: 'none', border: 'none', width: '100%', padding: '12px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <button onClick={() => onOpenSaleHistory ? onOpenSaleHistory(s.billNo) : onGoSales()} style={{ textAlign: 'left', background: 'none', border: 'none', width: '100%', padding: '12px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                             <span style={{ fontWeight: 600, fontSize: 14, color: '#1B5E20' }}>{s.billNo}</span>
@@ -2485,14 +2485,14 @@ function SalePrintView({ saleSession, onGoBack, onFinish, onEditPrice }) {
   return (
     <div style={{ flex: 1, padding: '16px 12px 32px', maxWidth: 520, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
       <div className="no-print" style={{ marginBottom: 14 }}>
-        <button onClick={onGoBack} style={{ border: 'none', background: 'none', fontSize: 14, color: '#8A7A66', cursor: 'pointer', padding: '4px 0 10px' }}>‹ กลับแก้ไข</button>
+        <button onClick={onGoBack} style={{ border: 'none', background: 'none', fontSize: 14, color: '#8A7A66', cursor: 'pointer', padding: '4px 0 10px' }}>{onFinish ? '‹ กลับแก้ไข' : '‹ กลับ'}</button>
         <button onClick={() => window.print()} style={{ width: '100%', border: 'none', borderRadius: 15, padding: 18, background: 'linear-gradient(135deg,#4A7A2E,#2E5C1A)', color: '#fff', fontWeight: 700, fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
           🖨 ปริ้นใบเสร็จ
         </button>
         <p style={{ textAlign: 'center', fontSize: 12, color: '#9A8662', margin: '8px 0 12px' }}>ขนาดกระดาษ A5 (ครึ่ง A4)</p>
-        <button onClick={onFinish} style={{ width: '100%', border: '1px solid #4A7A2E', background: '#F0FAE8', borderRadius: 12, padding: 14, fontSize: 15, fontFamily: 'Prompt', fontWeight: 600, color: '#2E5C1A', cursor: 'pointer' }}>
+        {onFinish && <button onClick={onFinish} style={{ width: '100%', border: '1px solid #4A7A2E', background: '#F0FAE8', borderRadius: 12, padding: 14, fontSize: 15, fontFamily: 'Prompt', fontWeight: 600, color: '#2E5C1A', cursor: 'pointer' }}>
           ✓ บันทึกบิลขาย
-        </button>
+        </button>}
       </div>
 
       <div className="bill-doc-wrapper" style={{ maxWidth: 420, margin: '0 auto' }}>
@@ -3106,6 +3106,8 @@ export default function App() {
   const [accounts, setAccounts] = useState(() => storage.loadAccounts());
   const [saleSession, setSaleSession] = useState(() => storage.loadSaleSession());
   const [saleHistory, setSaleHistory] = useState([]);
+  const [saleSessions, setSaleSessions] = useState([]);
+  const [viewSaleSession, setViewSaleSession] = useState(null);
   const [saleActiveCat, setSaleActiveCat] = useState('AB');
   const [saleInput, setSaleInput] = useState('');
   const [saleNumpad, setSaleNumpad] = useState(null);
@@ -3253,6 +3255,7 @@ export default function App() {
     }).catch(() => {});
     db.getSaleSessions().then(remoteSessions => {
       if (!remoteSessions?.length) return;
+      setSaleSessions(remoteSessions);
       const summaries = remoteSessions.map(s => {
         const totalKg = (s.entries || []).reduce((sum, e) => sum + (e.kg || 0), 0);
         const totalBaht = (s.entries || []).reduce((sum, e) => sum + (e.kg || 0) * ((s.prices || {})[e.cat] || 0), 0);
@@ -3870,6 +3873,12 @@ export default function App() {
     }
   }, [session, navigate]);
 
+  const openSaleHistoryDetail = useCallback((billNo) => {
+    const full = saleSessions.find(s => s.billNo === billNo);
+    if (full) { setViewSaleSession(full); navigate('/sale/history'); }
+    else { navigate('/sales'); }
+  }, [saleSessions, navigate]);
+
   const goBackFromBill = useCallback(() => {
     const dest = custPhone ? '/customers/' + encodeURIComponent(custPhone) : '/';
     setSession(savedSession.current || null); savedSession.current = null;
@@ -4002,7 +4011,7 @@ export default function App() {
             onResumeSale={() => navigate('/sale/record')}
             onGoSupervisors={() => { navigate('/supervisors'); syncNow(true); }}
             onChangePin={changePin} onSetEmployeePin={setEmployeePinAction}
-            onOpenHistory={openHistory} onPayment={handlePayment} onDeleteBill={handleDeleteBill} pin={pin} isEmployee={authRole === 'employee'} onLogout={handleLogout}
+            onOpenHistory={openHistory} onOpenSaleHistory={openSaleHistoryDetail} onPayment={handlePayment} onDeleteBill={handleDeleteBill} pin={pin} isEmployee={authRole === 'employee'} onLogout={handleLogout}
             onExport={handleExport} onImport={handleImport} />
         } />
         <Route path="/record" element={session ? (
@@ -4067,6 +4076,9 @@ export default function App() {
         ) : <Navigate to="/" replace />} />
         <Route path="/sale/print" element={saleSession ? (
           <SalePrintView saleSession={saleSession} onGoBack={() => navigate('/sale/summary')} onFinish={finishSaleSession} />
+        ) : <Navigate to="/" replace />} />
+        <Route path="/sale/history" element={viewSaleSession ? (
+          <SalePrintView saleSession={viewSaleSession} onGoBack={() => { setViewSaleSession(null); navigate('/'); }} onFinish={null} />
         ) : <Navigate to="/" replace />} />
         <Route path="/customers" element={
           <CustomersView history={history} verified={verified} onGoHome={() => navigate('/')}
