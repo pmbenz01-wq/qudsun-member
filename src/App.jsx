@@ -3242,6 +3242,10 @@ export default function App() {
       const localOnly = local.filter(h => h?.billNo && !remoteNos.has(h.billNo) && !deleted.has(h.billNo));
       const merged = [...remoteBills, ...localOnly];
       storage.saveHistory(merged); setHistory(merged);
+      // Also derive supervisor map from bills
+      const svMap = {};
+      merged.forEach(c => { const ph = c.phone || c.data?.sellerPhone || ''; const sup = c.data?.supervisor || c.supervisor || ''; if (ph && sup) svMap[ph] = sup; });
+      if (Object.keys(svMap).length) { const nSv = { ...storage.loadSupervisors(), ...svMap }; storage.saveSupervisors(nSv); setSupervisors(nSv); }
     }).catch(() => {});
     db.getSaleSessions().then(remoteSessions => {
       if (!remoteSessions?.length) return;
