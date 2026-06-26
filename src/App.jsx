@@ -2587,7 +2587,8 @@ function SalePrintView({ saleSession, onGoBack, onFinish, onEditPrice }) {
   entries.forEach(e => { if (!grouped[e.cat]) grouped[e.cat] = []; grouped[e.cat].push(e); });
 
   return (
-    <div className="print-view-root" style={{ flex: 1, padding: '16px 12px 32px', maxWidth: 520, margin: '0 auto', width: '100%', boxSizing: 'border-box', background: '#fff' }}>
+    <div className="print-view-root" style={{ flex: 1, background: '#fff' }}>
+      <div style={{ padding: '16px 12px 32px', maxWidth: 520, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
       <div className="no-print" style={{ marginBottom: 14 }}>
         <button onClick={onGoBack} style={{ border: 'none', background: 'none', fontSize: 14, color: '#8A7A66', cursor: 'pointer', padding: '4px 0 10px' }}>{onFinish ? '‹ กลับแก้ไข' : '‹ กลับ'}</button>
         <button onClick={() => window.print()} style={{ width: '100%', border: 'none', borderRadius: 15, padding: 18, background: 'linear-gradient(135deg,#4A7A2E,#2E5C1A)', color: '#fff', fontWeight: 700, fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
@@ -2725,6 +2726,7 @@ function SalePrintView({ saleSession, onGoBack, onFinish, onEditPrice }) {
           </div>
           <img src="/qr-bill.png" alt="QR" className="bill-doc-qr" style={{ width: 88, height: 88, objectFit: 'contain' }} onError={e => { e.target.style.display = 'none'; }} />
         </div>
+      </div>
       </div>
       </div>
     </div>
