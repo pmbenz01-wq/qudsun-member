@@ -3295,7 +3295,7 @@ export default function App() {
       setVehiclePlates(merged);
     }).catch(() => {});
     db.getCustomerInfo().then(remote => {
-      const merged = { ...storage.loadCustomerInfo(), ...remote };
+      const merged = { ...remote, ...storage.loadCustomerInfo() };
       storage.saveCustomerInfo(merged);
       setCustomerInfo(merged);
     }).catch(() => {});
@@ -3410,7 +3410,7 @@ export default function App() {
       const merged = [...sheetSalesData, ...localOnly];
       if (merged.length > 0) { storage.saveSales(merged); setSales(merged); }
     }
-    if (sheetCI.ok) { storage.saveCustomerInfo(sheetCI.info || {}); setCustomerInfo(sheetCI.info || {}); }
+    if (sheetCI.ok) { const merged = { ...(sheetCI.info || {}), ...storage.loadCustomerInfo() }; storage.saveCustomerInfo(merged); setCustomerInfo(merged); }
   }, []); // eslint-disable-line
 
   // Google Sheets is primary DB — Supabase is backup
