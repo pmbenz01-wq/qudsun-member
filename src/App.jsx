@@ -1686,7 +1686,7 @@ function DeleteBillModal({ bill, pin, onConfirm, onClose }) {
   );
 }
 
-function DashboardView({ history, payments, pin, onPayment, onDeleteBill, onGoHome, onOpenHistory }) {
+function DashboardView({ history, payments, pin, onPayment, onDeleteBill, onGoHome, onOpenHistory, isEmployee }) {
   const todayStr = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
   const [startDate, setStartDate] = useState(todayStr);
   const [endDate, setEndDate] = useState(todayStr);
@@ -1781,10 +1781,11 @@ function DashboardView({ history, payments, pin, onPayment, onDeleteBill, onGoHo
               </button>
               <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
                 <div style={{ fontWeight: 700, fontSize: 16, color: '#3F2D1E' }}>฿{b.baht}</div>
-                <button onClick={() => setDeleteBill(b)} style={{ border: 'none', background: 'none', padding: '2px 4px', cursor: 'pointer', fontSize: 14, color: '#C8B89A', lineHeight: 1 }}>🗑</button>
+                {!isEmployee && <button onClick={() => setDeleteBill(b)} style={{ border: 'none', background: 'none', padding: '2px 4px', cursor: 'pointer', fontSize: 14, color: '#C8B89A', lineHeight: 1 }}>🗑</button>}
               </div>
             </div>
             </div>
+            {!isEmployee && (
             <div style={{ padding: '0 16px 14px' }}>
               {b.pay.status === 'unpaid' ? (
                 <div style={{ display: 'flex', gap: 8 }}>
@@ -1804,6 +1805,7 @@ function DashboardView({ history, payments, pin, onPayment, onDeleteBill, onGoHo
                 </button>
               )}
             </div>
+            )}
           </div>
         );
       })}
@@ -1948,7 +1950,7 @@ function AddSaleModal({ date, accounts, onSave, onClose, onSaveAccount }) {
   );
 }
 
-function SalesView({ history, sales, accounts, pin, onGoHome, onAddSale, onDeleteSale, onUpdateSale, onSaveAccount, onOpenHistory, onNewSaleSession }) {
+function SalesView({ history, sales, accounts, pin, onGoHome, onAddSale, onDeleteSale, onUpdateSale, onSaveAccount, onOpenHistory, onNewSaleSession, isEmployee }) {
   const todayStr = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
   const [startDate, setStartDate] = useState(todayStr);
   const [endDate, setEndDate] = useState(todayStr);
@@ -2041,8 +2043,8 @@ function SalesView({ history, sales, accounts, pin, onGoHome, onAddSale, onDelet
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
         <span style={{ fontSize: 13, fontWeight: 600, color: '#4A3526' }}>รายการขาย</span>
         <div style={{ flex: 1, height: 1, background: '#E4D7BC' }} />
-        {onNewSaleSession && <button onClick={onNewSaleSession} style={{ border: 'none', background: 'linear-gradient(135deg,#4A7A2E,#2E5C1A)', color: '#fff', borderRadius: 10, padding: '7px 14px', fontSize: 13, cursor: 'pointer', fontFamily: 'Prompt', fontWeight: 600 }}>🧾 ใบขายใหม่</button>}
-        <button onClick={() => setAddOpen(true)} style={{ border: '1px solid #6B8E4E', background: '#fff', color: '#4A6E30', borderRadius: 10, padding: '7px 14px', fontSize: 13, cursor: 'pointer', fontFamily: 'Prompt' }}>+ เพิ่ม</button>
+        {!isEmployee && onNewSaleSession && <button onClick={onNewSaleSession} style={{ border: 'none', background: 'linear-gradient(135deg,#4A7A2E,#2E5C1A)', color: '#fff', borderRadius: 10, padding: '7px 14px', fontSize: 13, cursor: 'pointer', fontFamily: 'Prompt', fontWeight: 600 }}>🧾 ใบขายใหม่</button>}
+        {!isEmployee && <button onClick={() => setAddOpen(true)} style={{ border: '1px solid #6B8E4E', background: '#fff', color: '#4A6E30', borderRadius: 10, padding: '7px 14px', fontSize: 13, cursor: 'pointer', fontFamily: 'Prompt' }}>+ เพิ่ม</button>}
       </div>
 
       {outSales.length === 0 && (
@@ -2080,7 +2082,7 @@ function SalesView({ history, sales, accounts, pin, onGoHome, onAddSale, onDelet
                   <a href={s.receiptUrl} target="_blank" rel="noreferrer">
                     <img src={s.receiptUrl} alt="ใบเสร็จ" style={{ width: '100%', maxHeight: 180, objectFit: 'contain', borderRadius: 10, border: '1px solid #E4D7BC', background: '#f5f5f5', display: 'block', marginBottom: 10, marginTop: 10 }} />
                   </a>
-                ) : (
+                ) : !isEmployee ? (
                   <div style={{ marginTop: 10, marginBottom: 10 }}>
                     <button onClick={() => { uploadTargetRef.current = s.id; receiptInputRef.current?.click(); }}
                       disabled={uploadingSaleId === s.id}
@@ -2088,7 +2090,8 @@ function SalesView({ history, sales, accounts, pin, onGoHome, onAddSale, onDelet
                       {uploadingSaleId === s.id ? '⏳ กำลังอัปโหลด...' : '📎 อัปโหลดใบเสร็จ'}
                     </button>
                   </div>
-                )}
+                ) : null}
+                {!isEmployee && (
                 <div style={{ display: 'flex', gap: 8, marginTop: s.receiptUrl ? 10 : 0 }}>
                   <button onClick={() => onUpdateSale(s.id, { note: nextSt })}
                     style={{ flex: 1, border: `1px solid ${badge.border}`, borderRadius: 9, padding: '8px 0', background: badge.bg, color: badge.color, fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>
@@ -2102,6 +2105,7 @@ function SalesView({ history, sales, accounts, pin, onGoHome, onAddSale, onDelet
                   <button onClick={() => { setDeleteTarget(s.id); setDeletePinVal(''); setDeletePinErr(''); setExpandedId(null); }}
                     style={{ border: '1px solid #E8C8C2', background: '#FDF0EE', borderRadius: 9, padding: '8px 14px', fontSize: 12, color: '#C0392B', cursor: 'pointer' }}>🗑 ลบ</button>
                 </div>
+                )}
               </div>
             )}
           </div>
@@ -4043,11 +4047,11 @@ export default function App() {
             supervisors={supervisors} customerInfo={customerInfo} />
         ) : <Navigate to="/" replace />} />
         <Route path="/purchases" element={
-          <DashboardView history={history} payments={payments} pin={pin} onPayment={handlePayment} onDeleteBill={handleDeleteBill} onGoHome={() => { navigate('/'); syncNow(true); }} onOpenHistory={openHistory} />
+          <DashboardView history={history} payments={payments} pin={pin} onPayment={handlePayment} onDeleteBill={handleDeleteBill} onGoHome={() => { navigate('/'); syncNow(true); }} onOpenHistory={openHistory} isEmployee={authRole === 'employee'} />
         } />
         <Route path="/sales" element={
           <SalesView history={history} sales={sales} accounts={accounts} pin={pin} onGoHome={() => navigate('/')} onAddSale={handleAddSale} onDeleteSale={handleDeleteSale} onUpdateSale={handleUpdateSale} onSaveAccount={handleSaveAccount} onOpenHistory={openHistory}
-            onNewSaleSession={createSaleSession} />
+            onNewSaleSession={createSaleSession} isEmployee={authRole === 'employee'} />
         } />
         <Route path="/sale/record" element={saleSession ? (
           <SaleRecordView saleSession={saleSession} activeCat={saleActiveCat} input={saleInput} onInput={setSaleInput} onCommit={commitSaleEntry}
