@@ -229,7 +229,7 @@ export const db = {
     if (error) throw error;
   },
 
-  // ─── App Settings (accounts, employees) ──────────────────────────────────
+  // ─── App Settings (accounts, employees, supervisors) ─────────────────────
   async getSetting(key) {
     const { data, error } = await supabase.from('qm_app_settings').select('value').eq('key', key).maybeSingle();
     if (error) throw error;

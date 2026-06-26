@@ -3321,6 +3321,11 @@ export default function App() {
       const merged = [...remote, ...localOnly];
       storage.saveEmployees(merged); setEmployees(merged);
     }).catch(() => {});
+    db.getSetting('supervisors').then(remote => {
+      if (!remote || typeof remote !== 'object') return;
+      const merged = { ...storage.loadSupervisors(), ...remote };
+      storage.saveSupervisors(merged); setSupervisors(prev => ({ ...prev, ...merged }));
+    }).catch(() => {});
     const m = (window.location.hash || '').match(/bill=([^&]+)/);
     if (m) {
       try {
@@ -3623,6 +3628,7 @@ export default function App() {
     delete nextSup[phone];
     storage.saveSupervisors(nextSup);
     setSupervisors(nextSup);
+    db.saveSetting('supervisors', nextSup).catch(() => {});
   }, []);
 
   const handleDeleteSupervisor = useCallback((name) => {
@@ -3631,6 +3637,7 @@ export default function App() {
     );
     storage.saveSupervisors(nextSup);
     setSupervisors(nextSup);
+    db.saveSetting('supervisors', nextSup).catch(() => {});
   }, []);
 
   const handleSaveAccount = useCallback((acct) => {
@@ -3984,6 +3991,7 @@ export default function App() {
         if (data.supervisors && typeof data.supervisors === 'object') {
           const ns = { ...storage.loadSupervisors(), ...data.supervisors };
           storage.saveSupervisors(ns); setSupervisors(ns);
+          db.saveSetting('supervisors', ns).catch(() => {});
         }
         e.target.value = '';
         toast('นำเข้าสำเร็จ ✓');
@@ -4130,7 +4138,7 @@ export default function App() {
           <CustomerDetailRoute history={history} verified={verified} supervisors={supervisors}
             vehiclePlates={vehiclePlates} customerInfo={customerInfo} payments={payments} onPayment={handlePayment}
             onGoBack={() => navigate('/customers')} onOpenHistory={card => openHistory(card, true)}
-            onSaveSupervisor={(phone, name) => { const ns = { ...supervisors, [phone]: name }; storage.saveSupervisors(ns); setSupervisors(ns); }}
+            onSaveSupervisor={(phone, name) => { const ns = { ...supervisors, [phone]: name }; storage.saveSupervisors(ns); setSupervisors(ns); db.saveSetting('supervisors', ns).catch(() => {}); }}
             onSaveCustomerInfo={(phone, info) => { const next = { ...storage.loadCustomerInfo(), [phone]: info }; storage.saveCustomerInfo(next); setCustomerInfo(next); db.upsertCustomerInfo(phone, info).catch(() => {}); }}
             onOpenVerify={phone => {
               const stat = customerStat(phone, history, verified);
