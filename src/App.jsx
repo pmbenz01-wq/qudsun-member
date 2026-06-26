@@ -1446,6 +1446,18 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
             </tr>
           </tfoot>
         </table>
+        {(() => {
+          const bInfo = (customerInfo || {})[session?.sellerPhone || ''] || {};
+          if (!bInfo.bankAccount) return null;
+          return (
+            <div style={{ marginTop: 10, padding: '7px 12px', background: '#EEF3FA', border: '1px solid #B8CEE8', borderRadius: 6, fontSize: 11.5, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+              <span style={{ fontWeight: 600, color: '#3A5F88' }}>🏦 โอนค่าทุเรียน:</span>
+              {bInfo.bankName && <span style={{ color: '#3A5580' }}>{bInfo.bankName}</span>}
+              <span style={{ fontFamily: 'Prompt', fontWeight: 700, letterSpacing: '.05em', color: '#1A3A60' }}>{bInfo.bankAccount}</span>
+              {(bInfo.fullName || bInfo.note) && <span style={{ color: '#6A7A8A' }}>· {bInfo.fullName || bInfo.note}</span>}
+            </div>
+          );
+        })()}
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 36, gap: 20 }}>
           <div style={{ flex: 1, textAlign: 'center' }}>
             <div style={{ height: 48 }} />
