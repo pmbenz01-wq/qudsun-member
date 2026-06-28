@@ -1856,7 +1856,7 @@ function DashboardView({ history, payments, pin, onPayment, onDeleteBill, onGoHo
       {dayBills.map(b => {
         const st = STATUS[b.pay.status] || STATUS.unpaid;
         const billTime = b.date ? new Date(b.date).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) + ' น.' : '';
-        const billDateLabel = b.date ? new Date(b.date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' }) : '';
+        const billDateLabel = b.dateText || (b.date ? (d => `${d.getDate()} ${['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'][d.getMonth()]} ${d.getFullYear()+543}`)(new Date(b.date)) : '');
         return (
           <div key={b.billNo} style={{ background: '#FFFDF8', border: `1px solid #E4D7BC`, borderLeft: `4px solid ${st.color}`, borderRadius: 14, marginBottom: 10, overflow: 'hidden' }}>
             <div style={{ padding: '14px 16px' }}>
@@ -2156,7 +2156,7 @@ function SalesView({ history, sales, accounts, pin, onGoHome, onAddSale, onDelet
         const badge = stMap[st] || stMap.cash;
         const expanded = expandedId === s.id;
         const timeStr = s.date ? new Date(s.date).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) + ' น.' : '';
-        const saleDateLabel = s.date ? new Date(s.date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' }) : '';
+        const saleDateLabel = s.date ? (d => `${d.getDate()} ${['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'][d.getMonth()]} ${d.getFullYear()+543}`)(new Date(s.date)) : '';
         return (
           <div key={s.id} style={{ background: '#FFFDF8', border: `1px solid ${badge.border}`, borderRadius: 14, marginBottom: 10, overflow: 'hidden' }}>
             <button onClick={() => setExpandedId(expanded ? null : s.id)}
