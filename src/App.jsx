@@ -3458,9 +3458,16 @@ export default function App() {
     }
     if (sheetSales.ok) {
       const sheetSalesData = sheetSales.sales || [];
+      const localSales = storage.loadSales();
+      const localById = Object.fromEntries(localSales.filter(s => s.id).map(s => [s.id, s]));
       const sheetIds = new Set(sheetSalesData.map(s => s.id));
-      const localOnly = storage.loadSales().filter(s => s.id && !sheetIds.has(s.id));
-      const merged = [...sheetSalesData, ...localOnly];
+      const mergedSheet = sheetSalesData.map(s => {
+        const local = localById[s.id];
+        if (!local) return s;
+        return { ...s, receiptUrl: s.receiptUrl || local.receiptUrl || '', note: s.note || local.note || '' };
+      });
+      const localOnly = localSales.filter(s => s.id && !sheetIds.has(s.id));
+      const merged = [...mergedSheet, ...localOnly];
       if (merged.length > 0) { storage.saveSales(merged); setSales(merged); }
     }
     if (sheetCI.ok) { const merged = { ...(sheetCI.info || {}), ...storage.loadCustomerInfo() }; storage.saveCustomerInfo(merged); setCustomerInfo(merged); }
