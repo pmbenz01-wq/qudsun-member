@@ -3421,7 +3421,19 @@ export default function App() {
     const autoSync = setInterval(() => syncNow(true), 60000);
     const onVisible = () => { if (document.visibilityState === 'visible') syncNow(true); };
     document.addEventListener('visibilitychange', onVisible);
-    const unsubRealtime = db.subscribeChanges(() => syncNow(true));
+    const syncSalesFromSupabase = async () => {
+      try {
+        const remote = await db.getSales();
+        const localById = Object.fromEntries(storage.loadSales().filter(s => s.id).map(s => [s.id, s]));
+        const remoteIds = new Set(remote.map(s => s.id));
+        const merged = [
+          ...remote.map(s => { const local = localById[s.id]; return local ? { ...s, receiptUrl: s.receiptUrl || local.receiptUrl || '' } : s; }),
+          ...storage.loadSales().filter(s => s.id && !remoteIds.has(s.id)),
+        ];
+        storage.saveSales(merged); setSales(merged);
+      } catch {}
+    };
+    const unsubRealtime = db.subscribeChanges(() => syncNow(true), syncSalesFromSupabase);
     return () => { clearInterval(autoSync); document.removeEventListener('visibilitychange', onVisible); unsubRealtime(); };
   }, []);
 
