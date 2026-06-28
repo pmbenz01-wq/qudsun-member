@@ -2161,6 +2161,11 @@ function SalesView({ history, sales, accounts, pin, onGoHome, onAddSale, onDelet
           <div key={s.id} style={{ background: '#FFFDF8', border: `1px solid ${badge.border}`, borderRadius: 14, marginBottom: 10, overflow: 'hidden' }}>
             <button onClick={() => setExpandedId(expanded ? null : s.id)}
               style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', padding: '14px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10 }}>
+              {s.receiptUrl && (
+                <a href={s.receiptUrl} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()}>
+                  <img src={s.receiptUrl} alt="ใบเสร็จ" style={{ width: 52, height: 52, objectFit: 'cover', borderRadius: 8, border: '1px solid #C8E6C9', flexShrink: 0, display: 'block' }} />
+                </a>
+              )}
               <div style={{ flex: 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                   <span style={{ fontWeight: 700, fontSize: 15, color: '#1B5E20' }}>{fmtKg(Number(s.kg))} กก. · ฿{fmtBaht(Number(s.baht))}</span>
