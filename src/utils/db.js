@@ -7,13 +7,13 @@ const supabase = createClient(
 
 export const db = {
   // ─── Bills ────────────────────────────────────────────────────────────────
-  async getBills() {
+  async getBills({ limit = 2000, offset = 0 } = {}) {
     const { data, error } = await supabase
       .from('qm_bills')
       .select('json')
       .eq('deleted', false)
       .order('date', { ascending: false })
-      .limit(150);
+      .range(offset, offset + limit - 1);
     if (error) throw error;
     return data.map(row => {
       try { return JSON.parse(row.json); } catch { return null; }
@@ -199,13 +199,13 @@ export const db = {
   },
 
   // ─── Sale Sessions ────────────────────────────────────────────────────────
-  async getSaleSessions() {
+  async getSaleSessions({ limit = 2000, offset = 0 } = {}) {
     const { data, error } = await supabase
       .from('qm_sale_sessions')
       .select('json')
       .eq('deleted', false)
       .order('date', { ascending: false })
-      .limit(150);
+      .range(offset, offset + limit - 1);
     if (error) throw error;
     return data.map(row => { try { return JSON.parse(row.json); } catch { return null; } }).filter(Boolean);
   },
@@ -255,6 +255,9 @@ export const db = {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'qm_verified' }, onSync)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'qm_customer_info' }, onSync)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'qm_sales' }, onSalesSync || onSync)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'qm_sale_sessions' }, onSync)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'qm_vehicle_plates' }, onSync)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'qm_app_settings' }, onSync)
       .subscribe();
     return () => supabase.removeChannel(channel);
   },
