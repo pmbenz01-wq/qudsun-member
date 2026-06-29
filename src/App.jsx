@@ -1856,7 +1856,6 @@ function DashboardView({ history, payments, pin, onPayment, onDeleteBill, onGoHo
       {dayBills.map(b => {
         const st = STATUS[b.pay.status] || STATUS.unpaid;
         const billTime = b.date ? new Date(b.date).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) + ' น.' : '';
-        const billDateLabel = b.date ? new Date(b.date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' }) : '';
         return (
           <div key={b.billNo} style={{ background: '#FFFDF8', border: `1px solid #E4D7BC`, borderLeft: `4px solid ${st.color}`, borderRadius: 14, marginBottom: 10, overflow: 'hidden' }}>
             <div style={{ padding: '14px 16px' }}>
@@ -1872,7 +1871,7 @@ function DashboardView({ history, payments, pin, onPayment, onDeleteBill, onGoHo
                   <div style={{ fontWeight: 700, fontSize: 15, color: '#2A2118' }}>{b.seller || '—'}</div>
                   <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 20, background: st.bg, color: st.text, fontWeight: 600 }}>{st.label}</span>
                 </div>
-                <div style={{ fontSize: 12, color: '#8A7A66' }}>{b.billNo} · {b.kg} กก.{billDateLabel ? ` · ${billDateLabel}` : ''}{billTime ? ` · ${billTime}` : ''}</div>
+                <div style={{ fontSize: 12, color: '#8A7A66' }}>{b.billNo} · {b.kg} กก.{billTime ? ` · ${billTime}` : ''}</div>
               </button>
               <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
                 <div style={{ fontWeight: 700, fontSize: 16, color: '#3F2D1E' }}>฿{b.baht}</div>
@@ -2156,7 +2155,6 @@ function SalesView({ history, sales, accounts, pin, onGoHome, onAddSale, onDelet
         const badge = stMap[st] || stMap.cash;
         const expanded = expandedId === s.id;
         const timeStr = s.date ? new Date(s.date).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) + ' น.' : '';
-        const saleDateLabel = s.date ? new Date(s.date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' }) : '';
         return (
           <div key={s.id} style={{ background: '#FFFDF8', border: `1px solid ${badge.border}`, borderRadius: 14, marginBottom: 10, overflow: 'hidden' }}>
             <button onClick={() => setExpandedId(expanded ? null : s.id)}
@@ -2167,7 +2165,7 @@ function SalesView({ history, sales, accounts, pin, onGoHome, onAddSale, onDelet
                   <span style={{ borderRadius: 20, padding: '2px 9px', fontSize: 11, fontFamily: 'Prompt', fontWeight: 600, background: badge.bg, color: badge.color }}>{badge.label}</span>
                 </div>
                 <div style={{ fontSize: 11.5, color: '#9A8662', marginTop: 3 }}>
-                  {saleDateLabel ? `${saleDateLabel} · ` : ''}{timeStr}{s.buyer ? ` · ${s.buyer}` : ''}
+                  {timeStr}{s.buyer ? ` · ${s.buyer}` : ''}
                 </div>
               </div>
               <span style={{ color: '#C9A24B', fontSize: 16, transition: 'transform .2s', display: 'inline-block', transform: expanded ? 'rotate(90deg)' : 'none' }}>›</span>
