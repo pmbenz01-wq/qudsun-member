@@ -3143,16 +3143,21 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
   const parseNum = v => parseFloat(String(v ?? '').replace(/,/g, '')) || 0;
   const toDateStr = d => { const dt = new Date(d); return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`; };
   const fmtThDate = s => { if (!s) return ''; const d = new Date(s + 'T12:00:00'); return d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' }); };
+  const MONTH_TH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  const DOW_TH = ['อา','จ','อ','พ','พฤ','ศ','ส'];
+  const nowRef = new Date();
 
-  const [tab, setTab] = React.useState('calc');
-  const [dateFilter, setDateFilter] = React.useState('today');
-  const [selectedDate, setSelectedDate] = React.useState('');
-  const [base, setBase] = React.useState(200);
-  const [bonus, setBonus] = React.useState(0);
-  const [rate, setRate] = React.useState(1);
-  const [bills, setBills] = React.useState([]);
+  const [tab, setTab] = React.useState('calendar');
+  const [calYear, setCalYear] = React.useState(nowRef.getFullYear());
+  const [calMonth, setCalMonth] = React.useState(nowRef.getMonth());
+  const [selectedDay, setSelectedDay] = React.useState(nowRef.getDate());
+  const [dayBonus, setDayBonus] = React.useState(0);
+  const [dayRate, setDayRate] = React.useState(1);
+  const [baseRate, setBaseRate] = React.useState(200);
+  const [editingBase, setEditingBase] = React.useState(false);
+  const [baseDraft, setBaseDraft] = React.useState(200);
+  const [monthBills, setMonthBills] = React.useState([]);
   const [loadingBills, setLoadingBills] = React.useState(false);
-  const [showSlip, setShowSlip] = React.useState(false);
   const [earnings, setEarnings] = React.useState([]);
   const [payments, setPayments] = React.useState([]);
   const [loadingLedger, setLoadingLedger] = React.useState(true);
@@ -3160,6 +3165,23 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
   const [showPayForm, setShowPayForm] = React.useState(false);
   const [payAmount, setPayAmount] = React.useState('');
   const [payNote, setPayNote] = React.useState('');
+  const [showSlip, setShowSlip] = React.useState(false);
+
+  React.useEffect(() => {
+    db.getSetting('sup_base_rates').then(v => {
+      const r = v || {};
+      if (r[supervisorName] !== undefined) { setBaseRate(r[supervisorName]); setBaseDraft(r[supervisorName]); }
+    }).catch(() => {});
+  }, [supervisorName]);
+
+  const saveBaseRate = async (val) => {
+    try {
+      const cur = await db.getSetting('sup_base_rates') || {};
+      await db.saveSetting('sup_base_rates', { ...cur, [supervisorName]: val });
+      setBaseRate(val);
+    } catch {}
+    setEditingBase(false);
+  };
 
   const loadLedger = React.useCallback(async () => {
     setLoadingLedger(true);
@@ -3172,37 +3194,55 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
 
   React.useEffect(() => { loadLedger(); }, [loadLedger]);
 
-  const { dateFrom, dateTo } = React.useMemo(() => {
-    const now = new Date(); const todayStr = toDateStr(now);
-    if (selectedDate) return { dateFrom: selectedDate + 'T00:00:00', dateTo: selectedDate + 'T23:59:59' };
-    if (dateFilter === 'today') return { dateFrom: todayStr + 'T00:00:00', dateTo: todayStr + 'T23:59:59' };
-    if (dateFilter === '7d') return { dateFrom: toDateStr(new Date(now - 6*86400000)) + 'T00:00:00', dateTo: null };
-    if (dateFilter === '30d') return { dateFrom: toDateStr(new Date(now - 29*86400000)) + 'T00:00:00', dateTo: null };
-    return { dateFrom: null, dateTo: null };
-  }, [dateFilter, selectedDate]);
+  React.useEffect(() => {
+    if (phones.length === 0) { setMonthBills([]); return; }
+    setLoadingBills(true);
+    const mm = String(calMonth+1).padStart(2,'0');
+    const lastD = new Date(calYear, calMonth+1, 0).getDate();
+    const from = `${calYear}-${mm}-01T00:00:00`;
+    const to = `${calYear}-${mm}-${String(lastD).padStart(2,'0')}T23:59:59`;
+    db.fetchBillsByPhones(phones, from, to).then(b => setMonthBills(b)).catch(() => setMonthBills([])).finally(() => setLoadingBills(false));
+  }, [phones.join(','), calYear, calMonth]);
+
+  const billsByDay = React.useMemo(() => {
+    const g = {};
+    monthBills.forEach(b => { if (!b.date) return; const d = new Date(b.date).getDate(); if (!g[d]) g[d] = []; g[d].push(b); });
+    return g;
+  }, [monthBills]);
+
+  const earningsByDay = React.useMemo(() => {
+    const g = {};
+    earnings.forEach(e => {
+      if (!e.date) return;
+      const ed = new Date(e.date + 'T12:00:00');
+      if (ed.getFullYear() === calYear && ed.getMonth() === calMonth) g[ed.getDate()] = e;
+    });
+    return g;
+  }, [earnings, calYear, calMonth]);
+
+  const selBills = billsByDay[selectedDay] || [];
+  const selEarning = earningsByDay[selectedDay];
+  const selKg = selBills.reduce((s, b) => s + parseNum(b.kg), 0);
+  const selCommission = Math.round(selKg * dayRate);
+  const selTotal = baseRate + selCommission + dayBonus;
 
   React.useEffect(() => {
-    if (phones.length === 0) { setBills([]); return; }
-    setLoadingBills(true);
-    db.fetchBillsByPhones(phones, dateFrom, dateTo).then(b => setBills(b)).catch(() => setBills([])).finally(() => setLoadingBills(false));
-  }, [phones.join(','), dateFrom, dateTo]);
+    if (selEarning) {
+      setDayBonus(selEarning.bonus || 0);
+      setDayRate(selEarning.commission_kg > 0 ? Math.round(selEarning.commission_baht / selEarning.commission_kg * 10) / 10 : 1);
+    } else { setDayBonus(0); setDayRate(1); }
+  }, [selectedDay, selEarning?.id]);
 
-  const totalKg = bills.reduce((s, h) => s + parseNum(h.kg), 0);
-  const commission = Math.round(totalKg * rate);
-  const total = base + commission + bonus;
   const totalEarned = earnings.reduce((s, e) => s + (e.total || 0), 0);
   const totalPaid = payments.reduce((s, p) => s + (p.amount || 0), 0);
   const balance = totalEarned - totalPaid;
 
-  const dateLabel = selectedDate ? fmtThDate(selectedDate)
-    : dateFilter === 'today' ? fmtThDate(toDateStr(new Date()))
-    : dateFilter === '7d' ? '7 วันล่าสุด' : dateFilter === '30d' ? '30 วันล่าสุด' : 'ทั้งหมด';
-
-  const handleSaveEarning = async () => {
+  const handleSaveDayEarning = async () => {
     setSaving(true);
     try {
-      const dateStr = selectedDate || toDateStr(new Date());
-      await db.saveEarning({ supervisor_name: supervisorName, date: dateStr, base, commission_kg: totalKg, commission_baht: commission, bonus, total, note: rate !== 1 ? `rate=${rate}` : null });
+      const mm = String(calMonth+1).padStart(2,'0');
+      const dd = String(selectedDay).padStart(2,'0');
+      await db.saveEarning({ supervisor_name: supervisorName, date: `${calYear}-${mm}-${dd}`, base: baseRate, commission_kg: selKg, commission_baht: selCommission, bonus: dayBonus, total: selTotal });
       await loadLedger();
     } catch { alert('บันทึกไม่สำเร็จ'); }
     setSaving(false);
@@ -3219,103 +3259,138 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
     setSaving(false);
   };
 
+  const prevMonth = () => { if (calMonth === 0) { setCalYear(y => y-1); setCalMonth(11); } else setCalMonth(m => m-1); setSelectedDay(1); };
+  const nextMonth = () => { if (calMonth === 11) { setCalYear(y => y+1); setCalMonth(0); } else setCalMonth(m => m+1); setSelectedDay(1); };
+
+  const firstDow = new Date(calYear, calMonth, 1).getDay();
+  const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
+  const calCells = [];
+  for (let i = 0; i < firstDow; i++) calCells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) calCells.push(d);
+
+  const slipDateLabel = `${selectedDay} ${MONTH_TH[calMonth]} ${calYear + 543}`;
+
   if (showSlip) return (
-    <SalarySlipPrintView supervisorName={supervisorName} dateLabel={dateLabel} bills={bills} base={base} commission={commission} bonus={bonus} onBack={() => setShowSlip(false)} />
+    <SalarySlipPrintView supervisorName={supervisorName} dateLabel={slipDateLabel} bills={selBills} base={baseRate} commission={selCommission} bonus={dayBonus} onBack={() => setShowSlip(false)} />
   );
 
-  const TABS = [['calc','คำนวณ'],['earnings','ค่าแรง'],['paid','การจ่าย'],['customers','ลูกค้า']];
+  const TABS = [['calendar','ปฏิทิน'],['earnings','ค่าแรง'],['paid','การจ่าย'],['customers','ลูกค้า']];
 
   return (
     <div style={{ minHeight: '100vh', background: '#F5EFE4', paddingBottom: 40 }}>
       {/* Header */}
-      <div style={{ background: '#fff', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid #E4D7BC', position: 'sticky', top: 0, zIndex: 10 }}>
+      <div style={{ background: '#fff', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid #E4D7BC', position: 'sticky', top: 0, zIndex: 10 }}>
         <button onClick={onGoBack} style={{ width: 32, height: 32, borderRadius: '50%', background: '#F5EFE4', border: 'none', fontSize: 18, cursor: 'pointer', color: '#5B3A29' }}>‹</button>
         <div style={{ flex: 1 }}>
           <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 16, color: '#2A2118' }}>🧑‍💼 {supervisorName}</div>
-          <div style={{ fontSize: 11, color: '#9A8662' }}>{phones.length} ลูกค้าในความดูแล</div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ fontSize: 11, color: '#9A8662' }}>เบส/วัน:</span>
+          {editingBase ? (
+            <>
+              <input type="number" value={baseDraft} onChange={e => setBaseDraft(Number(e.target.value)||0)} style={{ width: 60, border: '1.5px solid #DC743C', borderRadius: 6, padding: '3px 6px', fontSize: 13, fontWeight: 700, color: '#3F2D1E', outline: 'none' }} />
+              <button onClick={() => saveBaseRate(baseDraft)} style={{ fontSize: 11, background: '#DC743C', color: '#fff', border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer' }}>✓</button>
+              <button onClick={() => setEditingBase(false)} style={{ fontSize: 11, background: 'none', border: 'none', color: '#9A8662', cursor: 'pointer' }}>✕</button>
+            </>
+          ) : (
+            <button onClick={() => { setBaseDraft(baseRate); setEditingBase(true); }} style={{ fontSize: 13, fontWeight: 700, color: '#DC743C', background: 'none', border: 'none', cursor: 'pointer' }}>฿{baseRate}</button>
+          )}
         </div>
       </div>
 
       {/* Balance card */}
-      <div style={{ margin: '12px 12px 0', background: '#fff', borderRadius: 14, border: '1px solid #E4D7BC', overflow: 'hidden' }}>
-        {loadingLedger ? (
-          <div style={{ textAlign: 'center', padding: 16, color: '#9A8662', fontSize: 12 }}>กำลังโหลด...</div>
-        ) : (
+      <div style={{ margin: '10px 12px 0', background: '#fff', borderRadius: 14, border: '1px solid #E4D7BC', overflow: 'hidden' }}>
+        {loadingLedger ? <div style={{ textAlign: 'center', padding: 14, color: '#9A8662', fontSize: 12 }}>กำลังโหลด...</div> : (
           <>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', textAlign: 'center', padding: '14px 8px 10px' }}>
-              <div>
-                <div style={{ fontSize: 10, color: '#9A8662', marginBottom: 3 }}>💼 ยอดสะสม</div>
-                <div style={{ fontSize: 16, fontWeight: 700, color: '#4A3526' }}>฿{totalEarned.toLocaleString()}</div>
-              </div>
-              <div style={{ borderLeft: '1px solid #F0E8DC', borderRight: '1px solid #F0E8DC' }}>
-                <div style={{ fontSize: 10, color: '#9A8662', marginBottom: 3 }}>✅ จ่ายแล้ว</div>
-                <div style={{ fontSize: 16, fontWeight: 700, color: '#2E7D32' }}>฿{totalPaid.toLocaleString()}</div>
-              </div>
-              <div>
-                <div style={{ fontSize: 10, color: '#9A8662', marginBottom: 3 }}>🔴 ยอดค้าง</div>
-                <div style={{ fontSize: 16, fontWeight: 700, color: balance > 0 ? '#C0392B' : '#9A8662' }}>฿{balance.toLocaleString()}</div>
-              </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', textAlign: 'center', padding: '12px 8px 8px' }}>
+              <div><div style={{ fontSize: 10, color: '#9A8662' }}>💼 ยอดสะสม</div><div style={{ fontSize: 15, fontWeight: 700, color: '#4A3526' }}>฿{totalEarned.toLocaleString()}</div></div>
+              <div style={{ borderLeft: '1px solid #F0E8DC', borderRight: '1px solid #F0E8DC' }}><div style={{ fontSize: 10, color: '#9A8662' }}>✅ จ่ายแล้ว</div><div style={{ fontSize: 15, fontWeight: 700, color: '#2E7D32' }}>฿{totalPaid.toLocaleString()}</div></div>
+              <div><div style={{ fontSize: 10, color: '#9A8662' }}>🔴 ยอดค้าง</div><div style={{ fontSize: 15, fontWeight: 700, color: balance > 0 ? '#C0392B' : '#9A8662' }}>฿{balance.toLocaleString()}</div></div>
             </div>
-            {balance > 0 && (
-              <div style={{ padding: '0 12px 12px' }}>
-                <button onClick={() => { setShowPayForm(true); setTab('paid'); }} style={{ width: '100%', background: '#2E7D32', color: '#fff', border: 'none', borderRadius: 10, padding: '9px 0', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>💸 บันทึกจ่ายเงิน</button>
-              </div>
-            )}
+            {balance > 0 && <div style={{ padding: '0 12px 10px' }}><button onClick={() => { setShowPayForm(true); setTab('paid'); }} style={{ width: '100%', background: '#2E7D32', color: '#fff', border: 'none', borderRadius: 10, padding: '8px 0', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>💸 บันทึกจ่ายเงิน</button></div>}
           </>
         )}
       </div>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: 4, padding: '10px 12px 0', overflowX: 'auto' }}>
+      <div style={{ display: 'flex', gap: 4, padding: '8px 12px 0', overflowX: 'auto' }}>
         {TABS.map(([val, label]) => (
-          <button key={val} onClick={() => setTab(val)} style={{ padding: '6px 14px', borderRadius: 20, border: '1px solid', fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', background: tab === val ? '#5B3A29' : '#fff', color: tab === val ? '#fff' : '#8A7A66', borderColor: tab === val ? '#5B3A29' : '#D0C8C0' }}>{label}</button>
+          <button key={val} onClick={() => setTab(val)} style={{ padding: '5px 14px', borderRadius: 20, border: '1px solid', fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', background: tab === val ? '#5B3A29' : '#fff', color: tab === val ? '#fff' : '#8A7A66', borderColor: tab === val ? '#5B3A29' : '#D0C8C0' }}>{label}</button>
         ))}
       </div>
 
-      {/* Tab: คำนวณ */}
-      {tab === 'calc' && (
+      {/* Tab: ปฏิทิน */}
+      {tab === 'calendar' && (
         <div style={{ padding: '10px 12px' }}>
-          <div style={{ display: 'flex', gap: 6, marginBottom: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-            {[['today','วันนี้'],['7d','7 วัน'],['30d','30 วัน'],['all','ทั้งหมด']].map(([val, label]) => (
-              <button key={val} onClick={() => { setDateFilter(val); setSelectedDate(''); }} style={{ padding: '4px 12px', borderRadius: 20, border: '1px solid', fontSize: 11, fontWeight: 600, cursor: 'pointer', background: !selectedDate && dateFilter === val ? '#DC743C' : 'transparent', color: !selectedDate && dateFilter === val ? '#fff' : '#9A8662', borderColor: !selectedDate && dateFilter === val ? '#DC743C' : '#D0C8C0' }}>{label}</button>
-            ))}
-            <input type="date" value={selectedDate} onChange={e => setSelectedDate(e.target.value)} style={{ marginLeft: 'auto', padding: '3px 8px', borderRadius: 8, border: `1px solid ${selectedDate ? '#DC743C' : '#D0C8C0'}`, fontSize: 11, color: selectedDate ? '#DC743C' : '#9A8662', background: '#fff', outline: 'none' }} />
+          {/* Month nav */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, background: '#fff', borderRadius: 12, padding: '8px 14px', border: '1px solid #E4D7BC' }}>
+            <button onClick={prevMonth} style={{ border: 'none', background: 'none', fontSize: 18, cursor: 'pointer', color: '#5B3A29', padding: '0 4px' }}>‹</button>
+            <span style={{ fontWeight: 700, fontSize: 14, color: '#2A2118' }}>{MONTH_TH[calMonth]} {calYear + 543}</span>
+            <button onClick={nextMonth} style={{ border: 'none', background: 'none', fontSize: 18, cursor: 'pointer', color: '#5B3A29', padding: '0 4px' }}>›</button>
           </div>
 
+          {/* Calendar grid */}
+          <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4D7BC', padding: '8px 6px', marginBottom: 10 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 1, marginBottom: 4 }}>
+              {DOW_TH.map(d => <div key={d} style={{ textAlign: 'center', fontSize: 10, color: '#9A8662', padding: '2px 0' }}>{d}</div>)}
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 3 }}>
+              {calCells.map((day, i) => {
+                if (!day) return <div key={'e'+i} />;
+                const earning = earningsByDay[day];
+                const dBills = billsByDay[day] || [];
+                const kg = dBills.reduce((s, b) => s + parseNum(b.kg), 0);
+                const isSelected = day === selectedDay;
+                const isToday = day === nowRef.getDate() && calMonth === nowRef.getMonth() && calYear === nowRef.getFullYear();
+                return (
+                  <button key={day} onClick={() => setSelectedDay(day)} style={{ borderRadius: 8, border: isSelected ? '2px solid #5B3A29' : earning ? '2px solid #DC743C' : '1px solid #E4D7BC', background: isSelected ? '#5B3A29' : earning ? '#FFF3E0' : kg > 0 ? '#F0FFF4' : '#FAFAFA', padding: '3px 2px', cursor: 'pointer', minHeight: 44, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ fontSize: 13, fontWeight: earning || isToday ? 700 : 400, color: isSelected ? '#fff' : earning ? '#E65100' : isToday ? '#5B3A29' : '#4A3526' }}>{day}</div>
+                    {earning && !isSelected && <div style={{ fontSize: 8, color: '#E65100', lineHeight: 1.1 }}>฿{earning.total}</div>}
+                    {!earning && kg > 0 && !isSelected && <div style={{ fontSize: 8, color: '#2E7D32', lineHeight: 1.1 }}>{Math.round(kg)}กก.</div>}
+                  </button>
+                );
+              })}
+            </div>
+            <div style={{ display: 'flex', gap: 12, marginTop: 8, paddingLeft: 4 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><div style={{ width: 10, height: 10, borderRadius: 2, background: '#FFF3E0', border: '2px solid #DC743C' }} /><span style={{ fontSize: 10, color: '#9A8662' }}>บันทึกแล้ว</span></div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><div style={{ width: 10, height: 10, borderRadius: 2, background: '#F0FFF4', border: '1px solid #E4D7BC' }} /><span style={{ fontSize: 10, color: '#9A8662' }}>มีบิล ยังไม่บันทึก</span></div>
+            </div>
+          </div>
+
+          {/* Selected day detail */}
           <div style={{ background: '#fff', borderRadius: 14, border: '1px solid #E4D7BC', padding: 14 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: '#9A8662', marginBottom: 10 }}>สรุปค่าแรง — {dateLabel}</div>
-            {loadingBills ? <div style={{ textAlign: 'center', padding: 16, color: '#9A8662', fontSize: 12 }}>กำลังโหลด...</div> : (<>
-              <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
-                <div style={{ flex: 1, background: '#FFF8EE', borderRadius: 10, padding: '10px 12px' }}>
-                  <div style={{ fontSize: 10, color: '#9A8662' }}>ยอดกิโล</div>
-                  <div style={{ fontSize: 17, fontWeight: 700, color: '#E65100' }}>{totalKg % 1 === 0 ? totalKg : totalKg.toFixed(1)} กก.</div>
-                  <div style={{ fontSize: 10, color: '#C0A88A' }}>{bills.length} บิล</div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <div style={{ fontWeight: 700, fontSize: 14, color: '#2A2118' }}>📅 {selectedDay} {MONTH_TH[calMonth]} {calYear + 543}</div>
+              {selEarning && <span style={{ fontSize: 11, color: '#DC743C', fontWeight: 600 }}>✅ บันทึกแล้ว</span>}
+            </div>
+            {loadingBills ? <div style={{ textAlign: 'center', padding: 12, color: '#9A8662', fontSize: 12 }}>กำลังโหลด...</div> : (<>
+              <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+                <div style={{ flex: 1, background: '#FFF8EE', borderRadius: 10, padding: '8px 10px' }}>
+                  <div style={{ fontSize: 10, color: '#9A8662' }}>ยอดกิโล (auto)</div>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: '#E65100' }}>{selKg % 1 === 0 ? selKg : selKg.toFixed(1)} กก.</div>
+                  <div style={{ fontSize: 9, color: '#C0A88A' }}>{selBills.length} บิล</div>
                 </div>
-                <div style={{ flex: 1, background: '#F0FFF4', borderRadius: 10, padding: '10px 12px' }}>
-                  <div style={{ fontSize: 10, color: '#9A8662' }}>ค่าคอม (×฿{rate}/กก.)</div>
-                  <div style={{ fontSize: 17, fontWeight: 700, color: '#2E7D32' }}>฿{commission.toLocaleString()}</div>
+                <div style={{ flex: 1, background: '#F0FFF4', borderRadius: 10, padding: '8px 10px' }}>
+                  <div style={{ fontSize: 10, color: '#9A8662' }}>ค่าคอม</div>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: '#2E7D32' }}>฿{selCommission.toLocaleString()}</div>
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 4 }}>เบสรายวัน (฿)</div>
-                  <input type="number" value={base} onChange={e => setBase(Number(e.target.value)||0)} style={{ width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 8, padding: '8px 10px', fontSize: 14, fontWeight: 600, color: '#3F2D1E', outline: 'none', boxSizing: 'border-box' }} />
+                  <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 3 }}>฿/กก.</div>
+                  <input type="number" value={dayRate} onChange={e => setDayRate(Number(e.target.value)||0)} style={{ width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 8, padding: '7px 10px', fontSize: 14, fontWeight: 600, color: '#2E7D32', outline: 'none', boxSizing: 'border-box' }} />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 4 }}>ค่าคอม (฿/กก.)</div>
-                  <input type="number" value={rate} onChange={e => setRate(Number(e.target.value)||0)} style={{ width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 8, padding: '8px 10px', fontSize: 14, fontWeight: 600, color: '#2E7D32', outline: 'none', boxSizing: 'border-box' }} />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 4 }}>โบนัส (฿)</div>
-                  <input type="number" value={bonus} onChange={e => setBonus(Number(e.target.value)||0)} placeholder="0" style={{ width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 8, padding: '8px 10px', fontSize: 14, color: '#3F2D1E', outline: 'none', boxSizing: 'border-box' }} />
+                  <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 3 }}>โบนัส (฿)</div>
+                  <input type="number" value={dayBonus} onChange={e => setDayBonus(Number(e.target.value)||0)} placeholder="0" style={{ width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 8, padding: '7px 10px', fontSize: 14, color: '#3F2D1E', outline: 'none', boxSizing: 'border-box' }} />
                 </div>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#F5EFE4', borderRadius: 10, padding: '10px 14px', marginBottom: 10 }}>
-                <span style={{ fontSize: 14, fontWeight: 700, color: '#4A3526' }}>รวม</span>
-                <span style={{ fontSize: 20, fontWeight: 700, color: '#5B3A29' }}>฿{total.toLocaleString()}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#F5EFE4', borderRadius: 10, padding: '8px 12px', marginBottom: 10 }}>
+                <span style={{ fontSize: 11, color: '#9A8662' }}>฿{baseRate} + ฿{selCommission} + ฿{dayBonus}</span>
+                <span style={{ fontSize: 18, fontWeight: 700, color: '#5B3A29' }}>฿{selTotal.toLocaleString()}</span>
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
-                <button onClick={handleSaveEarning} disabled={saving} style={{ flex: 1, background: '#DC743C', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 0', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>{saving ? '...' : '✅ บันทึกค่าแรง'}</button>
+                <button onClick={handleSaveDayEarning} disabled={saving} style={{ flex: 1, background: '#DC743C', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 0', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>{saving ? '...' : '✅ บันทึก'}</button>
                 <button onClick={() => setShowSlip(true)} style={{ flex: 1, background: '#5B3A29', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 0', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>🧾 ออกบิล</button>
               </div>
             </>)}
@@ -3328,17 +3403,12 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
         <div style={{ padding: '10px 12px' }}>
           {earnings.length === 0 && !loadingLedger && <div style={{ textAlign: 'center', color: '#B7A684', padding: 32 }}>ยังไม่มีรายการ</div>}
           {earnings.map(e => (
-            <div key={e.id} style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4D7BC', padding: '12px 14px', marginBottom: 8 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: 14, color: '#2A2118' }}>{fmtThDate(e.date)}</div>
-                  <div style={{ fontSize: 11, color: '#9A8662', marginTop: 2 }}>
-                    เบส ฿{e.base} · คอม ฿{e.commission_baht} ({e.commission_kg}กก.)
-                    {e.bonus > 0 ? ` · โบนัส ฿${e.bonus} 🎁` : ''}
-                  </div>
-                </div>
-                <div style={{ fontWeight: 700, fontSize: 16, color: '#5B3A29' }}>฿{(e.total||0).toLocaleString()}</div>
+            <div key={e.id} style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4D7BC', borderLeft: '4px solid #DC743C', padding: '12px 14px', marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 14, color: '#2A2118' }}>{fmtThDate(e.date)}</div>
+                <div style={{ fontSize: 11, color: '#9A8662', marginTop: 2 }}>฿{e.base}+฿{e.commission_baht}({e.commission_kg}กก.){e.bonus > 0 ? `+฿${e.bonus}🎁` : ''}</div>
               </div>
+              <div style={{ fontWeight: 700, fontSize: 16, color: '#5B3A29' }}>฿{(e.total||0).toLocaleString()}</div>
             </div>
           ))}
         </div>
@@ -3352,14 +3422,14 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
               <div style={{ fontSize: 12, fontWeight: 700, color: '#9A8662', marginBottom: 10 }}>บันทึกจ่ายเงิน — ยอดค้าง ฿{balance.toLocaleString()}</div>
               <div style={{ marginBottom: 8 }}>
                 <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 4 }}>จำนวนเงิน (฿)</div>
-                <input type="number" value={payAmount} onChange={e => setPayAmount(e.target.value)} placeholder={`เช่น ${balance}`} style={{ width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 8, padding: '8px 10px', fontSize: 15, fontWeight: 700, color: '#3F2D1E', outline: 'none', boxSizing: 'border-box' }} />
+                <input type="number" value={payAmount} onChange={e => setPayAmount(e.target.value)} placeholder={String(balance)} style={{ width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 8, padding: '8px 10px', fontSize: 15, fontWeight: 700, color: '#3F2D1E', outline: 'none', boxSizing: 'border-box' }} />
               </div>
               <div style={{ marginBottom: 12 }}>
                 <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 4 }}>หมายเหตุ</div>
                 <input value={payNote} onChange={e => setPayNote(e.target.value)} placeholder="เช่น โอนแล้ว" style={{ width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 8, padding: '8px 10px', fontSize: 13, color: '#3F2D1E', outline: 'none', boxSizing: 'border-box' }} />
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
-                <button onClick={() => setShowPayForm(false)} style={{ flex: 1, border: '1px solid #D0C8C0', background: '#F5EFE4', borderRadius: 10, padding: '9px 0', fontSize: 13, fontWeight: 600, cursor: 'pointer', color: '#7A6450' }}>ยกเลิก</button>
+                <button onClick={() => setShowPayForm(false)} style={{ flex: 1, border: '1px solid #D0C8C0', background: '#F5EFE4', borderRadius: 10, padding: '9px 0', fontSize: 13, cursor: 'pointer', color: '#7A6450' }}>ยกเลิก</button>
                 <button onClick={handleSavePayment} disabled={saving || !payAmount} style={{ flex: 2, background: '#2E7D32', color: '#fff', border: 'none', borderRadius: 10, padding: '9px 0', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>{saving ? '...' : '✅ ยืนยันจ่าย'}</button>
               </div>
             </div>
