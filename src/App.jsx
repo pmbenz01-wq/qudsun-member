@@ -2624,25 +2624,48 @@ function SalePrintView({ saleSession, onGoBack, onFinish, onEditPrice }) {
       </div>
 
       <div className="bill-doc-wrapper" style={{ maxWidth: 420, margin: '0 auto' }}>
-      <div className="bill-doc" style={{ background: '#fff', border: '1px solid #E4D7BC', borderRadius: 6, boxShadow: '0 10px 30px rgba(95,70,40,.14)', padding: '22px 22px 18px', color: '#2A2118', fontSize: 13 }}>
-        <div className="bill-doc-header" style={{ display: 'flex', alignItems: 'flex-start', gap: 12, borderBottom: '2px solid #2A2118', paddingBottom: 12 }}>
-          <img src="/logo.jpg" className="bill-doc-logo" style={{ width: 72, height: 72, borderRadius: 8, objectFit: 'cover' }} alt="Qudsun" />
+      <style>{`
+        @media print {
+          .sale-bill-doc { padding: 14px 16px 12px !important; font-size: 11px !important; }
+          .sale-bill-logo { width: 52px !important; height: 52px !important; }
+          .sale-bill-title { font-size: 14px !important; }
+          .sale-bill-subtitle { font-size: 10px !important; }
+          .sale-bill-header { padding-bottom: 8px !important; gap: 8px !important; }
+          .sale-entries-root { margin-top: 6px !important; margin-bottom: 6px !important; gap: 4px 10px !important; }
+          .sale-entries-group { margin-bottom: 0 !important; }
+          .sale-entry-label { font-size: 9px !important; margin-bottom: 2px !important; }
+          .sale-entry-grid { gap: 2px !important; grid-template-columns: repeat(6, max-content) !important; }
+          .sale-entry-chip { padding: 2px 5px !important; border-radius: 3px !important; line-height: 1.1 !important; }
+          .sale-entry-kg { font-size: 11px !important; }
+          .sale-bill-table td, .sale-bill-table th { padding: 4px 6px !important; font-size: 11px !important; }
+          .sale-bill-bank { margin-top: 7px !important; padding: 6px 8px !important; }
+          .sale-bank-acct { font-size: 12px !important; }
+          .sale-bill-sign { margin-top: 14px !important; }
+          .sale-bill-sign-line { height: 28px !important; }
+          .sale-bill-footer { margin-top: 8px !important; }
+          .sale-bill-qr { width: 64px !important; height: 64px !important; }
+          .footer-text { font-size: 10px !important; }
+        }
+      `}</style>
+      <div className="bill-doc sale-bill-doc" style={{ background: '#fff', border: '1px solid #E4D7BC', borderRadius: 6, boxShadow: '0 10px 30px rgba(95,70,40,.14)', padding: '18px 20px 14px', color: '#2A2118', fontSize: 13 }}>
+        <div className="bill-doc-header sale-bill-header" style={{ display: 'flex', alignItems: 'flex-start', gap: 12, borderBottom: '2px solid #2A2118', paddingBottom: 10 }}>
+          <img src="/logo.jpg" className="bill-doc-logo sale-bill-logo" style={{ width: 60, height: 60, borderRadius: 8, objectFit: 'cover' }} alt="Qudsun" />
           <div style={{ flex: 1 }}>
-            <div className="bill-doc-title" style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 19, letterSpacing: '.04em' }}>ทุเรียนคัดสรร <span style={{ color: '#8A6A2E' }}>QUDSUN</span></div>
-            <div style={{ fontSize: 12.5, color: '#5A4A38', marginTop: 2 }}>Premium Durian Selection</div>
+            <div className="bill-doc-title sale-bill-title" style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 17, letterSpacing: '.04em' }}>ทุเรียนคัดสรร <span style={{ color: '#8A6A2E' }}>QUDSUN</span></div>
+            <div className="sale-bill-subtitle" style={{ fontSize: 11.5, color: '#5A4A38', marginTop: 2 }}>Premium Durian Selection</div>
             {saleSession?.recorder && (
-              <div style={{ marginTop: 5, display: 'flex', flexDirection: 'column', gap: 1, fontSize: 11 }}>
-                <div><span style={{ color: '#9A8662' }}>ผู้จด: </span><b>{saleSession.recorder}</b></div>
+              <div style={{ marginTop: 4, fontSize: 11 }}>
+                <span style={{ color: '#9A8662' }}>ผู้จด: </span><b>{saleSession.recorder}</b>
               </div>
             )}
           </div>
-          <div style={{ textAlign: 'right', minWidth: 130 }}>
-            <div style={{ fontWeight: 700, fontSize: 15, color: '#4A7A2E' }}>ใบเสร็จรับเงิน</div>
-            <div style={{ fontSize: 12, color: '#5A4A38', marginBottom: 6 }}>เลขที่ {saleSession?.billNo}</div>
-            <div style={{ fontSize: 12, color: '#3A2A18', lineHeight: 1.8 }}>
+          <div style={{ textAlign: 'right', minWidth: 120 }}>
+            <div style={{ fontWeight: 700, fontSize: 13, color: '#4A7A2E' }}>ใบเสร็จรับเงิน</div>
+            <div style={{ fontSize: 11.5, color: '#5A4A38', marginBottom: 4 }}>เลขที่ {saleSession?.billNo}</div>
+            <div style={{ fontSize: 11.5, color: '#3A2A18', lineHeight: 1.6 }}>
               <div>{saleSession ? dateStr(saleSession.date) : ''}</div>
               {(saleSession?.customerName || saleSession?.customerPhone) && (
-                <div style={{ fontSize: 11.5, color: '#5A4A38', marginTop: 2 }}>
+                <div style={{ fontSize: 11, color: '#5A4A38', marginTop: 1 }}>
                   <b>{saleSession.customerName || '—'}</b>{saleSession.customerPhone ? ` · ${saleSession.customerPhone}` : ''}
                 </div>
               )}
@@ -2650,48 +2673,34 @@ function SalePrintView({ saleSession, onGoBack, onFinish, onEditPrice }) {
           </div>
         </div>
 
-        {entries.length > 0 && (() => {
-          return (
-            <>
-              <style>{`
-                @media print {
-                  .sale-entries-root { margin-top: 6px !important; margin-bottom: 6px !important; }
-                  .sale-entries-group { margin-bottom: 4px !important; }
-                  .sale-entry-label { font-size: 9px !important; margin-bottom: 3px !important; }
-                  .sale-entry-grid { gap: 2px !important; }
-                  .sale-entry-chip { padding: 3px 6px !important; border-radius: 3px !important; line-height: 1.1 !important; }
-                  .sale-entry-kg { font-size: 11px !important; }
-                }
-              `}</style>
-              <div className="sale-entries-root" style={{ marginTop: 10, marginBottom: 10, display: 'flex', flexWrap: 'wrap', gap: '6px 14px', alignItems: 'flex-start' }}>
-                {Object.entries(grouped).map(([catKey, ents]) => {
-                  const catObj = CATS.find(c => c.key === catKey);
-                  const label = catKey === 'custom' ? (customLabel || 'หมวดพิเศษ') : (catObj?.label || catKey);
-                  return (
-                    <div key={catKey} className="sale-entries-group" style={{ marginBottom: 0 }}>
-                      <div className="sale-entry-label" style={{ fontSize: 15, color: '#5A7A38', fontWeight: 600, marginBottom: 5 }}>{label} — {ents.length} เข่ง</div>
-                      <div className="sale-entry-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, max-content)', gap: 5 }}>
-                        {ents.map((e, i) => (
-                          <div key={e.id || i} className="sale-entry-chip" style={{ border: '1px solid #C8DFB0', borderRadius: 6, padding: '7px 12px', background: '#F5FAF0', textAlign: 'center', lineHeight: 1.15 }}>
-                            <span className="sale-entry-kg" style={{ fontWeight: 700, fontSize: 20, color: '#2E5C1A' }}>{fmtKg(e.kg)}</span>
-                          </div>
-                        ))}
+        {entries.length > 0 && (
+          <div className="sale-entries-root" style={{ marginTop: 8, marginBottom: 8, display: 'flex', flexWrap: 'wrap', gap: '4px 12px', alignItems: 'flex-start' }}>
+            {Object.entries(grouped).map(([catKey, ents]) => {
+              const catObj = CATS.find(c => c.key === catKey);
+              const label = catKey === 'custom' ? (customLabel || 'หมวดพิเศษ') : (catObj?.label || catKey);
+              return (
+                <div key={catKey} className="sale-entries-group" style={{ marginBottom: 0 }}>
+                  <div className="sale-entry-label" style={{ fontSize: 12, color: '#5A7A38', fontWeight: 600, marginBottom: 3 }}>{label} — {ents.length} เข่ง</div>
+                  <div className="sale-entry-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(6, max-content)', gap: 3 }}>
+                    {ents.map((e, i) => (
+                      <div key={e.id || i} className="sale-entry-chip" style={{ border: '1px solid #C8DFB0', borderRadius: 5, padding: '4px 8px', background: '#F5FAF0', textAlign: 'center', lineHeight: 1.15 }}>
+                        <span className="sale-entry-kg" style={{ fontWeight: 700, fontSize: 15, color: '#2E5C1A' }}>{fmtKg(e.kg)}</span>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </>
-          );
-        })()}
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
 
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+        <table className="sale-bill-table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5 }}>
           <thead>
             <tr style={{ background: '#EAF4E0' }}>
-              <th style={{ textAlign: 'left', padding: '7px 8px', border: '1px solid #C8DFB0' }}>หมวด</th>
-              <th style={{ textAlign: 'right', padding: '7px 8px', border: '1px solid #C8DFB0' }}>น้ำหนัก</th>
-              <th style={{ textAlign: 'right', padding: '7px 8px', border: '1px solid #C8DFB0' }}>ราคา/กก.</th>
-              <th style={{ textAlign: 'right', padding: '7px 8px', border: '1px solid #C8DFB0' }}>รวม (฿)</th>
+              <th style={{ textAlign: 'left', padding: '5px 7px', border: '1px solid #C8DFB0' }}>หมวด</th>
+              <th style={{ textAlign: 'right', padding: '5px 7px', border: '1px solid #C8DFB0' }}>น้ำหนัก</th>
+              <th style={{ textAlign: 'right', padding: '5px 7px', border: '1px solid #C8DFB0' }}>ราคา/กก.</th>
+              <th style={{ textAlign: 'right', padding: '5px 7px', border: '1px solid #C8DFB0' }}>รวม (฿)</th>
             </tr>
           </thead>
           <tbody>
@@ -2700,54 +2709,54 @@ function SalePrintView({ saleSession, onGoBack, onFinish, onEditPrice }) {
               const price = prices[c.key] || 0;
               return (
                 <tr key={c.key}>
-                  <td style={{ padding: '6px 8px', border: '1px solid #C8DFB0' }}>
+                  <td style={{ padding: '5px 7px', border: '1px solid #C8DFB0' }}>
                     <div>{c.key === 'custom' ? (customLabel || 'หมวดพิเศษ') : c.label}</div>
-                    {d.count > 0 && <div style={{ fontSize: 11, color: '#6A9A4E', marginTop: 1 }}>{d.count} เข่ง</div>}
+                    {d.count > 0 && <div style={{ fontSize: 10, color: '#6A9A4E', marginTop: 1 }}>{d.count} เข่ง</div>}
                   </td>
-                  <td style={{ padding: '6px 8px', border: '1px solid #C8DFB0', textAlign: 'right' }}>{fmtKg(d.kg)}</td>
-                  <td style={{ padding: '6px 8px', border: '1px solid #C8DFB0', textAlign: 'right' }}>{price ? fmtPrice(price) : '—'}</td>
-                  <td style={{ padding: '6px 8px', border: '1px solid #C8DFB0', textAlign: 'right' }}>{price ? fmtBaht(d.kg * price) : '—'}</td>
+                  <td style={{ padding: '5px 7px', border: '1px solid #C8DFB0', textAlign: 'right' }}>{fmtKg(d.kg)}</td>
+                  <td style={{ padding: '5px 7px', border: '1px solid #C8DFB0', textAlign: 'right' }}>{price ? fmtPrice(price) : '—'}</td>
+                  <td style={{ padding: '5px 7px', border: '1px solid #C8DFB0', textAlign: 'right' }}>{price ? fmtBaht(d.kg * price) : '—'}</td>
                 </tr>
               );
             })}
           </tbody>
           <tfoot>
             <tr style={{ background: '#2A2118', color: '#fff' }}>
-              <td style={{ padding: 8, fontWeight: 700 }}>
+              <td style={{ padding: '6px 7px', fontWeight: 700 }}>
                 <div>รวม</div>
-                <div style={{ fontSize: 11, opacity: .75, fontWeight: 400, marginTop: 1 }}>{entries.length} เข่ง</div>
+                <div style={{ fontSize: 10, opacity: .75, fontWeight: 400, marginTop: 1 }}>{entries.length} เข่ง</div>
               </td>
-              <td style={{ padding: 8, textAlign: 'right', fontWeight: 700 }}>{fmtKg(totalKg)}</td>
-              <td style={{ padding: 8 }} />
-              <td style={{ padding: 8, textAlign: 'right', fontWeight: 700 }}>{totalBaht > 0 ? fmtBaht(totalBaht) : '—'}</td>
+              <td style={{ padding: '6px 7px', textAlign: 'right', fontWeight: 700 }}>{fmtKg(totalKg)}</td>
+              <td style={{ padding: '6px 7px' }} />
+              <td style={{ padding: '6px 7px', textAlign: 'right', fontWeight: 700 }}>{totalBaht > 0 ? fmtBaht(totalBaht) : '—'}</td>
             </tr>
           </tfoot>
         </table>
 
-        <div className="bill-doc-bank" style={{ marginTop: 12, background: '#F5FAF0', border: '1px solid #C8DFB0', borderRadius: 8, padding: '10px 12px', display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div className="bill-doc-bank sale-bill-bank" style={{ marginTop: 9, background: '#F5FAF0', border: '1px solid #C8DFB0', borderRadius: 8, padding: '8px 10px', display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{ flex: 1 }}>
-            <div className="bank-label" style={{ fontSize: 11, color: '#6A9A4E', fontWeight: 600, marginBottom: 2 }}>โอนเงินมาที่</div>
-            <div className="bank-acct" style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 14, color: '#2A2118', letterSpacing: '.04em' }}>{QUDSUN_BANK.account}</div>
-            <div style={{ fontSize: 12, color: '#5A4A38' }}>{QUDSUN_BANK.bank} · {QUDSUN_BANK.name}</div>
+            <div className="bank-label" style={{ fontSize: 10.5, color: '#6A9A4E', fontWeight: 600, marginBottom: 2 }}>โอนเงินมาที่</div>
+            <div className="bank-acct sale-bank-acct" style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 13, color: '#2A2118', letterSpacing: '.04em' }}>{QUDSUN_BANK.account}</div>
+            <div style={{ fontSize: 11.5, color: '#5A4A38' }}>{QUDSUN_BANK.bank} · {QUDSUN_BANK.name}</div>
           </div>
         </div>
 
-        <div className="bill-doc-sign" style={{ display: 'flex', justifyContent: 'space-between', marginTop: 36, gap: 20 }}>
+        <div className="bill-doc-sign sale-bill-sign" style={{ display: 'flex', justifyContent: 'space-between', marginTop: 22, gap: 20 }}>
           <div style={{ flex: 1, textAlign: 'center' }}>
-            <div className="bill-doc-sign-line" style={{ height: 48 }} />
-            <div style={{ borderTop: '1px dotted #2A2118', paddingTop: 8, fontSize: 12 }}>ลายเซ็นผู้ขาย</div>
+            <div className="bill-doc-sign-line sale-bill-sign-line" style={{ height: 36 }} />
+            <div style={{ borderTop: '1px dotted #2A2118', paddingTop: 6, fontSize: 11.5 }}>ลายเซ็นผู้ขาย</div>
           </div>
           <div style={{ flex: 1, textAlign: 'center' }}>
-            <div className="bill-doc-sign-line" style={{ height: 48 }} />
-            <div style={{ borderTop: '1px dotted #2A2118', paddingTop: 8, fontSize: 12 }}>ลายเซ็นผู้ซื้อ</div>
+            <div className="bill-doc-sign-line sale-bill-sign-line" style={{ height: 36 }} />
+            <div style={{ borderTop: '1px dotted #2A2118', paddingTop: 6, fontSize: 11.5 }}>ลายเซ็นผู้ซื้อ</div>
           </div>
         </div>
-        <div className="bill-doc-footer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 14 }}>
+        <div className="bill-doc-footer sale-bill-footer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 10 }}>
           <div>
-            <div className="footer-text" style={{ fontSize: 11.5, color: '#8A7A66' }}>ขอบคุณที่ไว้วางใจ · ทุเรียนคัดสรร Qudsun</div>
-            <div className="footer-text" style={{ fontSize: 11.5, color: '#8A7A66', marginTop: 2 }}>โทร. 094-149-1914 (วิน) · 082-691-4414 (เบนซ์)</div>
+            <div className="footer-text" style={{ fontSize: 11, color: '#8A7A66' }}>ขอบคุณที่ไว้วางใจ · ทุเรียนคัดสรร Qudsun</div>
+            <div className="footer-text" style={{ fontSize: 11, color: '#8A7A66', marginTop: 2 }}>โทร. 094-149-1914 (วิน) · 082-691-4414 (เบนซ์)</div>
           </div>
-          <img src="/qr-bill.png" alt="QR" className="bill-doc-qr" style={{ width: 88, height: 88, objectFit: 'contain' }} onError={e => { e.target.style.display = 'none'; }} />
+          <img src="/qr-bill.png" alt="QR" className="bill-doc-qr sale-bill-qr" style={{ width: 72, height: 72, objectFit: 'contain' }} onError={e => { e.target.style.display = 'none'; }} />
         </div>
       </div>
       </div>
