@@ -3063,9 +3063,129 @@ function SupervisorsView({ supervisors, history, onGoHome, onOpenSupervisor, onD
 }
 
 // ─── SupervisorDetailView ─────────────────────────────────────────────────────
+function SalarySlipPrintView({ supervisorName, dateLabel, bills, base, commission, bonus, onBack }) {
+  const total = base + commission + bonus;
+  const parseNum = v => parseFloat(String(v ?? '').replace(/,/g, '')) || 0;
+  const customerRows = {};
+  bills.forEach(h => {
+    const phone = h.phone || h.data?.sellerPhone || '';
+    const name = h.seller || h.name || phone || '—';
+    if (!customerRows[phone]) customerRows[phone] = { name, kg: 0 };
+    customerRows[phone].kg += parseNum(h.kg);
+  });
+  const rows = Object.values(customerRows);
+
+  return (
+    <div style={{ minHeight: '100vh', background: '#F5EFE4', padding: 16 }}>
+      <div style={{ maxWidth: 420, margin: '0 auto' }}>
+        <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
+          <button onClick={onBack} style={{ border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 10, padding: '8px 14px', fontSize: 13, color: '#7A6450', cursor: 'pointer' }}>‹ กลับ</button>
+          <button onClick={() => window.print()} style={{ flex: 1, background: '#5B3A29', color: '#fff', border: 'none', borderRadius: 10, padding: '8px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>🖨️ พิมพ์บิล</button>
+        </div>
+
+        <div id="salary-slip-print" style={{ background: '#fff', borderRadius: 16, padding: '24px 20px', border: '1px solid #E4D7BC' }}>
+          <div style={{ textAlign: 'center', marginBottom: 16 }}>
+            <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 20, color: '#5B3A29' }}>QUDSUN</div>
+            <div style={{ fontSize: 11, color: '#9A8662', marginTop: 2 }}>ทุเรียนคัดสรร</div>
+            <div style={{ fontWeight: 700, fontSize: 15, color: '#2A2118', marginTop: 10 }}>บิลค่าแรง</div>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#5B3A29', marginBottom: 4 }}>
+            <span>ผู้ดูแล</span><span style={{ fontWeight: 700 }}>{supervisorName}</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#9A8662', marginBottom: 16 }}>
+            <span>ช่วงเวลา</span><span>{dateLabel}</span>
+          </div>
+
+          {rows.length > 0 && (
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#9A8662', marginBottom: 6, borderBottom: '1px solid #F0E8DC', paddingBottom: 4 }}>รายการลูกค้า</div>
+              {rows.map((r, i) => (
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#4A3526', padding: '3px 0' }}>
+                  <span>{r.name}</span>
+                  <span style={{ fontWeight: 600 }}>{r.kg % 1 === 0 ? r.kg : r.kg.toFixed(1)} กก.</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div style={{ borderTop: '1px solid #E4D7BC', paddingTop: 12 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#4A3526', marginBottom: 4 }}>
+              <span>เบสรายวัน</span><span>฿{base.toLocaleString()}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#4A3526', marginBottom: 4 }}>
+              <span>ค่าคอม ({bills.reduce((s,h)=>s+(parseFloat(String(h.kg??'').replace(/,/g,''))||0),0).toFixed(0)} กก. × ฿1)</span>
+              <span>฿{commission.toLocaleString()}</span>
+            </div>
+            {bonus > 0 && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#4A3526', marginBottom: 4 }}>
+                <span>โบนัส</span><span>฿{bonus.toLocaleString()}</span>
+              </div>
+            )}
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 16, fontWeight: 700, color: '#5B3A29', borderTop: '1px solid #E4D7BC', paddingTop: 10, marginTop: 6 }}>
+              <span>รวมจ่าย</span><span>฿{total.toLocaleString()}</span>
+            </div>
+          </div>
+
+          <div style={{ marginTop: 32, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            <div style={{ borderTop: '1px solid #9A8662', paddingTop: 6, textAlign: 'center', fontSize: 11, color: '#9A8662' }}>ผู้รับเงิน</div>
+            <div style={{ borderTop: '1px solid #9A8662', paddingTop: 6, textAlign: 'center', fontSize: 11, color: '#9A8662' }}>ผู้จ่าย</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function SupervisorDetailView({ supervisorName, supervisors, history, verified, onGoBack, onOpenCustomer }) {
   const phones = Object.entries(supervisors || {}).filter(([, n]) => n === supervisorName).map(([p]) => p);
+  const phoneSet = new Set(phones);
   const customers = loadCustomers(history);
+
+  const [dateFilter, setDateFilter] = React.useState('today');
+  const [selectedDate, setSelectedDate] = React.useState('');
+  const [base, setBase] = React.useState(200);
+  const [bonus, setBonus] = React.useState(0);
+  const [showSlip, setShowSlip] = React.useState(false);
+
+  const now = new Date();
+  const parseNum = v => parseFloat(String(v ?? '').replace(/,/g, '')) || 0;
+
+  const filteredBills = history.filter(h => {
+    const phone = h.phone || h.data?.sellerPhone || '';
+    if (!phoneSet.has(phone)) return false;
+    if (!h.date) return false;
+    const d = new Date(h.date);
+    if (selectedDate) {
+      const yy = d.getFullYear(), mm = String(d.getMonth()+1).padStart(2,'0'), dd = String(d.getDate()).padStart(2,'0');
+      return `${yy}-${mm}-${dd}` === selectedDate;
+    }
+    if (dateFilter === 'today') return d.toDateString() === now.toDateString();
+    if (dateFilter === '7d') return (now - d) <= 7 * 86400000;
+    if (dateFilter === '30d') return (now - d) <= 30 * 86400000;
+    return true;
+  });
+
+  const totalKg = filteredBills.reduce((s, h) => s + parseNum(h.kg), 0);
+  const commission = Math.round(totalKg);
+  const total = base + commission + bonus;
+
+  const dateLabel = selectedDate
+    ? new Date(selectedDate).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' })
+    : dateFilter === 'today' ? new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' })
+    : dateFilter === '7d' ? '7 วันล่าสุด' : dateFilter === '30d' ? '30 วันล่าสุด' : 'ทั้งหมด';
+
+  if (showSlip) return (
+    <SalarySlipPrintView
+      supervisorName={supervisorName}
+      dateLabel={dateLabel}
+      bills={filteredBills}
+      base={base}
+      commission={commission}
+      bonus={bonus}
+      onBack={() => setShowSlip(false)}
+    />
+  );
 
   return (
     <div style={{ flex: 1, maxWidth: 720, width: '100%', margin: '0 auto', padding: '14px 14px 40px' }}>
@@ -3077,21 +3197,70 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
         </div>
       </div>
 
+      {/* Date filter */}
+      <div style={{ display: 'flex', gap: 6, marginBottom: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+        {[['today','วันนี้'],['7d','7 วัน'],['30d','30 วัน'],['all','ทั้งหมด']].map(([val, label]) => (
+          <button key={val} onClick={() => { setDateFilter(val); setSelectedDate(''); }} style={{ padding: '4px 12px', borderRadius: 20, border: '1px solid', fontSize: 11, fontWeight: 600, cursor: 'pointer', background: !selectedDate && dateFilter === val ? '#DC743C' : 'transparent', color: !selectedDate && dateFilter === val ? '#fff' : '#9A8662', borderColor: !selectedDate && dateFilter === val ? '#DC743C' : '#D0C8C0' }}>{label}</button>
+        ))}
+        <input type="date" value={selectedDate} onChange={e => setSelectedDate(e.target.value)} style={{ marginLeft: 'auto', padding: '3px 8px', borderRadius: 8, border: `1px solid ${selectedDate ? '#DC743C' : '#D0C8C0'}`, fontSize: 11, color: selectedDate ? '#DC743C' : '#9A8662', background: '#fff', fontWeight: selectedDate ? 700 : 400, outline: 'none' }} />
+      </div>
+
+      {/* Commission summary card */}
+      <div style={{ background: '#fff', borderRadius: 14, border: '1px solid #E4D7BC', padding: '16px', marginBottom: 14 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: '#9A8662', marginBottom: 10 }}>สรุปค่าแรง — {dateLabel}</div>
+        <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
+          <div style={{ flex: 1, background: '#FFF8EE', borderRadius: 10, padding: '10px 12px' }}>
+            <div style={{ fontSize: 10, color: '#9A8662' }}>ยอดกิโล</div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: '#E65100' }}>{totalKg % 1 === 0 ? totalKg : totalKg.toFixed(1)} กก.</div>
+            <div style={{ fontSize: 10, color: '#C0A88A' }}>{filteredBills.length} บิล</div>
+          </div>
+          <div style={{ flex: 1, background: '#F0FFF4', borderRadius: 10, padding: '10px 12px' }}>
+            <div style={{ fontSize: 10, color: '#9A8662' }}>ค่าคอม (×฿1)</div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: '#2E7D32' }}>฿{commission.toLocaleString()}</div>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 4 }}>เบสรายวัน (฿)</div>
+            <input type="number" value={base} onChange={e => setBase(Number(e.target.value) || 0)} style={{ width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 8, padding: '8px 10px', fontSize: 14, fontWeight: 600, color: '#3F2D1E', outline: 'none', boxSizing: 'border-box' }} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 4 }}>โบนัส (฿)</div>
+            <input type="number" value={bonus} onChange={e => setBonus(Number(e.target.value) || 0)} placeholder="0" style={{ width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 8, padding: '8px 10px', fontSize: 14, color: '#3F2D1E', outline: 'none', boxSizing: 'border-box' }} />
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#F5EFE4', borderRadius: 10, padding: '10px 14px' }}>
+          <span style={{ fontSize: 14, fontWeight: 700, color: '#4A3526' }}>รวมจ่าย</span>
+          <span style={{ fontSize: 20, fontWeight: 700, color: '#5B3A29' }}>฿{total.toLocaleString()}</span>
+        </div>
+
+        <button onClick={() => setShowSlip(true)} style={{ width: '100%', marginTop: 10, background: '#5B3A29', color: '#fff', border: 'none', borderRadius: 10, padding: '11px 0', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>🧾 ออกบิลค่าแรง</button>
+      </div>
+
+      {/* Customer list */}
       {phones.length === 0 && <div style={{ textAlign: 'center', color: '#B7A684', fontSize: 14, marginTop: 40 }}>ไม่มีลูกค้า</div>}
+      <div style={{ fontSize: 11, fontWeight: 700, color: '#9A8662', marginBottom: 6, paddingLeft: 2 }}>ลูกค้าในความดูแล</div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {phones.map(phone => {
           const c = customers[phone];
           const stat = customerStat(phone, history, verified);
           const tier = stat ? stat.effectiveTier : null;
+          const supBills = filteredBills.filter(h => (h.phone || h.data?.sellerPhone || '') === phone);
+          const supKg = supBills.reduce((s, h) => s + parseNum(h.kg), 0);
           return (
             <button key={phone} onClick={() => onOpenCustomer(phone)} style={{ textAlign: 'left', border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 14, padding: '14px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
               <div style={{ width: 40, height: 40, borderRadius: 10, background: '#F0E4C8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>👤</div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontWeight: 600, fontSize: 15, color: '#4A3526' }}>{c?.name || '—'}</div>
-                <div style={{ fontSize: 12, color: '#9A8662' }}>{phone} · {c ? fmtKg(c.totalKg) + ' กก.' : '0 กก.'}</div>
+                <div style={{ fontSize: 12, color: '#9A8662' }}>{phone}</div>
                 {tier && tier.key !== 'silver' && <TierBadge tier={tier} />}
               </div>
-              <span style={{ color: '#C9A24B', fontSize: 18 }}>›</span>
+              <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                <div style={{ fontWeight: 700, fontSize: 14, color: '#E65100' }}>{supKg % 1 === 0 ? supKg : supKg.toFixed(1)} กก.</div>
+                <div style={{ fontSize: 11, color: '#9A8662' }}>{supBills.length} บิล</div>
+              </div>
             </button>
           );
         })}
