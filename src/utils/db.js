@@ -246,6 +246,45 @@ export const db = {
     if (error) throw error;
   },
 
+  // ─── History (Supabase-primary fetch) ────────────────────────────────────
+  async fetchHistoryBills(limit = 300) {
+    const { data, error } = await supabase
+      .from('qm_bills')
+      .select('bill_no, date, seller, phone, kg, baht')
+      .eq('deleted', false)
+      .order('date', { ascending: false })
+      .limit(limit);
+    if (error) throw error;
+    return data.map(row => ({
+      type: 'buy',
+      billNo: row.bill_no,
+      date: row.date,
+      name: row.seller || '',
+      phone: row.phone || '',
+      kg: row.kg || '',
+      baht: row.baht || '',
+    }));
+  },
+
+  async fetchHistorySaleSessions(limit = 300) {
+    const { data, error } = await supabase
+      .from('qm_sale_sessions')
+      .select('bill_no, date, customer, phone, kg, baht')
+      .eq('deleted', false)
+      .order('date', { ascending: false })
+      .limit(limit);
+    if (error) throw error;
+    return data.map(row => ({
+      type: 'sale',
+      billNo: row.bill_no,
+      date: row.date,
+      name: row.customer || '',
+      phone: row.phone || '',
+      kg: row.kg || '',
+      baht: row.baht || '',
+    }));
+  },
+
   // ─── Realtime ─────────────────────────────────────────────────────────────
   subscribeChanges(onSync) {
     const channel = supabase

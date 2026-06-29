@@ -287,7 +287,7 @@ function EmployeeManager({ employees, onSave, onCancel }) {
 }
 
 // ─── HomeView ─────────────────────────────────────────────────────────────────
-function HomeView({ session, history, saleHistory, payments, syncing, syncStatus, onSyncNow, onOpenSheet, onNew, onResume, onGoCustomers, onGoDashboard, onGoSupervisors, onGoSales, onNewSale, saleSession, onResumeSale, onChangePin, onSetEmployeePin, onOpenHistory, onOpenSaleHistory, onPayment, onDeleteBill, onDeleteSaleBill, pin, verified, supervisors, isEmployee, onLogout, onExport, onImport }) {
+function HomeView({ session, history, saleHistory, payments, syncing, syncStatus, onSyncNow, onOpenSheet, onNew, onResume, onGoCustomers, onGoDashboard, onGoSupervisors, onGoSales, onNewSale, saleSession, onResumeSale, onChangePin, onSetEmployeePin, onOpenHistory, onOpenSaleHistory, onPayment, onDeleteBill, onDeleteSaleBill, pin, verified, supervisors, isEmployee, onLogout, onExport, onImport, onGoHistory }) {
   const customerCount = Object.keys(loadCustomers(history)).length;
   const supervisorCount = Object.values(supervisors || {}).filter(Boolean).reduce((set, n) => (set.add(n), set), new Set()).size;
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -420,6 +420,7 @@ function HomeView({ session, history, saleHistory, payments, syncing, syncStatus
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '20px 0 12px' }}>
             <span style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 13, letterSpacing: '.14em', color: '#A6925E' }}>ประวัติบิล</span>
             <div style={{ flex: 1, height: 1, background: '#E4D7BC' }} />
+            <button onClick={onGoHistory} style={{ fontSize: 11, color: '#DC743C', fontWeight: 600, border: 'none', background: 'none', cursor: 'pointer', padding: '2px 4px' }}>ดูทั้งหมด →</button>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {[
@@ -2735,6 +2736,114 @@ function SalePrintView({ saleSession, onGoBack, onFinish, onEditPrice }) {
   );
 }
 
+// ─── HistoryPageView ──────────────────────────────────────────────────────────
+function HistoryPageView({ onGoHome, onOpenBill, onOpenSaleBill, isEmployee }) {
+  const [items, setItems] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+  const [filter, setFilter] = React.useState('all');
+  const [deleteTarget, setDeleteTarget] = React.useState(null);
+
+  const load = React.useCallback(async () => {
+    setLoading(true);
+    try {
+      const [bills, sessions] = await Promise.all([
+        db.fetchHistoryBills(300),
+        db.fetchHistorySaleSessions(300),
+      ]);
+      const merged = [...bills, ...sessions].sort((a, b) => new Date(b.date) - new Date(a.date));
+      setItems(merged);
+    } catch {}
+    setLoading(false);
+  }, []);
+
+  React.useEffect(() => { load(); }, [load]);
+
+  const handleDelete = React.useCallback(async (item) => {
+    try {
+      if (item.type === 'buy') await db.deleteBill(item.billNo);
+      else await db.deleteSaleSession(item.billNo);
+      setItems(prev => prev.filter(i => i.billNo !== item.billNo));
+    } catch {}
+    setDeleteTarget(null);
+  }, []);
+
+  const fmtDate = (d) => {
+    if (!d) return '';
+    const dt = new Date(d);
+    const day = dt.getDate();
+    const months = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+    return `${day} ${months[dt.getMonth()]}`;
+  };
+  const fmtTime = (d) => { if (!d) return ''; const dt = new Date(d); return dt.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) + ' น.'; };
+
+  const grouped = [];
+  let lastDate = '';
+  const filtered = items.filter(i => filter === 'all' || (filter === 'buy' ? i.type === 'buy' : i.type === 'sale'));
+  for (const item of filtered) {
+    const dateKey = item.date ? new Date(item.date).toDateString() : '';
+    if (dateKey !== lastDate) { grouped.push({ _header: fmtDate(item.date) }); lastDate = dateKey; }
+    grouped.push(item);
+  }
+
+  return (
+    <div style={{ minHeight: '100vh', background: '#F5EFE4', paddingBottom: 24 }}>
+      <div style={{ background: '#fff', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid #E4D7BC', position: 'sticky', top: 0, zIndex: 10 }}>
+        <button onClick={onGoHome} style={{ width: 32, height: 32, borderRadius: '50%', background: '#F5EFE4', border: 'none', fontSize: 18, cursor: 'pointer', color: '#5B3A29' }}>‹</button>
+        <span style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 17, color: '#2A2118', flex: 1 }}>ประวัติบิล</span>
+        <button onClick={load} style={{ fontSize: 12, color: '#4CAF50', fontWeight: 600, border: 'none', background: 'none', cursor: 'pointer' }}>⟳ รีเฟรช</button>
+      </div>
+
+      <div style={{ display: 'flex', gap: 8, padding: '10px 16px', background: '#fff', borderBottom: '1px solid #E4D7BC' }}>
+        {[['all','ทั้งหมด'],['buy','ซื้อ (QD)'],['sale','ขาย (QS)']].map(([val, label]) => (
+          <button key={val} onClick={() => setFilter(val)} style={{ padding: '5px 14px', borderRadius: 20, border: '1px solid', fontSize: 12, fontWeight: 600, cursor: 'pointer', background: filter === val ? '#5B3A29' : '#F5EFE4', color: filter === val ? '#fff' : '#8A7A66', borderColor: filter === val ? '#5B3A29' : '#D0C8C0' }}>{label}</button>
+        ))}
+      </div>
+
+      {loading && <div style={{ textAlign: 'center', padding: 32, color: '#9A8662' }}>กำลังโหลด...</div>}
+
+      {!loading && grouped.map((item, i) => {
+        if (item._header) return <div key={'h-'+i} style={{ padding: '10px 16px 4px', fontSize: 11, fontWeight: 700, color: '#9A8662', letterSpacing: '0.5px' }}>{item._header}</div>;
+        const isBuy = item.type === 'buy';
+        return (
+          <div key={item.billNo} style={{ margin: '0 12px 8px', background: '#fff', borderRadius: 14, border: `1px solid #E4D7BC`, borderLeft: `4px solid ${isBuy ? '#DC743C' : '#4CAF50'}`, overflow: 'hidden' }}>
+            <button onClick={() => isBuy ? onOpenBill?.(item.billNo) : onOpenSaleBill?.(item.billNo)} style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', padding: '12px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ padding: '2px 9px', borderRadius: 20, fontSize: 10, fontWeight: 700, background: isBuy ? '#FFF3E0' : '#E8F5E9', color: isBuy ? '#E65100' : '#2E7D32', flexShrink: 0 }}>{isBuy ? 'ซื้อ' : 'ขาย'}</span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontWeight: 700, fontSize: 13, color: '#2A2118' }}>{item.billNo}</div>
+                <div style={{ fontSize: 11.5, color: '#9A8662', marginTop: 2 }}>{fmtDate(item.date)} · {fmtTime(item.date)}{item.name ? ` · ${item.name}` : ''}</div>
+              </div>
+              <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                <div style={{ fontWeight: 700, fontSize: 15, color: '#3F2D1E' }}>฿{item.baht}</div>
+                <div style={{ fontSize: 11, color: '#9A8662' }}>{item.kg} กก.</div>
+              </div>
+            </button>
+            {!isEmployee && (
+              <div style={{ padding: '0 12px 10px', display: 'flex', justifyContent: 'flex-end' }}>
+                <button onClick={() => setDeleteTarget(item)} style={{ border: '1px solid #E8C8C2', background: '#FDF0EE', borderRadius: 8, padding: '4px 12px', fontSize: 11, color: '#C0392B', cursor: 'pointer' }}>🗑 ลบ</button>
+              </div>
+            )}
+          </div>
+        );
+      })}
+
+      {!loading && filtered.length === 0 && <div style={{ textAlign: 'center', padding: 40, color: '#9A8662' }}>ไม่มีข้อมูล</div>}
+
+      {deleteTarget && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <div style={{ background: '#fff', borderRadius: 18, padding: 24, maxWidth: 320, width: '100%' }}>
+            <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 8 }}>ลบบิลนี้?</div>
+            <div style={{ fontSize: 13, color: '#9A8662', marginBottom: 20 }}>{deleteTarget.billNo} · {deleteTarget.name || '—'}</div>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button onClick={() => setDeleteTarget(null)} style={{ flex: 1, padding: '10px 0', borderRadius: 10, border: '1px solid #D0C8C0', background: '#F5EFE4', fontWeight: 600, cursor: 'pointer' }}>ยกเลิก</button>
+              <button onClick={() => handleDelete(deleteTarget)} style={{ flex: 1, padding: '10px 0', borderRadius: 10, border: 'none', background: '#C0392B', color: '#fff', fontWeight: 600, cursor: 'pointer' }}>ลบ</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── CustomersView ────────────────────────────────────────────────────────────
 function CustomersView({ history, verified, onGoHome, onOpenCustomer, onDeleteCustomer, pin, isEmployee }) {
   const customers = loadCustomers(history);
@@ -3902,25 +4011,28 @@ export default function App() {
 
   useEffect(() => { if (saleSession) persistSaleSession(saleSession); }, [saleSession, persistSaleSession]);
 
-  const finishSaleSession = useCallback(() => {
+  const finishSaleSession = useCallback(async () => {
     if (!saleSession) return;
     const totalKg = (saleSession.entries || []).reduce((s, e) => s + e.kg, 0);
     const totalBaht = (saleSession.entries || []).reduce((s, e) => s + e.kg * ((saleSession.prices || {})[e.cat] || 0), 0);
 
-    // Save to saleHistory (home page chat-style display)
+    const saleRecord = { id: saleSession.billNo, date: saleSession.date, buyer: saleSession.customerName || saleSession.billNo, kg: totalKg, baht: totalBaht, note: 'pending', receiptUrl: '' };
+    try {
+      await Promise.all([
+        db.upsertSaleSession(saleSession),
+        db.upsertSale(saleRecord),
+      ]);
+    } catch {}
+
     const summary = { billNo: saleSession.billNo, date: saleSession.date, customerName: saleSession.customerName || '', customerPhone: saleSession.customerPhone || '', kg: totalKg, baht: totalBaht };
     const nextSh = [summary, ...saleHistory];
     storage.saveSaleHistory(nextSh); setSaleHistory(nextSh);
 
-    // Also add to sales array so SalesView KPIs + list show this bill
-    const saleRecord = { id: saleSession.billNo, date: saleSession.date, buyer: saleSession.customerName || saleSession.billNo, kg: totalKg, baht: totalBaht, note: 'pending', receiptUrl: '' };
     const nextSales = [saleRecord, ...sales];
     storage.saveSales(nextSales); setSales(nextSales);
-    db.upsertSale(saleRecord).catch(() => {});
 
     storage.saveSaleSession(null); setSaleSession(null);
     toast('บันทึกบิลขายเรียบร้อย'); navigate('/');
-    db.upsertSaleSession(saleSession).catch(() => {});
   }, [saleSession, saleHistory, sales, toast, navigate]);
 
   const editSaleEntry = useCallback((entry) => {
@@ -3959,16 +4071,24 @@ export default function App() {
     navigate('/print');
   }, [updateSession, navigate]);
 
-  const commitFinish = useCallback((sessOverride) => {
+  const commitFinish = useCallback(async (sessOverride) => {
     const s = sessOverride || session;
     if (!s) return;
     const card = { billNo: s.billNo, seller: s.seller || '-', phone: s.sellerPhone || '', date: s.date, dateText: dateStr(s.date), kg: fmtKg(grandKg(s)), baht: fmtBaht(grandBaht(s)), data: s };
+    setSyncStatus('กำลังบันทึก…');
+    try {
+      await db.upsertBill(card);
+      setSyncStatus('✓ บันทึกแล้ว ' + new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }));
+    } catch {
+      setSyncStatus('⚠ Supabase บันทึกไม่สำเร็จ');
+    }
     const hist = [card, ...history].slice(0, 60);
     storage.saveHistory(hist); storage.saveSession(null);
     setHistory(hist); setSession(null); navigate('/'); setVerifyPrompt(null);
     toast('บันทึกบิลเรียบร้อย');
-    pushBill(card);
-  }, [session, history, toast, pushBill, navigate]);
+    const billPayload = { action: 'syncBill', bill: { ...card, json: JSON.stringify(card) } };
+    fetch('/api/sheets', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(billPayload) }).catch(() => {});
+  }, [session, history, toast, navigate]);
 
   const finishBill = useCallback(() => {
     const s = session; if (!s) return;
@@ -4146,7 +4266,7 @@ export default function App() {
             onGoSupervisors={() => { navigate('/supervisors'); syncNow(true); }}
             onChangePin={changePin} onSetEmployeePin={setEmployeePinAction}
             onOpenHistory={openHistory} onOpenSaleHistory={openSaleHistoryDetail} onPayment={handlePayment} onDeleteBill={handleDeleteBill} onDeleteSaleBill={handleDeleteSaleBill} pin={pin} isEmployee={authRole === 'employee'} onLogout={handleLogout}
-            onExport={handleExport} onImport={handleImport} />
+            onExport={handleExport} onImport={handleImport} onGoHistory={() => navigate('/history')} />
         } />
         <Route path="/record" element={session ? (
           <RecordView session={session} activeCat={activeCat} input={input} onInput={setInput} onCommit={commitEntry}
@@ -4242,6 +4362,17 @@ export default function App() {
           <SupervisorDetailRoute supervisors={supervisors} history={history} verified={verified}
             onGoBack={() => navigate('/supervisors')}
             onOpenCustomer={phone => { setCustPhone(phone); navigate('/customers/' + encodeURIComponent(phone)); }} />
+        } />
+        <Route path="/history" element={
+          <HistoryPageView
+            onGoHome={() => navigate('/')}
+            onOpenBill={(billNo) => {
+              const card = history.find(h => h.billNo === billNo);
+              if (card) openHistory(card);
+            }}
+            onOpenSaleBill={(billNo) => openSaleHistoryDetail(billNo)}
+            isEmployee={authRole === 'employee'}
+          />
         } />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
