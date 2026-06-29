@@ -3391,6 +3391,25 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
                 <span style={{ fontSize: 11, color: '#9A8662' }}>฿{baseRate} + ฿{selCommission} + ฿{dayBonus}</span>
                 <span style={{ fontSize: 18, fontWeight: 700, color: '#5B3A29' }}>฿{selTotal.toLocaleString()}</span>
               </div>
+              {selBills.length > 0 && (
+                <div style={{ marginBottom: 10 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: '#9A8662', marginBottom: 6 }}>📋 บิลที่นับค่าคอม ({selBills.length} บิล)</div>
+                  <div style={{ borderRadius: 10, border: '1px solid #E4D7BC', overflow: 'hidden' }}>
+                    {selBills.map((b, idx) => (
+                      <div key={b.billNo || idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7px 12px', background: idx % 2 === 0 ? '#FAFAF8' : '#fff', borderBottom: idx < selBills.length - 1 ? '1px solid #F0E8DC' : 'none' }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 12, fontWeight: 600, color: '#3F2D1E', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.seller || '—'}</div>
+                          <div style={{ fontSize: 10, color: '#B0966A' }}>#{b.billNo}</div>
+                        </div>
+                        <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: '#E65100' }}>{parseNum(b.kg) % 1 === 0 ? parseNum(b.kg) : parseNum(b.kg).toFixed(1)} กก.</div>
+                          <div style={{ fontSize: 10, color: '#2E7D32' }}>+฿{Math.round(parseNum(b.kg) * dayRate)}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               <div style={{ display: 'flex', gap: 8 }}>
                 <button onClick={handleSaveDayEarning} disabled={saving} style={{ flex: 1, background: '#DC743C', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 0', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>{saving ? '...' : '✅ บันทึก'}</button>
                 <button onClick={() => setShowSlip(true)} style={{ flex: 1, background: '#5B3A29', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 0', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>🧾 ออกบิล</button>
