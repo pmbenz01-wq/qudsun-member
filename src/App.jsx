@@ -3195,14 +3195,13 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
   React.useEffect(() => { loadLedger(); }, [loadLedger]);
 
   React.useEffect(() => {
-    if (phones.length === 0) { setMonthBills([]); return; }
     setLoadingBills(true);
     const mm = String(calMonth+1).padStart(2,'0');
     const lastD = new Date(calYear, calMonth+1, 0).getDate();
     const from = `${calYear}-${mm}-01T00:00:00`;
     const to = `${calYear}-${mm}-${String(lastD).padStart(2,'0')}T23:59:59`;
-    db.fetchBillsByPhones(phones, from, to).then(b => setMonthBills(b)).catch(() => setMonthBills([])).finally(() => setLoadingBills(false));
-  }, [phones.join(','), calYear, calMonth]);
+    db.fetchBillsBySupervisor(supervisorName, from, to).then(b => setMonthBills(b)).catch(() => setMonthBills([])).finally(() => setLoadingBills(false));
+  }, [supervisorName, calYear, calMonth]);
 
   const billsByDay = React.useMemo(() => {
     const g = {};
@@ -4560,7 +4559,7 @@ export default function App() {
   const commitFinish = useCallback(async (sessOverride) => {
     const s = sessOverride || session;
     if (!s) return;
-    const card = { billNo: s.billNo, seller: s.seller || '-', phone: s.sellerPhone || '', date: s.date, dateText: dateStr(s.date), kg: fmtKg(grandKg(s)), baht: fmtBaht(grandBaht(s)), data: s };
+    const card = { billNo: s.billNo, seller: s.seller || '-', phone: s.sellerPhone || '', date: s.date, dateText: dateStr(s.date), kg: fmtKg(grandKg(s)), baht: fmtBaht(grandBaht(s)), supervisor: s.supervisor || (supervisors || {})[s.sellerPhone || ''] || '', data: s };
     setSyncStatus('กำลังบันทึก…');
     try {
       await db.upsertBill(card);

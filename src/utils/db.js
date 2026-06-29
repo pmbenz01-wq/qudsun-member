@@ -29,6 +29,7 @@ export const db = {
       phone: card.phone || '',
       kg: card.kg,
       baht: card.baht,
+      supervisor: card.supervisor || card.data?.supervisor || '',
       json: JSON.stringify(card),
       deleted: false,
     }, { onConflict: 'bill_no' });
@@ -292,6 +293,28 @@ export const db = {
       .select('bill_no, date, seller, phone, kg, baht')
       .eq('deleted', false)
       .in('phone', phones)
+      .order('date', { ascending: false });
+    if (dateFrom) q = q.gte('date', dateFrom);
+    if (dateTo) q = q.lte('date', dateTo);
+    const { data, error } = await q;
+    if (error) throw error;
+    return data.map(row => ({
+      billNo: row.bill_no,
+      date: row.date,
+      seller: row.seller || '',
+      phone: row.phone || '',
+      kg: row.kg || '',
+      baht: row.baht || '',
+    }));
+  },
+
+  async fetchBillsBySupervisor(supervisorName, dateFrom, dateTo) {
+    if (!supervisorName) return [];
+    let q = supabase
+      .from('qm_bills')
+      .select('bill_no, date, seller, phone, kg, baht')
+      .eq('deleted', false)
+      .eq('supervisor', supervisorName)
       .order('date', { ascending: false });
     if (dateFrom) q = q.gte('date', dateFrom);
     if (dateTo) q = q.lte('date', dateTo);
