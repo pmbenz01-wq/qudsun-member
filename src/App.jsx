@@ -3237,7 +3237,6 @@ export default function App() {
   const [saleCustomerModal, setSaleCustomerModal] = useState(false);
   const savedSession = useRef(null);
   const pendingPhotoDataUrl = useRef(null);
-  const syncingRef = useRef(false);
 
   const toast = useCallback((msg) => {
     setToastMsg(msg);
@@ -3349,8 +3348,7 @@ export default function App() {
       setVehiclePlates(merged);
     }).catch(() => {});
     db.getCustomerInfo().then(remote => {
-      // remote wins — ข้อมูลธนาคารต้องตรงกันทุก device
-      const merged = { ...storage.loadCustomerInfo(), ...remote };
+      const merged = { ...remote, ...storage.loadCustomerInfo() };
       storage.saveCustomerInfo(merged);
       setCustomerInfo(merged);
     }).catch(() => {});
@@ -3362,8 +3360,7 @@ export default function App() {
       storage.saveSales(merged); setSales(merged);
     }).catch(() => {});
     db.getVerified().then(remote => {
-      // remote wins — ข้อมูล verified ต้องตรงกันทุก device
-      const merged = { ...storage.loadVerified(), ...remote };
+      const merged = { ...remote, ...storage.loadVerified() };
       storage.saveVerified(merged); setVerified(merged);
     }).catch(() => {});
     db.getBills().then(remoteBills => {
@@ -3440,126 +3437,84 @@ export default function App() {
     return () => { clearInterval(autoSync); document.removeEventListener('visibilitychange', onVisible); unsubRealtime(); };
   }, []);
 
-  // Supabase คือ primary source of truth — อ่านทุกตารางพร้อมกัน
-  const syncFromSupabase = useCallback(async () => {
-    const [rBills, rPayments, rVerified, rCI, rPlates, rSales, rSessions] = await Promise.allSettled([
-      db.getBills(),
-      db.getPayments(),
-      db.getVerified(),
-      db.getCustomerInfo(),
-      db.getVehiclePlates(),
-      db.getSales(),
-      db.getSaleSessions(),
+  // Helper: load all data from Google Sheets
+  const syncFromSheets = useCallback(async () => {
+    const [sheetBills, sheetPayments, sheetSales, sheetCI] = await Promise.all([
+      fetch('/api/sheets').then(r => r.json()),
+      fetch('/api/sheets?action=getPayments').then(r => r.json()),
+      fetch('/api/sheets?action=getSales').then(r => r.json()),
+      fetch('/api/sheets?action=getCustomerInfo').then(r => r.json()),
     ]);
-
-    // Bills: remote wins, เอา local-only (ยังไม่ได้ push) มาต่อ
-    if (rBills.status === 'fulfilled' && rBills.value?.length) {
-      const remoteNos = new Set(rBills.value.map(b => b.billNo));
+    if (sheetBills.ok && sheetBills.bills?.length > 0) {
+      const sheetParsed = sheetBills.bills.map(b => {
+        // Try json field first (full object), fall back to individual columns
+        try { if (b.json) return JSON.parse(b.json); } catch {}
+        if (!b.billNo) return null;
+        return { billNo: b.billNo, date: b.date ? Number(b.date) : null, dateText: b.dateText || '', seller: b.seller || '', phone: b.phone || '', kg: b.kg || '', baht: b.baht || '', data: {} };
+      }).filter(Boolean);
+      // Merge: keep local-only bills (recorded offline / not yet in Sheets), exclude deleted
+      const sheetNos = new Set(sheetParsed.map(b => b.billNo));
       const deleted = storage.loadDeletedBills();
-      const localOnly = storage.loadHistory().filter(h => h?.billNo && !remoteNos.has(h.billNo) && !deleted.has(h.billNo));
-      const merged = [...rBills.value, ...localOnly];
-      storage.saveHistory(merged); setHistory(merged);
+      const localOnly = storage.loadHistory().filter(h => h?.billNo && !sheetNos.has(h.billNo) && !deleted.has(h.billNo));
+      const bills = [...sheetParsed, ...localOnly];
+      storage.saveHistory(bills); setHistory(bills);
       const svMap = {};
-      merged.forEach(c => { const ph = c.phone || c.data?.sellerPhone || ''; const sup = c.data?.supervisor || c.supervisor || ''; if (ph && sup) svMap[ph] = sup; });
+      bills.forEach(c => { const ph = c.phone || c.data?.sellerPhone || ''; const sup = c.data?.supervisor || c.supervisor || ''; if (ph && sup) svMap[ph] = sup; });
       if (Object.keys(svMap).length) { const nSv = { ...storage.loadSupervisors(), ...svMap }; storage.saveSupervisors(nSv); setSupervisors(nSv); }
     }
-
-    // Payments: remote wins, แต่ keep local URLs ถ้า remote ไม่มี
-    if (rPayments.status === 'fulfilled') {
+    if (sheetPayments.ok) {
+      // Merge: Sheets data takes priority, but keep any local-only entries not yet in Sheets
       const local = storage.loadPayments();
-      const merged = { ...local };
-      for (const [bn, rp] of Object.entries(rPayments.value)) {
-        const lp = local[bn] || {};
-        merged[bn] = { ...lp, ...rp, receiptUrl: rp.receiptUrl || lp.receiptUrl || null, slipUrl: rp.slipUrl || lp.slipUrl || null, vehicleUrl: rp.vehicleUrl || lp.vehicleUrl || null };
-      }
+      const merged = { ...local, ...(sheetPayments.payments || {}) };
       storage.savePayments(merged); setPayments(merged);
     }
-
-    // Verified — remote wins
-    if (rVerified.status === 'fulfilled') {
-      const merged = { ...storage.loadVerified(), ...rVerified.value };
-      storage.saveVerified(merged); setVerified(merged);
-    }
-
-    // CustomerInfo — remote wins (ข้อมูลธนาคารต้องตรงกันทุก device)
-    if (rCI.status === 'fulfilled') {
-      const merged = { ...storage.loadCustomerInfo(), ...rCI.value };
-      storage.saveCustomerInfo(merged); setCustomerInfo(merged);
-    }
-
-    // VehiclePlates — remote wins
-    if (rPlates.status === 'fulfilled') {
-      const merged = { ...storage.loadVehiclePlates(), ...rPlates.value };
-      storage.saveVehiclePlates(merged); setVehiclePlates(merged);
-    }
-
-    // Sales: remote wins, เอา local-only มาต่อ
-    if (rSales.status === 'fulfilled') {
-      const local = storage.loadSales();
-      const localById = Object.fromEntries(local.filter(s => s.id).map(s => [s.id, s]));
-      const remoteIds = new Set(rSales.value.map(s => s.id));
-      const merged = [
-        ...rSales.value.map(s => { const l = localById[s.id]; return l ? { ...s, receiptUrl: s.receiptUrl || l.receiptUrl || '' } : s; }),
-        ...local.filter(s => s.id && !remoteIds.has(s.id)),
-      ];
-      storage.saveSales(merged); setSales(merged);
-    }
-
-    // SaleSessions: remote wins
-    if (rSessions.status === 'fulfilled' && rSessions.value?.length) {
-      setSaleSessions(rSessions.value);
-      const summaries = rSessions.value.map(s => {
-        const totalKg = (s.entries || []).reduce((sum, e) => sum + (e.kg || 0), 0);
-        const totalBaht = (s.entries || []).reduce((sum, e) => sum + (e.kg || 0) * ((s.prices || {})[e.cat] || 0), 0);
-        return { billNo: s.billNo, date: s.date, customerName: s.customerName || '', customerPhone: s.customerPhone || '', kg: totalKg || s.kg || 0, baht: totalBaht || s.baht || 0 };
+    if (sheetSales.ok) {
+      const sheetSalesData = sheetSales.sales || [];
+      const localSales = storage.loadSales();
+      const localById = Object.fromEntries(localSales.filter(s => s.id).map(s => [s.id, s]));
+      const sheetIds = new Set(sheetSalesData.map(s => s.id));
+      const mergedSheet = sheetSalesData.map(s => {
+        const local = localById[s.id];
+        if (!local) return s;
+        return { ...s, receiptUrl: s.receiptUrl || local.receiptUrl || '', note: s.note || local.note || '' };
       });
-      const local = storage.loadSaleHistory();
-      const remoteNos = new Set(summaries.map(s => s.billNo));
-      const localOnly = local.filter(s => s.billNo && !remoteNos.has(s.billNo));
-      const merged = [...summaries, ...localOnly].sort((a, b) => (b.date || 0) - (a.date || 0));
-      storage.saveSaleHistory(merged); setSaleHistory(merged);
+      const localOnly = localSales.filter(s => s.id && !sheetIds.has(s.id));
+      const merged = [...mergedSheet, ...localOnly];
+      if (merged.length > 0) { storage.saveSales(merged); setSales(merged); }
     }
+    if (sheetCI.ok) { const merged = { ...(sheetCI.info || {}), ...storage.loadCustomerInfo() }; storage.saveCustomerInfo(merged); setCustomerInfo(merged); }
   }, []); // eslint-disable-line
 
-  // Supabase เป็น primary — Sheets เป็น background export เท่านั้น
+  // Google Sheets is primary DB — Supabase is backup
   const syncNow = useCallback(async (silent) => {
-    if (syncingRef.current) return; // ป้องกัน concurrent sync
-    syncingRef.current = true;
-    setSyncing(true);
-    if (!silent) setSyncStatus('กำลังซิงก์…');
+    setSyncing(true); if (!silent) setSyncStatus('กำลังซิงก์…');
     try {
-      await syncFromSupabase();
+      await syncFromSheets();
       setSyncStatus('✓ ซิงก์แล้ว ' + new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }));
-      // Background: push orphaned local bills ที่ยังไม่อยู่ใน Supabase ขึ้นไป
-      const currentHistory = storage.loadHistory();
-      if (currentHistory.length > 0) {
-        db.getBills().then(remoteBills => {
-          const remoteNos = new Set((remoteBills || []).map(b => b.billNo));
-          const deleted = storage.loadDeletedBills();
-          const orphaned = currentHistory.filter(h => h?.billNo && !remoteNos.has(h.billNo) && !deleted.has(h.billNo));
-          orphaned.forEach(c => pushBill(c, true));
-        }).catch(() => {});
-      }
-      // Background: sync ไป Sheets ด้วย (best-effort)
-      fetch('/api/sheets').catch(() => {});
+      // Background: also sync Supabase (best-effort, silent)
+      db.getBills().then(remoteBills => {
+        if (!remoteBills?.length) return;
+        const remoteNos = new Set(remoteBills.map(c => c.billNo));
+        const deleted = storage.loadDeletedBills();
+        const localOnly = storage.loadHistory().filter(h => h?.billNo && !remoteNos.has(h.billNo) && !deleted.has(h.billNo));
+        localOnly.forEach(c => pushBill(c, true));
+      }).catch(() => {});
     } catch (err) {
-      console.error('[syncNow] Supabase sync failed:', err);
+      console.error('[syncNow] Google Sheets failed:', err);
       setSyncStatus('⚠ ซิงก์ไม่สำเร็จ: ' + (err?.message || String(err)));
-    } finally {
-      setSyncing(false);
-      syncingRef.current = false;
     }
+    setSyncing(false);
   }, []); // eslint-disable-line
 
   const pushBill = useCallback(async (card, quiet) => {
     if (!card) return;
     const billPayload = { action: 'syncBill', bill: { ...card, json: JSON.stringify(card) } };
-    // Supabase เป็น primary write — Sheets เป็น background
-    const [supabaseResult] = await Promise.allSettled([
-      db.upsertBill(card),
+    // Write to Google Sheets (primary) + Supabase (backup) in parallel
+    const [sheetsResult] = await Promise.allSettled([
       fetch('/api/sheets', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(billPayload) }).then(r => r.json()),
+      db.upsertBill(card),
     ]);
-    if (supabaseResult.status === 'fulfilled') {
+    if (sheetsResult.status === 'fulfilled' && sheetsResult.value?.ok) {
       if (!quiet) setSyncStatus('✓ บันทึกแล้ว ' + new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }));
     } else if (!quiet) {
       setSyncStatus('⚠ อัปโหลดไม่สำเร็จ');
