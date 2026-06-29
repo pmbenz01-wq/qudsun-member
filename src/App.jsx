@@ -2770,6 +2770,7 @@ function HistoryPageView({ onGoHome, onOpenBill, onOpenSaleBill, isEmployee }) {
   const [items, setItems] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
   const [filter, setFilter] = React.useState('all');
+  const [dateFilter, setDateFilter] = React.useState('today');
   const [deleteTarget, setDeleteTarget] = React.useState(null);
 
   const load = React.useCallback(async () => {
@@ -2805,9 +2806,25 @@ function HistoryPageView({ onGoHome, onOpenBill, onOpenSaleBill, isEmployee }) {
   };
   const fmtTime = (d) => { if (!d) return ''; const dt = new Date(d); return dt.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) + ' น.'; };
 
+  const now = new Date();
+  const filtered = items.filter(i => {
+    if (filter !== 'all' && (filter === 'buy' ? i.type !== 'buy' : i.type !== 'sale')) return false;
+    if (dateFilter === 'today') return i.date && new Date(i.date).toDateString() === now.toDateString();
+    if (dateFilter === '7d') return i.date && (now - new Date(i.date)) <= 7 * 86400000;
+    if (dateFilter === '30d') return i.date && (now - new Date(i.date)) <= 30 * 86400000;
+    return true;
+  });
+
+  const buyItems = filtered.filter(i => i.type === 'buy');
+  const saleItems = filtered.filter(i => i.type === 'sale');
+  const buyKg = buyItems.reduce((s, i) => s + (parseFloat(i.kg) || 0), 0);
+  const buyBaht = buyItems.reduce((s, i) => s + (parseFloat(i.baht) || 0), 0);
+  const saleKg = saleItems.reduce((s, i) => s + (parseFloat(i.kg) || 0), 0);
+  const saleBaht = saleItems.reduce((s, i) => s + (parseFloat(i.baht) || 0), 0);
+  const profit = saleBaht - buyBaht;
+
   const grouped = [];
   let lastDate = '';
-  const filtered = items.filter(i => filter === 'all' || (filter === 'buy' ? i.type === 'buy' : i.type === 'sale'));
   for (const item of filtered) {
     const dateKey = item.date ? new Date(item.date).toDateString() : '';
     if (dateKey !== lastDate) { grouped.push({ _header: fmtDate(item.date) }); lastDate = dateKey; }
@@ -2827,6 +2844,37 @@ function HistoryPageView({ onGoHome, onOpenBill, onOpenSaleBill, isEmployee }) {
           <button key={val} onClick={() => setFilter(val)} style={{ padding: '5px 14px', borderRadius: 20, border: '1px solid', fontSize: 12, fontWeight: 600, cursor: 'pointer', background: filter === val ? '#5B3A29' : '#F5EFE4', color: filter === val ? '#fff' : '#8A7A66', borderColor: filter === val ? '#5B3A29' : '#D0C8C0' }}>{label}</button>
         ))}
       </div>
+
+      <div style={{ display: 'flex', gap: 6, padding: '8px 16px', background: '#FAF6F0', borderBottom: '1px solid #E4D7BC' }}>
+        {[['today','วันนี้'],['7d','7 วัน'],['30d','30 วัน'],['all','ทั้งหมด']].map(([val, label]) => (
+          <button key={val} onClick={() => setDateFilter(val)} style={{ padding: '3px 11px', borderRadius: 20, border: '1px solid', fontSize: 11, fontWeight: 600, cursor: 'pointer', background: dateFilter === val ? '#DC743C' : 'transparent', color: dateFilter === val ? '#fff' : '#9A8662', borderColor: dateFilter === val ? '#DC743C' : '#D0C8C0' }}>{label}</button>
+        ))}
+      </div>
+
+      {!loading && (
+        <div style={{ margin: '12px 12px 4px', background: '#fff', borderRadius: 14, border: '1px solid #E4D7BC', overflow: 'hidden' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', textAlign: 'center' }}>
+            <div style={{ padding: '12px 8px', borderRight: '1px solid #F0E8DC' }}>
+              <div style={{ fontSize: 10, color: '#9A8662', fontWeight: 600, marginBottom: 4 }}>📥 รับซื้อ</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: '#E65100' }}>฿{buyBaht.toLocaleString()}</div>
+              <div style={{ fontSize: 11, color: '#9A8662' }}>{buyKg % 1 === 0 ? buyKg : buyKg.toFixed(1)} กก.</div>
+              <div style={{ fontSize: 10, color: '#C0A88A', marginTop: 2 }}>{buyItems.length} บิล</div>
+            </div>
+            <div style={{ padding: '12px 8px', borderRight: '1px solid #F0E8DC' }}>
+              <div style={{ fontSize: 10, color: '#9A8662', fontWeight: 600, marginBottom: 4 }}>📤 ขาย</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: '#2E7D32' }}>฿{saleBaht.toLocaleString()}</div>
+              <div style={{ fontSize: 11, color: '#9A8662' }}>{saleKg % 1 === 0 ? saleKg : saleKg.toFixed(1)} กก.</div>
+              <div style={{ fontSize: 10, color: '#C0A88A', marginTop: 2 }}>{saleItems.length} บิล</div>
+            </div>
+            <div style={{ padding: '12px 8px' }}>
+              <div style={{ fontSize: 10, color: '#9A8662', fontWeight: 600, marginBottom: 4 }}>กำไร</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: profit >= 0 ? '#2E7D32' : '#C0392B' }}>{profit >= 0 ? '+' : ''}฿{Math.abs(profit).toLocaleString()}</div>
+              <div style={{ fontSize: 11, color: '#9A8662' }}>{buyBaht > 0 ? `${((profit/buyBaht)*100).toFixed(1)}%` : '—'}</div>
+              <div style={{ fontSize: 10, color: '#C0A88A', marginTop: 2 }}> </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {loading && <div style={{ textAlign: 'center', padding: 32, color: '#9A8662' }}>กำลังโหลด...</div>}
 
