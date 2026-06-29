@@ -1781,13 +1781,20 @@ function DeleteBillModal({ bill, pin, onConfirm, onClose }) {
   );
 }
 
-function DashboardView({ history, payments, pin, onPayment, onDeleteBill, onGoHome, onOpenHistory, isEmployee }) {
+function DashboardView({ payments, pin, onPayment, onDeleteBill, onGoHome, onOpenHistory, isEmployee }) {
   const todayStr = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
   const [startDate, setStartDate] = useState(todayStr);
   const [endDate, setEndDate] = useState(todayStr);
   const [transferBill, setTransferBill] = useState(null);
   const [cancelBill, setCancelBill] = useState(null);
   const [deleteBill, setDeleteBill] = useState(null);
+  const [billsData, setBillsData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const loadBills = useCallback(() => {
+    setLoading(true);
+    db.getBills().then(d => { setBillsData(d); setLoading(false); }).catch(() => setLoading(false));
+  }, []);
+  useEffect(() => { loadBills(); }, [loadBills]);
 
   const STATUS = {
     unpaid:      { label: 'ยังไม่โอน', color: '#E07A5F', bg: '#FDECEA', text: '#C0392B' },
@@ -1797,7 +1804,7 @@ function DashboardView({ history, payments, pin, onPayment, onDeleteBill, onGoHo
 
   const toDateStr = ts => { const d = new Date(ts); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
 
-  const dayBills = history
+  const dayBills = billsData
     .filter(h => { if (!h.date) return false; const ds = toDateStr(h.date); return ds >= startDate && ds <= endDate; })
     .map(h => ({ ...h, pay: payments[h.billNo] || { status: 'unpaid' } }))
     .sort((a, b) => (b.date || 0) - (a.date || 0));
@@ -1817,6 +1824,7 @@ function DashboardView({ history, payments, pin, onPayment, onDeleteBill, onGoHo
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
           <button onClick={onGoHome} style={{ border: 'none', background: 'none', fontSize: 22, cursor: 'pointer', color: '#7A6450' }}>‹</button>
           <span style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 18, color: '#3F2D1E' }}>ยอดซื้อ</span>
+          <button onClick={loadBills} disabled={loading} style={{ marginLeft: 'auto', border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 8, padding: '5px 10px', fontSize: 12, color: '#7A6450', cursor: 'pointer', opacity: loading ? 0.5 : 1 }}>⟳ รีเฟรช</button>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <input type="date" value={startDate} onChange={e => { setStartDate(e.target.value); if (e.target.value > endDate) setEndDate(e.target.value); }}
@@ -1850,8 +1858,9 @@ function DashboardView({ history, payments, pin, onPayment, onDeleteBill, onGoHo
         <div style={{ flex: 1, height: 1, background: '#E4D7BC' }} />
       </div>
 
-      {dayBills.length === 0 && (
-        <div style={{ textAlign: 'center', color: '#B7A684', fontSize: 13, padding: '20px 0' }}>ไม่มีบิลวันนี้</div>
+      {loading && <div style={{ textAlign: 'center', color: '#B7A684', fontSize: 13, padding: '20px 0' }}>กำลังโหลด…</div>}
+      {!loading && dayBills.length === 0 && (
+        <div style={{ textAlign: 'center', color: '#B7A684', fontSize: 13, padding: '20px 0' }}>ไม่มีบิลในช่วงวันที่เลือก</div>
       )}
 
       {dayBills.map(b => {
@@ -2046,11 +2055,21 @@ function AddSaleModal({ date, accounts, onSave, onClose, onSaveAccount }) {
   );
 }
 
-function SalesView({ history, sales, accounts, pin, onGoHome, onAddSale, onDeleteSale, onUpdateSale, onSaveAccount, onOpenHistory, onNewSaleSession, isEmployee }) {
+function SalesView({ accounts, pin, onGoHome, onAddSale, onDeleteSale, onUpdateSale, onSaveAccount, onOpenHistory, onNewSaleSession, isEmployee }) {
   const todayStr = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
   const [startDate, setStartDate] = useState(todayStr);
   const [endDate, setEndDate] = useState(todayStr);
   const [addOpen, setAddOpen] = useState(false);
+  const [billsData, setBillsData] = useState([]);
+  const [salesData, setSalesData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const loadData = useCallback(() => {
+    setLoading(true);
+    Promise.all([db.getBills(), db.getSales()])
+      .then(([bills, sl]) => { setBillsData(bills); setSalesData(sl); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, []);
+  useEffect(() => { loadData(); }, [loadData]);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deletePinVal, setDeletePinVal] = useState('');
   const [deletePinErr, setDeletePinErr] = useState('');
@@ -2080,11 +2099,11 @@ function SalesView({ history, sales, accounts, pin, onGoHome, onAddSale, onDelet
 
   const toDateStr = ts => { const d = new Date(ts); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
 
-  const inBills = history.filter(h => { if (!h.date) return false; const ds = toDateStr(h.date); return ds >= startDate && ds <= endDate; });
+  const inBills = billsData.filter(h => { if (!h.date) return false; const ds = toDateStr(h.date); return ds >= startDate && ds <= endDate; });
   const inKg = inBills.reduce((sum, h) => sum + (grandKg(h.data) || 0), 0);
   const inBaht = inBills.reduce((sum, h) => sum + (grandBaht(h.data) || 0), 0);
 
-  const outSales = (sales || []).filter(s => { if (!s.date) return false; const ds = toDateStr(s.date); return ds >= startDate && ds <= endDate; }).sort((a, b) => b.date - a.date);
+  const outSales = (salesData || []).filter(s => { if (!s.date) return false; const ds = toDateStr(s.date); return ds >= startDate && ds <= endDate; }).sort((a, b) => b.date - a.date);
   const outKg = outSales.reduce((sum, s) => sum + (Number(s.kg) || 0), 0);
   const outBaht = outSales.reduce((sum, s) => sum + (Number(s.baht) || 0), 0);
 
@@ -2096,6 +2115,7 @@ function SalesView({ history, sales, accounts, pin, onGoHome, onAddSale, onDelet
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
           <button onClick={onGoHome} style={{ border: 'none', background: 'none', fontSize: 22, cursor: 'pointer', color: '#7A6450' }}>‹</button>
           <span style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 18, color: '#3F2D1E' }}>ยอดขาย</span>
+          <button onClick={loadData} disabled={loading} style={{ marginLeft: 'auto', border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 8, padding: '5px 10px', fontSize: 12, color: '#7A6450', cursor: 'pointer', opacity: loading ? 0.5 : 1 }}>⟳ รีเฟรช</button>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <input type="date" value={startDate} onChange={e => { setStartDate(e.target.value); if (e.target.value > endDate) setEndDate(e.target.value); }}
@@ -4312,10 +4332,10 @@ export default function App() {
             supervisors={supervisors} customerInfo={customerInfo} />
         ) : <Navigate to="/" replace />} />
         <Route path="/purchases" element={
-          <DashboardView history={history} payments={payments} pin={pin} onPayment={handlePayment} onDeleteBill={handleDeleteBill} onGoHome={() => { navigate('/'); syncNow(true); }} onOpenHistory={openHistory} isEmployee={authRole === 'employee'} />
+          <DashboardView payments={payments} pin={pin} onPayment={handlePayment} onDeleteBill={handleDeleteBill} onGoHome={() => { navigate('/'); syncNow(true); }} onOpenHistory={openHistory} isEmployee={authRole === 'employee'} />
         } />
         <Route path="/sales" element={
-          <SalesView history={history} sales={sales} accounts={accounts} pin={pin} onGoHome={() => navigate('/')} onAddSale={handleAddSale} onDeleteSale={handleDeleteSale} onUpdateSale={handleUpdateSale} onSaveAccount={handleSaveAccount} onOpenHistory={openHistory}
+          <SalesView accounts={accounts} pin={pin} onGoHome={() => navigate('/')} onAddSale={handleAddSale} onDeleteSale={handleDeleteSale} onUpdateSale={handleUpdateSale} onSaveAccount={handleSaveAccount} onOpenHistory={openHistory}
             onNewSaleSession={createSaleSession} isEmployee={authRole === 'employee'} />
         } />
         <Route path="/sale/record" element={saleSession ? (
