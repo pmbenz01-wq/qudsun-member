@@ -212,26 +212,6 @@ export default async function handler(req, res) {
         return res.json({ ok: true });
       }
 
-      if (action === 'updateSale') {
-        await ensureSheet(token, 'Sales', ['id', 'date', 'dateText', 'buyer', 'kg', 'baht', 'receiptUrl', 'note']);
-        const col = await read(token, 'Sales!A:A') ?? [];
-        let found = -1;
-        for (let i = 1; i < col.length; i++) {
-          if (String(col[i]?.[0] ?? '') === String(body.id)) { found = i + 1; break; }
-        }
-        if (found > 0) {
-          const existing = (await read(token, `Sales!B${found}:H${found}`) ?? [[]])[0];
-          const row = [
-            existing[0] ?? '', existing[1] ?? '', existing[2] ?? '',
-            existing[3] ?? '', existing[4] ?? '',
-            body.receiptUrl !== undefined ? body.receiptUrl : (existing[5] ?? ''),
-            body.note !== undefined ? body.note : (existing[6] ?? ''),
-          ];
-          await update(token, `Sales!B${found}:H${found}`, [row]);
-        }
-        return res.json({ ok: true });
-      }
-
       if (action === 'deleteSale') {
         const col = await read(token, 'Sales!A:A') ?? [];
         let found = -1;
