@@ -2771,6 +2771,7 @@ function HistoryPageView({ onGoHome, onOpenBill, onOpenSaleBill, isEmployee }) {
   const [loading, setLoading] = React.useState(true);
   const [filter, setFilter] = React.useState('all');
   const [dateFilter, setDateFilter] = React.useState('today');
+  const [selectedDate, setSelectedDate] = React.useState('');
   const [deleteTarget, setDeleteTarget] = React.useState(null);
 
   const load = React.useCallback(async () => {
@@ -2809,6 +2810,12 @@ function HistoryPageView({ onGoHome, onOpenBill, onOpenSaleBill, isEmployee }) {
   const now = new Date();
   const filtered = items.filter(i => {
     if (filter !== 'all' && (filter === 'buy' ? i.type !== 'buy' : i.type !== 'sale')) return false;
+    if (selectedDate) {
+      const d = i.date ? new Date(i.date) : null;
+      if (!d) return false;
+      const yy = d.getFullYear(), mm = String(d.getMonth()+1).padStart(2,'0'), dd = String(d.getDate()).padStart(2,'0');
+      return `${yy}-${mm}-${dd}` === selectedDate;
+    }
     if (dateFilter === 'today') return i.date && new Date(i.date).toDateString() === now.toDateString();
     if (dateFilter === '7d') return i.date && (now - new Date(i.date)) <= 7 * 86400000;
     if (dateFilter === '30d') return i.date && (now - new Date(i.date)) <= 30 * 86400000;
@@ -2846,10 +2853,16 @@ function HistoryPageView({ onGoHome, onOpenBill, onOpenSaleBill, isEmployee }) {
         ))}
       </div>
 
-      <div style={{ display: 'flex', gap: 6, padding: '8px 16px', background: '#FAF6F0', borderBottom: '1px solid #E4D7BC' }}>
+      <div style={{ display: 'flex', gap: 6, padding: '8px 16px', background: '#FAF6F0', borderBottom: '1px solid #E4D7BC', alignItems: 'center', flexWrap: 'wrap' }}>
         {[['today','วันนี้'],['7d','7 วัน'],['30d','30 วัน'],['all','ทั้งหมด']].map(([val, label]) => (
-          <button key={val} onClick={() => setDateFilter(val)} style={{ padding: '3px 11px', borderRadius: 20, border: '1px solid', fontSize: 11, fontWeight: 600, cursor: 'pointer', background: dateFilter === val ? '#DC743C' : 'transparent', color: dateFilter === val ? '#fff' : '#9A8662', borderColor: dateFilter === val ? '#DC743C' : '#D0C8C0' }}>{label}</button>
+          <button key={val} onClick={() => { setDateFilter(val); setSelectedDate(''); }} style={{ padding: '3px 11px', borderRadius: 20, border: '1px solid', fontSize: 11, fontWeight: 600, cursor: 'pointer', background: !selectedDate && dateFilter === val ? '#DC743C' : 'transparent', color: !selectedDate && dateFilter === val ? '#fff' : '#9A8662', borderColor: !selectedDate && dateFilter === val ? '#DC743C' : '#D0C8C0' }}>{label}</button>
         ))}
+        <input
+          type="date"
+          value={selectedDate}
+          onChange={e => { setSelectedDate(e.target.value); }}
+          style={{ marginLeft: 'auto', padding: '3px 8px', borderRadius: 8, border: `1px solid ${selectedDate ? '#DC743C' : '#D0C8C0'}`, fontSize: 11, color: selectedDate ? '#DC743C' : '#9A8662', background: '#fff', fontWeight: selectedDate ? 700 : 400, cursor: 'pointer', outline: 'none' }}
+        />
       </div>
 
       {!loading && (
