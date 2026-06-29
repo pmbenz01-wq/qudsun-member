@@ -3340,20 +3340,22 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
                 const earning = earningsByDay[day];
                 const dBills = billsByDay[day] || [];
                 const kg = dBills.reduce((s, b) => s + parseNum(b.kg), 0);
+                const calcTotal = baseRate + Math.round(kg);
                 const isSelected = day === selectedDay;
                 const isToday = day === nowRef.getDate() && calMonth === nowRef.getMonth() && calYear === nowRef.getFullYear();
+                const hasData = earning || kg > 0;
                 return (
-                  <button key={day} onClick={() => setSelectedDay(day)} style={{ borderRadius: 8, border: isSelected ? '2px solid #5B3A29' : earning ? '2px solid #DC743C' : '1px solid #E4D7BC', background: isSelected ? '#5B3A29' : earning ? '#FFF3E0' : kg > 0 ? '#F0FFF4' : '#FAFAFA', padding: '3px 2px', cursor: 'pointer', minHeight: 44, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                    <div style={{ fontSize: 13, fontWeight: earning || isToday ? 700 : 400, color: isSelected ? '#fff' : earning ? '#E65100' : isToday ? '#5B3A29' : '#4A3526' }}>{day}</div>
-                    {earning && !isSelected && <div style={{ fontSize: 8, color: '#E65100', lineHeight: 1.1 }}>฿{earning.total}</div>}
-                    {!earning && kg > 0 && !isSelected && <div style={{ fontSize: 8, color: '#2E7D32', lineHeight: 1.1 }}>{Math.round(kg)}กก.</div>}
+                  <button key={day} onClick={() => setSelectedDay(day)} style={{ borderRadius: 8, border: isSelected ? '2px solid #5B3A29' : earning ? '2px solid #DC743C' : kg > 0 ? '1.5px solid #A8D5A2' : '1px solid #E4D7BC', background: isSelected ? '#5B3A29' : earning ? '#FFF3E0' : kg > 0 ? '#F0FFF4' : '#FAFAFA', padding: '3px 2px', cursor: 'pointer', minHeight: 48, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+                    <div style={{ fontSize: 12, fontWeight: hasData || isToday ? 700 : 400, color: isSelected ? '#fff' : earning ? '#E65100' : isToday ? '#5B3A29' : '#4A3526' }}>{day}</div>
+                    {!isSelected && earning && <div style={{ fontSize: 9, color: '#E65100', fontWeight: 700, lineHeight: 1 }}>฿{(earning.total||0).toLocaleString()}</div>}
+                    {!isSelected && !earning && kg > 0 && <div style={{ fontSize: 9, color: '#2E7D32', fontWeight: 700, lineHeight: 1 }}>฿{calcTotal.toLocaleString()}</div>}
                   </button>
                 );
               })}
             </div>
             <div style={{ display: 'flex', gap: 12, marginTop: 8, paddingLeft: 4 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><div style={{ width: 10, height: 10, borderRadius: 2, background: '#FFF3E0', border: '2px solid #DC743C' }} /><span style={{ fontSize: 10, color: '#9A8662' }}>บันทึกแล้ว</span></div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><div style={{ width: 10, height: 10, borderRadius: 2, background: '#F0FFF4', border: '1px solid #E4D7BC' }} /><span style={{ fontSize: 10, color: '#9A8662' }}>มีบิล ยังไม่บันทึก</span></div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><div style={{ width: 10, height: 10, borderRadius: 2, background: '#F0FFF4', border: '1.5px solid #A8D5A2' }} /><span style={{ fontSize: 10, color: '#9A8662' }}>คำนวณ (ยังไม่บันทึก)</span></div>
             </div>
           </div>
 
