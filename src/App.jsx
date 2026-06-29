@@ -3421,9 +3421,7 @@ export default function App() {
       } catch {}
     }
     syncNow(false);
-    const autoSync = setInterval(() => syncNow(true), 60000);
-    const onVisible = () => { if (document.visibilityState === 'visible') syncNow(true); };
-    document.addEventListener('visibilitychange', onVisible);
+    const autoSync = setInterval(() => syncNow(true), 30000);
     const syncSalesFromSupabase = async () => {
       try {
         const remote = await db.getSales();
@@ -3436,7 +3434,16 @@ export default function App() {
         storage.saveSales(merged); setSales(merged);
       } catch {}
     };
-    const unsubRealtime = db.subscribeChanges(() => syncNow(true), syncSalesFromSupabase);
+    let unsubRealtime = db.subscribeChanges(() => syncNow(true), syncSalesFromSupabase);
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') {
+        syncNow(true);
+        // Re-subscribe realtime เพื่อแก้ WebSocket ที่หลุดบน mobile
+        unsubRealtime();
+        unsubRealtime = db.subscribeChanges(() => syncNow(true), syncSalesFromSupabase);
+      }
+    };
+    document.addEventListener('visibilitychange', onVisible);
     return () => { clearInterval(autoSync); document.removeEventListener('visibilitychange', onVisible); unsubRealtime(); };
   }, []);
 

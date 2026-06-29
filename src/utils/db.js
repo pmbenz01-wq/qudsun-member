@@ -248,18 +248,33 @@ export const db = {
 
   // ─── Realtime ─────────────────────────────────────────────────────────────
   subscribeChanges(onSync, onSalesSync) {
-    const channel = supabase
-      .channel('qudsun-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'qm_bills' }, onSync)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'qm_payments' }, onSync)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'qm_verified' }, onSync)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'qm_customer_info' }, onSync)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'qm_sales' }, onSalesSync || onSync)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'qm_sale_sessions' }, onSync)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'qm_vehicle_plates' }, onSync)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'qm_app_settings' }, onSync)
-      .subscribe();
-    return () => supabase.removeChannel(channel);
+    let channel;
+    let retryTimer = null;
+
+    const connect = () => {
+      channel = supabase
+        .channel('qudsun-changes-' + Date.now())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'qm_bills' }, onSync)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'qm_payments' }, onSync)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'qm_verified' }, onSync)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'qm_customer_info' }, onSync)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'qm_sales' }, onSalesSync || onSync)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'qm_sale_sessions' }, onSync)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'qm_vehicle_plates' }, onSync)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'qm_app_settings' }, onSync)
+        .subscribe((status) => {
+          if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+            supabase.removeChannel(channel).catch(() => {});
+            retryTimer = setTimeout(connect, 5000);
+          }
+        });
+    };
+
+    connect();
+    return () => {
+      clearTimeout(retryTimer);
+      if (channel) supabase.removeChannel(channel).catch(() => {});
+    };
   },
 
   // ─── Storage ──────────────────────────────────────────────────────────────
