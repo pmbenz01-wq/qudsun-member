@@ -247,14 +247,13 @@ export const db = {
   },
 
   // ─── Realtime ─────────────────────────────────────────────────────────────
-  subscribeChanges(onSync, onSalesSync) {
+  subscribeChanges(onSync) {
     const channel = supabase
       .channel('qudsun-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'qm_bills' }, onSync)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'qm_payments' }, onSync)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'qm_verified' }, onSync)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'qm_customer_info' }, onSync)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'qm_sales' }, onSalesSync || onSync)
       .subscribe();
     return () => supabase.removeChannel(channel);
   },
