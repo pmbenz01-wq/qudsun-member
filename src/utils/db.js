@@ -285,6 +285,28 @@ export const db = {
     }));
   },
 
+  async fetchBillsByPhones(phones, dateFrom, dateTo) {
+    if (!phones || phones.length === 0) return [];
+    let q = supabase
+      .from('qm_bills')
+      .select('bill_no, date, seller, phone, kg, baht')
+      .eq('deleted', false)
+      .in('phone', phones)
+      .order('date', { ascending: false });
+    if (dateFrom) q = q.gte('date', dateFrom);
+    if (dateTo) q = q.lte('date', dateTo);
+    const { data, error } = await q;
+    if (error) throw error;
+    return data.map(row => ({
+      billNo: row.bill_no,
+      date: row.date,
+      seller: row.seller || '',
+      phone: row.phone || '',
+      kg: row.kg || '',
+      baht: row.baht || '',
+    }));
+  },
+
   // ─── Realtime ─────────────────────────────────────────────────────────────
   subscribeChanges(onSync) {
     const channel = supabase
