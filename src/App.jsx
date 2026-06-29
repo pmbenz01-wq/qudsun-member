@@ -2817,10 +2817,11 @@ function HistoryPageView({ onGoHome, onOpenBill, onOpenSaleBill, isEmployee }) {
 
   const buyItems = filtered.filter(i => i.type === 'buy');
   const saleItems = filtered.filter(i => i.type === 'sale');
-  const buyKg = buyItems.reduce((s, i) => s + (parseFloat(i.kg) || 0), 0);
-  const buyBaht = buyItems.reduce((s, i) => s + (parseFloat(i.baht) || 0), 0);
-  const saleKg = saleItems.reduce((s, i) => s + (parseFloat(i.kg) || 0), 0);
-  const saleBaht = saleItems.reduce((s, i) => s + (parseFloat(i.baht) || 0), 0);
+  const parseNum = (v) => parseFloat(String(v ?? '').replace(/,/g, '')) || 0;
+  const buyKg = buyItems.reduce((s, i) => s + parseNum(i.kg), 0);
+  const buyBaht = buyItems.reduce((s, i) => s + parseNum(i.baht), 0);
+  const saleKg = saleItems.reduce((s, i) => s + parseNum(i.kg), 0);
+  const saleBaht = saleItems.reduce((s, i) => s + parseNum(i.baht), 0);
   const profit = saleBaht - buyBaht;
 
   const grouped = [];
