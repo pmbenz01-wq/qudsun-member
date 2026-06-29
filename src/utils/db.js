@@ -307,6 +307,40 @@ export const db = {
     }));
   },
 
+  // ─── Supervisor Earnings ──────────────────────────────────────────────────
+  async saveEarning(earning) {
+    const { error } = await supabase.from('qm_sup_earnings').upsert(earning, { onConflict: 'supervisor_name,date' });
+    if (error) throw error;
+  },
+
+  async fetchEarnings(supervisorName) {
+    const { data, error } = await supabase.from('qm_sup_earnings').select('*').eq('supervisor_name', supervisorName).order('date', { ascending: false });
+    if (error) throw error;
+    return data || [];
+  },
+
+  async deleteEarning(id) {
+    const { error } = await supabase.from('qm_sup_earnings').delete().eq('id', id);
+    if (error) throw error;
+  },
+
+  // ─── Supervisor Payments ──────────────────────────────────────────────────
+  async savePayment(payment) {
+    const { error } = await supabase.from('qm_sup_payments').insert(payment);
+    if (error) throw error;
+  },
+
+  async fetchPayments(supervisorName) {
+    const { data, error } = await supabase.from('qm_sup_payments').select('*').eq('supervisor_name', supervisorName).order('paid_date', { ascending: false });
+    if (error) throw error;
+    return data || [];
+  },
+
+  async deletePayment(id) {
+    const { error } = await supabase.from('qm_sup_payments').delete().eq('id', id);
+    if (error) throw error;
+  },
+
   // ─── Realtime ─────────────────────────────────────────────────────────────
   subscribeChanges(onSync) {
     const channel = supabase
