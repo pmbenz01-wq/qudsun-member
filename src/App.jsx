@@ -3149,6 +3149,7 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
   const [selectedDate, setSelectedDate] = React.useState('');
   const [base, setBase] = React.useState(200);
   const [bonus, setBonus] = React.useState(0);
+  const [rate, setRate] = React.useState(1);
   const [bills, setBills] = React.useState([]);
   const [loadingBills, setLoadingBills] = React.useState(false);
   const [showSlip, setShowSlip] = React.useState(false);
@@ -3187,7 +3188,7 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
   }, [phones.join(','), dateFrom, dateTo]);
 
   const totalKg = bills.reduce((s, h) => s + parseNum(h.kg), 0);
-  const commission = Math.round(totalKg);
+  const commission = Math.round(totalKg * rate);
   const total = base + commission + bonus;
   const totalEarned = earnings.reduce((s, e) => s + (e.total || 0), 0);
   const totalPaid = payments.reduce((s, p) => s + (p.amount || 0), 0);
@@ -3201,7 +3202,7 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
     setSaving(true);
     try {
       const dateStr = selectedDate || toDateStr(new Date());
-      await db.saveEarning({ supervisor_name: supervisorName, date: dateStr, base, commission_kg: totalKg, commission_baht: commission, bonus, total });
+      await db.saveEarning({ supervisor_name: supervisorName, date: dateStr, base, commission_kg: totalKg, commission_baht: commission, bonus, total, note: rate !== 1 ? `rate=${rate}` : null });
       await loadLedger();
     } catch { alert('บันทึกไม่สำเร็จ'); }
     setSaving(false);
@@ -3291,7 +3292,7 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
                   <div style={{ fontSize: 10, color: '#C0A88A' }}>{bills.length} บิล</div>
                 </div>
                 <div style={{ flex: 1, background: '#F0FFF4', borderRadius: 10, padding: '10px 12px' }}>
-                  <div style={{ fontSize: 10, color: '#9A8662' }}>ค่าคอม (×฿1)</div>
+                  <div style={{ fontSize: 10, color: '#9A8662' }}>ค่าคอม (×฿{rate}/กก.)</div>
                   <div style={{ fontSize: 17, fontWeight: 700, color: '#2E7D32' }}>฿{commission.toLocaleString()}</div>
                 </div>
               </div>
@@ -3299,6 +3300,10 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 4 }}>เบสรายวัน (฿)</div>
                   <input type="number" value={base} onChange={e => setBase(Number(e.target.value)||0)} style={{ width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 8, padding: '8px 10px', fontSize: 14, fontWeight: 600, color: '#3F2D1E', outline: 'none', boxSizing: 'border-box' }} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 4 }}>ค่าคอม (฿/กก.)</div>
+                  <input type="number" value={rate} onChange={e => setRate(Number(e.target.value)||0)} style={{ width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 8, padding: '8px 10px', fontSize: 14, fontWeight: 600, color: '#2E7D32', outline: 'none', boxSizing: 'border-box' }} />
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 4 }}>โบนัส (฿)</div>
