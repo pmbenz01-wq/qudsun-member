@@ -702,7 +702,7 @@ function BankModal({ bankName, bankAccount, fullName, onSave, onClose }) {
   );
 }
 
-function RecordView({ session, activeCat, input, onInput, onCommit, onPickCat, onGoHome, onGoSummary, onEditSeller, onEditEntry, verified, history, customLabel, onCustomLabelChange, pinnedCats, onOpenPinEditor, vehiclePhotoUrl, onVehiclePlate, onVehiclePhoto, customerInfo, onSaveCustomerInfo, onChangeDate }) {
+function RecordView({ session, activeCat, input, onInput, onCommit, onPickCat, onGoHome, onGoSummary, onEditSeller, onEditEntry, verified, history, customLabel, onCustomLabelChange, pinnedCats, onOpenPinEditor, vehiclePhotoUrl, onVehiclePlate, onVehiclePhoto, customerInfo, onSaveCustomerInfo, onChangeDate, customCatLabels, onAddCustomCatLabel, onRemoveCustomCatLabel }) {
   const aggData = agg(session);
   const [vehicleModalOpen, setVehicleModalOpen] = useState(false);
   const [bankModalOpen, setBankModalOpen] = useState(false);
@@ -855,25 +855,44 @@ function RecordView({ session, activeCat, input, onInput, onCommit, onPickCat, o
           })}
         </div>
       )}
+      {/* Custom cat presets */}
+      {customCatLabels && customCatLabels.length > 0 && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
+          {customCatLabels.map(lbl => {
+            const isActive = activeCat === 'custom' && customLabel === lbl;
+            return (
+              <div key={lbl} style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
+                <button onClick={() => { onCustomLabelChange(lbl); onPickCat('custom'); }} style={{ padding: '6px 12px', borderRadius: '16px 0 0 16px', border: isActive ? 'none' : '1px solid #E4D7BC', borderRight: 'none', background: isActive ? '#7C8C9A' : '#fff', color: isActive ? '#fff' : '#4A3526', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>{lbl}</button>
+                {onRemoveCustomCatLabel && <button onClick={() => onRemoveCustomCatLabel(lbl)} style={{ padding: '6px 8px', borderRadius: '0 16px 16px 0', border: isActive ? 'none' : '1px solid #E4D7BC', background: isActive ? '#7C8C9A' : '#fff', color: isActive ? '#ddd' : '#C0B09A', fontSize: 11, cursor: 'pointer', lineHeight: 1 }}>✕</button>}
+              </div>
+            );
+          })}
+        </div>
+      )}
       {(() => {
         const d = aggData['custom'];
         const active = activeCat === 'custom';
         return (
-          <button onClick={() => onPickCat('custom')} style={{ width: '100%', border: active ? `2px solid ${customCat.accent}` : '1px solid #E4D7BC', background: active ? '#FFFDF8' : '#FBF6EC', borderRadius: 12, padding: '10px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, boxShadow: active ? `0 4px 12px ${customCat.accent}40` : 'none' }}>
-            <span style={{ width: 8, height: 8, borderRadius: '50%', background: customCat.accent, display: 'inline-block', flexShrink: 0 }} />
-            <input
-              value={customLabel}
-              onChange={e => onCustomLabelChange(e.target.value)}
-              onFocus={() => onPickCat('custom')}
-              onClick={e => e.stopPropagation()}
-              placeholder="พิมชื่อหมวดเอง…"
-              style={{ flex: 1, border: 'none', background: 'transparent', fontSize: 13, fontWeight: 600, color: '#4A3526', outline: 'none', cursor: 'text', fontFamily: 'inherit', minWidth: 0 }}
-            />
-            <div style={{ textAlign: 'right', flexShrink: 0 }}>
-              <div style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 16 }}>{fmtKg(d.kg)}</div>
-              <div style={{ fontSize: 10, opacity: .7 }}>{d.count} เข่ง</div>
-            </div>
-          </button>
+          <div style={{ display: 'flex', alignItems: 'stretch', gap: 6, marginBottom: 16 }}>
+            <button onClick={() => onPickCat('custom')} style={{ flex: 1, border: active ? `2px solid ${customCat.accent}` : '1px solid #E4D7BC', background: active ? '#FFFDF8' : '#FBF6EC', borderRadius: 12, padding: '10px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, boxShadow: active ? `0 4px 12px ${customCat.accent}40` : 'none' }}>
+              <span style={{ width: 8, height: 8, borderRadius: '50%', background: customCat.accent, display: 'inline-block', flexShrink: 0 }} />
+              <input
+                value={customLabel}
+                onChange={e => onCustomLabelChange(e.target.value)}
+                onFocus={() => onPickCat('custom')}
+                onClick={e => e.stopPropagation()}
+                placeholder="พิมชื่อหมวดเอง…"
+                style={{ flex: 1, border: 'none', background: 'transparent', fontSize: 13, fontWeight: 600, color: '#4A3526', outline: 'none', cursor: 'text', fontFamily: 'inherit', minWidth: 0 }}
+              />
+              <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                <div style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 16 }}>{fmtKg(d.kg)}</div>
+                <div style={{ fontSize: 10, opacity: .7 }}>{d.count} เข่ง</div>
+              </div>
+            </button>
+            {onAddCustomCatLabel && customLabel.trim() && !(customCatLabels||[]).includes(customLabel.trim()) && (
+              <button onClick={() => onAddCustomCatLabel(customLabel.trim())} title="บันทึกชื่อหมวดนี้" style={{ border: '1px solid #E4D7BC', background: '#FBF6EC', borderRadius: 12, padding: '0 12px', fontSize: 18, cursor: 'pointer', color: '#7C8C9A' }}>📌</button>
+            )}
+          </div>
         );
       })()}
 
@@ -2349,7 +2368,7 @@ function SaleNewView({ onStart, onGoBack, defaultRecorder }) {
 }
 
 // ─── Sale Record View ─────────────────────────────────────────────────────────
-function SaleRecordView({ saleSession, activeCat, input, onInput, onCommit, onPickCat, onGoBack, onGoSummary, onEditEntry, pinnedCats, onOpenPinEditor, onCustomLabelChange, onEditCustomer, onChangeDate }) {
+function SaleRecordView({ saleSession, activeCat, input, onInput, onCommit, onPickCat, onGoBack, onGoSummary, onEditEntry, pinnedCats, onOpenPinEditor, onCustomLabelChange, onEditCustomer, onChangeDate, customCatLabels, onAddCustomCatLabel, onRemoveCustomCatLabel }) {
   const entries = saleSession?.entries || [];
   const aggData = {};
   CATS.forEach(c => { aggData[c.key] = { kg: 0, count: 0 }; });
@@ -2453,26 +2472,46 @@ function SaleRecordView({ saleSession, activeCat, input, onInput, onCommit, onPi
         </div>
       )}
 
+      {/* Custom cat presets */}
+      {customCatLabels && customCatLabels.length > 0 && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
+          {customCatLabels.map(lbl => {
+            const isActive = activeCat === 'custom' && customLabel === lbl;
+            return (
+              <div key={lbl} style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
+                <button onClick={() => { onCustomLabelChange(lbl); onPickCat('custom'); }} style={{ padding: '6px 12px', borderRadius: '16px 0 0 16px', border: isActive ? 'none' : '1px solid #E4D7BC', borderRight: 'none', background: isActive ? '#7C8C9A' : '#fff', color: isActive ? '#fff' : '#4A3526', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>{lbl}</button>
+                {onRemoveCustomCatLabel && <button onClick={() => onRemoveCustomCatLabel(lbl)} style={{ padding: '6px 8px', borderRadius: '0 16px 16px 0', border: isActive ? 'none' : '1px solid #E4D7BC', background: isActive ? '#7C8C9A' : '#fff', color: isActive ? '#ddd' : '#C0B09A', fontSize: 11, cursor: 'pointer', lineHeight: 1 }}>✕</button>}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
       {/* Custom cat row */}
       {(() => {
         const d = aggData['custom'];
         const active = activeCat === 'custom';
         return (
-          <button onClick={() => onPickCat('custom')} style={{ width: '100%', border: active ? `2px solid ${customCat.accent}` : '1px solid #E4D7BC', background: active ? '#FFFDF8' : '#FBF6EC', borderRadius: 12, padding: '10px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, boxShadow: active ? `0 4px 12px ${customCat.accent}40` : 'none' }}>
-            <span style={{ width: 8, height: 8, borderRadius: '50%', background: customCat.accent, display: 'inline-block', flexShrink: 0 }} />
-            <input
-              value={customLabel}
-              onChange={e => onCustomLabelChange(e.target.value)}
-              onFocus={() => onPickCat('custom')}
-              onClick={e => e.stopPropagation()}
-              placeholder="พิมชื่อหมวดเอง…"
-              style={{ flex: 1, border: 'none', background: 'transparent', fontSize: 13, fontWeight: 600, color: '#4A3526', outline: 'none', cursor: 'text', fontFamily: 'inherit', minWidth: 0 }}
-            />
-            <div style={{ textAlign: 'right', flexShrink: 0 }}>
-              <div style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 16 }}>{fmtKg(d.kg)}</div>
-              <div style={{ fontSize: 10, opacity: .7 }}>{d.count} เข่ง</div>
-            </div>
-          </button>
+          <div style={{ display: 'flex', alignItems: 'stretch', gap: 6, marginBottom: 16 }}>
+            <button onClick={() => onPickCat('custom')} style={{ flex: 1, border: active ? `2px solid ${customCat.accent}` : '1px solid #E4D7BC', background: active ? '#FFFDF8' : '#FBF6EC', borderRadius: 12, padding: '10px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, boxShadow: active ? `0 4px 12px ${customCat.accent}40` : 'none' }}>
+              <span style={{ width: 8, height: 8, borderRadius: '50%', background: customCat.accent, display: 'inline-block', flexShrink: 0 }} />
+              <input
+                value={customLabel}
+                onChange={e => onCustomLabelChange(e.target.value)}
+                onFocus={() => onPickCat('custom')}
+                onClick={e => e.stopPropagation()}
+                placeholder="พิมชื่อหมวดเอง…"
+                style={{ flex: 1, border: 'none', background: 'transparent', fontSize: 13, fontWeight: 600, color: '#4A3526', outline: 'none', cursor: 'text', fontFamily: 'inherit', minWidth: 0 }}
+              />
+              <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                <div style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 16 }}>{fmtKg(d.kg)}</div>
+                <div style={{ fontSize: 10, opacity: .7 }}>{d.count} เข่ง</div>
+              </div>
+            </button>
+            {onAddCustomCatLabel && customLabel.trim() && !(customCatLabels||[]).includes(customLabel.trim()) && (
+              <button onClick={() => onAddCustomCatLabel(customLabel.trim())} title="บันทึกชื่อหมวดนี้" style={{ border: '1px solid #E4D7BC', background: '#FBF6EC', borderRadius: 12, padding: '0 12px', fontSize: 18, cursor: 'pointer', color: '#7C8C9A' }}>📌</button>
+            )}
+          </div>
         );
       })()}
 
@@ -4004,6 +4043,7 @@ export default function App() {
 
   const [supervisors, setSupervisors] = useState({});
   const [supervisorNames, setSupervisorNames] = useState([]);
+  const [customCatLabels, setCustomCatLabels] = useState([]);
   const [activeSupervisor, setActiveSupervisor] = useState(null);
   const [pinnedCats, setPinnedCats] = useState([]);
   const [pinEditorOpen, setPinEditorOpen] = useState(false);
@@ -4192,6 +4232,10 @@ export default function App() {
     db.getSetting('supervisor_names').then(remote => {
       if (!Array.isArray(remote)) return;
       setSupervisorNames(remote);
+    }).catch(() => {});
+    db.getSetting('custom_cat_labels').then(remote => {
+      if (!Array.isArray(remote)) return;
+      setCustomCatLabels(remote);
     }).catch(() => {});
     const m = (window.location.hash || '').match(/bill=([^&]+)/);
     if (m) {
@@ -4523,6 +4567,24 @@ export default function App() {
       if (prev.includes(name.trim())) return prev;
       const next = [...prev, name.trim()];
       db.saveSetting('supervisor_names', next).catch(() => {});
+      return next;
+    });
+  }, []);
+
+  const handleAddCustomCatLabel = useCallback((label) => {
+    if (!label.trim()) return;
+    setCustomCatLabels(prev => {
+      if (prev.includes(label.trim())) return prev;
+      const next = [...prev, label.trim()];
+      db.saveSetting('custom_cat_labels', next).catch(() => {});
+      return next;
+    });
+  }, []);
+
+  const handleRemoveCustomCatLabel = useCallback((label) => {
+    setCustomCatLabels(prev => {
+      const next = prev.filter(l => l !== label);
+      db.saveSetting('custom_cat_labels', next).catch(() => {});
       return next;
     });
   }, []);
@@ -4980,7 +5042,8 @@ export default function App() {
             vehiclePhotoUrl={vehiclePhotoUrl} onVehiclePlate={handleVehiclePlate} onVehiclePhoto={handleVehiclePhoto}
             customerInfo={customerInfo}
             onSaveCustomerInfo={(phone, info) => { const next = { ...storage.loadCustomerInfo(), [phone]: info }; storage.saveCustomerInfo(next); setCustomerInfo(next); db.upsertCustomerInfo(phone, info).catch(() => {}); }}
-            onChangeDate={handleChangeDate} />
+            onChangeDate={handleChangeDate}
+            customCatLabels={customCatLabels} onAddCustomCatLabel={handleAddCustomCatLabel} onRemoveCustomCatLabel={handleRemoveCustomCatLabel} />
         ) : <Navigate to="/" replace />} />
         <Route path="/summary" element={session ? (
           <SummaryView session={session} logOpen={logOpen}
@@ -5016,7 +5079,8 @@ export default function App() {
             pinnedCats={pinnedCats} onOpenPinEditor={() => setPinEditorOpen(true)}
             onCustomLabelChange={label => setSaleSession(prev => ({ ...prev, customLabel: label }))}
             onEditCustomer={() => setSaleCustomerModal(true)}
-            onChangeDate={ms => setSaleSession(prev => ({ ...prev, date: ms }))} />
+            onChangeDate={ms => setSaleSession(prev => ({ ...prev, date: ms }))}
+            customCatLabels={customCatLabels} onAddCustomCatLabel={handleAddCustomCatLabel} onRemoveCustomCatLabel={handleRemoveCustomCatLabel} />
         ) : <Navigate to="/" replace />} />
         <Route path="/sale/summary" element={saleSession ? (
           <SaleSummaryView saleSession={saleSession} customLabel={saleSession?.customLabel || ''}
