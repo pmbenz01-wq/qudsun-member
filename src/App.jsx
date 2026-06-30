@@ -3981,45 +3981,23 @@ export default function App() {
     if (s) { setSession(s); if (s.vehiclePhotoKey) loadPhoto(s.vehiclePhotoKey).then(u => { if (u) setVehiclePhotoUrl(u); }); }
 
     db.getPayments().then(remote => {
-      const local = storage.loadPayments();
-      const merged = { ...local };
-      for (const [bn, rp] of Object.entries(remote)) {
-        const lp = local[bn] || {};
-        merged[bn] = { ...lp, ...rp, receiptUrl: rp.receiptUrl || lp.receiptUrl || null, slipUrl: rp.slipUrl || lp.slipUrl || null, vehicleUrl: rp.vehicleUrl || lp.vehicleUrl || null };
-      }
-      storage.savePayments(merged);
-      setPayments(merged);
+      storage.savePayments(remote); setPayments(remote);
     }).catch(() => {});
     db.getVehiclePlates().then(remote => {
-      const merged = { ...storage.loadVehiclePlates(), ...remote };
-      storage.saveVehiclePlates(merged);
-      setVehiclePlates(merged);
+      storage.saveVehiclePlates(remote); setVehiclePlates(remote);
     }).catch(() => {});
     db.getCustomerInfo().then(remote => {
-      const merged = { ...remote, ...storage.loadCustomerInfo() };
-      storage.saveCustomerInfo(merged);
-      setCustomerInfo(merged);
+      storage.saveCustomerInfo(remote); setCustomerInfo(remote);
     }).catch(() => {});
     db.getSales().then(remote => {
-      const local = storage.loadSales();
-      const remoteIds = new Set(remote.map(s => s.id));
-      const localOnly = local.filter(s => !remoteIds.has(s.id));
-      const merged = [...remote, ...localOnly];
-      storage.saveSales(merged); setSales(merged);
+      storage.saveSales(remote); setSales(remote);
     }).catch(() => {});
     db.getVerified().then(remote => {
-      const merged = { ...remote, ...storage.loadVerified() };
-      storage.saveVerified(merged); setVerified(merged);
+      storage.saveVerified(remote); setVerified(remote);
     }).catch(() => {});
     db.getBills().then(remoteBills => {
       if (!remoteBills?.length) return;
-      const remoteNos = new Set(remoteBills.map(b => b.billNo));
-      const deleted = storage.loadDeletedBills();
-      const local = storage.loadHistory();
-      const localOnly = local.filter(h => h?.billNo && !remoteNos.has(h.billNo) && !deleted.has(h.billNo));
-      const merged = [...remoteBills, ...localOnly];
-      storage.saveHistory(merged); setHistory(merged);
-      // Also derive supervisor map from bills
+      storage.saveHistory(remoteBills); setHistory(remoteBills);
     }).catch(() => {});
     db.getSaleSessions().then(remoteSessions => {
       if (!remoteSessions?.length) return;
@@ -4029,26 +4007,15 @@ export default function App() {
         const totalBaht = (s.entries || []).reduce((sum, e) => sum + (e.kg || 0) * ((s.prices || {})[e.cat] || 0), 0);
         return { billNo: s.billNo, date: s.date, customerName: s.customerName || '', customerPhone: s.customerPhone || '', kg: totalKg || s.kg || 0, baht: totalBaht || s.baht || 0 };
       });
-      const local = storage.loadSaleHistory();
-      const remoteNos = new Set(summaries.map(s => s.billNo));
-      const localOnly = local.filter(s => s.billNo && !remoteNos.has(s.billNo));
-      const merged = [...summaries, ...localOnly].sort((a, b) => (b.date || 0) - (a.date || 0));
-      storage.saveSaleHistory(merged); setSaleHistory(merged);
+      storage.saveSaleHistory(summaries); setSaleHistory(summaries);
     }).catch(() => {});
-    // Sync accounts + employees from Supabase app settings
     db.getSetting('accounts').then(remote => {
       if (!Array.isArray(remote)) return;
-      const local = storage.loadAccounts();
-      const merged = [...new Set([...remote, ...local])];
-      storage.saveAccounts(merged); setAccounts(merged);
+      storage.saveAccounts(remote); setAccounts(remote);
     }).catch(() => {});
     db.getSetting('employees').then(remote => {
       if (!Array.isArray(remote) || !remote.length) return;
-      const local = storage.loadEmployees();
-      const remotePins = new Set(remote.map(e => e.pin));
-      const localOnly = local.filter(e => e.pin && !remotePins.has(e.pin));
-      const merged = [...remote, ...localOnly];
-      storage.saveEmployees(merged); setEmployees(merged);
+      storage.saveEmployees(remote); setEmployees(remote);
     }).catch(() => {});
     db.getSetting('supervisors').then(remote => {
       if (!remote || typeof remote !== 'object') return;
