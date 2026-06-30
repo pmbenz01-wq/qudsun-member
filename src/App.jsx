@@ -3191,7 +3191,7 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
   const [tab, setTab] = React.useState('calendar');
   const [calYear, setCalYear] = React.useState(nowRef.getFullYear());
   const [calMonth, setCalMonth] = React.useState(nowRef.getMonth());
-  const [selectedDay, setSelectedDay] = React.useState(nowRef.getDate());
+  const [selectedDay, setSelectedDay] = React.useState(null);
   const [dayBonus, setDayBonus] = React.useState(0);
   const [dayRate, setDayRate] = React.useState(1);
   const [baseRate, setBaseRate] = React.useState(200);
@@ -3301,18 +3301,36 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
     } else { setDayBonus(0); setDayRate(commissionRate); }
   }, [selectedDay, selEarning?.id]);
 
+  // Auto-save when user clicks a day that hasn't been saved yet
+  React.useEffect(() => {
+    if (!selectedDay || loadingBills || selEarning) return;
+    const mm = String(calMonth+1).padStart(2,'0');
+    const dd = String(selectedDay).padStart(2,'0');
+    db.saveEarning({ supervisor_name: supervisorName, date: `${calYear}-${mm}-${dd}`, base: baseRate, commission_kg: selKg, commission_baht: selCommission, bonus: 0, total: baseRate + selCommission })
+      .then(() => loadLedger()).catch(() => {});
+  }, [selectedDay, loadingBills]);
+
   const totalEarned = React.useMemo(() => {
-    const workDays = new Set();
+    const workDayKeys = new Set();
     let totalKg = 0;
     allTimeBills.forEach(b => {
       if (!b.date) return;
       const ms = typeof b.date === 'number' ? (b.date > 1e12 ? b.date : b.date * 1000) : new Date(b.date).getTime();
       const d = new Date(ms);
-      workDays.add(`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`);
+      workDayKeys.add(`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`);
       totalKg += parseNum(b.kg);
     });
-    const totalBonuses = earnings.reduce((s, e) => s + (e.bonus || 0), 0);
-    return workDays.size * baseRate + Math.round(totalKg * commissionRate) + totalBonuses;
+    let total = workDayKeys.size * baseRate + Math.round(totalKg * commissionRate);
+    earnings.forEach(e => {
+      const ed = new Date(e.date + 'T12:00:00');
+      const key = `${ed.getFullYear()}-${ed.getMonth()}-${ed.getDate()}`;
+      if (!workDayKeys.has(key)) {
+        total += (e.base || 0) + (e.commission_baht || 0) + (e.bonus || 0);
+      } else {
+        total += (e.bonus || 0);
+      }
+    });
+    return total;
   }, [allTimeBills, baseRate, commissionRate, earnings]);
   const totalPaid = payments.reduce((s, p) => s + (p.amount || 0), 0);
   const balance = totalEarned - totalPaid;
@@ -3592,20 +3610,19 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
                 </div>
               )}
 
-              {/* Bonus input */}
-              <div style={{ marginBottom: 12 }}>
-                <div style={{ fontSize: 12, color: '#9A8662', marginBottom: 5 }}>โบนัสเพิ่มเติม (฿)</div>
-                <input type="number" value={dayBonus} onChange={e => setDayBonus(Number(e.target.value)||0)} placeholder="0" style={{ width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 10, padding: '10px 14px', fontSize: 16, color: '#3F2D1E', outline: 'none', boxSizing: 'border-box' }} />
-              </div>
-
               {/* Total */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#F5EFE4', borderRadius: 12, padding: '10px 14px', marginBottom: 14 }}>
-                <span style={{ fontSize: 12, color: '#9A8662' }}>฿{baseRate} + ฿{selCommission} + ฿{dayBonus}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#F5EFE4', borderRadius: 12, padding: '10px 14px', marginBottom: 12 }}>
+                <span style={{ fontSize: 12, color: '#9A8662' }}>฿{baseRate} + ฿{selCommission}{dayBonus > 0 ? ` + ฿${dayBonus}` : ''}</span>
                 <span style={{ fontSize: 20, fontWeight: 700, color: '#5B3A29' }}>฿{selTotal.toLocaleString()}</span>
               </div>
 
-              {/* Actions */}
-              <button onClick={async () => { await handleSaveDayEarning(); setSelectedDay(null); }} disabled={saving} style={{ width: '100%', background: '#DC743C', color: '#fff', border: 'none', borderRadius: 12, padding: '13px 0', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>{saving ? '...' : '✅ บันทึก'}</button>
+              {/* Bonus inline edit */}
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 12 }}>
+                <span style={{ fontSize: 12, color: '#9A8662', flexShrink: 0 }}>🎁 โบนัส</span>
+                <input type="number" value={dayBonus} onChange={e => setDayBonus(Number(e.target.value)||0)} placeholder="0" style={{ flex: 1, border: '1.5px solid #E4D7BC', borderRadius: 8, padding: '7px 10px', fontSize: 14, color: '#3F2D1E', outline: 'none' }} />
+                <button onClick={async () => { await handleSaveDayEarning(); }} disabled={saving} style={{ background: '#DC743C', color: '#fff', border: 'none', borderRadius: 8, padding: '7px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>{saving ? '...' : '💾'}</button>
+                {selEarning && <button onClick={async () => { try { await db.deleteEarning(selEarning.id); await loadLedger(); setSelectedDay(null); } catch {} }} style={{ background: 'none', border: '1px solid #E4D7BC', borderRadius: 8, padding: '7px 10px', fontSize: 13, color: '#9A8662', cursor: 'pointer' }}>🗑️</button>}
+              </div>
             </>)}
           </div>
         </div>
