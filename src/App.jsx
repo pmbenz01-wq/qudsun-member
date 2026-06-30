@@ -3350,7 +3350,7 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
                 const isToday = day === nowRef.getDate() && calMonth === nowRef.getMonth() && calYear === nowRef.getFullYear();
                 const hasData = earning || kg > 0;
                 return (
-                  <button key={day} onClick={() => setSelectedDay(day)} style={{ borderRadius: 8, border: isSelected ? '2px solid #5B3A29' : earning ? '2px solid #DC743C' : kg > 0 ? '1.5px solid #A8D5A2' : '1px solid #E4D7BC', background: isSelected ? '#5B3A29' : earning ? '#FFF3E0' : kg > 0 ? '#F0FFF4' : '#FAFAFA', padding: '3px 2px', cursor: 'pointer', minHeight: 48, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+                  <button key={day} onClick={() => setSelectedDay(d => d === day ? null : day)} style={{ borderRadius: 8, border: isSelected ? '2px solid #5B3A29' : earning ? '2px solid #DC743C' : kg > 0 ? '1.5px solid #A8D5A2' : '1px solid #E4D7BC', background: isSelected ? '#5B3A29' : earning ? '#FFF3E0' : kg > 0 ? '#F0FFF4' : '#FAFAFA', padding: '3px 2px', cursor: 'pointer', minHeight: 48, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
                     <div style={{ fontSize: 12, fontWeight: hasData || isToday ? 700 : 400, color: isSelected ? '#fff' : earning ? '#E65100' : isToday ? '#5B3A29' : '#4A3526' }}>{day}</div>
                     {!isSelected && earning && <div style={{ fontSize: 9, color: '#E65100', fontWeight: 700, lineHeight: 1 }}>฿{(earning.total||0).toLocaleString()}</div>}
                     {!isSelected && !earning && kg > 0 && <div style={{ fontSize: 9, color: '#2E7D32', fontWeight: 700, lineHeight: 1 }}>฿{calcTotal.toLocaleString()}</div>}
@@ -3364,50 +3364,46 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
             </div>
           </div>
 
-          {/* Selected day detail */}
-          <div style={{ background: '#fff', borderRadius: 14, border: '1px solid #E4D7BC', padding: 14 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-              <div style={{ fontWeight: 700, fontSize: 14, color: '#2A2118' }}>📅 {selectedDay} {MONTH_TH[calMonth]} {calYear + 543}</div>
-              {selEarning && <span style={{ fontSize: 11, color: '#DC743C', fontWeight: 600 }}>✅ บันทึกแล้ว</span>}
+        </div>
+      )}
+
+      {/* Day detail modal */}
+      {tab === 'calendar' && selectedDay && (
+        <div onClick={() => setSelectedDay(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 100, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 480, maxHeight: '85vh', overflowY: 'auto', padding: '16px 16px 32px' }}>
+            {/* Modal header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 15, color: '#2A2118' }}>📅 {selectedDay} {MONTH_TH[calMonth]} {calYear + 543}</div>
+                {selEarning && <div style={{ fontSize: 11, color: '#DC743C', fontWeight: 600, marginTop: 2 }}>✅ บันทึกแล้ว</div>}
+              </div>
+              <button onClick={() => setSelectedDay(null)} style={{ width: 30, height: 30, borderRadius: '50%', border: 'none', background: '#F0EAE0', fontSize: 16, cursor: 'pointer', color: '#5B3A29', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
             </div>
-            {loadingBills ? <div style={{ textAlign: 'center', padding: 12, color: '#9A8662', fontSize: 12 }}>กำลังโหลด...</div> : (<>
-              <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+
+            {loadingBills ? <div style={{ textAlign: 'center', padding: 24, color: '#9A8662', fontSize: 13 }}>กำลังโหลด...</div> : (<>
+              {/* Summary row */}
+              <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
                 <div style={{ flex: 1, background: '#FFF8EE', borderRadius: 10, padding: '8px 10px' }}>
-                  <div style={{ fontSize: 10, color: '#9A8662' }}>ยอดกิโล (auto)</div>
-                  <div style={{ fontSize: 16, fontWeight: 700, color: '#E65100' }}>{selKg % 1 === 0 ? selKg : selKg.toFixed(1)} กก.</div>
-                  <div style={{ fontSize: 9, color: '#C0A88A' }}>{selBills.length} บิล</div>
+                  <div style={{ fontSize: 10, color: '#9A8662' }}>ยอดกิโล ({selBills.length} บิล)</div>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: '#E65100' }}>{selKg % 1 === 0 ? selKg : selKg.toFixed(1)} กก.</div>
                 </div>
                 <div style={{ flex: 1, background: '#F0FFF4', borderRadius: 10, padding: '8px 10px' }}>
-                  <div style={{ fontSize: 10, color: '#9A8662' }}>ค่าคอม</div>
-                  <div style={{ fontSize: 16, fontWeight: 700, color: '#2E7D32' }}>฿{selCommission.toLocaleString()}</div>
+                  <div style={{ fontSize: 10, color: '#9A8662' }}>ค่าคอม ({dayRate}฿/กก.)</div>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: '#2E7D32' }}>฿{selCommission.toLocaleString()}</div>
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 3 }}>฿/กก.</div>
-                  <input type="number" value={dayRate} onChange={e => setDayRate(Number(e.target.value)||0)} style={{ width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 8, padding: '7px 10px', fontSize: 14, fontWeight: 600, color: '#2E7D32', outline: 'none', boxSizing: 'border-box' }} />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 3 }}>โบนัส (฿)</div>
-                  <input type="number" value={dayBonus} onChange={e => setDayBonus(Number(e.target.value)||0)} placeholder="0" style={{ width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 8, padding: '7px 10px', fontSize: 14, color: '#3F2D1E', outline: 'none', boxSizing: 'border-box' }} />
-                </div>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#F5EFE4', borderRadius: 10, padding: '8px 12px', marginBottom: 10 }}>
-                <span style={{ fontSize: 11, color: '#9A8662' }}>฿{baseRate} + ฿{selCommission} + ฿{dayBonus}</span>
-                <span style={{ fontSize: 18, fontWeight: 700, color: '#5B3A29' }}>฿{selTotal.toLocaleString()}</span>
-              </div>
+
+              {/* Bill list */}
               {selBills.length > 0 && (
-                <div style={{ marginBottom: 10 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: '#9A8662', marginBottom: 6 }}>📋 บิลที่นับค่าคอม ({selBills.length} บิล)</div>
-                  <div style={{ borderRadius: 10, border: '1px solid #E4D7BC', overflow: 'hidden' }}>
-                    {selBills.map((b, idx) => {
-                      const fullCard = history.find(h => h.billNo === b.billNo);
-                      const clickable = !!fullCard && !!onOpenHistory;
-                      return (
+                <div style={{ marginBottom: 12, borderRadius: 10, border: '1px solid #E4D7BC', overflow: 'hidden' }}>
+                  {selBills.map((b, idx) => {
+                    const fullCard = history.find(h => h.billNo === b.billNo);
+                    const clickable = !!fullCard && !!onOpenHistory;
+                    return (
                       <button key={b.billNo || idx} onClick={() => clickable && onOpenHistory(fullCard)}
-                        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7px 12px', background: idx % 2 === 0 ? '#FAFAF8' : '#fff', borderBottom: idx < selBills.length - 1 ? '1px solid #F0E8DC' : 'none', width: '100%', border: 'none', cursor: clickable ? 'pointer' : 'default', textAlign: 'left' }}>
+                        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: idx % 2 === 0 ? '#FAFAF8' : '#fff', borderBottom: idx < selBills.length - 1 ? '1px solid #F0E8DC' : 'none', width: '100%', border: 'none', cursor: clickable ? 'pointer' : 'default', textAlign: 'left' }}>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 12, fontWeight: 600, color: '#3F2D1E', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.seller || '—'}</div>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: '#3F2D1E', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.seller || '—'}</div>
                           <div style={{ fontSize: 10, color: '#B0966A' }}>#{b.billNo}</div>
                         </div>
                         <div style={{ textAlign: 'right', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -3415,18 +3411,28 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
                             <div style={{ fontSize: 12, fontWeight: 700, color: '#E65100' }}>{parseNum(b.kg) % 1 === 0 ? parseNum(b.kg) : parseNum(b.kg).toFixed(1)} กก.</div>
                             <div style={{ fontSize: 10, color: '#2E7D32' }}>+฿{Math.round(parseNum(b.kg) * dayRate)}</div>
                           </div>
-                          {clickable && <span style={{ color: '#C9A24B', fontSize: 14 }}>›</span>}
+                          {clickable && <span style={{ color: '#C9A24B', fontSize: 16 }}>›</span>}
                         </div>
                       </button>
-                      );
-                    })}
-                  </div>
+                    );
+                  })}
                 </div>
               )}
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button onClick={handleSaveDayEarning} disabled={saving} style={{ flex: 1, background: '#DC743C', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 0', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>{saving ? '...' : '✅ บันทึก'}</button>
-                <button onClick={() => setShowSlip(true)} style={{ flex: 1, background: '#5B3A29', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 0', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>🧾 ออกบิล</button>
+
+              {/* Bonus input */}
+              <div style={{ marginBottom: 12 }}>
+                <div style={{ fontSize: 12, color: '#9A8662', marginBottom: 5 }}>โบนัสเพิ่มเติม (฿)</div>
+                <input type="number" value={dayBonus} onChange={e => setDayBonus(Number(e.target.value)||0)} placeholder="0" style={{ width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 10, padding: '10px 14px', fontSize: 16, color: '#3F2D1E', outline: 'none', boxSizing: 'border-box' }} />
               </div>
+
+              {/* Total */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#F5EFE4', borderRadius: 12, padding: '10px 14px', marginBottom: 14 }}>
+                <span style={{ fontSize: 12, color: '#9A8662' }}>฿{baseRate} + ฿{selCommission} + ฿{dayBonus}</span>
+                <span style={{ fontSize: 20, fontWeight: 700, color: '#5B3A29' }}>฿{selTotal.toLocaleString()}</span>
+              </div>
+
+              {/* Actions */}
+              <button onClick={async () => { await handleSaveDayEarning(); setSelectedDay(null); }} disabled={saving} style={{ width: '100%', background: '#DC743C', color: '#fff', border: 'none', borderRadius: 12, padding: '13px 0', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>{saving ? '...' : '✅ บันทึก'}</button>
             </>)}
           </div>
         </div>
