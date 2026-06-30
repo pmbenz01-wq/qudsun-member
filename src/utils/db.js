@@ -332,6 +332,25 @@ export const db = {
     }));
   },
 
+  async fetchSupervisorBillStats() {
+    const { data, error } = await supabase
+      .from('qm_bills')
+      .select('supervisor, kg')
+      .eq('deleted', false)
+      .not('supervisor', 'is', null)
+      .neq('supervisor', '');
+    if (error) throw error;
+    const stats = {};
+    for (const row of data) {
+      const name = row.supervisor;
+      if (!name) continue;
+      if (!stats[name]) stats[name] = { kg: 0, count: 0 };
+      stats[name].kg += parseFloat(String(row.kg || '').replace(/,/g, '')) || 0;
+      stats[name].count += 1;
+    }
+    return stats;
+  },
+
   // ─── Supervisor Earnings ──────────────────────────────────────────────────
   async saveEarning(earning) {
     const { error } = await supabase.from('qm_sup_earnings').upsert(earning, { onConflict: 'supervisor_name,date' });

@@ -3009,6 +3009,7 @@ function CustomersView({ history, verified, onGoHome, onOpenCustomer, onDeleteCu
 // ─── SupervisorsView ──────────────────────────────────────────────────────────
 function SupervisorsView({ supervisors, history, onGoHome, onOpenSupervisor, onDeleteSupervisor, pin, isEmployee }) {
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [billStats, setBillStats] = React.useState({});
   const supMap = {};
   Object.entries(supervisors || {}).forEach(([phone, name]) => {
     if (!name) return;
@@ -3016,7 +3017,10 @@ function SupervisorsView({ supervisors, history, onGoHome, onOpenSupervisor, onD
     supMap[name].push(phone);
   });
   const list = Object.entries(supMap).sort((a, b) => b[1].length - a[1].length);
-  const customers = loadCustomers(history);
+
+  React.useEffect(() => {
+    db.fetchSupervisorBillStats().then(setBillStats).catch(() => {});
+  }, []);
 
   return (
     <div style={{ flex: 1, maxWidth: 720, width: '100%', margin: '0 auto', padding: '14px 14px 40px' }}>
@@ -3028,14 +3032,14 @@ function SupervisorsView({ supervisors, history, onGoHome, onOpenSupervisor, onD
       {list.length === 0 && <div style={{ textAlign: 'center', color: '#B7A684', fontSize: 14, marginTop: 40 }}>ยังไม่มีผู้ดูแล — กำหนดผู้ดูแลได้ในหน้าข้อมูลผู้ขาย</div>}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {list.map(([name, phones]) => {
-          const totalKg = phones.reduce((s, p) => s + (customers[p]?.totalKg || 0), 0);
+          const stat = billStats[name] || {};
           return (
             <div key={name} style={{ border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 14, overflow: 'hidden' }}>
               <button onClick={() => onOpenSupervisor(name)} style={{ textAlign: 'left', background: 'none', border: 'none', width: '100%', padding: '14px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{ width: 44, height: 44, borderRadius: 12, background: 'linear-gradient(135deg,#5C4326,#3F2D1E)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>🧑‍💼</div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontWeight: 600, fontSize: 15, color: '#4A3526' }}>{name}</div>
-                  <div style={{ fontSize: 12, color: '#9A8662', marginTop: 2 }}>{phones.length} ลูกค้า · รวม {fmtKg(totalKg)} กก.</div>
+                  <div style={{ fontSize: 12, color: '#9A8662', marginTop: 2 }}>{phones.length} ลูกค้า · รวม {fmtKg(stat.kg || 0)} กก. · {stat.count || 0} บิล</div>
                 </div>
                 <span style={{ color: '#C9A24B', fontSize: 18 }}>›</span>
               </button>
