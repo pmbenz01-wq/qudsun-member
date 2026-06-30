@@ -3197,6 +3197,7 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
   const [payAmount, setPayAmount] = React.useState('');
   const [payNote, setPayNote] = React.useState('');
   const [showSlip, setShowSlip] = React.useState(false);
+  const [showPaySlip, setShowPaySlip] = React.useState(false);
 
   React.useEffect(() => {
     db.getSetting('sup_base_rates').then(v => {
@@ -3337,6 +3338,56 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
 
   if (showSlip) return (
     <SalarySlipPrintView supervisorName={supervisorName} dateLabel={slipDateLabel} bills={selBills} base={baseRate} commission={selCommission} bonus={dayBonus} onBack={() => setShowSlip(false)} />
+  );
+
+  if (showPaySlip) return (
+    <div style={{ minHeight: '100vh', background: '#F5EFE4', padding: 16 }}>
+      <div style={{ maxWidth: 420, margin: '0 auto' }}>
+        <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
+          <button onClick={() => setShowPaySlip(false)} style={{ border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 10, padding: '8px 14px', fontSize: 13, color: '#7A6450', cursor: 'pointer' }}>‹ กลับ</button>
+          <button onClick={() => window.print()} style={{ flex: 1, background: '#5B3A29', color: '#fff', border: 'none', borderRadius: 10, padding: '8px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>🖨️ พิมพ์</button>
+        </div>
+        <div id="pay-slip-print" style={{ background: '#fff', borderRadius: 16, padding: '24px 20px', border: '1px solid #E4D7BC' }}>
+          <div style={{ textAlign: 'center', marginBottom: 16 }}>
+            <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 20, color: '#5B3A29' }}>QUDSUN</div>
+            <div style={{ fontSize: 11, color: '#9A8662', marginTop: 2 }}>ทุเรียนคัดสรร</div>
+            <div style={{ fontWeight: 700, fontSize: 15, color: '#2A2118', marginTop: 10 }}>บิลสรุปการจ่ายเงิน</div>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#5B3A29', marginBottom: 4 }}>
+            <span>ผู้ดูแล</span><span style={{ fontWeight: 700 }}>{supervisorName}</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#9A8662', marginBottom: 16 }}>
+            <span>วันที่พิมพ์</span><span>{new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+          </div>
+          <div style={{ borderTop: '1px solid #E4D7BC', paddingTop: 12, marginBottom: 12 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#9A8662', marginBottom: 6, borderBottom: '1px solid #F0E8DC', paddingBottom: 4 }}>รายการจ่าย</div>
+            {payments.length === 0 ? (
+              <div style={{ fontSize: 12, color: '#B7A684', textAlign: 'center', padding: '8px 0' }}>ยังไม่มีรายการ</div>
+            ) : payments.map((p, i) => (
+              <div key={p.id || i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#4A3526', padding: '4px 0', borderBottom: '1px solid #F5EFE4' }}>
+                <span>{fmtThDate(p.paid_date)}{p.note ? ` · ${p.note}` : ''}</span>
+                <span style={{ fontWeight: 600 }}>฿{(p.amount||0).toLocaleString()}</span>
+              </div>
+            ))}
+          </div>
+          <div style={{ borderTop: '1px solid #E4D7BC', paddingTop: 12 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#4A3526', marginBottom: 4 }}>
+              <span>ยอดสะสมทั้งหมด</span><span>฿{totalEarned.toLocaleString()}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#2E7D32', marginBottom: 4 }}>
+              <span>จ่ายแล้ว</span><span>฿{totalPaid.toLocaleString()}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 16, fontWeight: 700, color: balance > 0 ? '#C0392B' : '#2E7D32', borderTop: '1px solid #E4D7BC', paddingTop: 10, marginTop: 6 }}>
+              <span>ยอดค้าง</span><span>฿{balance.toLocaleString()}</span>
+            </div>
+          </div>
+          <div style={{ marginTop: 32, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            <div style={{ borderTop: '1px solid #9A8662', paddingTop: 6, textAlign: 'center', fontSize: 11, color: '#9A8662' }}>ผู้รับเงิน</div>
+            <div style={{ borderTop: '1px solid #9A8662', paddingTop: 6, textAlign: 'center', fontSize: 11, color: '#9A8662' }}>ผู้จ่าย</div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 
   const TABS = [['calendar','ปฏิทิน'],['earnings','ค่าแรง'],['paid','การจ่าย'],['customers','ลูกค้า']];
@@ -3581,7 +3632,12 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
               </div>
             </div>
           )}
-          {!showPayForm && <button onClick={() => setShowPayForm(true)} style={{ width: '100%', marginBottom: 10, background: '#2E7D32', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 0', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>+ บันทึกจ่ายเงิน</button>}
+          {!showPayForm && (
+            <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+              <button onClick={() => setShowPayForm(true)} style={{ flex: 1, background: '#2E7D32', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 0', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>+ บันทึกจ่ายเงิน</button>
+              <button onClick={() => setShowPaySlip(true)} style={{ background: '#fff', color: '#5B3A29', border: '1px solid #E4D7BC', borderRadius: 10, padding: '10px 14px', fontSize: 13, cursor: 'pointer' }}>🖨️ ออกบิล</button>
+            </div>
+          )}
           {payments.length === 0 && !loadingLedger && <div style={{ textAlign: 'center', color: '#B7A684', padding: 32 }}>ยังไม่มีรายการจ่าย</div>}
           {payments.map(p => (
             <div key={p.id} style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4D7BC', borderLeft: '4px solid #2E7D32', padding: '12px 14px', marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
