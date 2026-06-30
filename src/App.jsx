@@ -2349,7 +2349,7 @@ function SaleNewView({ onStart, onGoBack, defaultRecorder }) {
 }
 
 // ─── Sale Record View ─────────────────────────────────────────────────────────
-function SaleRecordView({ saleSession, activeCat, input, onInput, onCommit, onPickCat, onGoBack, onGoSummary, onEditEntry, pinnedCats, onOpenPinEditor, onCustomLabelChange, onEditCustomer }) {
+function SaleRecordView({ saleSession, activeCat, input, onInput, onCommit, onPickCat, onGoBack, onGoSummary, onEditEntry, pinnedCats, onOpenPinEditor, onCustomLabelChange, onEditCustomer, onChangeDate }) {
   const entries = saleSession?.entries || [];
   const aggData = {};
   CATS.forEach(c => { aggData[c.key] = { kg: 0, count: 0 }; });
@@ -2369,7 +2369,14 @@ function SaleRecordView({ saleSession, activeCat, input, onInput, onCommit, onPi
         <button onClick={onGoBack} style={{ border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 10, padding: '8px 12px', fontSize: 13, color: '#7A6450', cursor: 'pointer' }}>‹ หน้าหลัก</button>
         <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.2 }}>
           <span style={{ fontWeight: 600, fontSize: 14, color: '#4A3526' }}>{saleSession?.billNo}</span>
-          <span style={{ fontSize: 12, color: '#9A8662' }}>{saleSession ? dateStr(saleSession.date) : ''}</span>
+          {onChangeDate ? (
+            <input type="date"
+              value={saleSession?.date ? (() => { const d = new Date(saleSession.date); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })() : ''}
+              onChange={e => { if (e.target.value) { const [y,m,d] = e.target.value.split('-').map(Number); const prev = new Date(saleSession.date); const nd = new Date(y,m-1,d,prev.getHours(),prev.getMinutes(),prev.getSeconds()); onChangeDate(nd.getTime()); } }}
+              style={{ fontSize: 12, color: '#DC743C', border: 'none', background: 'none', padding: 0, cursor: 'pointer', outline: 'none', fontWeight: 600 }} />
+          ) : (
+            <span style={{ fontSize: 12, color: '#9A8662' }}>{saleSession ? dateStr(saleSession.date) : ''}</span>
+          )}
         </div>
       </div>
 
@@ -4983,7 +4990,8 @@ export default function App() {
             onPickCat={setSaleActiveCat} onGoBack={() => navigate('/')} onGoSummary={() => navigate('/sale/summary')} onEditEntry={editSaleEntry}
             pinnedCats={pinnedCats} onOpenPinEditor={() => setPinEditorOpen(true)}
             onCustomLabelChange={label => setSaleSession(prev => ({ ...prev, customLabel: label }))}
-            onEditCustomer={() => setSaleCustomerModal(true)} />
+            onEditCustomer={() => setSaleCustomerModal(true)}
+            onChangeDate={ms => setSaleSession(prev => ({ ...prev, date: ms }))} />
         ) : <Navigate to="/" replace />} />
         <Route path="/sale/summary" element={saleSession ? (
           <SaleSummaryView saleSession={saleSession} customLabel={saleSession?.customLabel || ''}
