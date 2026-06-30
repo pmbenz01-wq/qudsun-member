@@ -3364,6 +3364,41 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
             </div>
           </div>
 
+          {/* Month bill overview */}
+          {monthBills.length > 0 && (
+            <div style={{ background: '#fff', borderRadius: 14, border: '1px solid #E4D7BC', overflow: 'hidden' }}>
+              <div style={{ padding: '10px 14px 8px', borderBottom: '1px solid #F0E8DC', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontWeight: 700, fontSize: 13, color: '#2A2118' }}>📋 บิลทั้งหมดเดือนนี้</span>
+                <span style={{ fontSize: 11, color: '#9A8662' }}>{monthBills.length} บิล · {monthBills.reduce((s,b) => s + parseNum(b.kg), 0).toLocaleString()} กก.</span>
+              </div>
+              {loadingBills ? (
+                <div style={{ textAlign: 'center', padding: 16, color: '#9A8662', fontSize: 12 }}>กำลังโหลด...</div>
+              ) : monthBills.map((b, idx) => {
+                const fullCard = history.find(h => h.billNo === b.billNo);
+                const clickable = !!fullCard && !!onOpenHistory;
+                const bDate = b.date > 1e12 ? b.date : b.date * 1000;
+                const bDay = new Date(bDate).getDate();
+                return (
+                  <button key={b.billNo || idx} onClick={() => clickable && onOpenHistory(fullCard)}
+                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: idx % 2 === 0 ? '#FAFAF8' : '#fff', borderBottom: idx < monthBills.length - 1 ? '1px solid #F0E8DC' : 'none', width: '100%', border: 'none', cursor: clickable ? 'pointer' : 'default', textAlign: 'left' }}>
+                    <div style={{ width: 32, height: 32, borderRadius: 8, background: '#F5EFE4', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: '#5B3A29' }}>{bDay}</span>
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: '#3F2D1E', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.seller || '—'}</div>
+                      <div style={{ fontSize: 10, color: '#B0966A' }}>#{b.billNo}</div>
+                    </div>
+                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: '#E65100' }}>{parseNum(b.kg) % 1 === 0 ? parseNum(b.kg) : parseNum(b.kg).toFixed(1)} กก.</div>
+                      <div style={{ fontSize: 10, color: '#9A8662' }}>฿{Number(b.baht?.toString().replace(/,/g,'')||0).toLocaleString()}</div>
+                    </div>
+                    {clickable && <span style={{ color: '#C9A24B', fontSize: 16, flexShrink: 0 }}>›</span>}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
         </div>
       )}
 
