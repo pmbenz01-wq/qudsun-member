@@ -3161,6 +3161,7 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
   const [editingBase, setEditingBase] = React.useState(false);
   const [baseDraft, setBaseDraft] = React.useState(200);
   const [monthBills, setMonthBills] = React.useState([]);
+  const [allTimeBills, setAllTimeBills] = React.useState([]);
   const [loadingBills, setLoadingBills] = React.useState(false);
   const [earnings, setEarnings] = React.useState([]);
   const [payments, setPayments] = React.useState([]);
@@ -3197,6 +3198,10 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
   }, [supervisorName]);
 
   React.useEffect(() => { loadLedger(); }, [loadLedger]);
+
+  React.useEffect(() => {
+    db.fetchBillsBySupervisor(supervisorName).then(b => setAllTimeBills(b)).catch(() => {});
+  }, [supervisorName]);
 
   React.useEffect(() => {
     setLoadingBills(true);
@@ -3242,7 +3247,19 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
     } else { setDayBonus(0); setDayRate(1); }
   }, [selectedDay, selEarning?.id]);
 
-  const totalEarned = earnings.reduce((s, e) => s + (e.total || 0), 0);
+  const totalEarned = React.useMemo(() => {
+    const workDays = new Set();
+    let totalKg = 0;
+    allTimeBills.forEach(b => {
+      if (!b.date) return;
+      const ms = typeof b.date === 'number' ? (b.date > 1e12 ? b.date : b.date * 1000) : new Date(b.date).getTime();
+      const d = new Date(ms);
+      workDays.add(`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`);
+      totalKg += parseNum(b.kg);
+    });
+    const totalBonuses = earnings.reduce((s, e) => s + (e.bonus || 0), 0);
+    return workDays.size * baseRate + Math.round(totalKg) + totalBonuses;
+  }, [allTimeBills, baseRate, earnings]);
   const totalPaid = payments.reduce((s, p) => s + (p.amount || 0), 0);
   const balance = totalEarned - totalPaid;
 
