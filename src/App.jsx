@@ -3007,29 +3007,52 @@ function CustomersView({ history, verified, onGoHome, onOpenCustomer, onDeleteCu
 }
 
 // ─── SupervisorsView ──────────────────────────────────────────────────────────
-function SupervisorsView({ supervisors, history, onGoHome, onOpenSupervisor, onDeleteSupervisor, pin, isEmployee }) {
+function SupervisorsView({ supervisors, supervisorNames, history, onGoHome, onOpenSupervisor, onDeleteSupervisor, onAddSupervisor, pin, isEmployee }) {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [billStats, setBillStats] = React.useState({});
+  const [showAddModal, setShowAddModal] = React.useState(false);
+  const [newName, setNewName] = React.useState('');
   const supMap = {};
   Object.entries(supervisors || {}).forEach(([phone, name]) => {
     if (!name) return;
     if (!supMap[name]) supMap[name] = [];
     supMap[name].push(phone);
   });
+  (supervisorNames || []).forEach(name => { if (name && !supMap[name]) supMap[name] = []; });
   const list = Object.entries(supMap).sort((a, b) => b[1].length - a[1].length);
 
   React.useEffect(() => {
     db.fetchSupervisorBillStats().then(setBillStats).catch(() => {});
   }, []);
 
+  const handleAdd = () => {
+    if (!newName.trim()) return;
+    onAddSupervisor && onAddSupervisor(newName.trim());
+    setNewName(''); setShowAddModal(false);
+  };
+
   return (
     <div style={{ flex: 1, maxWidth: 720, width: '100%', margin: '0 auto', padding: '14px 14px 40px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
         <button onClick={onGoHome} style={{ border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 10, padding: '8px 12px', fontSize: 13, color: '#7A6450', cursor: 'pointer' }}>‹ หน้าหลัก</button>
-        <h2 style={{ fontFamily: 'Prompt', fontWeight: 400, fontSize: 20, color: '#4A3526', margin: 0 }}>รายชื่อผู้ดูแล</h2>
+        <h2 style={{ fontFamily: 'Prompt', fontWeight: 400, fontSize: 20, color: '#4A3526', margin: 0, flex: 1 }}>รายชื่อผู้ดูแล</h2>
+        {!isEmployee && <button onClick={() => setShowAddModal(true)} style={{ border: 'none', background: '#DC743C', color: '#fff', borderRadius: 10, padding: '8px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>+ เพิ่ม</button>}
       </div>
 
-      {list.length === 0 && <div style={{ textAlign: 'center', color: '#B7A684', fontSize: 14, marginTop: 40 }}>ยังไม่มีผู้ดูแล — กำหนดผู้ดูแลได้ในหน้าข้อมูลผู้ขาย</div>}
+      {showAddModal && (
+        <div onClick={() => setShowAddModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 480, padding: '20px 16px 32px' }}>
+            <div style={{ fontWeight: 700, fontSize: 16, color: '#2A2118', marginBottom: 14 }}>เพิ่มผู้ดูแลใหม่</div>
+            <input autoFocus value={newName} onChange={e => setNewName(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') handleAdd(); }}
+              placeholder="ชื่อผู้ดูแล เช่น นุ่น, โจ้..."
+              style={{ width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 10, padding: '10px 12px', fontSize: 15, color: '#2A2118', outline: 'none', boxSizing: 'border-box', marginBottom: 12 }} />
+            <button onClick={handleAdd} style={{ width: '100%', background: '#DC743C', color: '#fff', border: 'none', borderRadius: 10, padding: '12px 0', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>บันทึก</button>
+          </div>
+        </div>
+      )}
+
+      {list.length === 0 && <div style={{ textAlign: 'center', color: '#B7A684', fontSize: 14, marginTop: 40 }}>ยังไม่มีผู้ดูแล</div>}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {list.map(([name, phones]) => {
           const stat = billStats[name] || {};
@@ -3857,6 +3880,7 @@ export default function App() {
   const [verified, setVerified] = useState({});
 
   const [supervisors, setSupervisors] = useState({});
+  const [supervisorNames, setSupervisorNames] = useState([]);
   const [activeSupervisor, setActiveSupervisor] = useState(null);
   const [pinnedCats, setPinnedCats] = useState([]);
   const [pinEditorOpen, setPinEditorOpen] = useState(false);
@@ -4037,6 +4061,10 @@ export default function App() {
     db.getSetting('supervisors').then(remote => {
       if (!remote || typeof remote !== 'object') return;
       storage.saveSupervisors(remote); setSupervisors(remote);
+    }).catch(() => {});
+    db.getSetting('supervisor_names').then(remote => {
+      if (!Array.isArray(remote)) return;
+      setSupervisorNames(remote);
     }).catch(() => {});
     const m = (window.location.hash || '').match(/bill=([^&]+)/);
     if (m) {
@@ -4355,6 +4383,21 @@ export default function App() {
     storage.saveSupervisors(nextSup);
     setSupervisors(nextSup);
     db.saveSetting('supervisors', nextSup).catch(() => {});
+    setSupervisorNames(prev => {
+      const next = prev.filter(n => n !== name);
+      db.saveSetting('supervisor_names', next).catch(() => {});
+      return next;
+    });
+  }, []);
+
+  const handleAddSupervisorName = useCallback((name) => {
+    if (!name.trim()) return;
+    setSupervisorNames(prev => {
+      if (prev.includes(name.trim())) return prev;
+      const next = [...prev, name.trim()];
+      db.saveSetting('supervisor_names', next).catch(() => {});
+      return next;
+    });
   }, []);
 
   const handleSaveAccount = useCallback((acct) => {
@@ -4874,10 +4917,12 @@ export default function App() {
             }} />
         } />
         <Route path="/supervisors" element={
-          <SupervisorsView supervisors={supervisors} history={history}
+          <SupervisorsView supervisors={supervisors} supervisorNames={supervisorNames} history={history}
             onGoHome={() => navigate('/')}
             onOpenSupervisor={name => { setActiveSupervisor(name); navigate('/supervisors/' + encodeURIComponent(name)); }}
-            onDeleteSupervisor={handleDeleteSupervisor} pin={pin} isEmployee={authRole === 'employee'} />
+            onDeleteSupervisor={handleDeleteSupervisor}
+            onAddSupervisor={handleAddSupervisorName}
+            pin={pin} isEmployee={authRole === 'employee'} />
         } />
         <Route path="/supervisors/:name" element={
           <SupervisorDetailRoute supervisors={supervisors} history={history} verified={verified}
