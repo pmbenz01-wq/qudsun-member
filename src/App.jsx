@@ -3205,7 +3205,13 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
 
   const billsByDay = React.useMemo(() => {
     const g = {};
-    monthBills.forEach(b => { if (!b.date) return; const d = new Date(b.date).getDate(); if (!g[d]) g[d] = []; g[d].push(b); });
+    monthBills.forEach(b => {
+      if (!b.date) return;
+      const ms = typeof b.date === 'number' ? b.date * 1000 : new Date(b.date).getTime();
+      const d = new Date(ms).getDate();
+      if (!g[d]) g[d] = [];
+      g[d].push(b);
+    });
     return g;
   }, [monthBills]);
 

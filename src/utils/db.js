@@ -288,14 +288,15 @@ export const db = {
 
   async fetchBillsByPhones(phones, dateFrom, dateTo) {
     if (!phones || phones.length === 0) return [];
+    const toSec = s => s ? Math.floor(new Date(s).getTime() / 1000) : null;
     let q = supabase
       .from('qm_bills')
       .select('bill_no, date, seller, phone, kg, baht')
       .eq('deleted', false)
       .in('phone', phones)
       .order('date', { ascending: false });
-    if (dateFrom) q = q.gte('date', dateFrom);
-    if (dateTo) q = q.lte('date', dateTo);
+    if (dateFrom) q = q.gte('date', toSec(dateFrom));
+    if (dateTo) q = q.lte('date', toSec(dateTo));
     const { data, error } = await q;
     if (error) throw error;
     return data.map(row => ({
@@ -310,14 +311,15 @@ export const db = {
 
   async fetchBillsBySupervisor(supervisorName, dateFrom, dateTo) {
     if (!supervisorName) return [];
+    const toSec = s => s ? Math.floor(new Date(s).getTime() / 1000) : null;
     let q = supabase
       .from('qm_bills')
       .select('bill_no, date, seller, phone, kg, baht')
       .eq('deleted', false)
       .eq('supervisor', supervisorName)
       .order('date', { ascending: false });
-    if (dateFrom) q = q.gte('date', dateFrom);
-    if (dateTo) q = q.lte('date', dateTo);
+    if (dateFrom) q = q.gte('date', toSec(dateFrom));
+    if (dateTo) q = q.lte('date', toSec(dateTo));
     const { data, error } = await q;
     if (error) throw error;
     return data.map(row => ({
