@@ -4055,8 +4055,7 @@ export default function App() {
     }).catch(() => {});
     db.getSetting('supervisors').then(remote => {
       if (!remote || typeof remote !== 'object') return;
-      const merged = { ...storage.loadSupervisors(), ...remote };
-      storage.saveSupervisors(merged); setSupervisors(prev => ({ ...prev, ...merged }));
+      storage.saveSupervisors(remote); setSupervisors(remote);
     }).catch(() => {});
     const m = (window.location.hash || '').match(/bill=([^&]+)/);
     if (m) {
