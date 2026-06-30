@@ -702,7 +702,7 @@ function BankModal({ bankName, bankAccount, fullName, onSave, onClose }) {
   );
 }
 
-function RecordView({ session, activeCat, input, onInput, onCommit, onPickCat, onGoHome, onGoSummary, onEditSeller, onEditEntry, verified, history, customLabel, onCustomLabelChange, pinnedCats, onOpenPinEditor, vehiclePhotoUrl, onVehiclePlate, onVehiclePhoto, customerInfo, onSaveCustomerInfo }) {
+function RecordView({ session, activeCat, input, onInput, onCommit, onPickCat, onGoHome, onGoSummary, onEditSeller, onEditEntry, verified, history, customLabel, onCustomLabelChange, pinnedCats, onOpenPinEditor, vehiclePhotoUrl, onVehiclePlate, onVehiclePhoto, customerInfo, onSaveCustomerInfo, onChangeDate }) {
   const aggData = agg(session);
   const [vehicleModalOpen, setVehicleModalOpen] = useState(false);
   const [bankModalOpen, setBankModalOpen] = useState(false);
@@ -726,7 +726,14 @@ function RecordView({ session, activeCat, input, onInput, onCommit, onPickCat, o
         <button onClick={onGoHome} style={{ border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 10, padding: '8px 12px', fontSize: 13, color: '#7A6450', cursor: 'pointer' }}>‹ หน้าหลัก</button>
         <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.2 }}>
           <span style={{ fontWeight: 600, fontSize: 14, color: '#4A3526' }}>{session?.billNo}</span>
-          <span style={{ fontSize: 12, color: '#9A8662' }}>{session ? dateStr(session.date) : ''}</span>
+          {onChangeDate ? (
+            <input type="date"
+              value={session?.date ? (() => { const d = new Date(session.date); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })() : ''}
+              onChange={e => { if (e.target.value) { const [y,m,d] = e.target.value.split('-').map(Number); const prev = new Date(session.date); const nd = new Date(y,m-1,d,prev.getHours(),prev.getMinutes(),prev.getSeconds()); onChangeDate(nd.getTime()); } }}
+              style={{ fontSize: 12, color: '#DC743C', border: 'none', background: 'none', padding: 0, cursor: 'pointer', outline: 'none', fontWeight: 600 }} />
+          ) : (
+            <span style={{ fontSize: 12, color: '#9A8662' }}>{session ? dateStr(session.date) : ''}</span>
+          )}
         </div>
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
           {tier && tier.key !== 'silver' && <TierBadge tier={tier} />}
@@ -4026,6 +4033,10 @@ export default function App() {
     });
   }, []);
 
+  const handleChangeDate = useCallback((ms) => {
+    updateSession(prev => ({ ...prev, date: ms }));
+  }, [updateSession]);
+
   const handleVehiclePlate = useCallback((plate) => {
     updateSession(prev => ({ ...prev, vehiclePlate: plate }));
     setSession(prev => prev ? { ...prev, vehiclePlate: plate } : prev);
@@ -4936,7 +4947,8 @@ export default function App() {
             pinnedCats={pinnedCats} onOpenPinEditor={() => setPinEditorOpen(true)}
             vehiclePhotoUrl={vehiclePhotoUrl} onVehiclePlate={handleVehiclePlate} onVehiclePhoto={handleVehiclePhoto}
             customerInfo={customerInfo}
-            onSaveCustomerInfo={(phone, info) => { const next = { ...storage.loadCustomerInfo(), [phone]: info }; storage.saveCustomerInfo(next); setCustomerInfo(next); db.upsertCustomerInfo(phone, info).catch(() => {}); }} />
+            onSaveCustomerInfo={(phone, info) => { const next = { ...storage.loadCustomerInfo(), [phone]: info }; storage.saveCustomerInfo(next); setCustomerInfo(next); db.upsertCustomerInfo(phone, info).catch(() => {}); }}
+            onChangeDate={handleChangeDate} />
         ) : <Navigate to="/" replace />} />
         <Route path="/summary" element={session ? (
           <SummaryView session={session} logOpen={logOpen}
