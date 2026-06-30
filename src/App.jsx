@@ -3137,7 +3137,7 @@ function SalarySlipPrintView({ supervisorName, dateLabel, bills, base, commissio
   );
 }
 
-function SupervisorDetailView({ supervisorName, supervisors, history, verified, onGoBack, onOpenCustomer }) {
+function SupervisorDetailView({ supervisorName, supervisors, history, verified, onGoBack, onOpenCustomer, onOpenHistory }) {
   const phones = Object.entries(supervisors || {}).filter(([, n]) => n === supervisorName).map(([p]) => p);
   const customers = loadCustomers(history);
   const parseNum = v => parseFloat(String(v ?? '').replace(/,/g, '')) || 0;
@@ -3400,18 +3400,26 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
                 <div style={{ marginBottom: 10 }}>
                   <div style={{ fontSize: 11, fontWeight: 700, color: '#9A8662', marginBottom: 6 }}>📋 บิลที่นับค่าคอม ({selBills.length} บิล)</div>
                   <div style={{ borderRadius: 10, border: '1px solid #E4D7BC', overflow: 'hidden' }}>
-                    {selBills.map((b, idx) => (
-                      <div key={b.billNo || idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7px 12px', background: idx % 2 === 0 ? '#FAFAF8' : '#fff', borderBottom: idx < selBills.length - 1 ? '1px solid #F0E8DC' : 'none' }}>
+                    {selBills.map((b, idx) => {
+                      const fullCard = history.find(h => h.billNo === b.billNo);
+                      const clickable = !!fullCard && !!onOpenHistory;
+                      return (
+                      <button key={b.billNo || idx} onClick={() => clickable && onOpenHistory(fullCard)}
+                        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7px 12px', background: idx % 2 === 0 ? '#FAFAF8' : '#fff', borderBottom: idx < selBills.length - 1 ? '1px solid #F0E8DC' : 'none', width: '100%', border: 'none', cursor: clickable ? 'pointer' : 'default', textAlign: 'left' }}>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 12, fontWeight: 600, color: '#3F2D1E', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.seller || '—'}</div>
                           <div style={{ fontSize: 10, color: '#B0966A' }}>#{b.billNo}</div>
                         </div>
-                        <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                          <div style={{ fontSize: 12, fontWeight: 700, color: '#E65100' }}>{parseNum(b.kg) % 1 === 0 ? parseNum(b.kg) : parseNum(b.kg).toFixed(1)} กก.</div>
-                          <div style={{ fontSize: 10, color: '#2E7D32' }}>+฿{Math.round(parseNum(b.kg) * dayRate)}</div>
+                        <div style={{ textAlign: 'right', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <div>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: '#E65100' }}>{parseNum(b.kg) % 1 === 0 ? parseNum(b.kg) : parseNum(b.kg).toFixed(1)} กก.</div>
+                            <div style={{ fontSize: 10, color: '#2E7D32' }}>+฿{Math.round(parseNum(b.kg) * dayRate)}</div>
+                          </div>
+                          {clickable && <span style={{ color: '#C9A24B', fontSize: 14 }}>›</span>}
                         </div>
-                      </div>
-                    ))}
+                      </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -3765,13 +3773,13 @@ function CustomerDetailRoute({ history, verified, supervisors, vehiclePlates, cu
 }
 
 // ─── Route wrapper: SupervisorDetail ──────────────────────────────────────────
-function SupervisorDetailRoute({ supervisors, history, verified, onGoBack, onOpenCustomer }) {
+function SupervisorDetailRoute({ supervisors, history, verified, onGoBack, onOpenCustomer, onOpenHistory }) {
   const { name } = useParams();
   const decodedName = decodeURIComponent(name || '');
   if (!decodedName) return <Navigate to="/supervisors" replace />;
   return (
     <SupervisorDetailView supervisorName={decodedName} supervisors={supervisors} history={history} verified={verified}
-      onGoBack={onGoBack} onOpenCustomer={onOpenCustomer} />
+      onGoBack={onGoBack} onOpenCustomer={onOpenCustomer} onOpenHistory={onOpenHistory} />
   );
 }
 
@@ -4852,7 +4860,8 @@ export default function App() {
         <Route path="/supervisors/:name" element={
           <SupervisorDetailRoute supervisors={supervisors} history={history} verified={verified}
             onGoBack={() => navigate('/supervisors')}
-            onOpenCustomer={phone => { setCustPhone(phone); navigate('/customers/' + encodeURIComponent(phone)); }} />
+            onOpenCustomer={phone => { setCustPhone(phone); navigate('/customers/' + encodeURIComponent(phone)); }}
+            onOpenHistory={card => openHistory(card)} />
         } />
         <Route path="/history" element={
           <HistoryPageView
