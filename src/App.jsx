@@ -3183,6 +3183,9 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
   const [baseRate, setBaseRate] = React.useState(200);
   const [editingBase, setEditingBase] = React.useState(false);
   const [baseDraft, setBaseDraft] = React.useState(200);
+  const [commissionRate, setCommissionRate] = React.useState(1);
+  const [editingCommission, setEditingCommission] = React.useState(false);
+  const [commissionDraft, setCommissionDraft] = React.useState(1);
   const [monthBills, setMonthBills] = React.useState([]);
   const [allTimeBills, setAllTimeBills] = React.useState([]);
   const [loadingBills, setLoadingBills] = React.useState(false);
@@ -3200,6 +3203,10 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
       const r = v || {};
       if (r[supervisorName] !== undefined) { setBaseRate(r[supervisorName]); setBaseDraft(r[supervisorName]); }
     }).catch(() => {});
+    db.getSetting('sup_commission_rates').then(v => {
+      const r = v || {};
+      if (r[supervisorName] !== undefined) { setCommissionRate(r[supervisorName]); setCommissionDraft(r[supervisorName]); }
+    }).catch(() => {});
   }, [supervisorName]);
 
   const saveBaseRate = async (val) => {
@@ -3209,6 +3216,15 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
       setBaseRate(val);
     } catch {}
     setEditingBase(false);
+  };
+
+  const saveCommissionRate = async (val) => {
+    try {
+      const cur = await db.getSetting('sup_commission_rates') || {};
+      await db.saveSetting('sup_commission_rates', { ...cur, [supervisorName]: val });
+      setCommissionRate(val);
+    } catch {}
+    setEditingCommission(false);
   };
 
   const loadLedger = React.useCallback(async () => {
@@ -3267,7 +3283,7 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
     if (selEarning) {
       setDayBonus(selEarning.bonus || 0);
       setDayRate(selEarning.commission_kg > 0 ? Math.round(selEarning.commission_baht / selEarning.commission_kg * 10) / 10 : 1);
-    } else { setDayBonus(0); setDayRate(1); }
+    } else { setDayBonus(0); setDayRate(commissionRate); }
   }, [selectedDay, selEarning?.id]);
 
   const totalEarned = React.useMemo(() => {
@@ -3281,8 +3297,8 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
       totalKg += parseNum(b.kg);
     });
     const totalBonuses = earnings.reduce((s, e) => s + (e.bonus || 0), 0);
-    return workDays.size * baseRate + Math.round(totalKg) + totalBonuses;
-  }, [allTimeBills, baseRate, earnings]);
+    return workDays.size * baseRate + Math.round(totalKg * commissionRate) + totalBonuses;
+  }, [allTimeBills, baseRate, commissionRate, earnings]);
   const totalPaid = payments.reduce((s, p) => s + (p.amount || 0), 0);
   const balance = totalEarned - totalPaid;
 
@@ -3345,6 +3361,18 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
             <button onClick={() => { setBaseDraft(baseRate); setEditingBase(true); }} style={{ fontSize: 13, fontWeight: 700, color: '#DC743C', background: 'none', border: 'none', cursor: 'pointer' }}>฿{baseRate}</button>
           )}
         </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ fontSize: 11, color: '#9A8662' }}>คอม/กก.:</span>
+          {editingCommission ? (
+            <>
+              <input type="number" step="0.5" value={commissionDraft} onChange={e => setCommissionDraft(Number(e.target.value)||0)} style={{ width: 50, border: '1.5px solid #2E7D32', borderRadius: 6, padding: '3px 6px', fontSize: 13, fontWeight: 700, color: '#3F2D1E', outline: 'none' }} />
+              <button onClick={() => saveCommissionRate(commissionDraft)} style={{ fontSize: 11, background: '#2E7D32', color: '#fff', border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer' }}>✓</button>
+              <button onClick={() => setEditingCommission(false)} style={{ fontSize: 11, background: 'none', border: 'none', color: '#9A8662', cursor: 'pointer' }}>✕</button>
+            </>
+          ) : (
+            <button onClick={() => { setCommissionDraft(commissionRate); setEditingCommission(true); }} style={{ fontSize: 13, fontWeight: 700, color: '#2E7D32', background: 'none', border: 'none', cursor: 'pointer' }}>฿{commissionRate}</button>
+          )}
+        </div>
       </div>
 
       {/* Balance card */}
@@ -3389,7 +3417,7 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
                 const earning = earningsByDay[day];
                 const dBills = billsByDay[day] || [];
                 const kg = dBills.reduce((s, b) => s + parseNum(b.kg), 0);
-                const calcTotal = baseRate + Math.round(kg);
+                const calcTotal = baseRate + Math.round(kg * commissionRate);
                 const isSelected = day === selectedDay;
                 const isToday = day === nowRef.getDate() && calMonth === nowRef.getMonth() && calYear === nowRef.getFullYear();
                 const hasData = earning || kg > 0;
