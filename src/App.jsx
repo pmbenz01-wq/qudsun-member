@@ -4020,9 +4020,6 @@ export default function App() {
       const merged = [...remoteBills, ...localOnly];
       storage.saveHistory(merged); setHistory(merged);
       // Also derive supervisor map from bills
-      const svMap = {};
-      merged.forEach(c => { const ph = c.phone || c.data?.sellerPhone || ''; const sup = c.data?.supervisor || c.supervisor || ''; if (ph && sup) svMap[ph] = sup; });
-      if (Object.keys(svMap).length) { const nSv = { ...storage.loadSupervisors(), ...svMap }; storage.saveSupervisors(nSv); setSupervisors(nSv); }
     }).catch(() => {});
     db.getSaleSessions().then(remoteSessions => {
       if (!remoteSessions?.length) return;
@@ -4093,9 +4090,6 @@ export default function App() {
       const localOnly = storage.loadHistory().filter(h => h?.billNo && !sheetNos.has(h.billNo) && !deleted.has(h.billNo));
       const bills = [...sheetParsed, ...localOnly];
       storage.saveHistory(bills); setHistory(bills);
-      const svMap = {};
-      bills.forEach(c => { const ph = c.phone || c.data?.sellerPhone || ''; const sup = c.data?.supervisor || c.supervisor || ''; if (ph && sup) svMap[ph] = sup; });
-      if (Object.keys(svMap).length) { const nSv = { ...storage.loadSupervisors(), ...svMap }; storage.saveSupervisors(nSv); setSupervisors(nSv); }
     }
     if (sheetPayments.ok) {
       // Merge: Sheets data takes priority, but keep any local-only entries not yet in Sheets
