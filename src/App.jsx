@@ -3884,7 +3884,7 @@ function CustomerDetailView({ phone, history, verified, supervisors, vehiclePlat
 }
 
 // ─── SellerModal ──────────────────────────────────────────────────────────────
-function SellerModal({ name, phone, supervisor, nameLocked, supervisorLocked, onNameChange, onPhoneChange, onSupervisorChange, onUnlock, onSave, onCancel, history, verified }) {
+function SellerModal({ name, phone, supervisor, nameLocked, supervisorLocked, onNameChange, onPhoneChange, onSupervisorChange, onUnlock, onSave, onCancel, history, verified, supervisorOptions }) {
   const stat = phone ? customerStat(phone, history, verified) : null;
   const tier = stat ? stat.effectiveTier : null;
   const locked = nameLocked || supervisorLocked;
@@ -3900,7 +3900,14 @@ function SellerModal({ name, phone, supervisor, nameLocked, supervisorLocked, on
         <label style={{ display: 'block', fontSize: 12, color: '#A6925E', marginBottom: 5 }}>เบอร์โทรผู้ขาย</label>
         <input value={phone} onChange={e => onPhoneChange(e.target.value)} inputMode="tel" placeholder="เช่น 081-234-5678" style={{ width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 12, padding: 14, fontSize: 16, color: '#3F2D1E', outline: 'none', marginBottom: 12 }} />
         <label style={{ display: 'block', fontSize: 12, color: '#A6925E', marginBottom: 5 }}>ผู้ดูแล {supervisorLocked && <span style={{ color: '#C9A24B' }}>🔒 จากประวัติ</span>}</label>
-        <input value={supervisor} onChange={e => !supervisorLocked && onSupervisorChange(e.target.value)} readOnly={supervisorLocked} placeholder="เช่น พี่โอ๋" style={{ width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 12, padding: 14, fontSize: 16, color: supervisorLocked ? '#9A8662' : '#3F2D1E', outline: 'none', background: supervisorLocked ? '#F5F0E8' : '#fff' }} />
+        {supervisorOptions && supervisorOptions.length > 0 && !supervisorLocked && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
+            {supervisorOptions.map(opt => (
+              <button key={opt} onClick={() => onSupervisorChange(opt)} style={{ padding: '7px 16px', borderRadius: 20, border: supervisor === opt ? 'none' : '1.5px solid #E4D7BC', background: supervisor === opt ? '#5B3A29' : '#fff', color: supervisor === opt ? '#fff' : '#5B3A29', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>{opt}</button>
+            ))}
+          </div>
+        )}
+        <input value={supervisor} onChange={e => !supervisorLocked && onSupervisorChange(e.target.value)} readOnly={supervisorLocked} placeholder="หรือพิมพ์ชื่อ..." style={{ width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 12, padding: 14, fontSize: 16, color: supervisorLocked ? '#9A8662' : '#3F2D1E', outline: 'none', background: supervisorLocked ? '#F5F0E8' : '#fff' }} />
         {tier && tier.key !== 'silver' && stat && (
           <div style={{ marginTop: 14, background: '#FBF6EC', border: '1px solid #E4D7BC', borderRadius: 14, padding: '13px 14px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
@@ -5073,6 +5080,7 @@ export default function App() {
       {sellerOpen && <SellerModal
         name={sellerDraft} phone={sellerPhoneDraft} supervisor={supervisorDraft}
         nameLocked={sellerNameLocked} supervisorLocked={sellerSupervisorLocked}
+        supervisorOptions={[...new Set([...supervisorNames, ...Object.values(supervisors).filter(Boolean)])].sort()}
         onUnlock={() => requirePin('ปลดล็อคชื่อ/ผู้ดูแล (Admin เท่านั้น)', () => { setSellerNameLocked(false); setSellerSupervisorLocked(false); })}
         onNameChange={setSellerDraft}
         onPhoneChange={val => {
