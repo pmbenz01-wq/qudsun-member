@@ -3335,6 +3335,7 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
       await db.savePayment({ supervisor_name: supervisorName, paid_date: toDateStr(new Date()), amount: Number(payAmount), note: payNote || null });
       setPayAmount(''); setPayNote(''); setShowPayForm(false);
       await loadLedger();
+      setShowPaySlip(true);
     } catch { alert('บันทึกไม่สำเร็จ'); }
     setSaving(false);
   };
