@@ -3207,7 +3207,7 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
     const g = {};
     monthBills.forEach(b => {
       if (!b.date) return;
-      const ms = typeof b.date === 'number' ? b.date * 1000 : new Date(b.date).getTime();
+      const ms = typeof b.date === 'number' ? (b.date > 1e12 ? b.date : b.date * 1000) : new Date(b.date).getTime();
       const d = new Date(ms).getDate();
       if (!g[d]) g[d] = [];
       g[d].push(b);
