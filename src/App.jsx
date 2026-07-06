@@ -853,52 +853,22 @@ function RecordView({ session, activeCat, input, onInput, onCommit, onPickCat, o
         </div>
       </div>
 
-      {pinnedCats && pinnedCats.length > 0 && (
-        <div style={{ marginBottom: 10 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-            <span style={{ fontSize: 11, color: '#A6925E', fontWeight: 600, letterSpacing: '.1em' }}>⭐ ปักหมุด</span>
-            <div style={{ flex: 1, height: 1, background: '#E4D7BC' }} />
-            <button onClick={onOpenPinEditor} style={{ border: '1px solid #E4D7BC', background: '#FBF6EC', borderRadius: 8, padding: '3px 8px', fontSize: 11, color: '#9A8662', cursor: 'pointer' }}>จัดการ</button>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(pinnedCats.length, 5)},1fr)`, gap: 7 }}>
-            {pinnedCats.map(key => {
-              const cat = CATS.find(c => c.key === key);
-              if (!cat) return null;
-              const d = aggData[key] || { kg: 0, count: 0 };
-              const active = activeCat === key;
-              return (
-                <button key={key} onClick={() => onPickCat(key)} style={{ border: active ? `2px solid ${cat.accent}` : '1.5px solid #D8C8A8', background: active ? '#FFFDF8' : '#F6F0E4', borderRadius: 12, padding: '10px 4px', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: active ? `0 4px 12px ${cat.accent}40` : 'none' }}>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: cat.accent, display: 'inline-block', flexShrink: 0 }} />
-                    <span style={{ fontWeight: 700, fontSize: 13, color: '#4A3526' }}>{cat.label || cat.key}</span>
-                  </span>
-                  <span style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 16, marginTop: 3 }}>{fmtKg(d.kg)}</span>
-                  <span style={{ fontSize: 10, opacity: .7 }}>{d.count} เข่ง</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {(!pinnedCats || pinnedCats.length === 0) && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 8, marginBottom: 8 }}>
-          {mainCats.map(c => {
-            const d = aggData[c.key];
-            const active = activeCat === c.key;
-            return (
-              <button key={c.key} onClick={() => onPickCat(c.key)} style={{ border: active ? `2px solid ${c.accent}` : '1px solid #E4D7BC', background: active ? '#FFFDF8' : '#FBF6EC', borderRadius: 12, padding: '10px 4px', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: active ? `0 4px 12px ${c.accent}40` : 'none' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'center' }}>
-                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: c.accent, display: 'inline-block', flexShrink: 0 }} />
-                  <span style={{ fontWeight: 600, fontSize: 13 }}>{c.label}</span>
-                </span>
-                <span style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 16, marginTop: 3 }}>{fmtKg(d.kg)}</span>
-                <span style={{ fontSize: 10, opacity: .7 }}>{d.count} เข่ง</span>
-              </button>
-            );
-          })}
-        </div>
-      )}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 8, marginBottom: 8 }}>
+        {mainCats.map(c => {
+          const d = aggData[c.key];
+          const active = activeCat === c.key;
+          return (
+            <button key={c.key} onClick={() => onPickCat(c.key)} style={{ border: active ? `2px solid ${c.accent}` : '1px solid #E4D7BC', background: active ? '#FFFDF8' : '#FBF6EC', borderRadius: 12, padding: '10px 4px', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: active ? `0 4px 12px ${c.accent}40` : 'none' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'center' }}>
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: c.accent, display: 'inline-block', flexShrink: 0 }} />
+                <span style={{ fontWeight: 600, fontSize: 13 }}>{c.label}</span>
+              </span>
+              <span style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 16, marginTop: 3 }}>{fmtKg(d.kg)}</span>
+              <span style={{ fontSize: 10, opacity: .7 }}>{d.count} เข่ง</span>
+            </button>
+          );
+        })}
+      </div>
       {/* Custom cat presets */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
         {(customCatLabels || []).map(lbl => {
@@ -911,7 +881,7 @@ function RecordView({ session, activeCat, input, onInput, onCommit, onPickCat, o
           );
         })}
         {onAddCustomCatLabel && (
-          <button onClick={() => { onCustomLabelChange(''); onPickCat('custom'); setTimeout(() => customInputRef.current?.focus(), 50); }} style={{ padding: '6px 12px', borderRadius: 16, border: '1px dashed #C9A24B', background: '#FBF6EC', color: '#9A8662', fontSize: 13, cursor: 'pointer', fontWeight: 600 }}>+ เพิ่ม</button>
+          <button onClick={() => { onCustomLabelChange(''); onPickCat('custom'); setTimeout(() => customInputRef.current?.focus(), 50); }} style={{ padding: '6px 12px', borderRadius: 16, border: '1px dashed #C9A24B', background: '#FBF6EC', color: '#9A8662', fontSize: 13, cursor: 'pointer', fontWeight: 600 }}>+ เพิ่มชื่อ</button>
         )}
       </div>
       {(() => {
@@ -935,6 +905,9 @@ function RecordView({ session, activeCat, input, onInput, onCommit, onPickCat, o
                 <div style={{ fontSize: 10, opacity: .7 }}>{d.count} เข่ง</div>
               </div>
             </button>
+            {onAddCustomCatLabel && customLabel.trim() && !(customCatLabels||[]).includes(customLabel.trim()) && (
+              <button onClick={() => onAddCustomCatLabel(customLabel.trim())} title="บันทึกชื่อหมวดนี้" style={{ border: '1px solid #E4D7BC', background: '#FBF6EC', borderRadius: 12, padding: '0 12px', fontSize: 18, cursor: 'pointer', color: '#7C8C9A' }}>📌</button>
+            )}
           </div>
         );
       })()}
@@ -2469,52 +2442,22 @@ function SaleRecordView({ saleSession, activeCat, input, onInput, onCommit, onPi
       </div>
 
       {/* Pinned cats */}
-      {pinnedCats && pinnedCats.length > 0 && (
-        <div style={{ marginBottom: 10 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-            <span style={{ fontSize: 11, color: '#A6925E', fontWeight: 600, letterSpacing: '.1em' }}>⭐ ปักหมุด</span>
-            <div style={{ flex: 1, height: 1, background: '#E4D7BC' }} />
-            <button onClick={onOpenPinEditor} style={{ border: '1px solid #E4D7BC', background: '#FBF6EC', borderRadius: 8, padding: '3px 8px', fontSize: 11, color: '#9A8662', cursor: 'pointer' }}>จัดการ</button>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(pinnedCats.length, 5)},1fr)`, gap: 7 }}>
-            {pinnedCats.map(key => {
-              const cat = CATS.find(c => c.key === key);
-              if (!cat) return null;
-              const d = aggData[key] || { kg: 0, count: 0 };
-              const active = activeCat === key;
-              return (
-                <button key={key} onClick={() => onPickCat(key)} style={{ border: active ? `2px solid ${cat.accent}` : '1.5px solid #D8C8A8', background: active ? '#FFFDF8' : '#F6F0E4', borderRadius: 12, padding: '10px 4px', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: active ? `0 4px 12px ${cat.accent}40` : 'none' }}>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: cat.accent, display: 'inline-block', flexShrink: 0 }} />
-                    <span style={{ fontWeight: 700, fontSize: 13, color: '#4A3526' }}>{cat.label || cat.key}</span>
-                  </span>
-                  <span style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 16, marginTop: 3 }}>{fmtKg(d.kg)}</span>
-                  <span style={{ fontSize: 10, opacity: .7 }}>{d.count} เข่ง</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {(!pinnedCats || pinnedCats.length === 0) && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 8, marginBottom: 8 }}>
-          {mainCats.map(c => {
-            const d = aggData[c.key];
-            const active = activeCat === c.key;
-            return (
-              <button key={c.key} onClick={() => onPickCat(c.key)} style={{ border: active ? `2px solid ${c.accent}` : '1px solid #E4D7BC', background: active ? '#FFFDF8' : '#FBF6EC', borderRadius: 12, padding: '10px 4px', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: active ? `0 4px 12px ${c.accent}40` : 'none' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'center' }}>
-                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: c.accent, display: 'inline-block', flexShrink: 0 }} />
-                  <span style={{ fontWeight: 600, fontSize: 13 }}>{c.label}</span>
-                </span>
-                <span style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 16, marginTop: 3 }}>{fmtKg(d.kg)}</span>
-                <span style={{ fontSize: 10, opacity: .7 }}>{d.count} เข่ง</span>
-              </button>
-            );
-          })}
-        </div>
-      )}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 8, marginBottom: 8 }}>
+        {mainCats.map(c => {
+          const d = aggData[c.key];
+          const active = activeCat === c.key;
+          return (
+            <button key={c.key} onClick={() => onPickCat(c.key)} style={{ border: active ? `2px solid ${c.accent}` : '1px solid #E4D7BC', background: active ? '#FFFDF8' : '#FBF6EC', borderRadius: 12, padding: '10px 4px', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: active ? `0 4px 12px ${c.accent}40` : 'none' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'center' }}>
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: c.accent, display: 'inline-block', flexShrink: 0 }} />
+                <span style={{ fontWeight: 600, fontSize: 13 }}>{c.label}</span>
+              </span>
+              <span style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 16, marginTop: 3 }}>{fmtKg(d.kg)}</span>
+              <span style={{ fontSize: 10, opacity: .7 }}>{d.count} เข่ง</span>
+            </button>
+          );
+        })}
+      </div>
 
       {/* Custom cat presets */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
@@ -2554,6 +2497,9 @@ function SaleRecordView({ saleSession, activeCat, input, onInput, onCommit, onPi
                 <div style={{ fontSize: 10, opacity: .7 }}>{d.count} เข่ง</div>
               </div>
             </button>
+            {onAddCustomCatLabel && customLabel.trim() && !(customCatLabels||[]).includes(customLabel.trim()) && (
+              <button onClick={() => onAddCustomCatLabel(customLabel.trim())} title="บันทึกชื่อหมวดนี้" style={{ border: '1px solid #E4D7BC', background: '#FBF6EC', borderRadius: 12, padding: '0 12px', fontSize: 18, cursor: 'pointer', color: '#7C8C9A' }}>📌</button>
+            )}
           </div>
         );
       })()}
