@@ -3509,7 +3509,6 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
               <div style={{ borderLeft: '1px solid #F0E8DC', borderRight: '1px solid #F0E8DC' }}><div style={{ fontSize: 10, color: '#9A8662' }}>✅ จ่ายแล้ว</div><div style={{ fontSize: 15, fontWeight: 700, color: '#2E7D32' }}>฿{totalPaid.toLocaleString()}</div></div>
               <div><div style={{ fontSize: 10, color: '#9A8662' }}>🔴 ยอดค้าง</div><div style={{ fontSize: 15, fontWeight: 700, color: balance > 0 ? '#C0392B' : '#9A8662' }}>฿{balance.toLocaleString()}</div></div>
             </div>
-            {balance > 0 && <div style={{ padding: '0 12px 10px' }}><button onClick={() => { setShowPayForm(true); setTab('paid'); }} style={{ width: '100%', background: '#2E7D32', color: '#fff', border: 'none', borderRadius: 10, padding: '8px 0', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>💸 บันทึกจ่ายเงิน</button></div>}
           </>
         )}
       </div>
@@ -3688,29 +3687,9 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
       {/* Tab: การจ่าย */}
       {tab === 'paid' && (
         <div style={{ padding: '10px 12px' }}>
-          {showPayForm && (
-            <div style={{ background: '#fff', borderRadius: 14, border: '1px solid #E4D7BC', padding: 14, marginBottom: 10 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#9A8662', marginBottom: 10 }}>บันทึกจ่ายเงิน — ยอดค้าง ฿{balance.toLocaleString()}</div>
-              <div style={{ marginBottom: 8 }}>
-                <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 4 }}>จำนวนเงิน (฿)</div>
-                <input type="number" value={payAmount} onChange={e => setPayAmount(e.target.value)} placeholder={String(balance)} style={{ width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 8, padding: '8px 10px', fontSize: 15, fontWeight: 700, color: '#3F2D1E', outline: 'none', boxSizing: 'border-box' }} />
-              </div>
-              <div style={{ marginBottom: 12 }}>
-                <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 4 }}>หมายเหตุ</div>
-                <input value={payNote} onChange={e => setPayNote(e.target.value)} placeholder="เช่น โอนแล้ว" style={{ width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 8, padding: '8px 10px', fontSize: 13, color: '#3F2D1E', outline: 'none', boxSizing: 'border-box' }} />
-              </div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button onClick={() => setShowPayForm(false)} style={{ flex: 1, border: '1px solid #D0C8C0', background: '#F5EFE4', borderRadius: 10, padding: '9px 0', fontSize: 13, cursor: 'pointer', color: '#7A6450' }}>ยกเลิก</button>
-                <button onClick={handleSavePayment} disabled={saving || !payAmount} style={{ flex: 2, background: '#2E7D32', color: '#fff', border: 'none', borderRadius: 10, padding: '9px 0', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>{saving ? '...' : '✅ ยืนยันจ่าย'}</button>
-              </div>
-            </div>
-          )}
-          {!showPayForm && (
-            <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
-              <button onClick={() => setShowPayForm(true)} style={{ flex: 1, background: '#2E7D32', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 0', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>+ บันทึกจ่ายเงิน</button>
-              <button onClick={() => setShowPaySlip(true)} style={{ background: '#fff', color: '#5B3A29', border: '1px solid #E4D7BC', borderRadius: 10, padding: '10px 14px', fontSize: 13, cursor: 'pointer' }}>🖨️ ออกบิล</button>
-            </div>
-          )}
+          <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+            <button onClick={() => setShowPaySlip(true)} style={{ flex: 1, background: '#fff', color: '#5B3A29', border: '1px solid #E4D7BC', borderRadius: 10, padding: '10px 14px', fontSize: 13, cursor: 'pointer' }}>🖨️ ออกบิล</button>
+          </div>
           {payments.length === 0 && !loadingLedger && <div style={{ textAlign: 'center', color: '#B7A684', padding: 32 }}>ยังไม่มีรายการจ่าย</div>}
           {payments.map(p => (
             <div key={p.id} style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4D7BC', borderLeft: '4px solid #2E7D32', padding: '12px 14px', marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
