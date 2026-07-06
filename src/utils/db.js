@@ -211,6 +211,18 @@ export const db = {
     return data.map(row => { try { return JSON.parse(row.json); } catch { return null; } }).filter(Boolean);
   },
 
+  async getSaleSessionByBillNo(billNo) {
+    const { data, error } = await supabase
+      .from('qm_sale_sessions')
+      .select('json')
+      .eq('bill_no', billNo)
+      .eq('deleted', false)
+      .maybeSingle();
+    if (error) throw error;
+    if (!data?.json) return null;
+    try { return JSON.parse(data.json); } catch { return null; }
+  },
+
   async upsertSaleSession(s) {
     const totalKg = (s.entries || []).reduce((sum, e) => sum + (e.kg || 0), 0);
     const totalBaht = (s.entries || []).reduce((sum, e) => sum + (e.kg || 0) * ((s.prices || {})[e.cat] || 0), 0);

@@ -4879,10 +4879,13 @@ export default function App() {
     }
   }, [session, navigate]);
 
-  const openSaleHistoryDetail = useCallback((billNo) => {
+  const openSaleHistoryDetail = useCallback(async (billNo) => {
     const full = saleSessions.find(s => s.billNo === billNo);
-    if (full) { setViewSaleSession(full); navigate('/sale/history'); }
-    else { navigate('/sales'); }
+    if (full) { setViewSaleSession(full); navigate('/sale/history'); return; }
+    try {
+      const remote = await db.getSaleSessionByBillNo(billNo);
+      if (remote) { setViewSaleSession(remote); navigate('/sale/history'); }
+    } catch {}
   }, [saleSessions, navigate]);
 
   const goBackFromBill = useCallback(() => {
