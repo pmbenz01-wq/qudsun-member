@@ -538,8 +538,10 @@ function HomeView({ session, history, saleHistory, payments, syncing, syncStatus
 }
 
 // ─── PinEditor ────────────────────────────────────────────────────────────────
-function PinEditor({ pinnedCats, onSave, onCancel }) {
+function PinEditor({ pinnedCats, customCatLabels, onSave, onCancel }) {
   const [pins, setPins] = useState([...pinnedCats]);
+  const [labels, setLabels] = useState([...(customCatLabels || [])]);
+  const [newLabel, setNewLabel] = useState('');
   const available = CATS.filter(c => c.key !== 'custom' && !pins.includes(c.key));
 
   const move = (i, dir) => {
@@ -548,6 +550,13 @@ function PinEditor({ pinnedCats, onSave, onCancel }) {
     if (j < 0 || j >= next.length) return;
     [next[i], next[j]] = [next[j], next[i]];
     setPins(next);
+  };
+
+  const addLabel = () => {
+    const v = newLabel.trim();
+    if (!v || labels.includes(v)) return;
+    setLabels(prev => [...prev, v]);
+    setNewLabel('');
   };
 
   return (
@@ -587,9 +596,33 @@ function PinEditor({ pinnedCats, onSave, onCancel }) {
           </>
         )}
 
+        <div style={{ borderTop: '1px solid #E4D7BC', paddingTop: 14, marginBottom: 14 }}>
+          <div style={{ fontSize: 11, color: '#A6925E', fontWeight: 600, letterSpacing: '.1em', marginBottom: 8 }}>ชื่อหมวดกำหนดเอง</div>
+          {labels.length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
+              {labels.map(lbl => (
+                <div key={lbl} style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
+                  <span style={{ padding: '5px 10px', borderRadius: '14px 0 0 14px', border: '1px solid #E4D7BC', borderRight: 'none', background: '#fff', fontSize: 13, fontWeight: 600, color: '#4A3526' }}>{lbl}</span>
+                  <button onClick={() => setLabels(prev => prev.filter(l => l !== lbl))} style={{ padding: '5px 7px', borderRadius: '0 14px 14px 0', border: '1px solid #E0B4A2', background: '#FBEEE8', color: '#B5503A', fontSize: 11, cursor: 'pointer', lineHeight: 1 }}>✕</button>
+                </div>
+              ))}
+            </div>
+          )}
+          <div style={{ display: 'flex', gap: 6 }}>
+            <input
+              value={newLabel}
+              onChange={e => setNewLabel(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && addLabel()}
+              placeholder="พิมชื่อหมวด เช่น Indo, เล็ก..."
+              style={{ flex: 1, border: '1.5px solid #D8C8A8', borderRadius: 10, padding: '8px 12px', fontSize: 13, fontFamily: 'inherit', outline: 'none', background: '#FBF6EC', color: '#2A2118' }}
+            />
+            <button onClick={addLabel} disabled={!newLabel.trim()} style={{ border: 'none', background: newLabel.trim() ? '#5B3A29' : '#C8B998', color: '#F6EEDD', borderRadius: 10, padding: '8px 14px', fontSize: 13, fontWeight: 700, cursor: newLabel.trim() ? 'pointer' : 'default' }}>+ เพิ่ม</button>
+          </div>
+        </div>
+
         <div style={{ display: 'flex', gap: 10 }}>
           <button onClick={onCancel} style={{ flex: 1, border: '1px solid #E4D7BC', background: '#fff', borderRadius: 12, padding: 13, color: '#7A6450', cursor: 'pointer' }}>ยกเลิก</button>
-          <button onClick={() => onSave(pins)} style={{ flex: 1, border: 'none', background: '#3F2D1E', color: '#F6EEDD', borderRadius: 12, padding: 13, fontWeight: 600, cursor: 'pointer' }}>บันทึก</button>
+          <button onClick={() => onSave(pins, labels)} style={{ flex: 1, border: 'none', background: '#3F2D1E', color: '#F6EEDD', borderRadius: 12, padding: 13, fontWeight: 600, cursor: 'pointer' }}>บันทึก</button>
         </div>
       </div>
     </div>
@@ -898,9 +931,6 @@ function RecordView({ session, activeCat, input, onInput, onCommit, onPickCat, o
                 <div style={{ fontSize: 10, opacity: .7 }}>{d.count} เข่ง</div>
               </div>
             </button>
-            {onAddCustomCatLabel && customLabel.trim() && !(customCatLabels||[]).includes(customLabel.trim()) && (
-              <button onClick={() => onAddCustomCatLabel(customLabel.trim())} title="บันทึกชื่อหมวดนี้" style={{ border: '1px solid #E4D7BC', background: '#FBF6EC', borderRadius: 12, padding: '0 12px', fontSize: 18, cursor: 'pointer', color: '#7C8C9A' }}>📌</button>
-            )}
           </div>
         );
       })()}
@@ -2520,9 +2550,6 @@ function SaleRecordView({ saleSession, activeCat, input, onInput, onCommit, onPi
                 <div style={{ fontSize: 10, opacity: .7 }}>{d.count} เข่ง</div>
               </div>
             </button>
-            {onAddCustomCatLabel && customLabel.trim() && !(customCatLabels||[]).includes(customLabel.trim()) && (
-              <button onClick={() => onAddCustomCatLabel(customLabel.trim())} title="บันทึกชื่อหมวดนี้" style={{ border: '1px solid #E4D7BC', background: '#FBF6EC', borderRadius: 12, padding: '0 12px', fontSize: 18, cursor: 'pointer', color: '#7C8C9A' }}>📌</button>
-            )}
           </div>
         );
       })()}
@@ -5168,7 +5195,7 @@ export default function App() {
         onDraftChange={v => setVerifyPrompt(p => ({ ...p, draft: v }))}
         onConfirm={handleVerifyConfirm} onSkip={() => commitFinish()} onCancel={() => setVerifyPrompt(null)} />}
 
-      {pinEditorOpen && <PinEditor pinnedCats={pinnedCats} onSave={pins => { storage.savePinnedCats(pins); setPinnedCats(pins); setPinEditorOpen(false); toast('บันทึกหมวดปักหมุดแล้ว'); }} onCancel={() => setPinEditorOpen(false)} />}
+      {pinEditorOpen && <PinEditor pinnedCats={pinnedCats} customCatLabels={customCatLabels} onSave={(pins, labels) => { storage.savePinnedCats(pins); setPinnedCats(pins); db.saveSetting('custom_cat_labels', labels).catch(() => {}); setCustomCatLabels(labels); setPinEditorOpen(false); toast('บันทึกหมวดปักหมุดแล้ว'); }} onCancel={() => setPinEditorOpen(false)} />}
       {employeeManagerOpen && <EmployeeManager employees={employees} onSave={list => { storage.saveEmployees(list); setEmployees(list); db.saveSetting('employees', list).catch(() => {}); setEmployeeManagerOpen(false); toast('บันทึกรายชื่อพนักงานแล้ว'); }} onCancel={() => setEmployeeManagerOpen(false)} />}
       {sheetModal && <SheetModal onSyncNow={() => { syncNow(false); }} syncStatus={syncStatus} syncing={syncing} onCancel={() => setSheetModal(false)} />}
 
