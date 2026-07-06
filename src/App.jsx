@@ -670,17 +670,20 @@ function VehicleModal({ plate, photoUrl, onSave, onPhoto, onClose }) {
 
 const THAI_BANKS = [
   'กสิกรไทย (KBank)', 'ไทยพาณิชย์ (SCB)', 'กรุงเทพ (BBL)', 'กรุงไทย (KTB)',
-  'กรุงศรีอยุธยา (BAY)', 'ออมสิน (GSB)', 'ทหารไทยธนชาต (TTB)', 'เกียรตินาคินภัทร (KKP)',
-  'ซีไอเอ็มบีไทย (CIMB)', 'ยูโอบี (UOB)', 'แลนด์ แอนด์ เฮ้าส์ (LH)', 'ธอส. (GHB)',
-  'พร้อมเพย์',
+  'กรุงศรีอยุธยา (BAY)', 'ออมสิน (GSB)', 'ธ.ก.ส. (BAAC)', 'ทหารไทยธนชาต (TTB)',
+  'เกียรตินาคินภัทร (KKP)', 'ซีไอเอ็มบีไทย (CIMB)', 'ยูโอบี (UOB)',
+  'แลนด์ แอนด์ เฮ้าส์ (LH)', 'ธอส. (GHB)', 'พร้อมเพย์', 'อื่นๆ',
 ];
 
 function BankModal({ bankName, bankAccount, fullName, onSave, onClose }) {
-  const [name, setName] = useState(bankName || '');
+  const isCustom = bankName && !THAI_BANKS.includes(bankName);
+  const [selectVal, setSelectVal] = useState(isCustom ? 'อื่นๆ' : (bankName || ''));
+  const [customBank, setCustomBank] = useState(isCustom ? bankName : '');
   const [acct, setAcct] = useState(bankAccount || '');
   const [fName, setFName] = useState(fullName || '');
+  const name = selectVal === 'อื่นๆ' ? customBank : selectVal;
   const inp = { width: '100%', boxSizing: 'border-box', border: '1.5px solid #D8C8A8', borderRadius: 12, padding: '12px 14px', fontSize: 15, fontFamily: 'Prompt', color: '#2A2118', background: '#FBF6EC', marginBottom: 10 };
-  const selStyle = { ...inp, appearance: 'none', WebkitAppearance: 'none', backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'10\' height=\'6\'%3E%3Cpath fill=\'%239A8662\' d=\'M5 6L0 0h10z\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 14px center', paddingRight: 36, color: name ? '#2A2118' : '#9A8662' };
+  const selStyle = { ...inp, appearance: 'none', WebkitAppearance: 'none', backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'10\' height=\'6\'%3E%3Cpath fill=\'%239A8662\' d=\'M5 6L0 0h10z\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 14px center', paddingRight: 36, color: selectVal ? '#2A2118' : '#9A8662' };
   return (
     <div className="no-print" style={{ position: 'fixed', inset: 0, zIndex: 70, background: 'rgba(42,33,24,.55)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', padding: '0 0 env(safe-area-inset-bottom)', animation: 'fadeIn .2s' }}>
       <div style={{ background: '#FFFDF8', borderRadius: '20px 20px 0 0', padding: '20px 18px 28px', width: '100%', maxWidth: 480, boxShadow: '0 -8px 30px rgba(42,33,24,.18)' }}>
@@ -689,10 +692,13 @@ function BankModal({ bankName, bankAccount, fullName, onSave, onClose }) {
           <button onClick={onClose} style={{ border: 'none', background: 'none', fontSize: 20, cursor: 'pointer', color: '#9A8662' }}>✕</button>
         </div>
         <input value={fName} onChange={e => setFName(e.target.value)} placeholder="ชื่อ-นามสกุลเจ้าของบัญชี" style={inp} />
-        <select value={name} onChange={e => setName(e.target.value)} style={selStyle}>
+        <select value={selectVal} onChange={e => setSelectVal(e.target.value)} style={selStyle}>
           <option value="">เลือกธนาคาร</option>
           {THAI_BANKS.map(b => <option key={b} value={b}>{b}</option>)}
         </select>
+        {selectVal === 'อื่นๆ' && (
+          <input value={customBank} onChange={e => setCustomBank(e.target.value)} placeholder="พิมชื่อธนาคาร..." style={inp} autoFocus />
+        )}
         <input value={acct} onChange={e => setAcct(e.target.value.replace(/\D/g, ''))} placeholder="เลขบัญชี / เบอร์พร้อมเพย์" inputMode="numeric" style={{ ...inp, fontFamily: 'Prompt', letterSpacing: '.06em', fontSize: 16 }} />
         <button onClick={() => { onSave(name.trim(), acct.trim(), fName.trim()); onClose(); }} style={{ width: '100%', border: 'none', borderRadius: 13, padding: 15, background: 'linear-gradient(135deg,#5A7FA8,#3A5F88)', color: '#fff', fontWeight: 700, fontSize: 16, cursor: 'pointer', boxShadow: '0 6px 16px rgba(58,95,136,.28)' }}>
           บันทึกข้อมูลธนาคาร
