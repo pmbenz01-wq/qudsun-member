@@ -539,24 +539,37 @@ function HomeView({ session, history, saleHistory, payments, syncing, syncStatus
 
 // ─── PinEditor ────────────────────────────────────────────────────────────────
 function PinEditor({ pinnedCats, customCatLabels, onSave, onCancel }) {
-  const [pins, setPins] = useState([...pinnedCats]);
-  const [labels, setLabels] = useState([...(customCatLabels || [])]);
+  // unified list: {type:'cat',key} or {type:'custom',label}
+  const initItems = [
+    ...pinnedCats.map(key => ({ type: 'cat', key })),
+    ...(customCatLabels || []).map(label => ({ type: 'custom', label })),
+  ];
+  const [items, setItems] = useState(initItems);
   const [newLabel, setNewLabel] = useState('');
-  const available = CATS.filter(c => c.key !== 'custom' && !pins.includes(c.key));
+  const pinnedKeys = items.filter(i => i.type === 'cat').map(i => i.key);
+  const available = CATS.filter(c => c.key !== 'custom' && !pinnedKeys.includes(c.key));
 
   const move = (i, dir) => {
-    const next = [...pins];
+    const next = [...items];
     const j = i + dir;
     if (j < 0 || j >= next.length) return;
     [next[i], next[j]] = [next[j], next[i]];
-    setPins(next);
+    setItems(next);
   };
+
+  const addCat = (key) => setItems(prev => [...prev, { type: 'cat', key }]);
 
   const addLabel = () => {
     const v = newLabel.trim();
-    if (!v || labels.includes(v)) return;
-    setLabels(prev => [...prev, v]);
+    if (!v || items.some(i => i.type === 'custom' && i.label === v)) return;
+    setItems(prev => [...prev, { type: 'custom', label: v }]);
     setNewLabel('');
+  };
+
+  const handleSave = () => {
+    const pins = items.filter(i => i.type === 'cat').map(i => i.key);
+    const labels = items.filter(i => i.type === 'custom').map(i => i.label);
+    onSave(pins, labels);
   };
 
   return (
@@ -566,28 +579,29 @@ function PinEditor({ pinnedCats, customCatLabels, onSave, onCancel }) {
         <p style={{ fontSize: 12, color: '#9A8662', margin: '0 0 14px' }}>เลือกหมวดที่ใช้บ่อย แล้วจัดลำดับตามต้องการ</p>
 
         <div style={{ marginBottom: 14 }}>
-          {pins.map((key, i) => {
-            const cat = CATS.find(c => c.key === key);
-            if (!cat) return null;
+          {items.map((item, i) => {
+            const cat = item.type === 'cat' ? CATS.find(c => c.key === item.key) : null;
+            const label = item.type === 'cat' ? (cat?.label || item.key) : item.label;
+            const accent = cat?.accent || '#7C8C9A';
             return (
-              <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 10px', background: '#FBF6EC', borderRadius: 10, marginBottom: 6, border: '1px solid #E4D7BC' }}>
-                <span style={{ width: 9, height: 9, borderRadius: '50%', background: cat.accent, flexShrink: 0 }} />
-                <span style={{ flex: 1, fontSize: 14, fontWeight: 600, color: '#4A3526' }}>{cat.label || cat.key}</span>
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 10px', background: '#FBF6EC', borderRadius: 10, marginBottom: 6, border: '1px solid #E4D7BC' }}>
+                <span style={{ width: 9, height: 9, borderRadius: '50%', background: accent, flexShrink: 0 }} />
+                <span style={{ flex: 1, fontSize: 14, fontWeight: 600, color: '#4A3526' }}>{label}</span>
                 <button onClick={() => move(i, -1)} disabled={i === 0} style={{ border: '1px solid #E4D7BC', background: '#fff', borderRadius: 7, padding: '4px 8px', fontSize: 13, cursor: i === 0 ? 'default' : 'pointer', opacity: i === 0 ? .3 : 1 }}>↑</button>
-                <button onClick={() => move(i, 1)} disabled={i === pins.length - 1} style={{ border: '1px solid #E4D7BC', background: '#fff', borderRadius: 7, padding: '4px 8px', fontSize: 13, cursor: i === pins.length - 1 ? 'default' : 'pointer', opacity: i === pins.length - 1 ? .3 : 1 }}>↓</button>
-                <button onClick={() => setPins(p => p.filter((_, j) => j !== i))} style={{ border: '1px solid #E0B4A2', background: '#FBEEE8', borderRadius: 7, padding: '4px 8px', fontSize: 13, color: '#B5503A', cursor: 'pointer' }}>✕</button>
+                <button onClick={() => move(i, 1)} disabled={i === items.length - 1} style={{ border: '1px solid #E4D7BC', background: '#fff', borderRadius: 7, padding: '4px 8px', fontSize: 13, cursor: i === items.length - 1 ? 'default' : 'pointer', opacity: i === items.length - 1 ? .3 : 1 }}>↓</button>
+                <button onClick={() => setItems(p => p.filter((_, j) => j !== i))} style={{ border: '1px solid #E0B4A2', background: '#FBEEE8', borderRadius: 7, padding: '4px 8px', fontSize: 13, color: '#B5503A', cursor: 'pointer' }}>✕</button>
               </div>
             );
           })}
-          {pins.length === 0 && <div style={{ textAlign: 'center', fontSize: 13, color: '#B7A684', padding: '12px 0' }}>ยังไม่มีหมวดปักหมุด</div>}
+          {items.length === 0 && <div style={{ textAlign: 'center', fontSize: 13, color: '#B7A684', padding: '12px 0' }}>ยังไม่มีหมวดปักหมุด</div>}
         </div>
 
         {available.length > 0 && (
           <>
-            <div style={{ fontSize: 11, color: '#A6925E', fontWeight: 600, letterSpacing: '.1em', marginBottom: 8 }}>เพิ่มหมวด</div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginBottom: 16 }}>
+            <div style={{ fontSize: 11, color: '#A6925E', fontWeight: 600, letterSpacing: '.1em', marginBottom: 8 }}>เพิ่มหมวดมาตรฐาน</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginBottom: 14 }}>
               {available.map(cat => (
-                <button key={cat.key} onClick={() => setPins(p => [...p, cat.key])} style={{ border: '1px dashed #C9A24B', background: '#FBF6EC', borderRadius: 9, padding: '6px 12px', fontSize: 13, color: '#7A5A22', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <button key={cat.key} onClick={() => addCat(cat.key)} style={{ border: '1px dashed #C9A24B', background: '#FBF6EC', borderRadius: 9, padding: '6px 12px', fontSize: 13, color: '#7A5A22', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
                   <span style={{ width: 7, height: 7, borderRadius: '50%', background: cat.accent }} />
                   {cat.label || cat.key} <span style={{ fontSize: 14 }}>＋</span>
                 </button>
@@ -596,24 +610,14 @@ function PinEditor({ pinnedCats, customCatLabels, onSave, onCancel }) {
           </>
         )}
 
-        <div style={{ borderTop: '1px solid #E4D7BC', paddingTop: 14, marginBottom: 14 }}>
-          <div style={{ fontSize: 11, color: '#A6925E', fontWeight: 600, letterSpacing: '.1em', marginBottom: 8 }}>ชื่อหมวดกำหนดเอง</div>
-          {labels.length > 0 && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
-              {labels.map(lbl => (
-                <div key={lbl} style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
-                  <span style={{ padding: '5px 10px', borderRadius: '14px 0 0 14px', border: '1px solid #E4D7BC', borderRight: 'none', background: '#fff', fontSize: 13, fontWeight: 600, color: '#4A3526' }}>{lbl}</span>
-                  <button onClick={() => setLabels(prev => prev.filter(l => l !== lbl))} style={{ padding: '5px 7px', borderRadius: '0 14px 14px 0', border: '1px solid #E0B4A2', background: '#FBEEE8', color: '#B5503A', fontSize: 11, cursor: 'pointer', lineHeight: 1 }}>✕</button>
-                </div>
-              ))}
-            </div>
-          )}
+        <div style={{ borderTop: '1px solid #E4D7BC', paddingTop: 12, marginBottom: 14 }}>
+          <div style={{ fontSize: 11, color: '#A6925E', fontWeight: 600, letterSpacing: '.1em', marginBottom: 8 }}>เพิ่มหมวดกำหนดเอง</div>
           <div style={{ display: 'flex', gap: 6 }}>
             <input
               value={newLabel}
               onChange={e => setNewLabel(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && addLabel()}
-              placeholder="พิมชื่อหมวด เช่น Indo, เล็ก..."
+              placeholder="พิมชื่อ เช่น Indo, เล็ก..."
               style={{ flex: 1, border: '1.5px solid #D8C8A8', borderRadius: 10, padding: '8px 12px', fontSize: 13, fontFamily: 'inherit', outline: 'none', background: '#FBF6EC', color: '#2A2118' }}
             />
             <button onClick={addLabel} disabled={!newLabel.trim()} style={{ border: 'none', background: newLabel.trim() ? '#5B3A29' : '#C8B998', color: '#F6EEDD', borderRadius: 10, padding: '8px 14px', fontSize: 13, fontWeight: 700, cursor: newLabel.trim() ? 'pointer' : 'default' }}>+ เพิ่ม</button>
@@ -622,7 +626,7 @@ function PinEditor({ pinnedCats, customCatLabels, onSave, onCancel }) {
 
         <div style={{ display: 'flex', gap: 10 }}>
           <button onClick={onCancel} style={{ flex: 1, border: '1px solid #E4D7BC', background: '#fff', borderRadius: 12, padding: 13, color: '#7A6450', cursor: 'pointer' }}>ยกเลิก</button>
-          <button onClick={() => onSave(pins, labels)} style={{ flex: 1, border: 'none', background: '#3F2D1E', color: '#F6EEDD', borderRadius: 12, padding: 13, fontWeight: 600, cursor: 'pointer' }}>บันทึก</button>
+          <button onClick={handleSave} style={{ flex: 1, border: 'none', background: '#3F2D1E', color: '#F6EEDD', borderRadius: 12, padding: 13, fontWeight: 600, cursor: 'pointer' }}>บันทึก</button>
         </div>
       </div>
     </div>
