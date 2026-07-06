@@ -706,6 +706,7 @@ function RecordView({ session, activeCat, input, onInput, onCommit, onPickCat, o
   const aggData = agg(session);
   const [vehicleModalOpen, setVehicleModalOpen] = useState(false);
   const [bankModalOpen, setBankModalOpen] = useState(false);
+  const customInputRef = React.useRef(null);
   const sellerPhone = session?.sellerPhone || '';
   const bankInfo = (customerInfo || {})[sellerPhone] || {};
   const totalKg = grandKg(session);
@@ -856,19 +857,20 @@ function RecordView({ session, activeCat, input, onInput, onCommit, onPickCat, o
         </div>
       )}
       {/* Custom cat presets */}
-      {customCatLabels && customCatLabels.length > 0 && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
-          {customCatLabels.map(lbl => {
-            const isActive = activeCat === 'custom' && customLabel === lbl;
-            return (
-              <div key={lbl} style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
-                <button onClick={() => { onCustomLabelChange(lbl); onPickCat('custom'); }} style={{ padding: '6px 12px', borderRadius: '16px 0 0 16px', border: isActive ? 'none' : '1px solid #E4D7BC', borderRight: 'none', background: isActive ? '#7C8C9A' : '#fff', color: isActive ? '#fff' : '#4A3526', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>{lbl}</button>
-                {onRemoveCustomCatLabel && <button onClick={() => onRemoveCustomCatLabel(lbl)} style={{ padding: '6px 8px', borderRadius: '0 16px 16px 0', border: isActive ? 'none' : '1px solid #E4D7BC', background: isActive ? '#7C8C9A' : '#fff', color: isActive ? '#ddd' : '#C0B09A', fontSize: 11, cursor: 'pointer', lineHeight: 1 }}>✕</button>}
-              </div>
-            );
-          })}
-        </div>
-      )}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
+        {(customCatLabels || []).map(lbl => {
+          const isActive = activeCat === 'custom' && customLabel === lbl;
+          return (
+            <div key={lbl} style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
+              <button onClick={() => { onCustomLabelChange(lbl); onPickCat('custom'); }} style={{ padding: '6px 12px', borderRadius: '16px 0 0 16px', border: isActive ? 'none' : '1px solid #E4D7BC', borderRight: 'none', background: isActive ? '#7C8C9A' : '#fff', color: isActive ? '#fff' : '#4A3526', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>{lbl}</button>
+              {onRemoveCustomCatLabel && <button onClick={() => onRemoveCustomCatLabel(lbl)} style={{ padding: '6px 8px', borderRadius: '0 16px 16px 0', border: isActive ? 'none' : '1px solid #E4D7BC', background: isActive ? '#7C8C9A' : '#fff', color: isActive ? '#ddd' : '#C0B09A', fontSize: 11, cursor: 'pointer', lineHeight: 1 }}>✕</button>}
+            </div>
+          );
+        })}
+        {onAddCustomCatLabel && (
+          <button onClick={() => { onCustomLabelChange(''); onPickCat('custom'); setTimeout(() => customInputRef.current?.focus(), 50); }} style={{ padding: '6px 12px', borderRadius: 16, border: '1px dashed #C9A24B', background: '#FBF6EC', color: '#9A8662', fontSize: 13, cursor: 'pointer', fontWeight: 600 }}>+ เพิ่ม</button>
+        )}
+      </div>
       {(() => {
         const d = aggData['custom'];
         const active = activeCat === 'custom';
@@ -877,6 +879,7 @@ function RecordView({ session, activeCat, input, onInput, onCommit, onPickCat, o
             <button onClick={() => onPickCat('custom')} style={{ flex: 1, border: active ? `2px solid ${customCat.accent}` : '1px solid #E4D7BC', background: active ? '#FFFDF8' : '#FBF6EC', borderRadius: 12, padding: '10px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, boxShadow: active ? `0 4px 12px ${customCat.accent}40` : 'none' }}>
               <span style={{ width: 8, height: 8, borderRadius: '50%', background: customCat.accent, display: 'inline-block', flexShrink: 0 }} />
               <input
+                ref={customInputRef}
                 value={customLabel}
                 onChange={e => onCustomLabelChange(e.target.value)}
                 onFocus={() => onPickCat('custom')}
@@ -2375,6 +2378,7 @@ function SaleRecordView({ saleSession, activeCat, input, onInput, onCommit, onPi
   entries.forEach(e => { if (aggData[e.cat]) { aggData[e.cat].kg += e.kg; aggData[e.cat].count++; } });
   const totalKg = entries.reduce((s, e) => s + e.kg, 0);
   const totalCount = entries.length;
+  const saleCustomInputRef = React.useRef(null);
   const customLabel = saleSession?.customLabel || '';
   const mainCats = CATS.filter(c => c.key !== 'custom');
   const customCat = CATS.find(c => c.key === 'custom');
@@ -2473,19 +2477,20 @@ function SaleRecordView({ saleSession, activeCat, input, onInput, onCommit, onPi
       )}
 
       {/* Custom cat presets */}
-      {customCatLabels && customCatLabels.length > 0 && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
-          {customCatLabels.map(lbl => {
-            const isActive = activeCat === 'custom' && customLabel === lbl;
-            return (
-              <div key={lbl} style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
-                <button onClick={() => { onCustomLabelChange(lbl); onPickCat('custom'); }} style={{ padding: '6px 12px', borderRadius: '16px 0 0 16px', border: isActive ? 'none' : '1px solid #E4D7BC', borderRight: 'none', background: isActive ? '#7C8C9A' : '#fff', color: isActive ? '#fff' : '#4A3526', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>{lbl}</button>
-                {onRemoveCustomCatLabel && <button onClick={() => onRemoveCustomCatLabel(lbl)} style={{ padding: '6px 8px', borderRadius: '0 16px 16px 0', border: isActive ? 'none' : '1px solid #E4D7BC', background: isActive ? '#7C8C9A' : '#fff', color: isActive ? '#ddd' : '#C0B09A', fontSize: 11, cursor: 'pointer', lineHeight: 1 }}>✕</button>}
-              </div>
-            );
-          })}
-        </div>
-      )}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
+        {(customCatLabels || []).map(lbl => {
+          const isActive = activeCat === 'custom' && customLabel === lbl;
+          return (
+            <div key={lbl} style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
+              <button onClick={() => { onCustomLabelChange(lbl); onPickCat('custom'); }} style={{ padding: '6px 12px', borderRadius: '16px 0 0 16px', border: isActive ? 'none' : '1px solid #E4D7BC', borderRight: 'none', background: isActive ? '#7C8C9A' : '#fff', color: isActive ? '#fff' : '#4A3526', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>{lbl}</button>
+              {onRemoveCustomCatLabel && <button onClick={() => onRemoveCustomCatLabel(lbl)} style={{ padding: '6px 8px', borderRadius: '0 16px 16px 0', border: isActive ? 'none' : '1px solid #E4D7BC', background: isActive ? '#7C8C9A' : '#fff', color: isActive ? '#ddd' : '#C0B09A', fontSize: 11, cursor: 'pointer', lineHeight: 1 }}>✕</button>}
+            </div>
+          );
+        })}
+        {onAddCustomCatLabel && (
+          <button onClick={() => { onCustomLabelChange(''); onPickCat('custom'); setTimeout(() => saleCustomInputRef.current?.focus(), 50); }} style={{ padding: '6px 12px', borderRadius: 16, border: '1px dashed #C9A24B', background: '#FBF6EC', color: '#9A8662', fontSize: 13, cursor: 'pointer', fontWeight: 600 }}>+ เพิ่ม</button>
+        )}
+      </div>
 
       {/* Custom cat row */}
       {(() => {
@@ -2496,6 +2501,7 @@ function SaleRecordView({ saleSession, activeCat, input, onInput, onCommit, onPi
             <button onClick={() => onPickCat('custom')} style={{ flex: 1, border: active ? `2px solid ${customCat.accent}` : '1px solid #E4D7BC', background: active ? '#FFFDF8' : '#FBF6EC', borderRadius: 12, padding: '10px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, boxShadow: active ? `0 4px 12px ${customCat.accent}40` : 'none' }}>
               <span style={{ width: 8, height: 8, borderRadius: '50%', background: customCat.accent, display: 'inline-block', flexShrink: 0 }} />
               <input
+                ref={saleCustomInputRef}
                 value={customLabel}
                 onChange={e => onCustomLabelChange(e.target.value)}
                 onFocus={() => onPickCat('custom')}
