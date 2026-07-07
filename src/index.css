@@ -26,8 +26,8 @@ input  { font-family: 'IBM Plex Sans Thai', sans-serif; }
 
 @media print {
   @page {
-    size: A5 portrait;
-    margin: 8mm;
+    size: A4 portrait;
+    margin: 12mm;
   }
   *, *::before, *::after {
     -webkit-print-color-adjust: exact !important;
@@ -43,11 +43,17 @@ input  { font-family: 'IBM Plex Sans Thai', sans-serif; }
     max-width: 100% !important;
     margin: 0 !important;
   }
-  .bill-doc {
+  .bill-doc:not(.sale-bill-doc) {
     background: #fff !important;
     border: none !important;
     border-radius: 0 !important;
     box-shadow: none !important;
     padding: 0 !important;
+  }
+  .sale-bill-doc {
+    background: #fff !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
   }
 }

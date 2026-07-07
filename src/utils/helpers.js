@@ -45,8 +45,22 @@ export function grandKg(session) {
 
 export function grandBaht(session) {
   if (!session) return 0;
-  const a = agg(session);
-  return CATS.reduce((sum, c) => sum + a[c.key].kg * (session.prices[c.key] || 0), 0);
+  return (session.entries || []).reduce((sum, e) => {
+    const priceKey = e.customLabel ? `custom:${e.customLabel}` : e.cat;
+    const price = (session.prices || {})[priceKey] ?? (session.prices || {})[e.cat] ?? 0;
+    return sum + (e.kg || 0) * price;
+  }, 0);
+}
+
+export function customLabelRows(session) {
+  const map = {};
+  (session?.entries || []).filter(e => e.cat === 'custom').forEach(e => {
+    const lbl = e.customLabel || '';
+    if (!map[lbl]) map[lbl] = { label: lbl, kg: 0, count: 0, priceKey: lbl ? 'custom:' + lbl : 'custom' };
+    map[lbl].kg += e.kg;
+    map[lbl].count++;
+  });
+  return Object.values(map);
 }
 
 export function billPayload(session) {

@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { grandBaht } from './helpers.js';
 
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
@@ -225,7 +226,7 @@ export const db = {
 
   async upsertSaleSession(s) {
     const totalKg = (s.entries || []).reduce((sum, e) => sum + (e.kg || 0), 0);
-    const totalBaht = (s.entries || []).reduce((sum, e) => sum + (e.kg || 0) * ((s.prices || {})[e.cat] || 0), 0);
+    const totalBaht = grandBaht(s);
     const { error } = await supabase.from('qm_sale_sessions').upsert({
       bill_no: s.billNo,
       date: new Date(s.date).toISOString(),
