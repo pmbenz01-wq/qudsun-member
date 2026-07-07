@@ -5124,7 +5124,7 @@ export default function App() {
         ) : <Navigate to="/" replace />} />
         <Route path="/sale/history" element={viewSaleSession ? (
           <SalePrintView saleSession={viewSaleSession} onGoBack={() => { setViewSaleSession(null); navigate('/'); }} onFinish={null}
-            onStartEdit={() => { setSaleSession({ ...viewSaleSession, confirmed: false }); setViewSaleSession(null); navigate('/sale/record'); }} />
+            onStartEdit={() => { setSaleSession({ ...viewSaleSession, confirmed: false }); navigate('/sale/record'); setTimeout(() => setViewSaleSession(null), 100); }} />
         ) : <Navigate to="/" replace />} />
         <Route path="/customers" element={
           <CustomersView history={history} verified={verified} onGoHome={() => navigate('/')}
