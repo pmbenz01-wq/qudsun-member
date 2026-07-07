@@ -2923,13 +2923,15 @@ function HistoryPageView({ onGoHome, onOpenBill, onOpenSaleBill, isEmployee, onD
           <span style={{ fontSize: 11, color: '#9A8662', fontWeight: 600, flexShrink: 0 }}>จาก</span>
           <input type="date" value={rangeFromDate} onChange={e => setRangeFromDate(e.target.value)}
             style={{ flex: 2, minWidth: 0, padding: '4px 6px', borderRadius: 8, border: `1px solid ${rangeFromDate ? '#DC743C' : '#D0C8C0'}`, fontSize: 11, color: rangeFromDate ? '#DC743C' : '#9A8662', background: '#fff', outline: 'none' }} />
-          <input type="time" value={rangeFromTime} onChange={e => setRangeFromTime(e.target.value)}
-            style={{ flex: 1, minWidth: 0, padding: '4px 6px', borderRadius: 8, border: `1px solid ${rangeFromTime ? '#DC743C' : '#D0C8C0'}`, fontSize: 11, color: rangeFromTime ? '#DC743C' : '#9A8662', background: '#fff', outline: 'none' }} />
+          <input type="text" value={rangeFromTime} placeholder="00:00" maxLength={5}
+            onChange={e => { let v = e.target.value.replace(/[^0-9]/g,''); if (v.length >= 3) v = v.slice(0,2)+':'+v.slice(2,4); setRangeFromTime(v); }}
+            style={{ flex: 1, minWidth: 0, padding: '4px 6px', borderRadius: 8, border: `1px solid ${rangeFromTime ? '#DC743C' : '#D0C8C0'}`, fontSize: 11, color: rangeFromTime ? '#DC743C' : '#9A8662', background: '#fff', outline: 'none', textAlign: 'center' }} />
           <span style={{ fontSize: 11, color: '#9A8662', fontWeight: 600, flexShrink: 0 }}>ถึง</span>
           <input type="date" value={rangeToDate} onChange={e => setRangeToDate(e.target.value)}
             style={{ flex: 2, minWidth: 0, padding: '4px 6px', borderRadius: 8, border: `1px solid ${rangeToDate ? '#DC743C' : '#D0C8C0'}`, fontSize: 11, color: rangeToDate ? '#DC743C' : '#9A8662', background: '#fff', outline: 'none' }} />
-          <input type="time" value={rangeToTime} onChange={e => setRangeToTime(e.target.value)}
-            style={{ flex: 1, minWidth: 0, padding: '4px 6px', borderRadius: 8, border: `1px solid ${rangeToTime ? '#DC743C' : '#D0C8C0'}`, fontSize: 11, color: rangeToTime ? '#DC743C' : '#9A8662', background: '#fff', outline: 'none' }} />
+          <input type="text" value={rangeToTime} placeholder="23:59" maxLength={5}
+            onChange={e => { let v = e.target.value.replace(/[^0-9]/g,''); if (v.length >= 3) v = v.slice(0,2)+':'+v.slice(2,4); setRangeToTime(v); }}
+            style={{ flex: 1, minWidth: 0, padding: '4px 6px', borderRadius: 8, border: `1px solid ${rangeToTime ? '#DC743C' : '#D0C8C0'}`, fontSize: 11, color: rangeToTime ? '#DC743C' : '#9A8662', background: '#fff', outline: 'none', textAlign: 'center' }} />
           {hasRange && (
             <button onClick={() => { setRangeFromDate(''); setRangeFromTime(''); setRangeToDate(''); setRangeToTime(''); }} style={{ flexShrink: 0, padding: '4px 10px', borderRadius: 8, border: '1px solid #D0C8C0', background: '#fff', fontSize: 11, color: '#9A8662', cursor: 'pointer' }}>ล้าง</button>
           )}
