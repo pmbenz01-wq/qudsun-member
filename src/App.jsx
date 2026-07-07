@@ -3476,15 +3476,6 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
     } else { setDayBonus(0); setDayIncludeBase(true); setDayRate(commissionRate); }
   }, [selectedDay, selEarning?.id]);
 
-  // Auto-save when user clicks a day that hasn't been saved yet
-  React.useEffect(() => {
-    if (!selectedDay || loadingBills || selEarning) return;
-    const mm = String(calMonth+1).padStart(2,'0');
-    const dd = String(selectedDay).padStart(2,'0');
-    db.saveEarning({ supervisor_name: supervisorName, date: `${calYear}-${mm}-${dd}`, base: baseRate, commission_kg: selKg, commission_baht: selCommission, bonus: 0, total: baseRate + selCommission })
-      .then(() => loadLedger()).catch(() => {});
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedDay, loadingBills]);
 
   // Daily wage cutoff: day D's base pay is earned only when D+1 at 12:00 has passed
   const isDaySettled = React.useCallback((billDateMs) => {
