@@ -5140,7 +5140,7 @@ export default function App() {
           <SalePrintView saleSession={saleSession} onGoBack={() => navigate('/sale/summary')} onFinish={finishSaleSession} />
         ) : <Navigate to="/" replace />} />
         <Route path="/sale/history" element={viewSaleSession ? (
-          <SalePrintView saleSession={viewSaleSession} onGoBack={() => { setViewSaleSession(null); navigate('/history'); }} onFinish={null}
+          <SalePrintView saleSession={viewSaleSession} onGoBack={() => { navigate('/history'); setTimeout(() => setViewSaleSession(null), 100); }} onFinish={null}
             onStartEdit={() => { setSaleSession({ ...viewSaleSession, confirmed: false }); navigate('/sale/record'); setTimeout(() => setViewSaleSession(null), 100); }} />
         ) : <Navigate to="/" replace />} />
         <Route path="/customers" element={
