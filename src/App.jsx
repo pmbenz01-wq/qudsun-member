@@ -3411,6 +3411,22 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
   const totalPaid = payments.reduce((s, p) => s + (p.amount || 0), 0);
   const balance = totalEarned - totalPaid;
 
+  // Breakdown by type
+  const breakdownWorkDays = React.useMemo(() => {
+    const keys = new Set();
+    allTimeBills.forEach(b => {
+      if (!b.date) return;
+      const ms = typeof b.date === 'number' ? (b.date > 1e12 ? b.date : b.date * 1000) : new Date(b.date).getTime();
+      const d = new Date(ms);
+      keys.add(`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`);
+    });
+    return keys.size;
+  }, [allTimeBills]);
+  const breakdownTotalKg = React.useMemo(() => allTimeBills.reduce((s, b) => s + parseNum(b.kg), 0), [allTimeBills]);
+  const breakdownBase = breakdownWorkDays * baseRate;
+  const breakdownComm = Math.round(breakdownTotalKg * commissionRate);
+  const breakdownBonus = earnings.reduce((s, e) => s + (e.bonus || 0), 0);
+
   const handleSaveDayEarning = async () => {
     setSaving(true);
     try {
@@ -3499,7 +3515,7 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
     </div>
   );
 
-  const TABS = [['calendar','ปฏิทิน'],['earnings','ค่าแรง'],['paid','การจ่าย'],['customers','ลูกค้า']];
+  const TABS = [['calendar','ปฏิทิน'],['bills','บิลคอม'],['earnings','ค่าแรง'],['paid','การจ่าย'],['customers','ลูกค้า']];
 
   return (
     <div style={{ minHeight: '100vh', background: '#F5EFE4', paddingBottom: 40 }}>
@@ -3537,15 +3553,73 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
 
       {/* Balance card */}
       <div style={{ margin: '10px 12px 0', background: '#fff', borderRadius: 14, border: '1px solid #E4D7BC', overflow: 'hidden' }}>
-        {loadingLedger ? <div style={{ textAlign: 'center', padding: 14, color: '#9A8662', fontSize: 12 }}>กำลังโหลด...</div> : (
-          <>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', textAlign: 'center', padding: '12px 8px 8px' }}>
-              <div><div style={{ fontSize: 10, color: '#9A8662' }}>💼 ยอดสะสม</div><div style={{ fontSize: 15, fontWeight: 700, color: '#4A3526' }}>฿{totalEarned.toLocaleString()}</div></div>
-              <div style={{ borderLeft: '1px solid #F0E8DC', borderRight: '1px solid #F0E8DC' }}><div style={{ fontSize: 10, color: '#9A8662' }}>✅ จ่ายแล้ว</div><div style={{ fontSize: 15, fontWeight: 700, color: '#2E7D32' }}>฿{totalPaid.toLocaleString()}</div></div>
-              <div><div style={{ fontSize: 10, color: '#9A8662' }}>🔴 ยอดค้าง</div><div style={{ fontSize: 15, fontWeight: 700, color: balance > 0 ? '#C0392B' : '#9A8662' }}>฿{balance.toLocaleString()}</div></div>
+        {loadingLedger ? <div style={{ textAlign: 'center', padding: 14, color: '#9A8662', fontSize: 12 }}>กำลังโหลด...</div> : (<>
+          {/* Pay type breakdown */}
+          <div style={{ padding: '12px 14px 8px', borderBottom: '1px solid #F0E8DC' }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: '#B7A684', marginBottom: 8, letterSpacing: '.08em' }}>รายละเอียดค่าแรง</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ fontSize: 14 }}>📅</span>
+                  <span style={{ fontSize: 12, color: '#4A3526' }}>รายวัน</span>
+                  <span style={{ fontSize: 10, color: '#B7A684' }}>{breakdownWorkDays} วัน × ฿{baseRate}</span>
+                </div>
+                <span style={{ fontSize: 13, fontWeight: 700, color: '#4A3526' }}>฿{breakdownBase.toLocaleString()}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ fontSize: 14 }}>📦</span>
+                  <span style={{ fontSize: 12, color: '#4A3526' }}>ค่าคอม</span>
+                  <span style={{ fontSize: 10, color: '#B7A684' }}>{breakdownTotalKg % 1 === 0 ? breakdownTotalKg : breakdownTotalKg.toFixed(1)} กก. × ฿{commissionRate}</span>
+                </div>
+                <span style={{ fontSize: 13, fontWeight: 700, color: '#E65100' }}>฿{breakdownComm.toLocaleString()}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ fontSize: 14 }}>🎁</span>
+                  <span style={{ fontSize: 12, color: '#4A3526' }}>โบนัส</span>
+                </div>
+                <span style={{ fontSize: 13, fontWeight: 700, color: '#7B3FA0' }}>฿{breakdownBonus.toLocaleString()}</span>
+              </div>
             </div>
-          </>
-        )}
+          </div>
+          {/* Totals row */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', textAlign: 'center', padding: '10px 8px' }}>
+            <div>
+              <div style={{ fontSize: 10, color: '#9A8662' }}>💼 รวมสะสม</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: '#4A3526' }}>฿{totalEarned.toLocaleString()}</div>
+            </div>
+            <div style={{ borderLeft: '1px solid #F0E8DC', borderRight: '1px solid #F0E8DC' }}>
+              <div style={{ fontSize: 10, color: '#9A8662' }}>✅ จ่ายแล้ว</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: '#2E7D32' }}>฿{totalPaid.toLocaleString()}</div>
+            </div>
+            <div>
+              <div style={{ fontSize: 10, color: '#9A8662' }}>🔴 ยอดค้าง</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: balance > 0 ? '#C0392B' : '#9A8662' }}>฿{balance.toLocaleString()}</div>
+            </div>
+          </div>
+          {/* Pay button */}
+          {balance > 0 && !showPayForm && (
+            <div style={{ padding: '0 12px 12px' }}>
+              <button onClick={() => { setShowPayForm(true); setPayAmount(String(balance)); }}
+                style={{ width: '100%', background: 'linear-gradient(135deg,#2E7D32,#1B5E20)', color: '#fff', border: 'none', borderRadius: 10, padding: '11px 0', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+                💸 บันทึกการจ่ายเงิน ฿{balance.toLocaleString()}
+              </button>
+            </div>
+          )}
+          {showPayForm && (
+            <div style={{ padding: '0 12px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input type="number" value={payAmount} onChange={e => setPayAmount(e.target.value)} placeholder="จำนวนเงิน" style={{ flex: 1, border: '1.5px solid #E4D7BC', borderRadius: 9, padding: '9px 12px', fontSize: 14, outline: 'none' }} />
+                <input value={payNote} onChange={e => setPayNote(e.target.value)} placeholder="หมายเหตุ" style={{ flex: 1, border: '1.5px solid #E4D7BC', borderRadius: 9, padding: '9px 12px', fontSize: 14, outline: 'none' }} />
+              </div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button onClick={() => setShowPayForm(false)} style={{ flex: 1, background: '#F5EFE4', color: '#7A6450', border: '1px solid #E4D7BC', borderRadius: 9, padding: '10px 0', fontSize: 13, cursor: 'pointer' }}>ยกเลิก</button>
+                <button onClick={handleSavePayment} disabled={saving} style={{ flex: 2, background: '#2E7D32', color: '#fff', border: 'none', borderRadius: 9, padding: '10px 0', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>{saving ? '...' : '✓ ยืนยันจ่าย'}</button>
+              </div>
+            </div>
+          )}
+        </>)}
       </div>
 
       {/* Tabs */}
@@ -3703,17 +3777,57 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
         </div>
       )}
 
+      {/* Tab: บิลคอม */}
+      {tab === 'bills' && (
+        <div style={{ padding: '10px 12px' }}>
+          {/* Summary bar */}
+          <div style={{ background: '#FFF8EE', borderRadius: 12, border: '1px solid #F0E8DC', padding: '10px 14px', marginBottom: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: 12, color: '#9A8662' }}>{allTimeBills.length} บิล · {breakdownTotalKg % 1 === 0 ? breakdownTotalKg : breakdownTotalKg.toFixed(1)} กก.</span>
+            <span style={{ fontSize: 14, fontWeight: 700, color: '#E65100' }}>ค่าคอม ฿{breakdownComm.toLocaleString()}</span>
+          </div>
+          {allTimeBills.length === 0 && <div style={{ textAlign: 'center', color: '#B7A684', padding: 32 }}>ยังไม่มีบิล</div>}
+          {allTimeBills.map((b, idx) => {
+            const ms = b.date > 1e12 ? b.date : (typeof b.date === 'number' ? b.date * 1000 : new Date(b.date).getTime());
+            const bDate = new Date(ms);
+            const dateLabel = bDate.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' });
+            const kg = parseNum(b.kg);
+            const comm = Math.round(kg * commissionRate);
+            const fullCard = history.find(h => h.billNo === b.billNo);
+            const clickable = !!fullCard && !!onOpenHistory;
+            return (
+              <button key={b.billNo || idx} onClick={() => clickable && onOpenHistory(fullCard)}
+                style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', background: '#fff', border: '1px solid #E4D7BC', borderRadius: 12, padding: '10px 14px', marginBottom: 6, cursor: clickable ? 'pointer' : 'default', textAlign: 'left' }}>
+                <div style={{ width: 36, height: 36, borderRadius: 9, background: '#FFF3E0', border: '1px solid #FFB74D', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 11, fontWeight: 700, color: '#BF360C' }}>{dateLabel}</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: '#3F2D1E', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.seller || '—'}</div>
+                  <div style={{ fontSize: 10, color: '#B0966A' }}>#{b.billNo}</div>
+                </div>
+                <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                  <div style={{ fontSize: 12, color: '#9A8662' }}>{kg % 1 === 0 ? kg : kg.toFixed(1)} กก.</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#E65100' }}>+฿{comm}</div>
+                </div>
+                {clickable && <span style={{ color: '#C9A24B', fontSize: 16, flexShrink: 0 }}>›</span>}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {/* Tab: ค่าแรง */}
       {tab === 'earnings' && (
         <div style={{ padding: '10px 12px' }}>
-          {earnings.length === 0 && !loadingLedger && <div style={{ textAlign: 'center', color: '#B7A684', padding: 32 }}>ยังไม่มีรายการ</div>}
+          {earnings.length === 0 && !loadingLedger && <div style={{ textAlign: 'center', color: '#B7A684', padding: 32 }}>ยังไม่มีรายการ<br/><span style={{ fontSize: 12 }}>กดวันในปฏิทินเพื่อบันทึก</span></div>}
           {earnings.map(e => (
-            <div key={e.id} style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4D7BC', borderLeft: '4px solid #DC743C', padding: '12px 14px', marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
+            <div key={e.id} style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4D7BC', borderLeft: '4px solid #DC743C', padding: '12px 14px', marginBottom: 8 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
                 <div style={{ fontWeight: 700, fontSize: 14, color: '#2A2118' }}>{fmtThDate(e.date)}</div>
-                <div style={{ fontSize: 11, color: '#9A8662', marginTop: 2 }}>฿{e.base}+฿{e.commission_baht}({e.commission_kg}กก.){e.bonus > 0 ? `+฿${e.bonus}🎁` : ''}</div>
+                <div style={{ fontWeight: 700, fontSize: 16, color: '#5B3A29' }}>฿{(e.total||0).toLocaleString()}</div>
               </div>
-              <div style={{ fontWeight: 700, fontSize: 16, color: '#5B3A29' }}>฿{(e.total||0).toLocaleString()}</div>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <span style={{ background: '#F5EFE4', borderRadius: 6, padding: '2px 8px', fontSize: 11, color: '#5B3A29' }}>📅 ฿{e.base}</span>
+                <span style={{ background: '#FFF3E0', borderRadius: 6, padding: '2px 8px', fontSize: 11, color: '#E65100' }}>📦 {e.commission_kg}กก. = ฿{e.commission_baht}</span>
+                {e.bonus > 0 && <span style={{ background: '#F3E8FF', borderRadius: 6, padding: '2px 8px', fontSize: 11, color: '#7B3FA0' }}>🎁 ฿{e.bonus}</span>}
+              </div>
             </div>
           ))}
         </div>
@@ -3723,6 +3837,7 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
       {tab === 'paid' && (
         <div style={{ padding: '10px 12px' }}>
           <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+            {balance > 0 && <button onClick={() => { setShowPayForm(true); setPayAmount(String(balance)); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={{ flex: 1, background: '#2E7D32', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>💸 จ่ายเงิน ฿{balance.toLocaleString()}</button>}
             <button onClick={() => setShowPaySlip(true)} style={{ flex: 1, background: '#fff', color: '#5B3A29', border: '1px solid #E4D7BC', borderRadius: 10, padding: '10px 14px', fontSize: 13, cursor: 'pointer' }}>🖨️ ออกบิล</button>
           </div>
           {payments.length === 0 && !loadingLedger && <div style={{ textAlign: 'center', color: '#B7A684', padding: 32 }}>ยังไม่มีรายการจ่าย</div>}
