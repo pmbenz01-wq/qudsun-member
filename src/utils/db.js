@@ -393,6 +393,11 @@ export const db = {
     return data || [];
   },
 
+  async updateSupPayment(id, fields) {
+    const { error } = await supabase.from('qm_sup_payments').update(fields).eq('id', id);
+    if (error) throw error;
+  },
+
   async deletePayment(id) {
     const { error } = await supabase.from('qm_sup_payments').delete().eq('id', id);
     if (error) throw error;

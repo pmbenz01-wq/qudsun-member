@@ -3394,6 +3394,9 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
   const [selectedCommBills, setSelectedCommBills] = React.useState(new Set());
   const [showCommPaySlip, setShowCommPaySlip] = React.useState(false);
   const [pendingCommBills, setPendingCommBills] = React.useState([]);
+  const [editingPayment, setEditingPayment] = React.useState(null); // { id, amount, note, paid_date }
+  const [editPayAmount, setEditPayAmount] = React.useState('');
+  const [editPayNote, setEditPayNote] = React.useState('');
 
   React.useEffect(() => {
     db.getSetting('sup_base_rates').then(v => {
@@ -4324,15 +4327,60 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
             <button onClick={() => setShowCommSlip(true)} style={{ flex: 1, background: '#FFF3E0', color: '#BF360C', border: '1px solid #FFCC80', borderRadius: 10, padding: '9px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>🖨️ บิลค่าคอม</button>
           </div>
           {payments.length === 0 && !loadingLedger && <div style={{ textAlign: 'center', color: '#B7A684', padding: 32 }}>ยังไม่มีรายการจ่าย</div>}
-          {payments.map(p => (
-            <div key={p.id} style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4D7BC', borderLeft: '4px solid #2E7D32', padding: '12px 14px', marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <div style={{ fontWeight: 700, fontSize: 14, color: '#2A2118' }}>{fmtThDate(p.paid_date)}</div>
-                {p.note && <div style={{ fontSize: 11, color: '#9A8662', marginTop: 2 }}>{fmtPayNote(p.note)}</div>}
+          {payments.map(p => {
+            const isEditing = editingPayment?.id === p.id;
+            const isCommBill = p.note && p.note.startsWith('COMM_BILLS:');
+            return (
+              <div key={p.id} style={{ background: '#fff', borderRadius: 12, border: `1px solid ${isEditing ? '#DC743C' : '#E4D7BC'}`, borderLeft: `4px solid ${isCommBill ? '#E65100' : '#2E7D32'}`, padding: '12px 14px', marginBottom: 8 }}>
+                {isEditing ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 2 }}>{fmtThDate(p.paid_date)}</div>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <input type="number" value={editPayAmount} onChange={e => setEditPayAmount(e.target.value)}
+                        placeholder="จำนวนเงิน" style={{ flex: 1, border: '1.5px solid #E4D7BC', borderRadius: 8, padding: '8px 10px', fontSize: 14, outline: 'none' }} />
+                      {!isCommBill && (
+                        <input value={editPayNote} onChange={e => setEditPayNote(e.target.value)}
+                          placeholder="หมายเหตุ" style={{ flex: 1, border: '1.5px solid #E4D7BC', borderRadius: 8, padding: '8px 10px', fontSize: 13, outline: 'none' }} />
+                      )}
+                    </div>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button onClick={async () => {
+                        if (!editPayAmount) return;
+                        setSaving(true);
+                        try {
+                          await db.updateSupPayment(p.id, { amount: Number(editPayAmount), note: isCommBill ? p.note : (editPayNote || null) });
+                          await loadLedger();
+                          setEditingPayment(null);
+                        } catch { alert('แก้ไขไม่สำเร็จ'); }
+                        setSaving(false);
+                      }} disabled={saving} style={{ flex: 2, background: '#2E7D32', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 0', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                        {saving ? '...' : '✓ บันทึก'}
+                      </button>
+                      <button onClick={() => setEditingPayment(null)} style={{ flex: 1, background: '#F5EFE4', color: '#5B3A29', border: '1px solid #E4D7BC', borderRadius: 8, padding: '8px 0', fontSize: 13, cursor: 'pointer' }}>ยกเลิก</button>
+                      <button onClick={async () => {
+                        if (!confirm('ลบรายการนี้?')) return;
+                        setSaving(true);
+                        try { await db.deletePayment(p.id); await loadLedger(); setEditingPayment(null); } catch { alert('ลบไม่สำเร็จ'); }
+                        setSaving(false);
+                      }} style={{ background: '#FDECEA', color: '#C0392B', border: '1px solid #FFCDD2', borderRadius: 8, padding: '8px 12px', fontSize: 13, cursor: 'pointer' }}>🗑</button>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: 14, color: '#2A2118' }}>{fmtThDate(p.paid_date)}</div>
+                      {p.note && <div style={{ fontSize: 11, color: '#9A8662', marginTop: 2 }}>{fmtPayNote(p.note)}</div>}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div style={{ fontWeight: 700, fontSize: 16, color: isCommBill ? '#E65100' : '#2E7D32' }}>฿{(p.amount||0).toLocaleString()}</div>
+                      <button onClick={() => { setEditingPayment(p); setEditPayAmount(String(p.amount || '')); setEditPayNote(p.note && !isCommBill ? p.note : ''); }}
+                        style={{ background: '#F5EFE4', border: '1px solid #E4D7BC', borderRadius: 7, padding: '4px 10px', fontSize: 12, color: '#7A6450', cursor: 'pointer' }}>แก้</button>
+                    </div>
+                  </div>
+                )}
               </div>
-              <div style={{ fontWeight: 700, fontSize: 16, color: '#2E7D32' }}>฿{(p.amount||0).toLocaleString()}</div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
