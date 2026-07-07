@@ -3383,6 +3383,10 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
   const [showPeriodPay, setShowPeriodPay] = React.useState(false);
   const [periodFrom, setPeriodFrom] = React.useState('');
   const [periodTo, setPeriodTo] = React.useState('');
+  const [commSelectMode, setCommSelectMode] = React.useState(false);
+  const [selectedCommBills, setSelectedCommBills] = React.useState(new Set());
+  const [showCommPaySlip, setShowCommPaySlip] = React.useState(false);
+  const [pendingCommBills, setPendingCommBills] = React.useState([]);
 
   React.useEffect(() => {
     db.getSetting('sup_base_rates').then(v => {
@@ -3636,6 +3640,94 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
   if (showCommSlip) return (
     <CommissionSlipPrintView supervisorName={supervisorName} bills={allTimeBills} commissionRate={commissionRate} onBack={() => setShowCommSlip(false)} />
   );
+
+  if (showCommPaySlip) {
+    const slipTotalKg = pendingCommBills.reduce((s, x) => s + x.kg, 0);
+    const slipTotalComm = pendingCommBills.reduce((s, x) => s + x.comm, 0);
+    const slipDate = new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' });
+    return (
+      <div style={{ minHeight: '100vh', background: '#F5EFE4' }}>
+        {/* Print-only slip */}
+        <div id="comm-pay-slip" style={{ maxWidth: 420, margin: '0 auto', background: '#fff', padding: '24px 20px' }}>
+          <div style={{ textAlign: 'center', marginBottom: 16 }}>
+            <div style={{ fontSize: 18, fontWeight: 800, color: '#5B3A29' }}>ใบจ่ายค่าคอมมิชชัน</div>
+            <div style={{ fontSize: 13, color: '#9A8662' }}>{supervisorName} · {slipDate}</div>
+          </div>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+            <thead>
+              <tr style={{ borderBottom: '2px solid #E4D7BC' }}>
+                <th style={{ textAlign: 'left', padding: '6px 4px', color: '#9A8662', fontWeight: 600 }}>วันที่</th>
+                <th style={{ textAlign: 'left', padding: '6px 4px', color: '#9A8662', fontWeight: 600 }}>ผู้ขาย</th>
+                <th style={{ textAlign: 'right', padding: '6px 4px', color: '#9A8662', fontWeight: 600 }}>กก.</th>
+                <th style={{ textAlign: 'right', padding: '6px 4px', color: '#9A8662', fontWeight: 600 }}>คอม</th>
+              </tr>
+            </thead>
+            <tbody>
+              {pendingCommBills.map(({ b, kg, comm }, i) => {
+                const ms = typeof b.date === 'number' ? (b.date > 1e12 ? b.date : b.date * 1000) : new Date(b.date).getTime();
+                const dl = new Date(ms).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
+                return (
+                  <tr key={b.billNo || i} style={{ borderBottom: '1px solid #F0E8DC' }}>
+                    <td style={{ padding: '7px 4px', color: '#5B3A29' }}>{dl}</td>
+                    <td style={{ padding: '7px 4px', color: '#3F2D1E', maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.seller || '—'}</td>
+                    <td style={{ padding: '7px 4px', textAlign: 'right', color: '#5B3A29' }}>{kg % 1 === 0 ? kg : kg.toFixed(1)}</td>
+                    <td style={{ padding: '7px 4px', textAlign: 'right', fontWeight: 700, color: '#E65100' }}>฿{comm}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+            <tfoot>
+              <tr style={{ borderTop: '2px solid #5B3A29' }}>
+                <td colSpan={2} style={{ padding: '10px 4px', fontWeight: 700, color: '#5B3A29' }}>รวม {pendingCommBills.length} บิล · {slipTotalKg % 1 === 0 ? slipTotalKg : slipTotalKg.toFixed(1)} กก.</td>
+                <td></td>
+                <td style={{ padding: '10px 4px', textAlign: 'right', fontSize: 16, fontWeight: 800, color: '#E65100' }}>฿{slipTotalComm.toLocaleString()}</td>
+              </tr>
+            </tfoot>
+          </table>
+          <div style={{ marginTop: 32, display: 'flex', justifyContent: 'space-between', paddingTop: 16, borderTop: '1px dashed #C9A24B' }}>
+            <div style={{ textAlign: 'center', flex: 1 }}>
+              <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 24 }}>ผู้จ่าย</div>
+              <div style={{ borderTop: '1px solid #5B3A29', paddingTop: 4, fontSize: 11, color: '#9A8662' }}>ลายเซ็น</div>
+            </div>
+            <div style={{ textAlign: 'center', flex: 1 }}>
+              <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 24 }}>ผู้รับ ({supervisorName})</div>
+              <div style={{ borderTop: '1px solid #5B3A29', paddingTop: 4, fontSize: 11, color: '#9A8662' }}>ลายเซ็น</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Action buttons (hidden in print) */}
+        <div className="no-print" style={{ maxWidth: 420, margin: '0 auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <button onClick={() => window.print()} style={{ background: '#5B3A29', color: '#fff', border: 'none', borderRadius: 12, padding: '13px', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
+            🖨️ พิมพ์บิล
+          </button>
+          <button onClick={async () => {
+            setSaving(true);
+            try {
+              const billNos = pendingCommBills.map(x => x.b.billNo);
+              await db.savePayment({
+                supervisor_name: supervisorName,
+                paid_date: toDateStr(new Date()),
+                amount: slipTotalComm,
+                note: `COMM_BILLS:${JSON.stringify(billNos)}`,
+              });
+              await loadLedger();
+              setShowCommPaySlip(false);
+              setCommSelectMode(false);
+              setSelectedCommBills(new Set());
+              setPendingCommBills([]);
+            } catch { alert('บันทึกไม่สำเร็จ'); }
+            setSaving(false);
+          }} disabled={saving} style={{ background: '#2E7D32', color: '#fff', border: 'none', borderRadius: 12, padding: '13px', fontSize: 15, fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer' }}>
+            {saving ? '...' : '✅ บันทึกจ่ายค่าคอมแล้ว ฿' + slipTotalComm.toLocaleString()}
+          </button>
+          <button onClick={() => setShowCommPaySlip(false)} style={{ background: '#E0D5C8', color: '#5B3A29', border: 'none', borderRadius: 12, padding: '13px', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+            ← ย้อนกลับ (ยังไม่จ่าย)
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (showPaySlip) return (
     <div style={{ minHeight: '100vh', background: '#F5EFE4', padding: 16 }}>
@@ -3966,26 +4058,36 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
 
       {/* Tab: บิลคอม */}
       {tab === 'bills' && (() => {
-        // Sort bills oldest→newest for running paid total
-        const sortedBills = [...allTimeBills].sort((a, b) => {
-          const msA = typeof a.date === 'number' ? (a.date > 1e12 ? a.date : a.date * 1000) : new Date(a.date).getTime();
-          const msB = typeof b.date === 'number' ? (b.date > 1e12 ? b.date : b.date * 1000) : new Date(b.date).getTime();
-          return msA - msB;
+        // Parse paid bill numbers from commission payments
+        const paidCommBillNos = new Set();
+        payments.forEach(p => {
+          if (p.note && p.note.startsWith('COMM_BILLS:')) {
+            try { JSON.parse(p.note.slice('COMM_BILLS:'.length)).forEach(n => paidCommBillNos.add(n)); } catch {}
+          }
         });
-        const commPaid = Math.min(totalPaid, breakdownComm);
-        const commRemain = Math.max(0, breakdownComm - totalPaid);
-        let runningComm = 0;
-        const billStatuses = sortedBills.map(b => {
+
+        const commPaidAmt = allTimeBills.reduce((s, b) => {
           const kg = parseNum(b.kg);
           const comm = Math.round(kg * commissionRate);
-          runningComm += comm;
-          const paid = runningComm <= totalPaid;
+          return paidCommBillNos.has(b.billNo) ? s + comm : s;
+        }, 0);
+        const commRemain = Math.max(0, breakdownComm - commPaidAmt);
+
+        // Bills newest-first with paid flag from explicit set
+        const displayBills = [...allTimeBills].map(b => {
+          const kg = parseNum(b.kg);
+          const comm = Math.round(kg * commissionRate);
+          const paid = paidCommBillNos.has(b.billNo);
           return { b, kg, comm, paid };
         });
-        // Reverse to show newest first for display
-        const displayBills = [...billStatuses].reverse();
+
+        // For selection mode
+        const selKg = displayBills.filter(x => selectedCommBills.has(x.b.billNo)).reduce((s, x) => s + x.kg, 0);
+        const selComm = displayBills.filter(x => selectedCommBills.has(x.b.billNo)).reduce((s, x) => s + x.comm, 0);
+        const unpaidBills = displayBills.filter(x => !x.paid);
+
         return (
-          <div style={{ padding: '10px 12px' }}>
+          <div style={{ padding: '10px 12px', paddingBottom: commSelectMode ? 90 : 10 }}>
             {/* Summary bar */}
             <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4D7BC', padding: '12px 14px', marginBottom: 10 }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', textAlign: 'center' }}>
@@ -3995,27 +4097,70 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
                 </div>
                 <div style={{ borderLeft: '1px solid #F0E8DC', borderRight: '1px solid #F0E8DC' }}>
                   <div style={{ fontSize: 10, color: '#9A8662' }}>✅ จ่ายแล้ว</div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: '#2E7D32' }}>฿{commPaid.toLocaleString()}</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: '#2E7D32' }}>฿{commPaidAmt.toLocaleString()}</div>
                 </div>
                 <div>
                   <div style={{ fontSize: 10, color: '#9A8662' }}>🔴 ค้าง</div>
                   <div style={{ fontSize: 14, fontWeight: 700, color: commRemain > 0 ? '#C0392B' : '#9A8662' }}>฿{commRemain.toLocaleString()}</div>
                 </div>
               </div>
-              <div style={{ marginTop: 8, fontSize: 10, color: '#B7A684', textAlign: 'center' }}>
-                {allTimeBills.length} บิล · {breakdownTotalKg % 1 === 0 ? breakdownTotalKg : breakdownTotalKg.toFixed(1)} กก. · นับจ่ายแล้วจากบิลเก่าสุด
+              <div style={{ marginTop: 10, display: 'flex', gap: 8, justifyContent: 'center' }}>
+                {!commSelectMode ? (
+                  <button onClick={() => { setCommSelectMode(true); setSelectedCommBills(new Set()); }}
+                    style={{ background: '#DC743C', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 16px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                    📄 ออกบิลค่าคอม
+                  </button>
+                ) : (
+                  <>
+                    <button onClick={() => {
+                      const allUnpaid = new Set(unpaidBills.map(x => x.b.billNo));
+                      setSelectedCommBills(selectedCommBills.size === unpaidBills.length ? new Set() : allUnpaid);
+                    }} style={{ background: '#5B3A29', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                      {selectedCommBills.size === unpaidBills.length ? 'ยกเลิกทั้งหมด' : 'เลือกทั้งหมด'}
+                    </button>
+                    <button onClick={() => { setCommSelectMode(false); setSelectedCommBills(new Set()); }}
+                      style={{ background: '#E0D5C8', color: '#5B3A29', border: 'none', borderRadius: 8, padding: '6px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                      ยกเลิก
+                    </button>
+                  </>
+                )}
               </div>
             </div>
+
             {allTimeBills.length === 0 && <div style={{ textAlign: 'center', color: '#B7A684', padding: 32 }}>ยังไม่มีบิล</div>}
             {displayBills.map(({ b, kg, comm, paid }, idx) => {
               const ms = typeof b.date === 'number' ? (b.date > 1e12 ? b.date : b.date * 1000) : new Date(b.date).getTime();
               const bDate = new Date(ms);
               const dateLabel = bDate.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' });
               const fullCard = history.find(h => h.billNo === b.billNo);
-              const clickable = !!fullCard && !!onOpenHistory;
+              const isSelected = selectedCommBills.has(b.billNo);
+              const canSelect = commSelectMode && !paid;
+
+              const handleClick = () => {
+                if (commSelectMode) {
+                  if (paid) return;
+                  const next = new Set(selectedCommBills);
+                  if (next.has(b.billNo)) next.delete(b.billNo); else next.add(b.billNo);
+                  setSelectedCommBills(next);
+                } else if (fullCard && onOpenHistory) {
+                  onOpenHistory(fullCard);
+                }
+              };
+
               return (
-                <button key={b.billNo || idx} onClick={() => clickable && onOpenHistory(fullCard)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', background: paid ? '#F9FFF9' : '#fff', border: `1px solid ${paid ? '#C8E6C9' : '#E4D7BC'}`, borderLeft: `4px solid ${paid ? '#2E7D32' : '#E4D7BC'}`, borderRadius: 12, padding: '10px 14px', marginBottom: 6, cursor: clickable ? 'pointer' : 'default', textAlign: 'left' }}>
+                <button key={b.billNo || idx} onClick={handleClick}
+                  style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%',
+                    background: paid ? '#F9FFF9' : (isSelected ? '#FFF3E6' : '#fff'),
+                    border: `1px solid ${paid ? '#C8E6C9' : (isSelected ? '#DC743C' : '#E4D7BC')}`,
+                    borderLeft: `4px solid ${paid ? '#2E7D32' : (isSelected ? '#DC743C' : '#E4D7BC')}`,
+                    borderRadius: 12, padding: '10px 14px', marginBottom: 6,
+                    cursor: canSelect || (!commSelectMode && !!fullCard && !!onOpenHistory) ? 'pointer' : 'default',
+                    textAlign: 'left', opacity: commSelectMode && paid ? 0.5 : 1 }}>
+                  {commSelectMode && (
+                    <div style={{ width: 22, height: 22, borderRadius: 6, border: `2px solid ${paid ? '#B0BEC5' : (isSelected ? '#DC743C' : '#C9A24B')}`, background: isSelected ? '#DC743C' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: '#fff', fontSize: 14, fontWeight: 700 }}>
+                      {isSelected ? '✓' : ''}
+                    </div>
+                  )}
                   <div style={{ width: 36, height: 36, borderRadius: 9, background: paid ? '#E8F5E9' : '#FFF3E0', border: `1px solid ${paid ? '#81C784' : '#FFB74D'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 10, fontWeight: 700, color: paid ? '#2E7D32' : '#BF360C' }}>{dateLabel}</div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 13, fontWeight: 600, color: '#3F2D1E', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.seller || '—'}</div>
@@ -4029,12 +4174,29 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
                   </div>
                   <div style={{ textAlign: 'right', flexShrink: 0 }}>
                     <div style={{ fontSize: 12, color: '#9A8662' }}>{kg % 1 === 0 ? kg : kg.toFixed(1)} กก.</div>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: paid ? '#2E7D32' : '#E65100' }}>+฿{comm}</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: paid ? '#2E7D32' : (isSelected ? '#DC743C' : '#E65100') }}>+฿{comm}</div>
                   </div>
-                  {clickable && <span style={{ color: '#C9A24B', fontSize: 16, flexShrink: 0 }}>›</span>}
+                  {!commSelectMode && !!fullCard && !!onOpenHistory && <span style={{ color: '#C9A24B', fontSize: 16, flexShrink: 0 }}>›</span>}
                 </button>
               );
             })}
+
+            {/* Sticky bottom bar when selecting */}
+            {commSelectMode && selectedCommBills.size > 0 && (
+              <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: '#5B3A29', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', zIndex: 200 }}>
+                <div style={{ color: '#FFF6ED' }}>
+                  <div style={{ fontSize: 12 }}>{selectedCommBills.size} บิล · {selKg % 1 === 0 ? selKg : selKg.toFixed(1)} กก.</div>
+                  <div style={{ fontSize: 16, fontWeight: 700 }}>฿{selComm.toLocaleString()}</div>
+                </div>
+                <button onClick={() => {
+                  const selectedList = displayBills.filter(x => selectedCommBills.has(x.b.billNo));
+                  setPendingCommBills(selectedList);
+                  setShowCommPaySlip(true);
+                }} style={{ background: '#DC743C', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 20px', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+                  📄 ออกบิล
+                </button>
+              </div>
+            )}
           </div>
         );
       })()}
