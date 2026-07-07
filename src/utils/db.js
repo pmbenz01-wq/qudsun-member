@@ -265,7 +265,7 @@ export const db = {
     const { data, error } = await supabase
       .from('qm_bills')
       .select('bill_no, date, seller, phone, kg, baht')
-      .eq('deleted', false)
+      .neq('deleted', true)
       .order('date', { ascending: false })
       .limit(limit);
     if (error) throw error;
@@ -284,7 +284,7 @@ export const db = {
     const { data, error } = await supabase
       .from('qm_sale_sessions')
       .select('bill_no, date, customer, phone, kg, baht')
-      .eq('deleted', false)
+      .neq('deleted', true)
       .order('date', { ascending: false })
       .limit(limit);
     if (error) throw error;

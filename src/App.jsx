@@ -2841,6 +2841,7 @@ function HistoryPageView({ onGoHome, onOpenBill, onOpenSaleBill, isEmployee, onD
   React.useEffect(() => { load(); }, [load]);
 
   const handleDelete = React.useCallback(async (item) => {
+    setDeleteTarget(null);
     try {
       if (item.type === 'buy') {
         await db.deleteBill(item.billNo);
@@ -2850,8 +2851,9 @@ function HistoryPageView({ onGoHome, onOpenBill, onOpenSaleBill, isEmployee, onD
         onDeleteSaleBill?.(item.billNo);
       }
       setItems(prev => prev.filter(i => i.billNo !== item.billNo));
-    } catch {}
-    setDeleteTarget(null);
+    } catch (err) {
+      alert('ลบไม่สำเร็จ: ' + (err?.message || String(err)));
+    }
   }, [onDeleteBill, onDeleteSaleBill]);
 
   const fmtDate = (d) => {
