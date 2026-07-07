@@ -383,23 +383,6 @@ function HomeView({ session, history, saleHistory, payments, syncing, syncStatus
       })()}
 
 
-      <button onClick={onGoDashboard} style={{ width: '100%', border: '1.5px solid #5A7FA8', background: 'linear-gradient(135deg,#EEF3FA,#DDE8F5)', borderRadius: 14, padding: '14px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
-        <span style={{ fontSize: 22 }}>🧾</span>
-        <div style={{ textAlign: 'left' }}>
-          <div style={{ fontWeight: 700, fontSize: 15, color: '#1A3A5C' }}>ยอดซื้อ</div>
-          <div style={{ fontSize: 12, color: '#4A6A8A' }}>ประวัติรับซื้อ / สถานะชำระ</div>
-        </div>
-        <span style={{ marginLeft: 'auto', color: '#5A7FA8', fontSize: 18 }}>›</span>
-      </button>
-
-      <button onClick={onGoSales} style={{ width: '100%', border: '1.5px solid #6B8E4E', background: 'linear-gradient(135deg,#EDF5E7,#DFF0D4)', borderRadius: 14, padding: '14px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
-        <span style={{ fontSize: 22 }}>📤</span>
-        <div style={{ textAlign: 'left' }}>
-          <div style={{ fontWeight: 700, fontSize: 15, color: '#3A5A28' }}>ยอดขาย / กำไร</div>
-          <div style={{ fontSize: 12, color: '#6A8A58' }}>ขาเข้า / ขาออก / กำไร-ขาดทุน</div>
-        </div>
-        <span style={{ marginLeft: 'auto', color: '#6B8E4E', fontSize: 18 }}>›</span>
-      </button>
 
       <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
         <button onClick={onGoCustomers} style={{ flex: 1, border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 14, padding: '15px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
