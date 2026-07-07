@@ -3355,6 +3355,9 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
     if (note.startsWith('COMM_BILLS:')) {
       try { const arr = JSON.parse(note.slice('COMM_BILLS:'.length)); return `ค่าคอม ${arr.length} บิล`; } catch {}
     }
+    if (note.startsWith('WAGE_DATES:')) {
+      try { const arr = JSON.parse(note.slice('WAGE_DATES:'.length)); return `ค่าแรง ${arr.length} วัน`; } catch {}
+    }
     return note;
   };
   const MONTH_TH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
@@ -3394,9 +3397,13 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
   const [selectedCommBills, setSelectedCommBills] = React.useState(new Set());
   const [showCommPaySlip, setShowCommPaySlip] = React.useState(false);
   const [pendingCommBills, setPendingCommBills] = React.useState([]);
-  const [editingPayment, setEditingPayment] = React.useState(null); // { id, amount, note, paid_date }
+  const [editingPayment, setEditingPayment] = React.useState(null);
   const [editPayAmount, setEditPayAmount] = React.useState('');
   const [editPayNote, setEditPayNote] = React.useState('');
+  const [wageSelectMode, setWageSelectMode] = React.useState(false);
+  const [selectedWageDates, setSelectedWageDates] = React.useState(new Set());
+  const [showWagePaySlip, setShowWagePaySlip] = React.useState(false);
+  const [pendingWageRecords, setPendingWageRecords] = React.useState([]);
 
   React.useEffect(() => {
     db.getSetting('sup_base_rates').then(v => {
@@ -3732,6 +3739,90 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
             {saving ? '...' : '✅ บันทึกจ่ายค่าคอมแล้ว ฿' + slipTotalComm.toLocaleString()}
           </button>
           <button onClick={() => setShowCommPaySlip(false)} style={{ background: '#E0D5C8', color: '#5B3A29', border: 'none', borderRadius: 12, padding: '13px', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+            ← ย้อนกลับ (ยังไม่จ่าย)
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (showWagePaySlip) {
+    const slipDate = new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' });
+    const slipBase = pendingWageRecords.reduce((s, e) => s + (e.base || 0), 0);
+    const slipBonus = pendingWageRecords.reduce((s, e) => s + (e.bonus || 0), 0);
+    const slipTotal = slipBase + slipBonus;
+    const sortedWage = [...pendingWageRecords].sort((a, b) => a.date.localeCompare(b.date));
+    return (
+      <div style={{ minHeight: '100vh', background: '#F5EFE4' }}>
+        <div id="wage-pay-slip" style={{ maxWidth: 420, margin: '0 auto', background: '#fff', padding: '24px 20px' }}>
+          <div style={{ textAlign: 'center', marginBottom: 16 }}>
+            <div style={{ fontSize: 18, fontWeight: 800, color: '#5B3A29' }}>ใบจ่ายค่าแรง</div>
+            <div style={{ fontSize: 13, color: '#9A8662' }}>{supervisorName} · {slipDate}</div>
+          </div>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+            <thead>
+              <tr style={{ borderBottom: '2px solid #E4D7BC' }}>
+                <th style={{ textAlign: 'left', padding: '6px 4px', color: '#9A8662', fontWeight: 600 }}>วันที่</th>
+                <th style={{ textAlign: 'right', padding: '6px 4px', color: '#9A8662', fontWeight: 600 }}>ค่าแรง</th>
+                <th style={{ textAlign: 'right', padding: '6px 4px', color: '#9A8662', fontWeight: 600 }}>โบนัส</th>
+                <th style={{ textAlign: 'right', padding: '6px 4px', color: '#9A8662', fontWeight: 600 }}>รวม</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sortedWage.map((e, i) => (
+                <tr key={e.id || i} style={{ borderBottom: '1px solid #F0E8DC' }}>
+                  <td style={{ padding: '7px 4px', color: '#5B3A29' }}>{fmtThDate(e.date)}</td>
+                  <td style={{ padding: '7px 4px', textAlign: 'right', color: '#5B3A29' }}>{(e.base || 0) > 0 ? `฿${e.base}` : '—'}</td>
+                  <td style={{ padding: '7px 4px', textAlign: 'right', color: '#7B3FA0' }}>{(e.bonus || 0) > 0 ? `฿${e.bonus}` : '—'}</td>
+                  <td style={{ padding: '7px 4px', textAlign: 'right', fontWeight: 700, color: '#5B3A29' }}>฿{((e.base || 0) + (e.bonus || 0)).toLocaleString()}</td>
+                </tr>
+              ))}
+            </tbody>
+            <tfoot>
+              <tr style={{ borderTop: '2px solid #5B3A29' }}>
+                <td style={{ padding: '10px 4px', fontWeight: 700, color: '#5B3A29' }}>รวม {pendingWageRecords.length} วัน</td>
+                <td style={{ padding: '10px 4px', textAlign: 'right', fontWeight: 700 }}>฿{slipBase.toLocaleString()}</td>
+                <td style={{ padding: '10px 4px', textAlign: 'right', fontWeight: 700, color: '#7B3FA0' }}>{slipBonus > 0 ? `฿${slipBonus.toLocaleString()}` : '—'}</td>
+                <td style={{ padding: '10px 4px', textAlign: 'right', fontSize: 16, fontWeight: 800, color: '#5B3A29' }}>฿{slipTotal.toLocaleString()}</td>
+              </tr>
+            </tfoot>
+          </table>
+          <div style={{ marginTop: 32, display: 'flex', justifyContent: 'space-between', paddingTop: 16, borderTop: '1px dashed #C9A24B' }}>
+            <div style={{ textAlign: 'center', flex: 1 }}>
+              <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 24 }}>ผู้จ่าย</div>
+              <div style={{ borderTop: '1px solid #5B3A29', paddingTop: 4, fontSize: 11, color: '#9A8662' }}>ลายเซ็น</div>
+            </div>
+            <div style={{ textAlign: 'center', flex: 1 }}>
+              <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 24 }}>ผู้รับ ({supervisorName})</div>
+              <div style={{ borderTop: '1px solid #5B3A29', paddingTop: 4, fontSize: 11, color: '#9A8662' }}>ลายเซ็น</div>
+            </div>
+          </div>
+        </div>
+        <div className="no-print" style={{ maxWidth: 420, margin: '0 auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <button onClick={() => window.print()} style={{ background: '#5B3A29', color: '#fff', border: 'none', borderRadius: 12, padding: '13px', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
+            🖨️ พิมพ์บิล
+          </button>
+          <button onClick={async () => {
+            setSaving(true);
+            try {
+              const dates = pendingWageRecords.map(e => e.date);
+              await db.savePayment({
+                supervisor_name: supervisorName,
+                paid_date: toDateStr(new Date()),
+                amount: slipTotal,
+                note: `WAGE_DATES:${JSON.stringify(dates)}`,
+              });
+              await loadLedger();
+              setShowWagePaySlip(false);
+              setWageSelectMode(false);
+              setSelectedWageDates(new Set());
+              setPendingWageRecords([]);
+            } catch { alert('บันทึกไม่สำเร็จ'); }
+            setSaving(false);
+          }} disabled={saving} style={{ background: '#2E7D32', color: '#fff', border: 'none', borderRadius: 12, padding: '13px', fontSize: 15, fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer' }}>
+            {saving ? '...' : '✅ บันทึกจ่ายค่าแรงแล้ว ฿' + slipTotal.toLocaleString()}
+          </button>
+          <button onClick={() => setShowWagePaySlip(false)} style={{ background: '#E0D5C8', color: '#5B3A29', border: 'none', borderRadius: 12, padding: '13px', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
             ← ย้อนกลับ (ยังไม่จ่าย)
           </button>
         </div>
@@ -4212,30 +4303,142 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
       })()}
 
       {/* Tab: ค่าแรง */}
-      {tab === 'earnings' && (
-        <div style={{ padding: '10px 12px' }}>
-          {earnings.length === 0 && !loadingLedger && <div style={{ textAlign: 'center', color: '#B7A684', padding: 32 }}>ยังไม่มีรายการ<br/><span style={{ fontSize: 12 }}>กดวันในปฏิทินเพื่อบันทึก</span></div>}
-          {earnings.map(e => (
-            <div key={e.id} style={{ background: '#fff', borderRadius: 12, border: `1px solid ${(e.base || 0) === 0 ? '#F0A0A0' : '#E4D7BC'}`, borderLeft: `4px solid ${(e.base || 0) === 0 ? '#C0392B' : '#DC743C'}`, padding: '12px 14px', marginBottom: 8 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
-                <div style={{ fontWeight: 700, fontSize: 14, color: '#2A2118' }}>{fmtThDate(e.date)}</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <div style={{ fontWeight: 700, fontSize: 16, color: '#5B3A29' }}>฿{(e.total||0).toLocaleString()}</div>
-                  <button onClick={() => handleDeleteEarning(e.id)} style={{ background: 'none', border: '1px solid #E4D7BC', borderRadius: 7, padding: '3px 8px', fontSize: 12, color: '#9A8662', cursor: 'pointer' }}>🗑</button>
+      {tab === 'earnings' && (() => {
+        // Parse paid wage dates from wage payments
+        const paidWageDateSet = new Set();
+        payments.forEach(p => {
+          if (p.note && p.note.startsWith('WAGE_DATES:')) {
+            try { JSON.parse(p.note.slice('WAGE_DATES:'.length)).forEach(d => paidWageDateSet.add(d)); } catch {}
+          }
+        });
+
+        const eligibleEarnings = earnings.filter(e => (e.base || 0) > 0 || (e.bonus || 0) > 0);
+        const unpaidEarnings = eligibleEarnings.filter(e => !paidWageDateSet.has(e.date));
+
+        const selWageTotal = eligibleEarnings
+          .filter(e => selectedWageDates.has(e.date))
+          .reduce((s, e) => s + (e.base || 0) + (e.bonus || 0), 0);
+
+        const wagePaidAmt = payments
+          .filter(p => p.note && p.note.startsWith('WAGE_DATES:'))
+          .reduce((s, p) => s + (p.amount || 0), 0);
+
+        return (
+          <div style={{ padding: '10px 12px', paddingBottom: wageSelectMode ? 90 : 10 }}>
+            {/* Summary + select mode controls */}
+            <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4D7BC', padding: '12px 14px', marginBottom: 10 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', textAlign: 'center' }}>
+                <div>
+                  <div style={{ fontSize: 10, color: '#9A8662' }}>📅 ค่าแรง+โบนัส</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: '#5B3A29' }}>฿{(breakdownBase + breakdownBonus).toLocaleString()}</div>
+                </div>
+                <div style={{ borderLeft: '1px solid #F0E8DC', borderRight: '1px solid #F0E8DC' }}>
+                  <div style={{ fontSize: 10, color: '#9A8662' }}>✅ จ่ายแล้ว</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: '#2E7D32' }}>฿{wagePaidAmt.toLocaleString()}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 10, color: '#9A8662' }}>🔴 ค้าง</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: (breakdownBase + breakdownBonus - wagePaidAmt) > 0 ? '#C0392B' : '#9A8662' }}>
+                    ฿{Math.max(0, breakdownBase + breakdownBonus - wagePaidAmt).toLocaleString()}
+                  </div>
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                {(e.base || 0) > 0
-                  ? <span style={{ background: '#F5EFE4', borderRadius: 6, padding: '2px 8px', fontSize: 11, color: '#5B3A29' }}>📅 ฿{e.base}</span>
-                  : <span style={{ background: '#FFF0F0', borderRadius: 6, padding: '2px 8px', fontSize: 11, color: '#C0392B' }}>📅 ไม่นับค่าแรง</span>
-                }
-                <span style={{ background: '#FFF3E0', borderRadius: 6, padding: '2px 8px', fontSize: 11, color: '#E65100' }}>📦 {e.commission_kg}กก. = ฿{e.commission_baht}</span>
-                {e.bonus > 0 && <span style={{ background: '#F3E8FF', borderRadius: 6, padding: '2px 8px', fontSize: 11, color: '#7B3FA0' }}>🎁 ฿{e.bonus}</span>}
+              <div style={{ marginTop: 10, display: 'flex', gap: 8, justifyContent: 'center' }}>
+                {!wageSelectMode ? (
+                  <button onClick={() => { setWageSelectMode(true); setSelectedWageDates(new Set()); }}
+                    style={{ background: '#5B3A29', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 16px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                    📄 ออกบิลค่าแรง
+                  </button>
+                ) : (
+                  <>
+                    <button onClick={() => {
+                      const allUnpaidDates = new Set(unpaidEarnings.map(e => e.date));
+                      setSelectedWageDates(selectedWageDates.size === unpaidEarnings.length ? new Set() : allUnpaidDates);
+                    }} style={{ background: '#5B3A29', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                      {selectedWageDates.size === unpaidEarnings.length ? 'ยกเลิกทั้งหมด' : 'เลือกทั้งหมด'}
+                    </button>
+                    <button onClick={() => { setWageSelectMode(false); setSelectedWageDates(new Set()); }}
+                      style={{ background: '#E0D5C8', color: '#5B3A29', border: 'none', borderRadius: 8, padding: '6px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                      ยกเลิก
+                    </button>
+                  </>
+                )}
               </div>
             </div>
-          ))}
-        </div>
-      )}
+
+            {earnings.length === 0 && !loadingLedger && (
+              <div style={{ textAlign: 'center', color: '#B7A684', padding: 32 }}>ยังไม่มีรายการ<br/><span style={{ fontSize: 12 }}>กดวันในปฏิทินแล้วกด 💾 เพื่อบันทึก</span></div>
+            )}
+
+            {earnings.map(e => {
+              const isOff = (e.base || 0) === 0 && (e.bonus || 0) === 0;
+              const isPaid = paidWageDateSet.has(e.date);
+              const isSelected = selectedWageDates.has(e.date);
+              const canSelect = wageSelectMode && !isPaid && !isOff;
+              const dayTotal = (e.base || 0) + (e.bonus || 0);
+
+              const handleClick = () => {
+                if (!wageSelectMode) return;
+                if (isPaid || isOff) return;
+                const next = new Set(selectedWageDates);
+                if (next.has(e.date)) next.delete(e.date); else next.add(e.date);
+                setSelectedWageDates(next);
+              };
+
+              const borderColor = isOff ? '#C0392B' : isPaid ? '#2E7D32' : isSelected ? '#DC743C' : '#DC743C';
+              const bgColor = isOff ? '#fff' : isPaid ? '#F9FFF9' : isSelected ? '#FFF3E6' : '#fff';
+              const borderLeftColor = isOff ? '#C0392B' : isPaid ? '#2E7D32' : isSelected ? '#DC743C' : '#DC743C';
+
+              return (
+                <div key={e.id} onClick={handleClick}
+                  style={{ background: bgColor, borderRadius: 12, border: `1px solid ${isSelected ? '#DC743C' : isPaid ? '#C8E6C9' : isOff ? '#F0A0A0' : '#E4D7BC'}`, borderLeft: `4px solid ${borderLeftColor}`, padding: '12px 14px', marginBottom: 8, cursor: canSelect ? 'pointer' : 'default', opacity: wageSelectMode && isPaid ? 0.5 : 1 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      {wageSelectMode && !isOff && (
+                        <div style={{ width: 22, height: 22, borderRadius: 6, border: `2px solid ${isPaid ? '#B0BEC5' : isSelected ? '#DC743C' : '#C9A24B'}`, background: isSelected ? '#DC743C' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: '#fff', fontSize: 14, fontWeight: 700 }}>
+                          {isSelected ? '✓' : ''}
+                        </div>
+                      )}
+                      <div style={{ fontWeight: 700, fontSize: 14, color: '#2A2118' }}>{fmtThDate(e.date)}</div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      {isPaid && <span style={{ fontSize: 10, fontWeight: 700, color: '#2E7D32', background: '#E8F5E9', borderRadius: 4, padding: '2px 6px' }}>✓ จ่ายแล้ว</span>}
+                      {!isOff && <div style={{ fontWeight: 700, fontSize: 15, color: isPaid ? '#2E7D32' : isSelected ? '#DC743C' : '#5B3A29' }}>฿{dayTotal.toLocaleString()}</div>}
+                      {!wageSelectMode && (
+                        <button onClick={e2 => { e2.stopPropagation(); handleDeleteEarning(e.id); }} style={{ background: 'none', border: '1px solid #E4D7BC', borderRadius: 7, padding: '3px 8px', fontSize: 12, color: '#9A8662', cursor: 'pointer' }}>🗑</button>
+                      )}
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                    {(e.base || 0) > 0
+                      ? <span style={{ background: '#F5EFE4', borderRadius: 6, padding: '2px 8px', fontSize: 11, color: '#5B3A29' }}>📅 ฿{e.base}</span>
+                      : <span style={{ background: '#FFF0F0', borderRadius: 6, padding: '2px 8px', fontSize: 11, color: '#C0392B' }}>📅 ไม่นับค่าแรง</span>
+                    }
+                    {e.bonus > 0 && <span style={{ background: '#F3E8FF', borderRadius: 6, padding: '2px 8px', fontSize: 11, color: '#7B3FA0' }}>🎁 ฿{e.bonus}</span>}
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Sticky bottom bar when selecting */}
+            {wageSelectMode && selectedWageDates.size > 0 && (
+              <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: '#5B3A29', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', zIndex: 200 }}>
+                <div style={{ color: '#FFF6ED' }}>
+                  <div style={{ fontSize: 12 }}>{selectedWageDates.size} วัน</div>
+                  <div style={{ fontSize: 16, fontWeight: 700 }}>฿{selWageTotal.toLocaleString()}</div>
+                </div>
+                <button onClick={() => {
+                  const selected = earnings.filter(e => selectedWageDates.has(e.date));
+                  setPendingWageRecords(selected);
+                  setShowWagePaySlip(true);
+                }} style={{ background: '#DC743C', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 20px', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+                  📄 ออกบิล
+                </button>
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {/* Tab: การจ่าย */}
       {tab === 'paid' && (
