@@ -1044,7 +1044,7 @@ function ConfirmView({ session, verified, history, onConfirm, onGoSummary, custo
 }
 
 // ─── PrintView ────────────────────────────────────────────────────────────────
-function PrintView({ session, readonly, isHandoff, verified, history, payments, onGoSummary, onGoBack, onFinish, customLabel, vehiclePhotoUrl, onSaveSlip, onUploadEvidence, onReusePhoto, onBulkUpload, onSaveCustomerInfo, supervisors, customerInfo }) {
+function PrintView({ session, readonly, isHandoff, verified, history, payments, onGoSummary, onGoBack, onFinish, onStartEdit, customLabel, vehiclePhotoUrl, onSaveSlip, onUploadEvidence, onReusePhoto, onBulkUpload, onSaveCustomerInfo, supervisors, customerInfo }) {
   const [qrDataUrl, setQrDataUrl] = useState('');
   const [copied, setCopied] = useState(false);
   const [uploading, setUploading] = useState(null); // null | 'receipt' | 'slip' | 'vehicle'
@@ -1209,8 +1209,9 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
                 <div style={{ background: '#FFFDF8', border: '1px solid #E4D7BC', borderRadius: 16, padding: '16px 18px', marginBottom: 12 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                     <span style={{ fontSize: 18 }}>👁</span>
-                    <span style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 14, color: '#7A5A22' }}>ดูบิลย้อนหลัง · อ่านอย่างเดียว</span>
-                    <span style={{ marginLeft: 'auto', fontSize: 11, color: '#B7A684' }}>ยืนยัน {confirmTime}</span>
+                    <span style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 14, color: '#7A5A22' }}>ดูบิลย้อนหลัง</span>
+                    {onStartEdit && <button onClick={onStartEdit} style={{ marginLeft: 'auto', border: 'none', background: 'linear-gradient(135deg,#5C4326,#3F2D1E)', color: '#F6EEDD', borderRadius: 9, padding: '5px 13px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>✏️ แก้ไข</button>}
+                    {!onStartEdit && <span style={{ marginLeft: 'auto', fontSize: 11, color: '#B7A684' }}>ยืนยัน {confirmTime}</span>}
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 14px' }}>
                     <div>
@@ -2643,7 +2644,7 @@ function SaleSummaryView({ saleSession, onGoRecord, onGoPrint, onSetPrice, custo
 // ─── Sale Print View ──────────────────────────────────────────────────────────
 const QUDSUN_BANK = { bank: 'ธ.ไทยพาณิชย์ (SCB)', account: '408-426694-9', name: 'ภัทรกฤช จันพิทักษ์' };
 
-function SalePrintView({ saleSession, onGoBack, onFinish, onEditPrice }) {
+function SalePrintView({ saleSession, onGoBack, onFinish, onEditPrice, onStartEdit }) {
   const entries = saleSession?.entries || [];
   const prices = saleSession?.prices || {};
   const aggData = {};
@@ -2668,7 +2669,10 @@ function SalePrintView({ saleSession, onGoBack, onFinish, onEditPrice }) {
     <div className="print-view-root" style={{ flex: 1, background: '#fff' }}>
       <div className="sale-print-inner" style={{ padding: '16px 14px 32px', maxWidth: 680, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
       <div className="no-print" style={{ marginBottom: 14 }}>
-        <button onClick={onGoBack} style={{ border: 'none', background: 'none', fontSize: 14, color: '#8A7A66', cursor: 'pointer', padding: '4px 0 10px' }}>{onFinish ? '‹ กลับแก้ไข' : '‹ กลับ'}</button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+          <button onClick={onGoBack} style={{ border: 'none', background: 'none', fontSize: 14, color: '#8A7A66', cursor: 'pointer', padding: '4px 0' }}>{onFinish ? '‹ กลับแก้ไข' : '‹ กลับ'}</button>
+          {onStartEdit && <button onClick={onStartEdit} style={{ marginLeft: 'auto', border: 'none', background: 'linear-gradient(135deg,#2E5C1A,#4A7A2E)', color: '#fff', borderRadius: 9, padding: '6px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>✏️ แก้ไข</button>}
+        </div>
         <button onClick={() => window.print()} style={{ width: '100%', border: 'none', borderRadius: 15, padding: 18, background: 'linear-gradient(135deg,#4A7A2E,#2E5C1A)', color: '#fff', fontWeight: 700, fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
           🖨 ปริ้นใบเสร็จ
         </button>
@@ -5085,6 +5089,7 @@ export default function App() {
         <Route path="/print" element={session ? (
           <PrintView session={session} readonly={readonly} isHandoff={isHandoff} verified={verified} history={history} payments={payments}
             onGoSummary={() => navigate('/summary')} onGoBack={goBackFromBill} onFinish={finishBill}
+            onStartEdit={readonly ? () => { setReadonly(false); setSession(prev => ({ ...prev, confirmed: false })); navigate('/record'); } : undefined}
             customLabel={session.customLabel || ''} vehiclePhotoUrl={session.vehicleDriveUrl || vehiclePhotoUrl}
             onSaveSlip={handleSaveSlip} onUploadEvidence={readonly ? handleUploadEvidence : undefined}
             onReusePhoto={readonly ? handleReusePhoto : undefined}
@@ -5118,7 +5123,8 @@ export default function App() {
           <SalePrintView saleSession={saleSession} onGoBack={() => navigate('/sale/summary')} onFinish={finishSaleSession} />
         ) : <Navigate to="/" replace />} />
         <Route path="/sale/history" element={viewSaleSession ? (
-          <SalePrintView saleSession={viewSaleSession} onGoBack={() => { setViewSaleSession(null); navigate('/'); }} onFinish={null} />
+          <SalePrintView saleSession={viewSaleSession} onGoBack={() => { setViewSaleSession(null); navigate('/'); }} onFinish={null}
+            onStartEdit={() => { setSaleSession({ ...viewSaleSession, confirmed: false }); setViewSaleSession(null); navigate('/sale/record'); }} />
         ) : <Navigate to="/" replace />} />
         <Route path="/customers" element={
           <CustomersView history={history} verified={verified} onGoHome={() => navigate('/')}
