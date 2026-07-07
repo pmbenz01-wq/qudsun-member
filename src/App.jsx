@@ -3180,6 +3180,38 @@ function SupervisorsView({ supervisors, supervisorNames, history, onGoHome, onOp
 }
 
 // ─── SupervisorDetailView ─────────────────────────────────────────────────────
+function SlipShell({ title, supervisorName, dateLabel, onBack, children }) {
+  return (
+    <div style={{ minHeight: '100vh', background: '#F5EFE4', padding: 16 }}>
+      <div style={{ maxWidth: 420, margin: '0 auto' }}>
+        <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
+          <button onClick={onBack} style={{ border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 10, padding: '8px 14px', fontSize: 13, color: '#7A6450', cursor: 'pointer' }}>‹ กลับ</button>
+          <button onClick={() => window.print()} style={{ flex: 1, background: '#5B3A29', color: '#fff', border: 'none', borderRadius: 10, padding: '8px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>🖨️ พิมพ์</button>
+        </div>
+        <div style={{ background: '#fff', borderRadius: 16, padding: '24px 20px', border: '1px solid #E4D7BC' }}>
+          <div style={{ textAlign: 'center', marginBottom: 16 }}>
+            <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 20, color: '#5B3A29' }}>QUDSUN</div>
+            <div style={{ fontSize: 11, color: '#9A8662', marginTop: 2 }}>ทุเรียนคัดสรร</div>
+            <div style={{ fontWeight: 700, fontSize: 15, color: '#2A2118', marginTop: 10 }}>{title}</div>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#5B3A29', marginBottom: 4 }}>
+            <span>ผู้ดูแล</span><span style={{ fontWeight: 700 }}>{supervisorName}</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#9A8662', marginBottom: 16 }}>
+            <span>วันที่</span><span>{dateLabel}</span>
+          </div>
+          {children}
+          <div style={{ marginTop: 32, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            <div style={{ borderTop: '1px solid #9A8662', paddingTop: 6, textAlign: 'center', fontSize: 11, color: '#9A8662' }}>ผู้รับเงิน</div>
+            <div style={{ borderTop: '1px solid #9A8662', paddingTop: 6, textAlign: 'center', fontSize: 11, color: '#9A8662' }}>ผู้จ่าย</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// บิลค่าแรง+โบนัส (รายวัน)
 function SalarySlipPrintView({ supervisorName, dateLabel, bills, base, commission, bonus, onBack }) {
   const total = base + commission + bonus;
   const parseNum = v => parseFloat(String(v ?? '').replace(/,/g, '')) || 0;
@@ -3191,66 +3223,124 @@ function SalarySlipPrintView({ supervisorName, dateLabel, bills, base, commissio
     customerRows[phone].kg += parseNum(h.kg);
   });
   const rows = Object.values(customerRows);
-
   return (
-    <div style={{ minHeight: '100vh', background: '#F5EFE4', padding: 16 }}>
-      <div style={{ maxWidth: 420, margin: '0 auto' }}>
-        <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
-          <button onClick={onBack} style={{ border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 10, padding: '8px 14px', fontSize: 13, color: '#7A6450', cursor: 'pointer' }}>‹ กลับ</button>
-          <button onClick={() => window.print()} style={{ flex: 1, background: '#5B3A29', color: '#fff', border: 'none', borderRadius: 10, padding: '8px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>🖨️ พิมพ์บิล</button>
+    <SlipShell title="บิลค่าแรง" supervisorName={supervisorName} dateLabel={dateLabel} onBack={onBack}>
+      {rows.length > 0 && (
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: '#9A8662', marginBottom: 6, borderBottom: '1px solid #F0E8DC', paddingBottom: 4 }}>รายการลูกค้า</div>
+          {rows.map((r, i) => (
+            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#4A3526', padding: '3px 0' }}>
+              <span>{r.name}</span><span style={{ fontWeight: 600 }}>{r.kg % 1 === 0 ? r.kg : r.kg.toFixed(1)} กก.</span>
+            </div>
+          ))}
         </div>
-
-        <div id="salary-slip-print" style={{ background: '#fff', borderRadius: 16, padding: '24px 20px', border: '1px solid #E4D7BC' }}>
-          <div style={{ textAlign: 'center', marginBottom: 16 }}>
-            <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 20, color: '#5B3A29' }}>QUDSUN</div>
-            <div style={{ fontSize: 11, color: '#9A8662', marginTop: 2 }}>ทุเรียนคัดสรร</div>
-            <div style={{ fontWeight: 700, fontSize: 15, color: '#2A2118', marginTop: 10 }}>บิลค่าแรง</div>
+      )}
+      <div style={{ borderTop: '1px solid #E4D7BC', paddingTop: 12 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#4A3526', marginBottom: 4 }}>
+          <span>เบสรายวัน</span><span>฿{base.toLocaleString()}</span>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#4A3526', marginBottom: 4 }}>
+          <span>ค่าคอม ({bills.reduce((s,h)=>s+(parseFloat(String(h.kg??'').replace(/,/g,''))||0),0).toFixed(0)} กก. × ฿1)</span>
+          <span>฿{commission.toLocaleString()}</span>
+        </div>
+        {bonus > 0 && (
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#4A3526', marginBottom: 4 }}>
+            <span>โบนัส</span><span>฿{bonus.toLocaleString()}</span>
           </div>
-
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#5B3A29', marginBottom: 4 }}>
-            <span>ผู้ดูแล</span><span style={{ fontWeight: 700 }}>{supervisorName}</span>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#9A8662', marginBottom: 16 }}>
-            <span>ช่วงเวลา</span><span>{dateLabel}</span>
-          </div>
-
-          {rows.length > 0 && (
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: '#9A8662', marginBottom: 6, borderBottom: '1px solid #F0E8DC', paddingBottom: 4 }}>รายการลูกค้า</div>
-              {rows.map((r, i) => (
-                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#4A3526', padding: '3px 0' }}>
-                  <span>{r.name}</span>
-                  <span style={{ fontWeight: 600 }}>{r.kg % 1 === 0 ? r.kg : r.kg.toFixed(1)} กก.</span>
-                </div>
-              ))}
-            </div>
-          )}
-
-          <div style={{ borderTop: '1px solid #E4D7BC', paddingTop: 12 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#4A3526', marginBottom: 4 }}>
-              <span>เบสรายวัน</span><span>฿{base.toLocaleString()}</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#4A3526', marginBottom: 4 }}>
-              <span>ค่าคอม ({bills.reduce((s,h)=>s+(parseFloat(String(h.kg??'').replace(/,/g,''))||0),0).toFixed(0)} กก. × ฿1)</span>
-              <span>฿{commission.toLocaleString()}</span>
-            </div>
-            {bonus > 0 && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#4A3526', marginBottom: 4 }}>
-                <span>โบนัส</span><span>฿{bonus.toLocaleString()}</span>
-              </div>
-            )}
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 16, fontWeight: 700, color: '#5B3A29', borderTop: '1px solid #E4D7BC', paddingTop: 10, marginTop: 6 }}>
-              <span>รวมจ่าย</span><span>฿{total.toLocaleString()}</span>
-            </div>
-          </div>
-
-          <div style={{ marginTop: 32, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-            <div style={{ borderTop: '1px solid #9A8662', paddingTop: 6, textAlign: 'center', fontSize: 11, color: '#9A8662' }}>ผู้รับเงิน</div>
-            <div style={{ borderTop: '1px solid #9A8662', paddingTop: 6, textAlign: 'center', fontSize: 11, color: '#9A8662' }}>ผู้จ่าย</div>
-          </div>
+        )}
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 16, fontWeight: 700, color: '#5B3A29', borderTop: '1px solid #E4D7BC', paddingTop: 10, marginTop: 6 }}>
+          <span>รวมจ่าย</span><span>฿{total.toLocaleString()}</span>
         </div>
       </div>
-    </div>
+    </SlipShell>
+  );
+}
+
+// บิลค่าแรง+โบนัส ภาพรวม (ออกจาก tab การจ่าย)
+function WageSlipPrintView({ supervisorName, earnings, baseRate, onBack }) {
+  const fmtThDate = s => { if (!s) return ''; const d = new Date(s + 'T12:00:00'); return d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' }); };
+  const totalBase = earnings.reduce((s, e) => s + (e.base || 0), 0);
+  const totalBonus = earnings.reduce((s, e) => s + (e.bonus || 0), 0);
+  const total = totalBase + totalBonus;
+  const dateLabel = earnings.length > 0
+    ? `${fmtThDate(earnings[earnings.length-1]?.date)} – ${fmtThDate(earnings[0]?.date)}`
+    : new Date().toLocaleDateString('th-TH');
+  return (
+    <SlipShell title="บิลค่าแรง + โบนัส" supervisorName={supervisorName} dateLabel={dateLabel} onBack={onBack}>
+      <div style={{ marginBottom: 12 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: '#9A8662', marginBottom: 6, borderBottom: '1px solid #F0E8DC', paddingBottom: 4 }}>รายการรายวัน</div>
+        {earnings.map((e, i) => (
+          <div key={e.id || i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#4A3526', padding: '4px 0', borderBottom: '1px solid #FAF4EC' }}>
+            <span>{fmtThDate(e.date)}</span>
+            <div style={{ textAlign: 'right' }}>
+              <span style={{ fontWeight: 600 }}>฿{(e.base || 0).toLocaleString()}</span>
+              {e.bonus > 0 && <span style={{ color: '#7B3FA0', marginLeft: 6 }}>+฿{e.bonus} โบนัส</span>}
+            </div>
+          </div>
+        ))}
+      </div>
+      <div style={{ borderTop: '1px solid #E4D7BC', paddingTop: 12 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#4A3526', marginBottom: 4 }}>
+          <span>รวมรายวัน ({earnings.length} วัน)</span><span>฿{totalBase.toLocaleString()}</span>
+        </div>
+        {totalBonus > 0 && (
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#7B3FA0', marginBottom: 4 }}>
+            <span>โบนัสรวม</span><span>฿{totalBonus.toLocaleString()}</span>
+          </div>
+        )}
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 16, fontWeight: 700, color: '#5B3A29', borderTop: '1px solid #E4D7BC', paddingTop: 10, marginTop: 6 }}>
+          <span>รวมจ่าย</span><span>฿{total.toLocaleString()}</span>
+        </div>
+      </div>
+    </SlipShell>
+  );
+}
+
+// บิลค่าคอม (แยกออก)
+function CommissionSlipPrintView({ supervisorName, bills, commissionRate, onBack }) {
+  const parseNum = v => parseFloat(String(v ?? '').replace(/,/g, '')) || 0;
+  const fmtBillDate = ms => {
+    const d = new Date(typeof ms === 'number' ? (ms > 1e12 ? ms : ms * 1000) : new Date(ms).getTime());
+    return d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
+  };
+  const totalKg = bills.reduce((s, b) => s + parseNum(b.kg), 0);
+  const totalComm = Math.round(totalKg * commissionRate);
+  const dateLabel = bills.length > 0
+    ? (() => {
+        const sorted = [...bills].sort((a, b) => (a.date > b.date ? 1 : -1));
+        return `${fmtBillDate(sorted[0].date)} – ${fmtBillDate(sorted[sorted.length-1].date)}`;
+      })()
+    : new Date().toLocaleDateString('th-TH');
+  return (
+    <SlipShell title="บิลค่าคอมมิชชั่น" supervisorName={supervisorName} dateLabel={dateLabel} onBack={onBack}>
+      <div style={{ marginBottom: 12 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: '#9A8662', marginBottom: 6, borderBottom: '1px solid #F0E8DC', paddingBottom: 4 }}>รายการบิล ({bills.length} บิล)</div>
+        {bills.map((b, i) => {
+          const kg = parseNum(b.kg);
+          const comm = Math.round(kg * commissionRate);
+          return (
+            <div key={b.billNo || i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#4A3526', padding: '4px 0', borderBottom: '1px solid #FAF4EC' }}>
+              <div>
+                <div style={{ fontWeight: 600 }}>{b.seller || '—'}</div>
+                <div style={{ fontSize: 10, color: '#B0966A' }}>{fmtBillDate(b.date)} · #{b.billNo}</div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontWeight: 600 }}>{kg % 1 === 0 ? kg : kg.toFixed(1)} กก.</div>
+                <div style={{ color: '#E65100', fontWeight: 700 }}>+฿{comm}</div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <div style={{ borderTop: '1px solid #E4D7BC', paddingTop: 12 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#4A3526', marginBottom: 4 }}>
+          <span>รวม {totalKg % 1 === 0 ? totalKg : totalKg.toFixed(1)} กก. × ฿{commissionRate}</span><span>฿{totalComm.toLocaleString()}</span>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 16, fontWeight: 700, color: '#E65100', borderTop: '1px solid #E4D7BC', paddingTop: 10, marginTop: 6 }}>
+          <span>รวมค่าคอม</span><span>฿{totalComm.toLocaleString()}</span>
+        </div>
+      </div>
+    </SlipShell>
   );
 }
 
@@ -3288,6 +3378,8 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
   const [payNote, setPayNote] = React.useState('');
   const [showSlip, setShowSlip] = React.useState(false);
   const [showPaySlip, setShowPaySlip] = React.useState(false);
+  const [showWageSlip, setShowWageSlip] = React.useState(false);
+  const [showCommSlip, setShowCommSlip] = React.useState(false);
 
   React.useEffect(() => {
     db.getSetting('sup_base_rates').then(v => {
@@ -3477,6 +3569,14 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
 
   if (showSlip) return (
     <SalarySlipPrintView supervisorName={supervisorName} dateLabel={slipDateLabel} bills={selBills} base={baseRate} commission={selCommission} bonus={dayBonus} onBack={() => setShowSlip(false)} />
+  );
+
+  if (showWageSlip) return (
+    <WageSlipPrintView supervisorName={supervisorName} earnings={earnings} baseRate={baseRate} onBack={() => setShowWageSlip(false)} />
+  );
+
+  if (showCommSlip) return (
+    <CommissionSlipPrintView supervisorName={supervisorName} bills={allTimeBills} commissionRate={commissionRate} onBack={() => setShowCommSlip(false)} />
   );
 
   if (showPaySlip) return (
@@ -3852,8 +3952,12 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
       {tab === 'paid' && (
         <div style={{ padding: '10px 12px' }}>
           <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
-            {balance > 0 && <button onClick={() => { setShowPayForm(true); setPayAmount(String(balance)); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={{ flex: 1, background: '#2E7D32', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>💸 จ่ายเงิน ฿{balance.toLocaleString()}</button>}
-            <button onClick={() => setShowPaySlip(true)} style={{ flex: 1, background: '#fff', color: '#5B3A29', border: '1px solid #E4D7BC', borderRadius: 10, padding: '10px 14px', fontSize: 13, cursor: 'pointer' }}>🖨️ ออกบิล</button>
+            {balance > 0 && <button onClick={() => { setShowPayForm(true); setPayAmount(String(balance)); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={{ flex: 1, background: '#2E7D32', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>💸 จ่ายเงิน</button>}
+            <button onClick={() => setShowPaySlip(true)} style={{ flex: 1, background: '#fff', color: '#5B3A29', border: '1px solid #E4D7BC', borderRadius: 10, padding: '10px 14px', fontSize: 13, cursor: 'pointer' }}>📋 สรุปจ่าย</button>
+          </div>
+          <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+            <button onClick={() => setShowWageSlip(true)} style={{ flex: 1, background: '#F5EFE4', color: '#5B3A29', border: '1px solid #D0C8BC', borderRadius: 10, padding: '9px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>🖨️ บิลค่าแรง+โบนัส</button>
+            <button onClick={() => setShowCommSlip(true)} style={{ flex: 1, background: '#FFF3E0', color: '#BF360C', border: '1px solid #FFCC80', borderRadius: 10, padding: '9px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>🖨️ บิลค่าคอม</button>
           </div>
           {payments.length === 0 && !loadingLedger && <div style={{ textAlign: 'center', color: '#B7A684', padding: 32 }}>ยังไม่มีรายการจ่าย</div>}
           {payments.map(p => (
