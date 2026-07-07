@@ -2522,22 +2522,41 @@ function SaleRecordView({ saleSession, activeCat, input, onInput, onCommit, onPi
 }
 
 // ─── Sale Customer Modal ──────────────────────────────────────────────────────
-function SaleCustomerModal({ customerName, customerPhone, recorder: initRecorder, onSave, onCancel }) {
+function SaleCustomerModal({ customerName, customerPhone, recorder: initRecorder, onSave, onCancel, verified = {}, customerInfo = {} }) {
   const [name, setName] = useState(customerName || '');
   const [phone, setPhone] = useState(customerPhone || '');
   const [recorder, setRecorder] = useState(initRecorder || '');
+  const [autoFilled, setAutoFilled] = useState(false);
   const inp = { width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 10, padding: '12px 14px', fontSize: 15, fontFamily: 'Prompt', background: '#fff', boxSizing: 'border-box', outline: 'none' };
+
+  const lookupName = (p) => {
+    const digits = p.replace(/\D/g, '');
+    if (digits.length < 9) return null;
+    return verified[digits] || verified[p] || customerInfo[digits]?.fullName || customerInfo[p]?.fullName || null;
+  };
+
+  const handlePhoneChange = (e) => {
+    const p = e.target.value;
+    setPhone(p);
+    const found = lookupName(p);
+    if (found && !name) { setName(found); setAutoFilled(true); }
+    else if (autoFilled) { setName(''); setAutoFilled(false); }
+  };
+
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.45)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
       <div style={{ background: '#FFFDF8', borderRadius: '18px 18px 0 0', padding: '22px 18px 36px', width: '100%', maxWidth: 520 }}>
         <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 17, marginBottom: 16, color: '#3F2D1E' }}>ข้อมูลลูกค้า</div>
         <div style={{ marginBottom: 12 }}>
-          <div style={{ fontSize: 12, color: '#9A8662', marginBottom: 4 }}>ชื่อลูกค้า</div>
-          <input value={name} onChange={e => setName(e.target.value)} placeholder="ชื่อ (ไม่บังคับ)" style={inp} autoFocus />
+          <div style={{ fontSize: 12, color: '#9A8662', marginBottom: 4 }}>เบอร์โทร</div>
+          <input value={phone} onChange={handlePhoneChange} placeholder="0812345678 (ไม่บังคับ)" type="tel" style={inp} autoFocus />
         </div>
         <div style={{ marginBottom: 12 }}>
-          <div style={{ fontSize: 12, color: '#9A8662', marginBottom: 4 }}>เบอร์โทร</div>
-          <input value={phone} onChange={e => setPhone(e.target.value)} placeholder="0812345678 (ไม่บังคับ)" type="tel" style={inp} />
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+            <span style={{ fontSize: 12, color: '#9A8662' }}>ชื่อลูกค้า</span>
+            {autoFilled && <span style={{ fontSize: 10, color: '#4A7A2E', background: '#EDF7E6', borderRadius: 4, padding: '1px 6px' }}>✓ ดึงข้อมูลอัตโนมัติ</span>}
+          </div>
+          <input value={name} onChange={e => { setName(e.target.value); setAutoFilled(false); }} placeholder="ชื่อ (ไม่บังคับ)" style={{ ...inp, background: autoFilled ? '#F6FFF3' : '#fff', borderColor: autoFilled ? '#81C784' : '#E4D7BC' }} />
         </div>
         <div style={{ marginBottom: 18 }}>
           <div style={{ fontSize: 12, color: '#9A8662', marginBottom: 4 }}>ผู้จด</div>
@@ -6040,7 +6059,7 @@ export default function App() {
       {pinPrompt && <PinModal title={pinPrompt.title} error={pinError} value={pinValue} onKey={handlePinKey} onCancel={() => { setPinPrompt(null); setPinValue(''); setPinError(''); }} />}
       {numpad && <NumModal title={numpad.title} unit={numpad.unit} value={numpad.value || ''} onChange={v => setNumpad(n => ({ ...n, value: v }))} onSave={numSave} onCancel={() => setNumpad(null)} onDelete={numDelete} saveLabel={numpad.saveLabel} canDelete={numpad.canDelete} />}
       {saleNumpad && <NumModal title={saleNumpad.title} unit={saleNumpad.unit || 'กก.'} value={saleNumpad.value || ''} onChange={v => setSaleNumpad(n => ({ ...n, value: v }))} onSave={saleNumSave} onCancel={() => setSaleNumpad(null)} onDelete={saleNumDelete} saveLabel="บันทึก" canDelete={saleNumpad.canDelete} />}
-      {saleCustomerModal && <SaleCustomerModal customerName={saleSession?.customerName} customerPhone={saleSession?.customerPhone} recorder={saleSession?.recorder} onSave={(name, phone, rec) => { setSaleSession(prev => ({ ...prev, customerName: name, customerPhone: phone, recorder: rec })); setSaleCustomerModal(false); }} onCancel={() => setSaleCustomerModal(false)} />}
+      {saleCustomerModal && <SaleCustomerModal customerName={saleSession?.customerName} customerPhone={saleSession?.customerPhone} recorder={saleSession?.recorder} verified={verified} customerInfo={customerInfo} onSave={(name, phone, rec) => { setSaleSession(prev => ({ ...prev, customerName: name, customerPhone: phone, recorder: rec })); setSaleCustomerModal(false); }} onCancel={() => setSaleCustomerModal(false)} />}
       {sellerOpen && <SellerModal
         name={sellerDraft} phone={sellerPhoneDraft} supervisor={supervisorDraft}
         nameLocked={sellerNameLocked} supervisorLocked={sellerSupervisorLocked}
