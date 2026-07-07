@@ -3456,17 +3456,21 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
     return g;
   }, [earnings, calYear, calMonth]);
 
+  const [dayIncludeBase, setDayIncludeBase] = React.useState(true);
+
   const selBills = billsByDay[selectedDay] || [];
   const selEarning = earningsByDay[selectedDay];
   const selKg = selBills.reduce((s, b) => s + parseNum(b.kg), 0);
   const selCommission = Math.round(selKg * dayRate);
-  const selTotal = baseRate + selCommission + dayBonus;
+  const selDayBase = dayIncludeBase ? baseRate : 0;
+  const selTotal = selDayBase + selCommission + dayBonus;
 
   React.useEffect(() => {
     if (selEarning) {
       setDayBonus(selEarning.bonus || 0);
+      setDayIncludeBase((selEarning.base || 0) > 0);
       setDayRate(selEarning.commission_kg > 0 ? Math.round(selEarning.commission_baht / selEarning.commission_kg * 10) / 10 : 1);
-    } else { setDayBonus(0); setDayRate(commissionRate); }
+    } else { setDayBonus(0); setDayIncludeBase(true); setDayRate(commissionRate); }
   }, [selectedDay, selEarning?.id]);
 
   // Auto-save when user clicks a day that hasn't been saved yet
@@ -3476,6 +3480,7 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
     const dd = String(selectedDay).padStart(2,'0');
     db.saveEarning({ supervisor_name: supervisorName, date: `${calYear}-${mm}-${dd}`, base: baseRate, commission_kg: selKg, commission_baht: selCommission, bonus: 0, total: baseRate + selCommission })
       .then(() => loadLedger()).catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDay, loadingBills]);
 
   // Daily wage cutoff: day D's base pay is earned only when D+1 at 12:00 has passed
@@ -3486,6 +3491,13 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
   }, []);
 
   const totalEarned = React.useMemo(() => {
+    // Days with base=0 earnings = manually excluded from daily wage
+    const zeroBaseDayKeys = new Set(
+      earnings.filter(e => (e.base || 0) === 0).map(e => {
+        const ed = new Date(e.date + 'T12:00:00');
+        return `${ed.getFullYear()}-${ed.getMonth()}-${ed.getDate()}`;
+      })
+    );
     const settledDayKeys = new Set();
     const allDayKeys = new Set();
     let totalKg = 0;
@@ -3495,10 +3507,10 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
       const d = new Date(ms);
       const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
       allDayKeys.add(key);
-      if (isDaySettled(ms)) settledDayKeys.add(key);
+      // Only count base for settled days that are NOT manually excluded
+      if (isDaySettled(ms) && !zeroBaseDayKeys.has(key)) settledDayKeys.add(key);
       totalKg += parseNum(b.kg);
     });
-    // Base: only settled days; Commission: all bills (immediate)
     let total = settledDayKeys.size * baseRate + Math.round(totalKg * commissionRate);
     earnings.forEach(e => {
       const ed = new Date(e.date + 'T12:00:00');
@@ -3516,6 +3528,12 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
 
   // Breakdown by type (respects cutoff)
   const { breakdownWorkDays, breakdownPendingDays, breakdownTotalKg } = React.useMemo(() => {
+    const zeroBaseDayKeys = new Set(
+      earnings.filter(e => (e.base || 0) === 0).map(e => {
+        const ed = new Date(e.date + 'T12:00:00');
+        return `${ed.getFullYear()}-${ed.getMonth()}-${ed.getDate()}`;
+      })
+    );
     const settled = new Set();
     const pending = new Set();
     let kg = 0;
@@ -3524,11 +3542,15 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
       const ms = typeof b.date === 'number' ? (b.date > 1e12 ? b.date : b.date * 1000) : new Date(b.date).getTime();
       const d = new Date(ms);
       const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
-      if (isDaySettled(ms)) settled.add(key); else pending.add(key);
+      if (isDaySettled(ms)) {
+        if (!zeroBaseDayKeys.has(key)) settled.add(key);
+      } else {
+        pending.add(key);
+      }
       kg += parseNum(b.kg);
     });
     return { breakdownWorkDays: settled.size, breakdownPendingDays: pending.size, breakdownTotalKg: kg };
-  }, [allTimeBills, isDaySettled]);
+  }, [allTimeBills, earnings, isDaySettled]);
   const breakdownBase = breakdownWorkDays * baseRate;
   const breakdownComm = Math.round(breakdownTotalKg * commissionRate);
   const breakdownBonus = earnings.reduce((s, e) => s + (e.bonus || 0), 0);
@@ -3538,10 +3560,17 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
     try {
       const mm = String(calMonth+1).padStart(2,'0');
       const dd = String(selectedDay).padStart(2,'0');
-      await db.saveEarning({ supervisor_name: supervisorName, date: `${calYear}-${mm}-${dd}`, base: baseRate, commission_kg: selKg, commission_baht: selCommission, bonus: dayBonus, total: selTotal });
+      await db.saveEarning({ supervisor_name: supervisorName, date: `${calYear}-${mm}-${dd}`, base: selDayBase, commission_kg: selKg, commission_baht: selCommission, bonus: dayBonus, total: selTotal });
       await loadLedger();
     } catch { alert('บันทึกไม่สำเร็จ'); }
     setSaving(false);
+  };
+
+  const handleDeleteEarning = async (earningId) => {
+    try {
+      await db.deleteEarning(earningId);
+      await loadLedger();
+    } catch { alert('ลบไม่สำเร็จ'); }
   };
 
   const handleSavePayment = async () => {
@@ -3874,9 +3903,21 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
                 </div>
               )}
 
+              {/* Daily wage toggle */}
+              <button onClick={() => setDayIncludeBase(v => !v)} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: dayIncludeBase ? '#F0FFF4' : '#FFF0F0', border: `1.5px solid ${dayIncludeBase ? '#A8D5A2' : '#F0A0A0'}`, borderRadius: 10, padding: '9px 14px', marginBottom: 10, cursor: 'pointer' }}>
+                <span style={{ fontSize: 13, color: dayIncludeBase ? '#2E7D32' : '#C0392B', fontWeight: 600 }}>
+                  📅 ค่าแรงรายวัน ฿{baseRate}
+                </span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: dayIncludeBase ? '#2E7D32' : '#C0392B', background: dayIncludeBase ? '#D4EDDA' : '#FADBD8', borderRadius: 6, padding: '2px 10px' }}>
+                  {dayIncludeBase ? 'นับ ✓' : 'ไม่นับ ✕'}
+                </span>
+              </button>
+
               {/* Total */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#F5EFE4', borderRadius: 12, padding: '10px 14px', marginBottom: 12 }}>
-                <span style={{ fontSize: 12, color: '#9A8662' }}>฿{baseRate} + ฿{selCommission}{dayBonus > 0 ? ` + ฿${dayBonus}` : ''}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#F5EFE4', borderRadius: 12, padding: '10px 14px', marginBottom: 10 }}>
+                <span style={{ fontSize: 12, color: '#9A8662' }}>
+                  {dayIncludeBase ? `฿${baseRate}` : '฿0 (ไม่นับ)'} + ฿{selCommission}{dayBonus > 0 ? ` + ฿${dayBonus}` : ''}
+                </span>
                 <span style={{ fontSize: 20, fontWeight: 700, color: '#5B3A29' }}>฿{selTotal.toLocaleString()}</span>
               </div>
 
@@ -3885,7 +3926,6 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
                 <span style={{ fontSize: 12, color: '#9A8662', flexShrink: 0 }}>🎁 โบนัส</span>
                 <input type="number" value={dayBonus} onChange={e => setDayBonus(Number(e.target.value)||0)} placeholder="0" style={{ flex: 1, border: '1.5px solid #E4D7BC', borderRadius: 8, padding: '7px 10px', fontSize: 14, color: '#3F2D1E', outline: 'none' }} />
                 <button onClick={async () => { await handleSaveDayEarning(); }} disabled={saving} style={{ background: '#DC743C', color: '#fff', border: 'none', borderRadius: 8, padding: '7px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>{saving ? '...' : '💾'}</button>
-                {selEarning && <button onClick={async () => { try { await db.deleteEarning(selEarning.id); await loadLedger(); setSelectedDay(null); } catch {} }} style={{ background: 'none', border: '1px solid #E4D7BC', borderRadius: 8, padding: '7px 10px', fontSize: 13, color: '#9A8662', cursor: 'pointer' }}>🗑️</button>}
               </div>
             </>)}
           </div>
@@ -3933,13 +3973,19 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
         <div style={{ padding: '10px 12px' }}>
           {earnings.length === 0 && !loadingLedger && <div style={{ textAlign: 'center', color: '#B7A684', padding: 32 }}>ยังไม่มีรายการ<br/><span style={{ fontSize: 12 }}>กดวันในปฏิทินเพื่อบันทึก</span></div>}
           {earnings.map(e => (
-            <div key={e.id} style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4D7BC', borderLeft: '4px solid #DC743C', padding: '12px 14px', marginBottom: 8 }}>
+            <div key={e.id} style={{ background: '#fff', borderRadius: 12, border: `1px solid ${(e.base || 0) === 0 ? '#F0A0A0' : '#E4D7BC'}`, borderLeft: `4px solid ${(e.base || 0) === 0 ? '#C0392B' : '#DC743C'}`, padding: '12px 14px', marginBottom: 8 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
                 <div style={{ fontWeight: 700, fontSize: 14, color: '#2A2118' }}>{fmtThDate(e.date)}</div>
-                <div style={{ fontWeight: 700, fontSize: 16, color: '#5B3A29' }}>฿{(e.total||0).toLocaleString()}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ fontWeight: 700, fontSize: 16, color: '#5B3A29' }}>฿{(e.total||0).toLocaleString()}</div>
+                  <button onClick={() => handleDeleteEarning(e.id)} style={{ background: 'none', border: '1px solid #E4D7BC', borderRadius: 7, padding: '3px 8px', fontSize: 12, color: '#9A8662', cursor: 'pointer' }}>🗑</button>
+                </div>
               </div>
-              <div style={{ display: 'flex', gap: 6 }}>
-                <span style={{ background: '#F5EFE4', borderRadius: 6, padding: '2px 8px', fontSize: 11, color: '#5B3A29' }}>📅 ฿{e.base}</span>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {(e.base || 0) > 0
+                  ? <span style={{ background: '#F5EFE4', borderRadius: 6, padding: '2px 8px', fontSize: 11, color: '#5B3A29' }}>📅 ฿{e.base}</span>
+                  : <span style={{ background: '#FFF0F0', borderRadius: 6, padding: '2px 8px', fontSize: 11, color: '#C0392B' }}>📅 ไม่นับค่าแรง</span>
+                }
                 <span style={{ background: '#FFF3E0', borderRadius: 6, padding: '2px 8px', fontSize: 11, color: '#E65100' }}>📦 {e.commission_kg}กก. = ฿{e.commission_baht}</span>
                 {e.bonus > 0 && <span style={{ background: '#F3E8FF', borderRadius: 6, padding: '2px 8px', fontSize: 11, color: '#7B3FA0' }}>🎁 ฿{e.bonus}</span>}
               </div>
