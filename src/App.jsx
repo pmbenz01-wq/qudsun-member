@@ -297,8 +297,6 @@ function EmployeeManager({ employees, onSave, onCancel }) {
 function HomeView({ session, history, saleHistory, payments, syncing, syncStatus, onSyncNow, onOpenSheet, onNew, onResume, onGoCustomers, onGoDashboard, onGoSupervisors, onGoSales, onNewSale, saleSession, onResumeSale, onChangePin, onSetEmployeePin, onOpenHistory, onOpenSaleHistory, onPayment, onDeleteBill, onDeleteSaleBill, pin, verified, supervisors, isEmployee, onLogout, onExport, onImport, onGoHistory }) {
   const customerCount = Object.keys(loadCustomers(history)).length;
   const supervisorCount = Object.values(supervisors || {}).filter(Boolean).reduce((set, n) => (set.add(n), set), new Set()).size;
-  const [deleteTarget, setDeleteTarget] = useState(null);
-  const [deleteSaleTarget, setDeleteSaleTarget] = useState(null);
   if (isEmployee) {
     return (
       <div style={{ flex: 1, maxWidth: 480, width: '100%', margin: '0 auto', padding: '32px 14px 40px', display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -422,99 +420,14 @@ function HomeView({ session, history, saleHistory, payments, syncing, syncStatus
         </button>
       </div>
 
-      {(history.length > 0 || (saleHistory || []).length > 0) && (
-        <>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '20px 0 12px' }}>
-            <span style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 13, letterSpacing: '.14em', color: '#A6925E' }}>ประวัติบิล</span>
-            <div style={{ flex: 1, height: 1, background: '#E4D7BC' }} />
-            <button onClick={onGoHistory} style={{ fontSize: 11, color: '#DC743C', fontWeight: 600, border: 'none', background: 'none', cursor: 'pointer', padding: '2px 4px' }}>ดูทั้งหมด →</button>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {[
-              ...history.slice(0, 30).map(h => ({ _type: 'buy', _date: h.date || 0, ...h })),
-              ...(saleHistory || []).slice(0, 30).map(s => ({ _type: 'sell', _date: s.date || 0, ...s })),
-            ].sort((a, b) => b._date - a._date).slice(0, 30).map((item, i) => {
-              if (item._type === 'buy') {
-                const h = item;
-                const stat = h.phone ? customerStat(h.phone, history, verified) : null;
-                const tier = stat ? stat.effectiveTier : null;
-                const pay = payments?.[h.billNo];
-                const status = pay?.status || 'unpaid';
-                const borderColor = status === 'transferred' ? '#5A9A6A' : status === 'cash' ? '#5A7FA8' : '#E05050';
-                const statusLabel = status === 'transferred' ? '✓ โอนแล้ว' : status === 'cash' ? '✓ เงินสด' : null;
-                const statusColor = status === 'transferred' ? '#2E7D32' : status === 'cash' ? '#1A4D80' : null;
-                return (
-                  <div key={'b-' + i} style={{ display: 'flex', justifyContent: 'flex-start' }}>
-                    <div style={{ width: '83%', border: `1.5px solid ${borderColor}`, background: '#FFFDF8', borderRadius: '4px 13px 13px 13px', overflow: 'hidden' }}>
-                      <button onClick={() => onOpenHistory(h)} style={{ textAlign: 'left', background: 'none', border: 'none', width: '100%', padding: '12px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <div style={{ width: 38, height: 38, borderRadius: 9, background: '#F0E4C8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, flexShrink: 0 }}>🧾</div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <span style={{ fontWeight: 600, fontSize: 14, color: '#4A3526' }}>{h.billNo}</span>
-                            {statusLabel && <span style={{ fontSize: 10, fontWeight: 700, color: statusColor }}>{statusLabel}</span>}
-                          </div>
-                          <div style={{ fontSize: 12, color: '#9A8662', marginTop: 1 }}>
-                            {h.dateText} · {h.seller || '—'} · {h.kg} กก.
-                          </div>
-                          {tier && tier.key !== 'silver' && <TierBadge tier={tier} />}
-                        </div>
-                        <span style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 15, color: '#3F2D1E', whiteSpace: 'nowrap' }}>฿{h.baht}</span>
-                      </button>
-                      {status === 'unpaid' && onPayment && (
-                        <div style={{ display: 'flex', gap: 8, padding: '0 12px 10px' }}>
-                          <button onClick={() => onPayment(h.billNo, 'transferred')} style={{ flex: 1, border: 'none', borderRadius: 9, padding: '8px 0', background: '#5A9A6A', color: '#fff', fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>โอนแล้ว ✓</button>
-                          <button onClick={() => onPayment(h.billNo, 'cash')} style={{ flex: 1, border: 'none', borderRadius: 9, padding: '8px 0', background: '#5A7FA8', color: '#fff', fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>เงินสด ✓</button>
-                        </div>
-                      )}
-                      {!isEmployee && onDeleteBill && (
-                        <div style={{ padding: '0 12px 10px', display: 'flex', justifyContent: 'flex-end' }}>
-                          <button onClick={() => setDeleteTarget(h)} style={{ border: '1px solid #E8C8C2', background: '#FDF0EE', borderRadius: 8, padding: '5px 12px', fontSize: 11, color: '#C0392B', cursor: 'pointer' }}>🗑 ลบบิล</button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              } else {
-                const s = item;
-                const fmtTs = ts => { const d = new Date(ts); return `${d.getDate()} ${['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'][d.getMonth()]} ${d.getFullYear() + 543}`; };
-                return (
-                  <div key={'s-' + i} style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                    <div style={{ width: '83%', border: '1.5px solid #6BBF70', background: '#F2FBF2', borderRadius: '13px 4px 13px 13px', overflow: 'hidden' }}>
-                      <button onClick={() => onOpenSaleHistory ? onOpenSaleHistory(s.billNo) : onGoSales()} style={{ textAlign: 'left', background: 'none', border: 'none', width: '100%', padding: '12px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <span style={{ fontWeight: 600, fontSize: 14, color: '#1B5E20' }}>{s.billNo}</span>
-                            <span style={{ fontSize: 10, fontWeight: 700, color: '#4CAF50' }}>📤 ขาย</span>
-                          </div>
-                          <div style={{ fontSize: 12, color: '#5A8A5A', marginTop: 1 }}>
-                            {s.date ? fmtTs(s.date) : ''}{s.customerName ? ` · ${s.customerName}` : ''} · {fmtKg(s.kg)} กก.
-                          </div>
-                        </div>
-                        <span style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 15, color: '#1B5E20', whiteSpace: 'nowrap' }}>฿{fmtBaht(s.baht)}</span>
-                      </button>
-                      {!isEmployee && onDeleteSaleBill && (
-                        <div style={{ padding: '0 12px 10px', display: 'flex', justifyContent: 'flex-end' }}>
-                          <button onClick={() => setDeleteSaleTarget(s)} style={{ border: '1px solid #A8D5A2', background: '#E8F5E9', borderRadius: 8, padding: '5px 12px', fontSize: 11, color: '#2E7D32', cursor: 'pointer' }}>🗑 ลบบิล</button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              }
-            })}
-          </div>
-        </>
-      )}
-      {deleteTarget && (
-        <DeleteBillModal bill={deleteTarget} pin={pin}
-          onConfirm={() => { onDeleteBill(deleteTarget.billNo); setDeleteTarget(null); }}
-          onClose={() => setDeleteTarget(null)} />
-      )}
-      {deleteSaleTarget && (
-        <DeleteBillModal bill={{ seller: deleteSaleTarget.customerName || deleteSaleTarget.billNo, billNo: deleteSaleTarget.billNo, baht: deleteSaleTarget.baht }} pin={pin}
-          onConfirm={() => { onDeleteSaleBill(deleteSaleTarget.billNo); setDeleteSaleTarget(null); }}
-          onClose={() => setDeleteSaleTarget(null)} />
-      )}
+      <button onClick={onGoHistory} style={{ width: '100%', border: '1.5px solid #C9A24B', background: 'linear-gradient(135deg,#FFFBF0,#FFF3D4)', borderRadius: 14, padding: '14px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+        <span style={{ fontSize: 22 }}>📋</span>
+        <div style={{ textAlign: 'left' }}>
+          <div style={{ fontWeight: 700, fontSize: 15, color: '#5B3A29' }}>ประวัติบิล</div>
+          <div style={{ fontSize: 12, color: '#9A7A4A' }}>ซื้อ / ขาย · ทั้งหมด</div>
+        </div>
+        <span style={{ marginLeft: 'auto', color: '#C9A24B', fontSize: 18 }}>›</span>
+      </button>
 
       <div style={{ marginTop: 24, display: 'flex', flexDirection: 'column', gap: 8 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '4px 0 8px' }}>
