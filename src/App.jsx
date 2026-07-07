@@ -2962,15 +2962,18 @@ function HistoryPageView({ onGoHome, onOpenBill, onOpenSaleBill, isEmployee, onD
         if (item._header) return <div key={'h-'+i} style={{ padding: '10px 16px 4px', fontSize: 11, fontWeight: 700, color: '#9A8662', letterSpacing: '0.5px' }}>{item._header}</div>;
         const isBuy = item.type === 'buy';
         return (
-          <div key={item.billNo} style={{ margin: '0 12px 8px', background: '#fff', borderRadius: 14, border: `1px solid #E4D7BC`, borderLeft: `4px solid ${isBuy ? '#DC743C' : '#4CAF50'}`, overflow: 'hidden' }}>
+          <div key={item.billNo} style={{ margin: '0 12px 8px', background: isBuy ? '#FFFAF5' : '#F5FBF6', borderRadius: 14, border: `1px solid ${isBuy ? '#F0DECA' : '#C8E6C9'}`, borderLeft: `4px solid ${isBuy ? '#DC743C' : '#4CAF50'}`, overflow: 'hidden' }}>
             <button onClick={() => isBuy ? onOpenBill?.(item.billNo) : onOpenSaleBill?.(item.billNo)} style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', padding: '12px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ padding: '2px 9px', borderRadius: 20, fontSize: 10, fontWeight: 700, background: isBuy ? '#FFF3E0' : '#E8F5E9', color: isBuy ? '#E65100' : '#2E7D32', flexShrink: 0 }}>{isBuy ? 'ซื้อ' : 'ขาย'}</span>
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: isBuy ? '#FDE8D4' : '#D4EDDA', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>{isBuy ? '📥' : '📤'}</div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontWeight: 700, fontSize: 13, color: '#2A2118' }}>{item.billNo}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ fontWeight: 700, fontSize: 13, color: '#2A2118' }}>{item.billNo}</span>
+                  <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 7px', borderRadius: 20, background: isBuy ? '#FDE8D4' : '#D4EDDA', color: isBuy ? '#C0450A' : '#1B6B2E' }}>{isBuy ? 'ซื้อ' : 'ขาย'}</span>
+                </div>
                 <div style={{ fontSize: 11.5, color: '#9A8662', marginTop: 2 }}>{fmtDate(item.date)} · {fmtTime(item.date)}{item.name ? ` · ${item.name}` : ''}</div>
               </div>
               <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                <div style={{ fontWeight: 700, fontSize: 15, color: '#3F2D1E' }}>฿{fmtBaht(parseNum(item.baht))}</div>
+                <div style={{ fontWeight: 700, fontSize: 15, color: isBuy ? '#C0450A' : '#1B6B2E' }}>฿{fmtBaht(parseNum(item.baht))}</div>
                 <div style={{ fontSize: 11, color: '#9A8662' }}>{fmtKg(parseNum(item.kg))} กก.</div>
               </div>
             </button>
