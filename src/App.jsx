@@ -3386,43 +3386,57 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
       .then(() => loadLedger()).catch(() => {});
   }, [selectedDay, loadingBills]);
 
+  // Daily wage cutoff: day D's base pay is earned only when D+1 at 12:00 has passed
+  const isDaySettled = React.useCallback((billDateMs) => {
+    const d = new Date(billDateMs);
+    const cutoff = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1, 12, 0, 0);
+    return Date.now() >= cutoff.getTime();
+  }, []);
+
   const totalEarned = React.useMemo(() => {
-    const workDayKeys = new Set();
+    const settledDayKeys = new Set();
+    const allDayKeys = new Set();
     let totalKg = 0;
     allTimeBills.forEach(b => {
       if (!b.date) return;
       const ms = typeof b.date === 'number' ? (b.date > 1e12 ? b.date : b.date * 1000) : new Date(b.date).getTime();
       const d = new Date(ms);
-      workDayKeys.add(`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`);
+      const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+      allDayKeys.add(key);
+      if (isDaySettled(ms)) settledDayKeys.add(key);
       totalKg += parseNum(b.kg);
     });
-    let total = workDayKeys.size * baseRate + Math.round(totalKg * commissionRate);
+    // Base: only settled days; Commission: all bills (immediate)
+    let total = settledDayKeys.size * baseRate + Math.round(totalKg * commissionRate);
     earnings.forEach(e => {
       const ed = new Date(e.date + 'T12:00:00');
       const key = `${ed.getFullYear()}-${ed.getMonth()}-${ed.getDate()}`;
-      if (!workDayKeys.has(key)) {
+      if (!allDayKeys.has(key)) {
         total += (e.base || 0) + (e.commission_baht || 0) + (e.bonus || 0);
       } else {
         total += (e.bonus || 0);
       }
     });
     return total;
-  }, [allTimeBills, baseRate, commissionRate, earnings]);
+  }, [allTimeBills, baseRate, commissionRate, earnings, isDaySettled]);
   const totalPaid = payments.reduce((s, p) => s + (p.amount || 0), 0);
   const balance = totalEarned - totalPaid;
 
-  // Breakdown by type
-  const breakdownWorkDays = React.useMemo(() => {
-    const keys = new Set();
+  // Breakdown by type (respects cutoff)
+  const { breakdownWorkDays, breakdownPendingDays, breakdownTotalKg } = React.useMemo(() => {
+    const settled = new Set();
+    const pending = new Set();
+    let kg = 0;
     allTimeBills.forEach(b => {
       if (!b.date) return;
       const ms = typeof b.date === 'number' ? (b.date > 1e12 ? b.date : b.date * 1000) : new Date(b.date).getTime();
       const d = new Date(ms);
-      keys.add(`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`);
+      const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+      if (isDaySettled(ms)) settled.add(key); else pending.add(key);
+      kg += parseNum(b.kg);
     });
-    return keys.size;
-  }, [allTimeBills]);
-  const breakdownTotalKg = React.useMemo(() => allTimeBills.reduce((s, b) => s + parseNum(b.kg), 0), [allTimeBills]);
+    return { breakdownWorkDays: settled.size, breakdownPendingDays: pending.size, breakdownTotalKg: kg };
+  }, [allTimeBills, isDaySettled]);
   const breakdownBase = breakdownWorkDays * baseRate;
   const breakdownComm = Math.round(breakdownTotalKg * commissionRate);
   const breakdownBonus = earnings.reduce((s, e) => s + (e.bonus || 0), 0);
@@ -3559,10 +3573,11 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
             <div style={{ fontSize: 10, fontWeight: 700, color: '#B7A684', marginBottom: 8, letterSpacing: '.08em' }}>รายละเอียดค่าแรง</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                   <span style={{ fontSize: 14 }}>📅</span>
                   <span style={{ fontSize: 12, color: '#4A3526' }}>รายวัน</span>
                   <span style={{ fontSize: 10, color: '#B7A684' }}>{breakdownWorkDays} วัน × ฿{baseRate}</span>
+                  {breakdownPendingDays > 0 && <span style={{ fontSize: 10, color: '#DC743C', background: '#FFF3E0', borderRadius: 4, padding: '1px 5px' }}>+{breakdownPendingDays} วัน รอตัด 12:00</span>}
                 </div>
                 <span style={{ fontSize: 13, fontWeight: 700, color: '#4A3526' }}>฿{breakdownBase.toLocaleString()}</span>
               </div>
