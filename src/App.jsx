@@ -3599,6 +3599,21 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
     setSaving(false);
   };
 
+  const todayDateStr = toDateStr(new Date());
+  const todayEarning = earnings.find(e => e.date === todayDateStr);
+  const todayIsOff = todayEarning && (todayEarning.base || 0) === 0;
+
+  const handleTodayOff = async () => {
+    try {
+      if (todayIsOff) {
+        await db.deleteEarning(todayEarning.id);
+      } else {
+        await db.saveEarning({ supervisor_name: supervisorName, date: todayDateStr, base: 0, commission_kg: 0, commission_baht: 0, bonus: 0, total: 0 });
+      }
+      await loadLedger();
+    } catch { alert('บันทึกไม่สำเร็จ'); }
+  };
+
   const prevMonth = () => { if (calMonth === 0) { setCalYear(y => y-1); setCalMonth(11); } else setCalMonth(m => m-1); setSelectedDay(1); };
   const nextMonth = () => { if (calMonth === 11) { setCalYear(y => y+1); setCalMonth(0); } else setCalMonth(m => m+1); setSelectedDay(1); };
 
@@ -3682,6 +3697,9 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
         <div style={{ flex: 1 }}>
           <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 16, color: '#2A2118' }}>🧑‍💼 {supervisorName}</div>
         </div>
+        <button onClick={handleTodayOff} style={{ fontSize: 11, fontWeight: 700, padding: '5px 10px', borderRadius: 8, border: `1.5px solid ${todayIsOff ? '#A8D5A2' : '#E4D7BC'}`, background: todayIsOff ? '#F0FFF4' : '#FFF8EE', color: todayIsOff ? '#2E7D32' : '#9A8662', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}>
+          {todayIsOff ? '✅ หยุดวันนี้' : '💤 หยุดวันนี้'}
+        </button>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ fontSize: 11, color: '#9A8662' }}>เบส/วัน:</span>
           {editingBase ? (
