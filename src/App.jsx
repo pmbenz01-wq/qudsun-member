@@ -3380,6 +3380,9 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
   const [showPaySlip, setShowPaySlip] = React.useState(false);
   const [showWageSlip, setShowWageSlip] = React.useState(false);
   const [showCommSlip, setShowCommSlip] = React.useState(false);
+  const [showPeriodPay, setShowPeriodPay] = React.useState(false);
+  const [periodFrom, setPeriodFrom] = React.useState('');
+  const [periodTo, setPeriodTo] = React.useState('');
 
   React.useEffect(() => {
     db.getSetting('sup_base_rates').then(v => {
@@ -3554,6 +3557,26 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
   const breakdownBase = breakdownWorkDays * baseRate;
   const breakdownComm = Math.round(breakdownTotalKg * commissionRate);
   const breakdownBonus = earnings.reduce((s, e) => s + (e.bonus || 0), 0);
+
+  const periodSummary = React.useMemo(() => {
+    if (!periodFrom || !periodTo) return null;
+    const from = new Date(periodFrom + 'T00:00:00').getTime();
+    const to = new Date(periodTo + 'T23:59:59').getTime();
+    const pEarnings = earnings.filter(e => {
+      const d = new Date(e.date + 'T12:00:00').getTime();
+      return d >= from && d <= to;
+    });
+    const pBase = pEarnings.reduce((s, e) => s + (e.base || 0), 0);
+    const pBonus = pEarnings.reduce((s, e) => s + (e.bonus || 0), 0);
+    const pBills = allTimeBills.filter(b => {
+      if (!b.date) return false;
+      const ms = typeof b.date === 'number' ? (b.date > 1e12 ? b.date : b.date * 1000) : new Date(b.date).getTime();
+      return ms >= from && ms <= to;
+    });
+    const pKg = pBills.reduce((s, b) => s + parseNum(b.kg), 0);
+    const pComm = Math.round(pKg * commissionRate);
+    return { days: pEarnings.length, base: pBase, bonus: pBonus, kg: pKg, comm: pComm, total: pBase + pBonus + pComm };
+  }, [periodFrom, periodTo, earnings, allTimeBills, commissionRate]);
 
   const handleSaveDayEarning = async () => {
     setSaving(true);
@@ -3998,9 +4021,87 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
       {tab === 'paid' && (
         <div style={{ padding: '10px 12px' }}>
           <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
-            {balance > 0 && <button onClick={() => { setShowPayForm(true); setPayAmount(String(balance)); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={{ flex: 1, background: '#2E7D32', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>💸 จ่ายเงิน</button>}
-            <button onClick={() => setShowPaySlip(true)} style={{ flex: 1, background: '#fff', color: '#5B3A29', border: '1px solid #E4D7BC', borderRadius: 10, padding: '10px 14px', fontSize: 13, cursor: 'pointer' }}>📋 สรุปจ่าย</button>
+            {balance > 0 && <button onClick={() => { setShowPayForm(true); setPayAmount(String(balance)); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={{ flex: 1, background: '#2E7D32', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>💸 จ่ายทั้งหมด</button>}
+            <button onClick={() => { setShowPeriodPay(v => !v); setPeriodFrom(''); setPeriodTo(''); }} style={{ flex: 1, background: showPeriodPay ? '#5B3A29' : '#fff', color: showPeriodPay ? '#fff' : '#5B3A29', border: '1px solid #5B3A29', borderRadius: 10, padding: '10px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>📆 จ่ายช่วงเวลา</button>
+            <button onClick={() => setShowPaySlip(true)} style={{ background: '#fff', color: '#9A8662', border: '1px solid #E4D7BC', borderRadius: 10, padding: '10px 12px', fontSize: 13, cursor: 'pointer' }}>📋</button>
           </div>
+
+          {/* Period pay form */}
+          {showPeriodPay && (
+            <div style={{ background: '#fff', borderRadius: 14, border: '1px solid #E4D7BC', padding: '14px', marginBottom: 12 }}>
+              <div style={{ fontWeight: 700, fontSize: 13, color: '#2A2118', marginBottom: 10 }}>📆 เลือกช่วงเวลาที่จ่าย</div>
+              <div style={{ display: 'flex', gap: 8, marginBottom: 12, alignItems: 'center' }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 10, color: '#9A8662', marginBottom: 3 }}>จาก</div>
+                  <input type="date" value={periodFrom} onChange={e => setPeriodFrom(e.target.value)}
+                    style={{ width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 9, padding: '8px 10px', fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
+                </div>
+                <span style={{ color: '#9A8662', marginTop: 14 }}>–</span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 10, color: '#9A8662', marginBottom: 3 }}>ถึง</div>
+                  <input type="date" value={periodTo} onChange={e => setPeriodTo(e.target.value)}
+                    style={{ width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 9, padding: '8px 10px', fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
+                </div>
+              </div>
+
+              {periodSummary && periodFrom && periodTo && (
+                <>
+                  {/* Period summary card */}
+                  <div style={{ background: '#F9F5EC', borderRadius: 12, border: '1px solid #E4D7BC', padding: '12px 14px', marginBottom: 12 }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: '#B7A684', marginBottom: 8 }}>
+                      สรุป {new Date(periodFrom+'T12:00').toLocaleDateString('th-TH', { day:'numeric', month:'short' })} – {new Date(periodTo+'T12:00').toLocaleDateString('th-TH', { day:'numeric', month:'short', year:'2-digit' })}
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
+                        <span style={{ color: '#5B3A29' }}>📅 รายวัน ({periodSummary.days} วัน)</span>
+                        <span style={{ fontWeight: 600 }}>฿{periodSummary.base.toLocaleString()}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
+                        <span style={{ color: '#E65100' }}>📦 ค่าคอม ({periodSummary.kg % 1 === 0 ? periodSummary.kg : periodSummary.kg.toFixed(1)} กก.)</span>
+                        <span style={{ fontWeight: 600 }}>฿{periodSummary.comm.toLocaleString()}</span>
+                      </div>
+                      {periodSummary.bonus > 0 && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
+                          <span style={{ color: '#7B3FA0' }}>🎁 โบนัส</span>
+                          <span style={{ fontWeight: 600 }}>฿{periodSummary.bonus.toLocaleString()}</span>
+                        </div>
+                      )}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 15, fontWeight: 700, borderTop: '1px solid #E4D7BC', paddingTop: 8, marginTop: 4, color: '#2A2118' }}>
+                        <span>รวม</span><span>฿{periodSummary.total.toLocaleString()}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Note + confirm */}
+                  <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                    <input value={payNote} onChange={e => setPayNote(e.target.value)}
+                      placeholder={`ค่าแรง ${new Date(periodFrom+'T12:00').toLocaleDateString('th-TH', { day:'numeric', month:'short' })} – ${new Date(periodTo+'T12:00').toLocaleDateString('th-TH', { day:'numeric', month:'short' })}`}
+                      style={{ flex: 1, border: '1.5px solid #E4D7BC', borderRadius: 9, padding: '9px 12px', fontSize: 13, outline: 'none' }} />
+                  </div>
+                  <button
+                    onClick={async () => {
+                      const note = payNote || `ค่าแรง ${new Date(periodFrom+'T12:00').toLocaleDateString('th-TH', { day:'numeric', month:'short' })} – ${new Date(periodTo+'T12:00').toLocaleDateString('th-TH', { day:'numeric', month:'short' })}`;
+                      setSaving(true);
+                      try {
+                        await db.savePayment({ supervisor_name: supervisorName, paid_date: toDateStr(new Date()), amount: periodSummary.total, note });
+                        setPayNote(''); setPeriodFrom(''); setPeriodTo(''); setShowPeriodPay(false);
+                        await loadLedger();
+                        setShowPaySlip(true);
+                      } catch { alert('บันทึกไม่สำเร็จ'); }
+                      setSaving(false);
+                    }}
+                    disabled={saving || periodSummary.total === 0}
+                    style={{ width: '100%', background: periodSummary.total > 0 ? '#2E7D32' : '#ccc', color: '#fff', border: 'none', borderRadius: 10, padding: '12px 0', fontSize: 14, fontWeight: 700, cursor: periodSummary.total > 0 ? 'pointer' : 'default' }}>
+                    {saving ? '...' : `✓ จ่าย ฿${periodSummary.total.toLocaleString()}`}
+                  </button>
+                </>
+              )}
+              {periodFrom && periodTo && periodSummary && periodSummary.total === 0 && (
+                <div style={{ textAlign: 'center', color: '#B7A684', fontSize: 13, padding: '12px 0' }}>ไม่มีข้อมูลค่าแรงในช่วงนี้</div>
+              )}
+            </div>
+          )}
+
           <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
             <button onClick={() => setShowWageSlip(true)} style={{ flex: 1, background: '#F5EFE4', color: '#5B3A29', border: '1px solid #D0C8BC', borderRadius: 10, padding: '9px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>🖨️ บิลค่าแรง+โบนัส</button>
             <button onClick={() => setShowCommSlip(true)} style={{ flex: 1, background: '#FFF3E0', color: '#BF360C', border: '1px solid #FFCC80', borderRadius: 10, padding: '9px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>🖨️ บิลค่าคอม</button>
