@@ -4932,10 +4932,9 @@ export default function App() {
   }, [saleSessions, navigate]);
 
   const goBackFromBill = useCallback(() => {
-    const dest = custPhone ? '/customers/' + encodeURIComponent(custPhone) : '/';
     setSession(savedSession.current || null); savedSession.current = null;
-    setReadonly(false); navigate(dest);
-  }, [custPhone, navigate]);
+    setReadonly(false); navigate(-1);
+  }, [navigate]);
 
   const handleForcePush = useCallback(async () => {
     setSyncing(true);
