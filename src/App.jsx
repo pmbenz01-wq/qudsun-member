@@ -3350,6 +3350,13 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
   const parseNum = v => parseFloat(String(v ?? '').replace(/,/g, '')) || 0;
   const toDateStr = d => { const dt = new Date(d); return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`; };
   const fmtThDate = s => { if (!s) return ''; const d = new Date(s + 'T12:00:00'); return d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' }); };
+  const fmtPayNote = note => {
+    if (!note) return '';
+    if (note.startsWith('COMM_BILLS:')) {
+      try { const arr = JSON.parse(note.slice('COMM_BILLS:'.length)); return `ค่าคอม ${arr.length} บิล`; } catch {}
+    }
+    return note;
+  };
   const MONTH_TH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
   const DOW_TH = ['อา','จ','อ','พ','พฤ','ศ','ส'];
   const nowRef = new Date();
@@ -3754,7 +3761,7 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
               <div style={{ fontSize: 12, color: '#B7A684', textAlign: 'center', padding: '8px 0' }}>ยังไม่มีรายการ</div>
             ) : payments.map((p, i) => (
               <div key={p.id || i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#4A3526', padding: '4px 0', borderBottom: '1px solid #F5EFE4' }}>
-                <span>{fmtThDate(p.paid_date)}{p.note ? ` · ${p.note}` : ''}</span>
+                <span>{fmtThDate(p.paid_date)}{p.note ? ` · ${fmtPayNote(p.note)}` : ''}</span>
                 <span style={{ fontWeight: 600 }}>฿{(p.amount||0).toLocaleString()}</span>
               </div>
             ))}
@@ -4321,7 +4328,7 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
             <div key={p.id} style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4D7BC', borderLeft: '4px solid #2E7D32', padding: '12px 14px', marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <div style={{ fontWeight: 700, fontSize: 14, color: '#2A2118' }}>{fmtThDate(p.paid_date)}</div>
-                {p.note && <div style={{ fontSize: 11, color: '#9A8662', marginTop: 2 }}>{p.note}</div>}
+                {p.note && <div style={{ fontSize: 11, color: '#9A8662', marginTop: 2 }}>{fmtPayNote(p.note)}</div>}
               </div>
               <div style={{ fontWeight: 700, fontSize: 16, color: '#2E7D32' }}>฿{(p.amount||0).toLocaleString()}</div>
             </div>
