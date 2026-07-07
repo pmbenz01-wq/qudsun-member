@@ -3965,40 +3965,79 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
       )}
 
       {/* Tab: บิลคอม */}
-      {tab === 'bills' && (
-        <div style={{ padding: '10px 12px' }}>
-          {/* Summary bar */}
-          <div style={{ background: '#FFF8EE', borderRadius: 12, border: '1px solid #F0E8DC', padding: '10px 14px', marginBottom: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: 12, color: '#9A8662' }}>{allTimeBills.length} บิล · {breakdownTotalKg % 1 === 0 ? breakdownTotalKg : breakdownTotalKg.toFixed(1)} กก.</span>
-            <span style={{ fontSize: 14, fontWeight: 700, color: '#E65100' }}>ค่าคอม ฿{breakdownComm.toLocaleString()}</span>
+      {tab === 'bills' && (() => {
+        // Sort bills oldest→newest for running paid total
+        const sortedBills = [...allTimeBills].sort((a, b) => {
+          const msA = typeof a.date === 'number' ? (a.date > 1e12 ? a.date : a.date * 1000) : new Date(a.date).getTime();
+          const msB = typeof b.date === 'number' ? (b.date > 1e12 ? b.date : b.date * 1000) : new Date(b.date).getTime();
+          return msA - msB;
+        });
+        const commPaid = Math.min(totalPaid, breakdownComm);
+        const commRemain = Math.max(0, breakdownComm - totalPaid);
+        let runningComm = 0;
+        const billStatuses = sortedBills.map(b => {
+          const kg = parseNum(b.kg);
+          const comm = Math.round(kg * commissionRate);
+          runningComm += comm;
+          const paid = runningComm <= totalPaid;
+          return { b, kg, comm, paid };
+        });
+        // Reverse to show newest first for display
+        const displayBills = [...billStatuses].reverse();
+        return (
+          <div style={{ padding: '10px 12px' }}>
+            {/* Summary bar */}
+            <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4D7BC', padding: '12px 14px', marginBottom: 10 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', textAlign: 'center' }}>
+                <div>
+                  <div style={{ fontSize: 10, color: '#9A8662' }}>📦 ค่าคอมรวม</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: '#E65100' }}>฿{breakdownComm.toLocaleString()}</div>
+                </div>
+                <div style={{ borderLeft: '1px solid #F0E8DC', borderRight: '1px solid #F0E8DC' }}>
+                  <div style={{ fontSize: 10, color: '#9A8662' }}>✅ จ่ายแล้ว</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: '#2E7D32' }}>฿{commPaid.toLocaleString()}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 10, color: '#9A8662' }}>🔴 ค้าง</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: commRemain > 0 ? '#C0392B' : '#9A8662' }}>฿{commRemain.toLocaleString()}</div>
+                </div>
+              </div>
+              <div style={{ marginTop: 8, fontSize: 10, color: '#B7A684', textAlign: 'center' }}>
+                {allTimeBills.length} บิล · {breakdownTotalKg % 1 === 0 ? breakdownTotalKg : breakdownTotalKg.toFixed(1)} กก. · นับจ่ายแล้วจากบิลเก่าสุด
+              </div>
+            </div>
+            {allTimeBills.length === 0 && <div style={{ textAlign: 'center', color: '#B7A684', padding: 32 }}>ยังไม่มีบิล</div>}
+            {displayBills.map(({ b, kg, comm, paid }, idx) => {
+              const ms = typeof b.date === 'number' ? (b.date > 1e12 ? b.date : b.date * 1000) : new Date(b.date).getTime();
+              const bDate = new Date(ms);
+              const dateLabel = bDate.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' });
+              const fullCard = history.find(h => h.billNo === b.billNo);
+              const clickable = !!fullCard && !!onOpenHistory;
+              return (
+                <button key={b.billNo || idx} onClick={() => clickable && onOpenHistory(fullCard)}
+                  style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', background: paid ? '#F9FFF9' : '#fff', border: `1px solid ${paid ? '#C8E6C9' : '#E4D7BC'}`, borderLeft: `4px solid ${paid ? '#2E7D32' : '#E4D7BC'}`, borderRadius: 12, padding: '10px 14px', marginBottom: 6, cursor: clickable ? 'pointer' : 'default', textAlign: 'left' }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 9, background: paid ? '#E8F5E9' : '#FFF3E0', border: `1px solid ${paid ? '#81C784' : '#FFB74D'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 10, fontWeight: 700, color: paid ? '#2E7D32' : '#BF360C' }}>{dateLabel}</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: '#3F2D1E', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.seller || '—'}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                      <span style={{ fontSize: 10, color: '#B0966A' }}>#{b.billNo}</span>
+                      {paid
+                        ? <span style={{ fontSize: 10, fontWeight: 700, color: '#2E7D32', background: '#E8F5E9', borderRadius: 4, padding: '1px 5px' }}>✓ จ่ายแล้ว</span>
+                        : <span style={{ fontSize: 10, fontWeight: 700, color: '#C0392B', background: '#FDECEA', borderRadius: 4, padding: '1px 5px' }}>ค้าง</span>
+                      }
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                    <div style={{ fontSize: 12, color: '#9A8662' }}>{kg % 1 === 0 ? kg : kg.toFixed(1)} กก.</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: paid ? '#2E7D32' : '#E65100' }}>+฿{comm}</div>
+                  </div>
+                  {clickable && <span style={{ color: '#C9A24B', fontSize: 16, flexShrink: 0 }}>›</span>}
+                </button>
+              );
+            })}
           </div>
-          {allTimeBills.length === 0 && <div style={{ textAlign: 'center', color: '#B7A684', padding: 32 }}>ยังไม่มีบิล</div>}
-          {allTimeBills.map((b, idx) => {
-            const ms = b.date > 1e12 ? b.date : (typeof b.date === 'number' ? b.date * 1000 : new Date(b.date).getTime());
-            const bDate = new Date(ms);
-            const dateLabel = bDate.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' });
-            const kg = parseNum(b.kg);
-            const comm = Math.round(kg * commissionRate);
-            const fullCard = history.find(h => h.billNo === b.billNo);
-            const clickable = !!fullCard && !!onOpenHistory;
-            return (
-              <button key={b.billNo || idx} onClick={() => clickable && onOpenHistory(fullCard)}
-                style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', background: '#fff', border: '1px solid #E4D7BC', borderRadius: 12, padding: '10px 14px', marginBottom: 6, cursor: clickable ? 'pointer' : 'default', textAlign: 'left' }}>
-                <div style={{ width: 36, height: 36, borderRadius: 9, background: '#FFF3E0', border: '1px solid #FFB74D', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 11, fontWeight: 700, color: '#BF360C' }}>{dateLabel}</div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: '#3F2D1E', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.seller || '—'}</div>
-                  <div style={{ fontSize: 10, color: '#B0966A' }}>#{b.billNo}</div>
-                </div>
-                <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                  <div style={{ fontSize: 12, color: '#9A8662' }}>{kg % 1 === 0 ? kg : kg.toFixed(1)} กก.</div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#E65100' }}>+฿{comm}</div>
-                </div>
-                {clickable && <span style={{ color: '#C9A24B', fontSize: 16, flexShrink: 0 }}>›</span>}
-              </button>
-            );
-          })}
-        </div>
-      )}
+        );
+      })()}
 
       {/* Tab: ค่าแรง */}
       {tab === 'earnings' && (
