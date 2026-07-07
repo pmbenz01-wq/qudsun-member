@@ -2960,6 +2960,18 @@ function HistoryPageView({ onGoHome, onOpenBill, onOpenSaleBill, isEmployee, onD
               <div style={{ fontSize: 10, color: '#C0A88A', marginTop: 2 }}> </div>
             </div>
           </div>
+          {(() => {
+            const remainKg = buyKg - saleKg;
+            const remainColor = remainKg >= 0 ? '#5B3A29' : '#C0392B';
+            return (
+              <div style={{ borderTop: '1px solid #F0E8DC', padding: '8px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: 11, color: '#9A8662', fontWeight: 600 }}>📦 คงเหลือ (ซื้อ − ขาย)</span>
+                <span style={{ fontSize: 14, fontWeight: 700, color: remainColor }}>
+                  {remainKg >= 0 ? '' : '−'}{Math.abs(remainKg % 1 === 0 ? remainKg : parseFloat(remainKg.toFixed(1))).toLocaleString()} กก.
+                </span>
+              </div>
+            );
+          })()}
         </div>
       )}
 
