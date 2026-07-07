@@ -2819,8 +2819,10 @@ function HistoryPageView({ onGoHome, onOpenBill, onOpenSaleBill, isEmployee, onD
   const [loading, setLoading] = React.useState(true);
   const [filter, setFilter] = React.useState('all');
   const [dateFilter, setDateFilter] = React.useState('today');
-  const [rangeFrom, setRangeFrom] = React.useState('');
-  const [rangeTo, setRangeTo] = React.useState('');
+  const [rangeFromDate, setRangeFromDate] = React.useState('');
+  const [rangeFromTime, setRangeFromTime] = React.useState('');
+  const [rangeToDate, setRangeToDate] = React.useState('');
+  const [rangeToTime, setRangeToTime] = React.useState('');
   const [deleteTarget, setDeleteTarget] = React.useState(null);
 
   const load = React.useCallback(async () => {
@@ -2862,14 +2864,16 @@ function HistoryPageView({ onGoHome, onOpenBill, onOpenSaleBill, isEmployee, onD
   const fmtTime = (d) => { if (!d) return ''; const dt = new Date(d); return dt.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) + ' น.'; };
 
   const now = new Date();
-  const hasRange = rangeFrom || rangeTo;
+  const hasRange = rangeFromDate || rangeToDate;
+  const fromDt = rangeFromDate ? new Date(rangeFromDate + 'T' + (rangeFromTime || '00:00')) : null;
+  const toDt = rangeToDate ? new Date(rangeToDate + 'T' + (rangeToTime || '23:59')) : null;
   const filtered = items.filter(i => {
     if (filter !== 'all' && (filter === 'buy' ? i.type !== 'buy' : i.type !== 'sale')) return false;
     const d = i.date ? new Date(i.date) : null;
     if (hasRange) {
       if (!d) return false;
-      if (rangeFrom && d < new Date(rangeFrom)) return false;
-      if (rangeTo && d > new Date(rangeTo)) return false;
+      if (fromDt && d < fromDt) return false;
+      if (toDt && d > toDt) return false;
       return true;
     }
     if (dateFilter === 'today') return d && d.toDateString() === now.toDateString();
@@ -2912,18 +2916,22 @@ function HistoryPageView({ onGoHome, onOpenBill, onOpenSaleBill, isEmployee, onD
       <div style={{ padding: '8px 16px', background: '#FAF6F0', borderBottom: '1px solid #E4D7BC' }}>
         <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap', marginBottom: 8 }}>
           {[['today','วันนี้'],['7d','7 วัน'],['30d','30 วัน'],['all','ทั้งหมด']].map(([val, label]) => (
-            <button key={val} onClick={() => { setDateFilter(val); setRangeFrom(''); setRangeTo(''); }} style={{ padding: '3px 11px', borderRadius: 20, border: '1px solid', fontSize: 11, fontWeight: 600, cursor: 'pointer', background: !hasRange && dateFilter === val ? '#DC743C' : 'transparent', color: !hasRange && dateFilter === val ? '#fff' : '#9A8662', borderColor: !hasRange && dateFilter === val ? '#DC743C' : '#D0C8C0' }}>{label}</button>
+            <button key={val} onClick={() => { setDateFilter(val); setRangeFromDate(''); setRangeFromTime(''); setRangeToDate(''); setRangeToTime(''); }} style={{ padding: '3px 11px', borderRadius: 20, border: '1px solid', fontSize: 11, fontWeight: 600, cursor: 'pointer', background: !hasRange && dateFilter === val ? '#DC743C' : 'transparent', color: !hasRange && dateFilter === val ? '#fff' : '#9A8662', borderColor: !hasRange && dateFilter === val ? '#DC743C' : '#D0C8C0' }}>{label}</button>
           ))}
         </div>
-        <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexWrap: 'wrap' }}>
           <span style={{ fontSize: 11, color: '#9A8662', fontWeight: 600, flexShrink: 0 }}>จาก</span>
-          <input type="datetime-local" value={rangeFrom} onChange={e => setRangeFrom(e.target.value)}
-            style={{ flex: 1, minWidth: 0, padding: '4px 8px', borderRadius: 8, border: `1px solid ${rangeFrom ? '#DC743C' : '#D0C8C0'}`, fontSize: 11, color: rangeFrom ? '#DC743C' : '#9A8662', background: '#fff', outline: 'none', fontWeight: rangeFrom ? 700 : 400 }} />
+          <input type="date" value={rangeFromDate} onChange={e => setRangeFromDate(e.target.value)}
+            style={{ flex: 2, minWidth: 0, padding: '4px 6px', borderRadius: 8, border: `1px solid ${rangeFromDate ? '#DC743C' : '#D0C8C0'}`, fontSize: 11, color: rangeFromDate ? '#DC743C' : '#9A8662', background: '#fff', outline: 'none' }} />
+          <input type="time" value={rangeFromTime} onChange={e => setRangeFromTime(e.target.value)}
+            style={{ flex: 1, minWidth: 0, padding: '4px 6px', borderRadius: 8, border: `1px solid ${rangeFromTime ? '#DC743C' : '#D0C8C0'}`, fontSize: 11, color: rangeFromTime ? '#DC743C' : '#9A8662', background: '#fff', outline: 'none' }} />
           <span style={{ fontSize: 11, color: '#9A8662', fontWeight: 600, flexShrink: 0 }}>ถึง</span>
-          <input type="datetime-local" value={rangeTo} onChange={e => setRangeTo(e.target.value)}
-            style={{ flex: 1, minWidth: 0, padding: '4px 8px', borderRadius: 8, border: `1px solid ${rangeTo ? '#DC743C' : '#D0C8C0'}`, fontSize: 11, color: rangeTo ? '#DC743C' : '#9A8662', background: '#fff', outline: 'none', fontWeight: rangeTo ? 700 : 400 }} />
+          <input type="date" value={rangeToDate} onChange={e => setRangeToDate(e.target.value)}
+            style={{ flex: 2, minWidth: 0, padding: '4px 6px', borderRadius: 8, border: `1px solid ${rangeToDate ? '#DC743C' : '#D0C8C0'}`, fontSize: 11, color: rangeToDate ? '#DC743C' : '#9A8662', background: '#fff', outline: 'none' }} />
+          <input type="time" value={rangeToTime} onChange={e => setRangeToTime(e.target.value)}
+            style={{ flex: 1, minWidth: 0, padding: '4px 6px', borderRadius: 8, border: `1px solid ${rangeToTime ? '#DC743C' : '#D0C8C0'}`, fontSize: 11, color: rangeToTime ? '#DC743C' : '#9A8662', background: '#fff', outline: 'none' }} />
           {hasRange && (
-            <button onClick={() => { setRangeFrom(''); setRangeTo(''); }} style={{ flexShrink: 0, padding: '4px 10px', borderRadius: 8, border: '1px solid #D0C8C0', background: '#fff', fontSize: 11, color: '#9A8662', cursor: 'pointer' }}>ล้าง</button>
+            <button onClick={() => { setRangeFromDate(''); setRangeFromTime(''); setRangeToDate(''); setRangeToTime(''); }} style={{ flexShrink: 0, padding: '4px 10px', borderRadius: 8, border: '1px solid #D0C8C0', background: '#fff', fontSize: 11, color: '#9A8662', cursor: 'pointer' }}>ล้าง</button>
           )}
         </div>
       </div>
