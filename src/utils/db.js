@@ -403,6 +403,27 @@ export const db = {
     if (error) throw error;
   },
 
+  // ─── Reset All Transaction Data ──────────────────────────────────────────
+  async resetAllData() {
+    const errors = [];
+    const del = async (table, col) => {
+      const { error } = await supabase.from(table).delete().not(col, 'is', null);
+      if (error) errors.push(`${table}: ${error.message}`);
+    };
+    await del('qm_bills', 'bill_no');
+    await del('qm_payments', 'bill_no');
+    await del('qm_sales', 'id');
+    await del('qm_sale_sessions', 'bill_no');
+    await del('qm_sup_earnings', 'id');
+    await del('qm_sup_payments', 'id');
+    const now = new Date().toISOString();
+    const { error: e1 } = await supabase.from('qm_app_settings').upsert({ key: 'sup_commission_rates', value: {}, updated_at: now }, { onConflict: 'key' });
+    const { error: e2 } = await supabase.from('qm_app_settings').upsert({ key: 'sup_base_rates', value: {}, updated_at: now }, { onConflict: 'key' });
+    if (e1) errors.push(`sup_commission_rates: ${e1.message}`);
+    if (e2) errors.push(`sup_base_rates: ${e2.message}`);
+    if (errors.length) throw new Error(errors.join('; '));
+  },
+
   // ─── Realtime ─────────────────────────────────────────────────────────────
   subscribeChanges(onSync) {
     const channel = supabase

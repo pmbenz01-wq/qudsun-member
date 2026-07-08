@@ -294,7 +294,7 @@ function EmployeeManager({ employees, onSave, onCancel }) {
 }
 
 // ─── HomeView ─────────────────────────────────────────────────────────────────
-function HomeView({ session, history, saleHistory, payments, syncing, syncStatus, onSyncNow, onOpenSheet, onNew, onResume, onGoCustomers, onGoDashboard, onGoSupervisors, onGoSales, onNewSale, saleSession, onResumeSale, onChangePin, onSetEmployeePin, onOpenHistory, onOpenSaleHistory, onPayment, onDeleteBill, onDeleteSaleBill, pin, verified, supervisors, isEmployee, onLogout, onExport, onImport, onGoHistory }) {
+function HomeView({ session, history, saleHistory, payments, syncing, syncStatus, onSyncNow, onOpenSheet, onNew, onResume, onGoCustomers, onGoDashboard, onGoSupervisors, onGoSales, onNewSale, saleSession, onResumeSale, onChangePin, onSetEmployeePin, onOpenHistory, onOpenSaleHistory, onPayment, onDeleteBill, onDeleteSaleBill, pin, verified, supervisors, isEmployee, onLogout, onExport, onImport, onGoHistory, onResetData }) {
   const customerCount = Object.keys(loadCustomers(history)).length;
   const supervisorCount = Object.values(supervisors || {}).filter(Boolean).reduce((set, n) => (set.add(n), set), new Set()).size;
   if (isEmployee) {
@@ -435,6 +435,15 @@ function HomeView({ session, history, saleHistory, payments, syncing, syncStatus
             {syncing ? '…' : '↺ ซิงก์'}
           </button>
         </button>
+        {!isEmployee && (
+          <button onClick={onResetData} style={{ border: '1px solid #F5C6C6', background: '#FFF8F8', borderRadius: 13, padding: '13px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontSize: 18 }}>🗑️</span>
+            <div style={{ textAlign: 'left' }}>
+              <div style={{ fontSize: 14, color: '#C0392B', fontWeight: 500 }}>รีเซ็ตข้อมูลทั้งหมด</div>
+              <div style={{ fontSize: 11, color: '#E57373', marginTop: 1 }}>ล้างบิล / รายรับ / ค่าคอม · คงข้อมูลลูกค้า</div>
+            </div>
+          </button>
+        )}
       </div>
     </div>
   );
@@ -1773,6 +1782,60 @@ function DeleteBillModal({ bill, pin, onConfirm, onClose }) {
           {keys.map(k => <button key={k} onClick={() => handleKey(k)} style={k === '⌫' || k === '✓' ? F : S}>{k}</button>)}
         </div>
         <button onClick={onClose} style={{ width: '100%', border: 'none', background: 'none', color: '#9A8662', fontSize: 13, cursor: 'pointer', padding: 6 }}>ยกเลิก</button>
+      </div>
+    </div>
+  );
+}
+
+function ResetDataModal({ pin, onConfirm, onClose }) {
+  const [pinVal, setPinVal] = useState('');
+  const [pinErr, setPinErr] = useState('');
+  const [busy, setBusy] = useState(false);
+  const keys = ['1','2','3','4','5','6','7','8','9','⌫','0','✓'];
+  const S = { border: '1px solid #E4D7BC', background: '#FBF6EC', borderRadius: 11, padding: '13px 0', fontSize: 20, color: '#3F2D1E', cursor: 'pointer' };
+  const F = { border: '1px solid #E0D2B4', background: '#F3E9D2', borderRadius: 11, padding: '13px 0', fontSize: 18, color: '#7A5A22', cursor: 'pointer' };
+  const handleKey = async k => {
+    if (busy) return;
+    if (k === '⌫') { setPinVal(v => v.slice(0, -1)); setPinErr(''); return; }
+    if (k === '✓') {
+      if (pinVal.length < 4) return;
+      if (pinVal !== pin) { setPinErr('รหัสไม่ถูกต้อง'); setPinVal(''); return; }
+      setBusy(true);
+      try { await onConfirm(); } catch (e) { setPinErr('เกิดข้อผิดพลาด: ' + e.message); setBusy(false); }
+      return;
+    }
+    if (pinVal.length < 4) setPinVal(v => v + k);
+  };
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 80, background: 'rgba(42,33,24,.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 18 }}>
+      <div style={{ background: '#FFFDF8', borderRadius: 20, padding: '22px 18px', width: '100%', maxWidth: 340 }}>
+        <div style={{ textAlign: 'center', fontSize: 28, marginBottom: 4 }}>⚠️</div>
+        <h3 style={{ textAlign: 'center', fontFamily: 'Prompt', fontWeight: 600, fontSize: 16, margin: '0 0 6px', color: '#C0392B' }}>รีเซ็ตข้อมูลทั้งหมด</h3>
+        <div style={{ background: '#FDECEA', borderRadius: 10, padding: '10px 14px', marginBottom: 12, fontSize: 12, color: '#7B1D1D', lineHeight: 1.7 }}>
+          <b>จะล้างข้อมูลต่อไปนี้:</b><br />
+          • บิลซื้อ / บิลขาย ทั้งหมด<br />
+          • การชำระเงินทุกบิล<br />
+          • รายรับ / การจ่ายเงินผู้ดูแล<br />
+          • ค่าคอมรายโล &amp; เงินเดือนผู้ดูแล<br />
+          <br />
+          <b>ข้อมูลที่จะคงอยู่:</b><br />
+          • ข้อมูลลูกค้า, ชื่อที่ยืนยัน, ทะเบียนรถ<br />
+          • รายชื่อผู้ดูแล / พนักงาน / บัญชี
+        </div>
+        {busy ? (
+          <div style={{ textAlign: 'center', padding: '20px 0', color: '#9A8662', fontSize: 14 }}>กำลังล้างข้อมูล…</div>
+        ) : (
+          <>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginBottom: 6 }}>
+              {[0,1,2,3].map(i => <span key={i} style={{ width: 12, height: 12, borderRadius: '50%', background: i < pinVal.length ? '#C0392B' : '#E4D7BC', border: '1.5px solid #C0392B', display: 'inline-block' }} />)}
+            </div>
+            <p style={{ textAlign: 'center', fontSize: 11, color: '#C0392B', minHeight: 14, margin: '0 0 8px' }}>{pinErr || 'กรอก Admin PIN เพื่อยืนยัน'}</p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 7, marginBottom: 10 }}>
+              {keys.map(k => <button key={k} onClick={() => handleKey(k)} style={k === '⌫' || k === '✓' ? F : S}>{k}</button>)}
+            </div>
+          </>
+        )}
+        <button onClick={onClose} disabled={busy} style={{ width: '100%', border: 'none', background: 'none', color: '#9A8662', fontSize: 13, cursor: 'pointer', padding: 6, opacity: busy ? 0.4 : 1 }}>ยกเลิก</button>
       </div>
     </div>
   );
@@ -5875,6 +5938,20 @@ export default function App() {
     reader.readAsText(file);
   }, [toast]);
 
+  const [resetModalOpen, setResetModalOpen] = useState(false);
+
+  const handleResetData = useCallback(async () => {
+    await db.resetAllData();
+    setHistory([]);
+    setSaleHistory([]);
+    setPayments({});
+    storage.saveHistory([]);
+    storage.saveSaleHistory([]);
+    storage.savePayments({});
+    setResetModalOpen(false);
+    toast('รีเซ็ตข้อมูลเรียบร้อย ✓');
+  }, [toast]);
+
   const changePin = useCallback(() => {
     requirePin('ยืนยันรหัสเดิมก่อนเปลี่ยน', () => {
       setNumpad({ mode: 'setpin', title: 'ตั้งรหัส Admin ใหม่ (4 หลัก)', unit: '', value: '', original: '', canDelete: false, saveLabel: 'บันทึกรหัสใหม่' });
@@ -5932,7 +6009,7 @@ export default function App() {
             onGoSupervisors={() => { navigate('/supervisors'); syncNow(true); }}
             onChangePin={changePin} onSetEmployeePin={setEmployeePinAction}
             onOpenHistory={openHistory} onOpenSaleHistory={openSaleHistoryDetail} onPayment={handlePayment} onDeleteBill={handleDeleteBill} onDeleteSaleBill={handleDeleteSaleBill} pin={pin} isEmployee={authRole === 'employee'} onLogout={handleLogout}
-            onExport={handleExport} onImport={handleImport} onGoHistory={() => navigate('/history')} />
+            onExport={handleExport} onImport={handleImport} onGoHistory={() => navigate('/history')} onResetData={() => setResetModalOpen(true)} />
         } />
         <Route path="/record" element={session ? (
           <RecordView session={session} activeCat={activeCat} input={input} onInput={setInput} onCommit={commitEntry}
@@ -6094,6 +6171,7 @@ export default function App() {
       {pinEditorOpen && <PinEditor customCatLabels={customCatLabels} onSave={labels => { db.saveSetting('custom_cat_labels', labels).catch(() => {}); setCustomCatLabels(labels); setPinEditorOpen(false); toast('บันทึกหมวดกำหนดเองแล้ว'); }} onCancel={() => setPinEditorOpen(false)} />}
       {employeeManagerOpen && <EmployeeManager employees={employees} onSave={list => { storage.saveEmployees(list); setEmployees(list); db.saveSetting('employees', list).catch(() => {}); setEmployeeManagerOpen(false); toast('บันทึกรายชื่อพนักงานแล้ว'); }} onCancel={() => setEmployeeManagerOpen(false)} />}
       {sheetModal && <SheetModal onSyncNow={() => { syncNow(false); }} syncStatus={syncStatus} syncing={syncing} onCancel={() => setSheetModal(false)} />}
+      {resetModalOpen && <ResetDataModal pin={pin} onConfirm={handleResetData} onClose={() => setResetModalOpen(false)} />}
 
 <Toast msg={toastMsg} />
     </div>
