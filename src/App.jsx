@@ -3831,7 +3831,7 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
                 amount: slipTotalComm,
                 note: `COMM_BILLS:${JSON.stringify(billNos)}`,
               });
-              db.upsertWalletTxIfNew({ wallet: 'A_transfer', direction: 'out', amount: slipTotalComm, txType: 'commission', status: 'confirmed', refId: String(payId), note: `ค่าคอม ${supervisorName}` }).catch(() => {});
+              db.upsertWalletTxIfNew({ wallet: 'A_transfer', direction: 'out', amount: slipTotalComm, txType: 'commission', status: 'pending', refId: String(payId), note: `ค่าคอม ${supervisorName}` }).catch(() => {});
               await loadLedger();
               setShowCommPaySlip(false);
               setCommSelectMode(false);
@@ -3916,7 +3916,7 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
                 amount: slipTotal,
                 note: `WAGE_DATES:${JSON.stringify(dates)}`,
               });
-              db.upsertWalletTxIfNew({ wallet: 'C', direction: 'out', amount: slipTotal, txType: 'expense', category: 'เงินเดือน', status: 'confirmed', refId: String(payId), note: `ค่าแรง ${supervisorName}` }).catch(() => {});
+              db.upsertWalletTxIfNew({ wallet: 'C', direction: 'out', amount: slipTotal, txType: 'expense', category: 'เงินเดือน', status: 'pending', refId: String(payId), note: `ค่าแรง ${supervisorName}` }).catch(() => {});
               await loadLedger();
               setShowWagePaySlip(false);
               setWageSelectMode(false);
@@ -4612,7 +4612,7 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
                       setSaving(true);
                       try {
                         const payId = await db.savePayment({ supervisor_name: supervisorName, paid_date: toDateStr(new Date()), amount: periodSummary.total, note });
-                        db.upsertWalletTxIfNew({ wallet: 'C', direction: 'out', amount: periodSummary.total, txType: 'expense', category: 'เงินเดือน', status: 'confirmed', refId: String(payId), note: `ค่าแรง ${supervisorName}` }).catch(() => {});
+                        db.upsertWalletTxIfNew({ wallet: 'C', direction: 'out', amount: periodSummary.total, txType: 'expense', category: 'เงินเดือน', status: 'pending', refId: String(payId), note: `ค่าแรง ${supervisorName}` }).catch(() => {});
                         setPayNote(''); setPeriodFrom(''); setPeriodTo(''); setShowPeriodPay(false);
                         await loadLedger();
                         setShowPaySlip(true);
@@ -5150,9 +5150,26 @@ function WalletView({ onGoHome, recorderName }) {
     setBusy(false);
   };
 
+  const [pendingSlipTx, setPendingSlipTx] = useState(null);
+  const [pgSlip, setPgSlip] = useState(null);
+  const [pgSlipUpload, setPgSlipUpload] = useState(false);
+
   const handleConfirmTx = async (tx) => {
     setBusy(true);
     try { await db.confirmWalletTx(tx.id, null); await load(); } catch(e) { alert(e.message); }
+    setBusy(false);
+  };
+
+  const handleUploadWageSlip = async () => {
+    if (!pendingSlipTx) return;
+    setBusy(true);
+    try {
+      let slipUrl = null;
+      if (pgSlip) { setPgSlipUpload(true); slipUrl = await uploadSlip(pgSlip, 'wages'); setPgSlipUpload(false); }
+      await db.confirmWalletTx(pendingSlipTx.id, slipUrl);
+      setPendingSlipTx(null); setPgSlip(null);
+      await load();
+    } catch(e) { alert('เกิดข้อผิดพลาด: ' + e.message); }
     setBusy(false);
   };
 
@@ -5231,18 +5248,28 @@ function WalletView({ onGoHome, recorderName }) {
             {pending.length > 0 && (
               <div style={{ marginBottom: 16 }}>
                 <div style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 13, color: '#E65100', marginBottom: 8 }}>⏳ รอยืนยัน ({pending.length})</div>
-                {pending.map(tx => (
-                  <div key={tx.id} style={{ background: '#FFF8E1', border: '1px solid #FFE082', borderRadius: 12, padding: '12px 14px', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: '#5D4037' }}>{TX_LABELS[tx.tx_type] || tx.tx_type}</div>
-                      <div style={{ fontSize: 11, color: '#9A8662' }}>{WALLET_LABELS[tx.wallet]} · {tx.ref_id || ''}</div>
+                {pending.map(tx => {
+                  const isWageOrComm = tx.tx_type === 'commission' || (tx.tx_type === 'expense' && tx.category === 'เงินเดือน');
+                  return (
+                    <div key={tx.id} style={{ background: '#FFF8E1', border: '1px solid #FFE082', borderRadius: 12, padding: '12px 14px', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: '#5D4037' }}>{TX_LABELS[tx.tx_type] || tx.tx_type}{tx.category ? ` · ${tx.category}` : ''}</div>
+                        <div style={{ fontSize: 11, color: '#9A8662' }}>{WALLET_LABELS[tx.wallet]} · {tx.note || tx.ref_id || ''}</div>
+                      </div>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: tx.direction === 'in' ? '#2E7D32' : '#C0392B' }}>
+                        {tx.direction === 'in' ? '+' : '-'}{fmtB(tx.amount)}
+                      </div>
+                      {isWageOrComm ? (
+                        <button onClick={() => { setPendingSlipTx(tx); setPgSlip(null); setModal('wage_slip'); }} disabled={busy}
+                          style={{ background: '#6A1B9A', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 10px', fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                          📎 สลิป
+                        </button>
+                      ) : (
+                        <button onClick={() => handleConfirmTx(tx)} disabled={busy} style={{ background: '#2E7D32', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 10px', fontSize: 12, cursor: 'pointer' }}>ยืนยัน</button>
+                      )}
                     </div>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: tx.direction === 'in' ? '#2E7D32' : '#C0392B' }}>
-                      {tx.direction === 'in' ? '+' : '-'}{fmtB(tx.amount)}
-                    </div>
-                    <button onClick={() => handleConfirmTx(tx)} disabled={busy} style={{ background: '#2E7D32', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 10px', fontSize: 12, cursor: 'pointer' }}>ยืนยัน</button>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
 
@@ -5317,6 +5344,20 @@ function WalletView({ onGoHome, recorderName }) {
           {inp(tpAmt, setTpAmt, 'จำนวนเงิน (บาท)', 'number')}
           {inp(tpNote, setTpNote, 'หมายเหตุ')}
           {btn(`เติม ${fmtB(parseFloat(tpAmt) || 0)}`, handleTopup, '#5D4037', !tpAmt)}
+        </WalletActionModal>
+      )}
+
+      {/* Wage/Commission Slip Upload Modal */}
+      {modal === 'wage_slip' && pendingSlipTx && (
+        <WalletActionModal title={pendingSlipTx.tx_type === 'commission' ? 'อัปโหลดสลิปค่าคอม' : 'อัปโหลดสลิปค่าแรง'}
+          onClose={() => { setModal(null); setPendingSlipTx(null); setPgSlip(null); }}>
+          <div style={{ background: '#F9F5EC', borderRadius: 10, padding: '10px 12px', marginBottom: 12 }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: '#3F2D1E' }}>{pendingSlipTx.note || (TX_LABELS[pendingSlipTx.tx_type] || pendingSlipTx.tx_type)}</div>
+            <div style={{ fontSize: 13, color: '#C0392B', fontWeight: 700, marginTop: 4 }}>-{fmtB(pendingSlipTx.amount)}</div>
+          </div>
+          <WalletSlipUpload file={pgSlip} uploading={pgSlipUpload} onUpload={f => setPgSlip(f)} />
+          <div style={{ fontSize: 12, color: '#9A8662', marginBottom: 10, textAlign: 'center' }}>แนบสลิปโอนเงินแล้วกดยืนยัน (ถ้าไม่มีสลิปกดยืนยันได้เลย)</div>
+          {btn('✅ ยืนยันจ่ายแล้ว', handleUploadWageSlip, '#6A1B9A')}
         </WalletActionModal>
       )}
 
