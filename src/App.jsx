@@ -2325,7 +2325,7 @@ function SalesView({ accounts, pin, onGoHome, onAddSale, onDeleteSale, onUpdateS
         </>
       )}
 
-      <input ref={receiptInputRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }}
+      <input ref={receiptInputRef} type="file" accept="image/*" style={{ display: 'none' }}
         onChange={e => { const f = e.target.files?.[0]; if (f && uploadTargetRef.current) handleSaleReceiptUpload(f, uploadTargetRef.current); e.target.value = ''; }} />
 
       {addOpen && <AddSaleModal date={todayStr} accounts={accounts || []} onSaveAccount={onSaveAccount} onSave={async (data) => { await onAddSale(data); setAddOpen(false); }} onClose={() => setAddOpen(false)} />}
@@ -5021,10 +5021,15 @@ function WalletActionModal({ title, onClose, children }) {
 }
 
 function WalletSlipUpload({ file, onUpload, uploading }) {
-  const ref = useRef();
+  const camRef = useRef();
+  const galRef = useRef();
   const previewUrl = useMemo(() => file ? URL.createObjectURL(file) : null, [file]);
   useEffect(() => { return () => { if (previewUrl) URL.revokeObjectURL(previewUrl); }; }, [previewUrl]);
-  const clear = () => { if (ref.current) ref.current.value = ''; onUpload(null); };
+  const clear = () => {
+    if (camRef.current) camRef.current.value = '';
+    if (galRef.current) galRef.current.value = '';
+    onUpload(null);
+  };
   return (
     <div style={{ marginBottom: 12 }}>
       <div style={{ fontSize: 13, color: '#6B5740', marginBottom: 6, fontWeight: 500 }}>สลิป / หลักฐาน</div>
@@ -5034,11 +5039,17 @@ function WalletSlipUpload({ file, onUpload, uploading }) {
           <button onClick={clear} style={{ position: 'absolute', top: -6, right: -6, background: '#C0392B', color: '#fff', border: 'none', borderRadius: '50%', width: 20, height: 20, fontSize: 12, cursor: 'pointer', lineHeight: '20px', textAlign: 'center' }}>×</button>
         </div>
       ) : (
-        <button onClick={() => ref.current?.click()} disabled={uploading} style={{ border: '1.5px dashed #A8C5A0', background: '#F4FAF4', borderRadius: 10, padding: '14px 20px', cursor: 'pointer', fontSize: 13, color: '#4A7A44', opacity: uploading ? 0.6 : 1 }}>
-          {uploading ? 'กำลังอัปโหลด…' : '📷 แนบรูป'}
-        </button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button onClick={() => camRef.current?.click()} disabled={uploading} style={{ flex: 1, border: '1.5px dashed #C9A24B', background: '#FBF6EC', borderRadius: 10, padding: '12px 0', cursor: 'pointer', fontSize: 13, color: '#7A5A22', opacity: uploading ? 0.6 : 1 }}>
+            {uploading ? '⏳' : '📷 ถ่ายรูป'}
+          </button>
+          <button onClick={() => galRef.current?.click()} disabled={uploading} style={{ flex: 1, border: '1.5px dashed #A8C5A0', background: '#F4FAF4', borderRadius: 10, padding: '12px 0', cursor: 'pointer', fontSize: 13, color: '#4A7A44', opacity: uploading ? 0.6 : 1 }}>
+            {uploading ? '⏳' : '🖼 อัปโหลด'}
+          </button>
+        </div>
       )}
-      <input ref={ref} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={e => { if (e.target.files[0]) onUpload(e.target.files[0]); }} />
+      <input ref={camRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={e => { if (e.target.files[0]) onUpload(e.target.files[0]); e.target.value = ''; }} />
+      <input ref={galRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => { if (e.target.files[0]) onUpload(e.target.files[0]); e.target.value = ''; }} />
     </div>
   );
 }
