@@ -2720,7 +2720,7 @@ function SaleSummaryView({ saleSession, onGoRecord, onGoPrint, onSetPrice, custo
 // ─── Sale Print View ──────────────────────────────────────────────────────────
 const QUDSUN_BANK = { bank: 'ธ.ไทยพาณิชย์ (SCB)', account: '408-426694-9', name: 'ภัทรกฤช จันพิทักษ์' };
 
-function SalePrintView({ saleSession, onGoBack, onFinish, onEditPrice, onStartEdit }) {
+function SalePrintView({ saleSession, onGoBack, onFinish, onEditPrice, onStartEdit, salePaymentStatus, onConfirmPayment }) {
   const entries = saleSession?.entries || [];
   const prices = saleSession?.prices || {};
   const aggData = {};
@@ -2756,6 +2756,16 @@ function SalePrintView({ saleSession, onGoBack, onFinish, onEditPrice, onStartEd
         {onFinish && <button onClick={onFinish} style={{ width: '100%', border: '1px solid #4A7A2E', background: '#F0FAE8', borderRadius: 12, padding: 14, fontSize: 15, fontFamily: 'Prompt', fontWeight: 600, color: '#2E5C1A', cursor: 'pointer' }}>
           ✓ บันทึกบิลขาย
         </button>}
+        {salePaymentStatus === 'confirmed' && (
+          <div style={{ width: '100%', border: '1px solid #2E7D32', background: '#E8F5E9', borderRadius: 12, padding: 14, fontSize: 15, fontWeight: 600, color: '#2E7D32', textAlign: 'center', marginTop: 8 }}>
+            ✅ รับเงินแล้ว
+          </div>
+        )}
+        {onConfirmPayment && (
+          <button onClick={onConfirmPayment} style={{ width: '100%', border: 'none', background: 'linear-gradient(135deg,#2E7D32,#4CAF50)', color: '#fff', borderRadius: 12, padding: 14, fontSize: 15, fontFamily: 'Prompt', fontWeight: 600, cursor: 'pointer', marginTop: 8 }}>
+            💰 ยืนยันรับเงินแล้ว
+          </button>
+        )}
       </div>
 
       <div className="bill-doc-wrapper" style={{ maxWidth: 600, margin: '0 auto' }}>
@@ -3815,12 +3825,13 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
             setSaving(true);
             try {
               const billNos = pendingCommBills.map(x => x.b.billNo);
-              await db.savePayment({
+              const payId = await db.savePayment({
                 supervisor_name: supervisorName,
                 paid_date: toDateStr(new Date()),
                 amount: slipTotalComm,
                 note: `COMM_BILLS:${JSON.stringify(billNos)}`,
               });
+              db.upsertWalletTxIfNew({ wallet: 'A_transfer', direction: 'out', amount: slipTotalComm, txType: 'commission', status: 'confirmed', refId: String(payId), note: `ค่าคอม ${supervisorName}` }).catch(() => {});
               await loadLedger();
               setShowCommPaySlip(false);
               setCommSelectMode(false);
@@ -3899,12 +3910,13 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
             setSaving(true);
             try {
               const dates = pendingWageRecords.map(e => e.date);
-              await db.savePayment({
+              const payId = await db.savePayment({
                 supervisor_name: supervisorName,
                 paid_date: toDateStr(new Date()),
                 amount: slipTotal,
                 note: `WAGE_DATES:${JSON.stringify(dates)}`,
               });
+              db.upsertWalletTxIfNew({ wallet: 'C', direction: 'out', amount: slipTotal, txType: 'expense', category: 'เงินเดือน', status: 'confirmed', refId: String(payId), note: `ค่าแรง ${supervisorName}` }).catch(() => {});
               await loadLedger();
               setShowWagePaySlip(false);
               setWageSelectMode(false);
@@ -4599,7 +4611,8 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
                       const note = payNote || `ค่าแรง ${new Date(periodFrom+'T12:00').toLocaleDateString('th-TH', { day:'numeric', month:'short' })} – ${new Date(periodTo+'T12:00').toLocaleDateString('th-TH', { day:'numeric', month:'short' })}`;
                       setSaving(true);
                       try {
-                        await db.savePayment({ supervisor_name: supervisorName, paid_date: toDateStr(new Date()), amount: periodSummary.total, note });
+                        const payId = await db.savePayment({ supervisor_name: supervisorName, paid_date: toDateStr(new Date()), amount: periodSummary.total, note });
+                        db.upsertWalletTxIfNew({ wallet: 'C', direction: 'out', amount: periodSummary.total, txType: 'expense', category: 'เงินเดือน', status: 'confirmed', refId: String(payId), note: `ค่าแรง ${supervisorName}` }).catch(() => {});
                         setPayNote(''); setPeriodFrom(''); setPeriodTo(''); setShowPeriodPay(false);
                         await loadLedger();
                         setShowPaySlip(true);
@@ -5383,6 +5396,7 @@ export default function App() {
   const [saleHistory, setSaleHistory] = useState([]);
   const [saleSessions, setSaleSessions] = useState([]);
   const [viewSaleSession, setViewSaleSession] = useState(null);
+  const [viewSalePaymentStatus, setViewSalePaymentStatus] = useState(null);
   const [saleActiveCat, setSaleActiveCat] = useState('AB');
   const [saleInput, setSaleInput] = useState('');
   const [saleNumpad, setSaleNumpad] = useState(null);
@@ -5782,6 +5796,20 @@ export default function App() {
     storage.savePayments(next);
     setPayments(next);
     pushPayment(billNo, next[billNo] || { status: 'unpaid' });
+    // Wallet integration: debit A on bill payment
+    if (status === 'cash' || status === 'transferred') {
+      const bill = history.find(h => h.billNo === billNo);
+      const amount = parseFloat(String(bill?.baht || '0').replace(/,/g, '')) || 0;
+      if (amount > 0) {
+        const wallet = status === 'transferred' ? 'A_transfer' : 'A_cash';
+        const txStatus = (status === 'cash' || !!slipPhotoUrl) ? 'confirmed' : 'pending';
+        db.upsertWalletTxIfNew({
+          wallet, direction: 'out', amount, txType: 'bill_pay',
+          status: txStatus, refId: billNo,
+          note: `บิลซื้อ ${billNo}`, slipUrl: slipPhotoUrl || null,
+        }).catch(() => {});
+      }
+    }
     if (status === 'transferred' && slipPhotoUrl) {
       const bill = history.find(h => h.billNo === billNo);
       const now = new Date();
@@ -6109,6 +6137,13 @@ export default function App() {
     const nextSales = [saleRecord, ...sales];
     storage.saveSales(nextSales); setSales(nextSales);
 
+    // Wallet integration: credit B as pending when sale is finalized
+    db.upsertWalletTxIfNew({
+      wallet: 'B', direction: 'in', amount: totalBaht, txType: 'sale_recv',
+      status: 'pending', refId: saleSession.billNo,
+      note: `รับเงินขาย ${saleSession.billNo}`,
+    }).catch(() => {});
+
     storage.saveSaleSession(null); setSaleSession(null);
     toast('บันทึกบิลขายเรียบร้อย'); navigate('/');
   }, [saleSession, saleHistory, sales, toast, navigate]);
@@ -6206,13 +6241,29 @@ export default function App() {
   }, [session, navigate]);
 
   const openSaleHistoryDetail = useCallback(async (billNo) => {
+    setViewSalePaymentStatus(null);
+    const loadPayStatus = (bn) => db.fetchWalletTxByRef(bn, 'sale_recv').then(tx => setViewSalePaymentStatus(tx?.status || null)).catch(() => {});
     const full = saleSessions.find(s => s.billNo === billNo);
-    if (full) { setViewSaleSession(full); navigate('/sale/history'); return; }
+    if (full) { setViewSaleSession(full); navigate('/sale/history'); loadPayStatus(billNo); return; }
     try {
       const remote = await db.getSaleSessionByBillNo(billNo);
-      if (remote) { setViewSaleSession(remote); navigate('/sale/history'); }
+      if (remote) { setViewSaleSession(remote); navigate('/sale/history'); loadPayStatus(billNo); }
     } catch {}
   }, [saleSessions, navigate]);
+
+  const handleConfirmSalePayment = useCallback(async (billNo, totalBaht) => {
+    try {
+      const existing = await db.fetchWalletTxByRef(billNo, 'sale_recv');
+      if (existing?.status === 'confirmed') { toast('รับเงินแล้ว ✓'); setViewSalePaymentStatus('confirmed'); return; }
+      if (existing?.status === 'pending') {
+        await db.confirmWalletTxByRef(billNo, 'sale_recv', null);
+      } else {
+        await db.upsertWalletTxIfNew({ wallet: 'B', direction: 'in', amount: totalBaht, txType: 'sale_recv', status: 'confirmed', refId: billNo, note: `รับเงินขาย ${billNo}` });
+      }
+      setViewSalePaymentStatus('confirmed');
+      toast('ยืนยันรับเงินแล้ว ✓');
+    } catch { alert('ยืนยันไม่สำเร็จ'); }
+  }, [toast]);
 
   const goBackFromBill = useCallback(() => {
     setSession(savedSession.current || null); savedSession.current = null;
@@ -6437,6 +6488,8 @@ export default function App() {
         ) : <Navigate to="/" replace />} />
         <Route path="/sale/history" element={viewSaleSession ? (
           <SalePrintView saleSession={viewSaleSession} onGoBack={() => { navigate('/history'); setTimeout(() => setViewSaleSession(null), 100); }} onFinish={null}
+            salePaymentStatus={viewSalePaymentStatus}
+            onConfirmPayment={viewSalePaymentStatus !== 'confirmed' ? () => handleConfirmSalePayment(viewSaleSession.billNo, grandBaht(viewSaleSession)) : null}
             onStartEdit={() => { setSaleSession({ ...viewSaleSession, confirmed: false }); navigate('/sale/record'); setTimeout(() => setViewSaleSession(null), 100); }} />
         ) : <Navigate to="/" replace />} />
         <Route path="/customers" element={

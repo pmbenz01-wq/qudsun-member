@@ -383,8 +383,9 @@ export const db = {
 
   // ─── Supervisor Payments ──────────────────────────────────────────────────
   async savePayment(payment) {
-    const { error } = await supabase.from('qm_sup_payments').insert(payment);
+    const { data, error } = await supabase.from('qm_sup_payments').insert(payment).select('id').single();
     if (error) throw error;
+    return data.id;
   },
 
   async fetchPayments(supervisorName) {
@@ -501,6 +502,36 @@ export const db = {
     const { data } = await supabase
       .from('qm_wallet_tx').select('id').eq('ref_id', refId).eq('tx_type', txType).maybeSingle();
     return !!data;
+  },
+
+  async upsertWalletTxIfNew(tx) {
+    const { error } = await supabase.from('qm_wallet_tx').upsert({
+      wallet: tx.wallet,
+      direction: tx.direction,
+      amount: tx.amount,
+      tx_type: tx.txType,
+      status: tx.status || 'confirmed',
+      ref_id: tx.refId || null,
+      category: tx.category || null,
+      note: tx.note || null,
+      slip_url: tx.slipUrl || null,
+      created_by: tx.createdBy || 'admin',
+    }, { onConflict: 'ref_id,tx_type,wallet', ignoreDuplicates: true });
+    if (error) throw error;
+  },
+
+  async confirmWalletTxByRef(refId, txType, slipUrl) {
+    const updates = { status: 'confirmed' };
+    if (slipUrl) updates.slip_url = slipUrl;
+    const { error } = await supabase.from('qm_wallet_tx').update(updates)
+      .eq('ref_id', refId).eq('tx_type', txType).eq('status', 'pending');
+    if (error) throw error;
+  },
+
+  async fetchWalletTxByRef(refId, txType) {
+    const { data } = await supabase.from('qm_wallet_tx').select('*')
+      .eq('ref_id', refId).eq('tx_type', txType).maybeSingle();
+    return data || null;
   },
 
   // ─── Reset All Transaction Data ──────────────────────────────────────────
