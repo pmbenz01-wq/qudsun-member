@@ -5007,15 +5007,18 @@ function WalletActionModal({ title, onClose, children }) {
   );
 }
 
-function WalletSlipUpload({ slipUrl, onUpload, uploading }) {
+function WalletSlipUpload({ file, onUpload, uploading }) {
   const ref = useRef();
+  const previewUrl = useMemo(() => file ? URL.createObjectURL(file) : null, [file]);
+  useEffect(() => { return () => { if (previewUrl) URL.revokeObjectURL(previewUrl); }; }, [previewUrl]);
+  const clear = () => { if (ref.current) ref.current.value = ''; onUpload(null); };
   return (
     <div style={{ marginBottom: 12 }}>
       <div style={{ fontSize: 13, color: '#6B5740', marginBottom: 6, fontWeight: 500 }}>สลิป / หลักฐาน</div>
-      {slipUrl ? (
+      {previewUrl ? (
         <div style={{ position: 'relative', display: 'inline-block' }}>
-          <img src={slipUrl} alt="slip" style={{ width: 100, height: 100, objectFit: 'cover', borderRadius: 10, border: '2px solid #A8D5A2' }} />
-          <button onClick={() => onUpload(null)} style={{ position: 'absolute', top: -6, right: -6, background: '#C0392B', color: '#fff', border: 'none', borderRadius: '50%', width: 20, height: 20, fontSize: 12, cursor: 'pointer', lineHeight: '20px', textAlign: 'center' }}>×</button>
+          <img src={previewUrl} alt="slip" style={{ width: 100, height: 100, objectFit: 'cover', borderRadius: 10, border: '2px solid #A8D5A2' }} />
+          <button onClick={clear} style={{ position: 'absolute', top: -6, right: -6, background: '#C0392B', color: '#fff', border: 'none', borderRadius: '50%', width: 20, height: 20, fontSize: 12, cursor: 'pointer', lineHeight: '20px', textAlign: 'center' }}>×</button>
         </div>
       ) : (
         <button onClick={() => ref.current?.click()} disabled={uploading} style={{ border: '1.5px dashed #A8C5A0', background: '#F4FAF4', borderRadius: 10, padding: '14px 20px', cursor: 'pointer', fontSize: 13, color: '#4A7A44', opacity: uploading ? 0.6 : 1 }}>
@@ -5067,14 +5070,18 @@ function WalletView({ onGoHome, recorderName }) {
   const uploadSlip = async (file, folder) => {
     if (!file) return null;
     const reader = new FileReader();
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       reader.onload = async (e) => {
-        const base64 = e.target.result;
-        const path = `${folder}/${Date.now()}.jpg`;
-        const res = await fetch('/api/upload', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ base64, path }) });
-        const d = await res.json();
-        resolve(d.ok ? d.url : null);
+        try {
+          const base64 = e.target.result;
+          const path = `${folder}/${Date.now()}.jpg`;
+          const res = await fetch('/api/upload', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ base64, path }) });
+          const d = await res.json();
+          if (!d.ok) reject(new Error(d.error || 'อัปโหลดรูปไม่สำเร็จ'));
+          else resolve(d.url);
+        } catch (err) { reject(err); }
       };
+      reader.onerror = () => reject(new Error('อ่านไฟล์ไม่สำเร็จ'));
       reader.readAsDataURL(file);
     });
   };
@@ -5243,8 +5250,8 @@ function WalletView({ onGoHome, recorderName }) {
 
       {/* Transfer Modal */}
       {modal === 'transfer' && (
-        <WalletActionModal title={trTo === 'C' ? 'โอน B → C (ค่าใช้จ่าย)' : 'โอน B → A (จ่ายทุเรียน)'} onClose={() => { setModal(null); setTrAmt(''); setTrSlip(null); }}>
-          {trTo === 'A_transfer' && (
+        <WalletActionModal title={trTo === 'C' ? 'โอน B → C (ค่าใช้จ่าย)' : 'โอน B → A (จ่ายทุเรียน)'} onClose={() => { setModal(null); setTrAmt(''); setTrNote(''); setTrSlip(null); }}>
+          {trTo !== 'C' && (
             <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
               {['A_transfer', 'A_cash'].map(w => (
                 <button key={w} onClick={() => setTrTo(w)} style={{ flex: 1, padding: '10px', borderRadius: 10, border: `2px solid ${trTo === w ? '#1565C0' : '#E4D7BC'}`, background: trTo === w ? '#E3F2FD' : '#FFFDF8', color: trTo === w ? '#1565C0' : '#7A5A22', fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>
@@ -5255,8 +5262,7 @@ function WalletView({ onGoHome, recorderName }) {
           )}
           {inp(trAmt, setTrAmt, 'จำนวนเงิน (บาท)', 'number')}
           {inp(trNote, setTrNote, 'หมายเหตุ (ถ้ามี)')}
-          <WalletSlipUpload slipUrl={trSlip ? URL.createObjectURL(trSlip) : null} uploading={trSlipUpload}
-            onUpload={f => setTrSlip(f)} />
+          <WalletSlipUpload file={trSlip} uploading={trSlipUpload} onUpload={f => setTrSlip(f)} />
           {btn(`โอน ${fmtB(parseFloat(trAmt) || 0)}`, handleTransfer, '#1565C0', !trAmt)}
         </WalletActionModal>
       )}
@@ -5271,8 +5277,7 @@ function WalletView({ onGoHome, recorderName }) {
           </div>
           {inp(exAmt, setExAmt, 'จำนวนเงิน (บาท)', 'number')}
           {inp(exNote, setExNote, 'หมายเหตุ (ถ้ามี)')}
-          <WalletSlipUpload slipUrl={exSlip ? URL.createObjectURL(exSlip) : null} uploading={exSlipUpload}
-            onUpload={f => setExSlip(f)} />
+          <WalletSlipUpload file={exSlip} uploading={exSlipUpload} onUpload={f => setExSlip(f)} />
           {btn(`บันทึก ${fmtB(parseFloat(exAmt) || 0)}`, handleExpense, '#6A1B9A', !exAmt)}
         </WalletActionModal>
       )}

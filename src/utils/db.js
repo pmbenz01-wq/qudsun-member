@@ -477,11 +477,20 @@ export const db = {
   },
 
   async computeAllBalances() {
-    const { data, error } = await supabase
-      .from('qm_wallet_tx').select('wallet,direction,amount').eq('status', 'confirmed');
-    if (error) throw error;
+    // Fetch all confirmed rows (wallet, direction, amount) — no row limit so all records are counted
+    let offset = 0;
+    const rows = [];
+    while (true) {
+      const { data, error } = await supabase
+        .from('qm_wallet_tx').select('wallet,direction,amount')
+        .eq('status', 'confirmed').range(offset, offset + 999);
+      if (error) throw error;
+      rows.push(...(data || []));
+      if (!data || data.length < 1000) break;
+      offset += 1000;
+    }
     const bal = { A_transfer: 0, A_cash: 0, B: 0, C: 0 };
-    for (const r of data || []) {
+    for (const r of rows) {
       if (bal[r.wallet] === undefined) bal[r.wallet] = 0;
       bal[r.wallet] += r.direction === 'in' ? Number(r.amount) : -Number(r.amount);
     }
