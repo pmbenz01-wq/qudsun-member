@@ -403,6 +403,97 @@ export const db = {
     if (error) throw error;
   },
 
+  // ─── Wallet ───────────────────────────────────────────────────────────────
+  async insertWalletTx(tx) {
+    const { data, error } = await supabase.from('qm_wallet_tx').insert({
+      wallet: tx.wallet,
+      direction: tx.direction,
+      amount: tx.amount,
+      tx_type: tx.txType,
+      status: tx.status || 'pending',
+      from_wallet: tx.fromWallet || null,
+      to_wallet: tx.toWallet || null,
+      ref_id: tx.refId || null,
+      category: tx.category || null,
+      note: tx.note || null,
+      slip_url: tx.slipUrl || null,
+      created_by: tx.createdBy || 'admin',
+    }).select('id').single();
+    if (error) throw error;
+    return data.id;
+  },
+
+  async confirmWalletTx(id, slipUrl) {
+    const updates = { status: 'confirmed' };
+    if (slipUrl) updates.slip_url = slipUrl;
+    const { error } = await supabase.from('qm_wallet_tx').update(updates).eq('id', id);
+    if (error) throw error;
+  },
+
+  async insertTransferTx(fromWallet, toWallet, amount, slipUrl, note, createdBy) {
+    const { error } = await supabase.from('qm_wallet_tx').insert({
+      wallet: fromWallet,
+      direction: 'out',
+      amount,
+      tx_type: 'transfer',
+      status: 'confirmed',
+      from_wallet: fromWallet,
+      to_wallet: toWallet,
+      note: note || null,
+      slip_url: slipUrl || null,
+      created_by: createdBy || 'admin',
+    });
+    if (error) throw error;
+    const { error: e2 } = await supabase.from('qm_wallet_tx').insert({
+      wallet: toWallet,
+      direction: 'in',
+      amount,
+      tx_type: 'transfer',
+      status: 'confirmed',
+      from_wallet: fromWallet,
+      to_wallet: toWallet,
+      note: note || null,
+      slip_url: slipUrl || null,
+      created_by: createdBy || 'admin',
+    });
+    if (e2) throw e2;
+  },
+
+  async fetchWalletTxs(wallet, limit = 50) {
+    const q = wallet
+      ? supabase.from('qm_wallet_tx').select('*').eq('wallet', wallet)
+      : supabase.from('qm_wallet_tx').select('*');
+    const { data, error } = await q.order('created_at', { ascending: false }).limit(limit);
+    if (error) throw error;
+    return data || [];
+  },
+
+  async fetchPendingWalletTxs() {
+    const { data, error } = await supabase
+      .from('qm_wallet_tx').select('*').eq('status', 'pending')
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    return data || [];
+  },
+
+  async computeAllBalances() {
+    const { data, error } = await supabase
+      .from('qm_wallet_tx').select('wallet,direction,amount').eq('status', 'confirmed');
+    if (error) throw error;
+    const bal = { A_transfer: 0, A_cash: 0, B: 0, C: 0 };
+    for (const r of data || []) {
+      if (bal[r.wallet] === undefined) bal[r.wallet] = 0;
+      bal[r.wallet] += r.direction === 'in' ? Number(r.amount) : -Number(r.amount);
+    }
+    return bal;
+  },
+
+  async walletTxExists(refId, txType) {
+    const { data } = await supabase
+      .from('qm_wallet_tx').select('id').eq('ref_id', refId).eq('tx_type', txType).maybeSingle();
+    return !!data;
+  },
+
   // ─── Reset All Transaction Data ──────────────────────────────────────────
   async resetAllData() {
     const errors = [];

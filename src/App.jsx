@@ -294,7 +294,7 @@ function EmployeeManager({ employees, onSave, onCancel }) {
 }
 
 // ─── HomeView ─────────────────────────────────────────────────────────────────
-function HomeView({ session, history, saleHistory, payments, syncing, syncStatus, onSyncNow, onOpenSheet, onNew, onResume, onGoCustomers, onGoDashboard, onGoSupervisors, onGoSales, onNewSale, saleSession, onResumeSale, onChangePin, onSetEmployeePin, onOpenHistory, onOpenSaleHistory, onPayment, onDeleteBill, onDeleteSaleBill, pin, verified, supervisors, isEmployee, onLogout, onExport, onImport, onGoHistory, onResetData }) {
+function HomeView({ session, history, saleHistory, payments, syncing, syncStatus, onSyncNow, onOpenSheet, onNew, onResume, onGoCustomers, onGoDashboard, onGoSupervisors, onGoSales, onNewSale, saleSession, onResumeSale, onChangePin, onSetEmployeePin, onOpenHistory, onOpenSaleHistory, onPayment, onDeleteBill, onDeleteSaleBill, pin, verified, supervisors, isEmployee, onLogout, onExport, onImport, onGoHistory, onResetData, onGoWallet }) {
   const customerCount = Object.keys(loadCustomers(history)).length;
   const supervisorCount = Object.values(supervisors || {}).filter(Boolean).reduce((set, n) => (set.add(n), set), new Set()).size;
   if (isEmployee) {
@@ -411,6 +411,17 @@ function HomeView({ session, history, saleHistory, payments, syncing, syncStatus
         </div>
         <span style={{ marginLeft: 'auto', color: '#C9A24B', fontSize: 18 }}>›</span>
       </button>
+
+      {!isEmployee && (
+        <button onClick={onGoWallet} style={{ width: '100%', border: '1.5px solid #2E7D32', background: 'linear-gradient(135deg,#F1F8F1,#E8F5E9)', borderRadius: 14, padding: '14px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+          <span style={{ fontSize: 22 }}>💰</span>
+          <div style={{ textAlign: 'left' }}>
+            <div style={{ fontWeight: 700, fontSize: 15, color: '#1B5E20' }}>กระเป๋าเงิน</div>
+            <div style={{ fontSize: 12, color: '#4CAF50' }}>จ่ายทุเรียน · รับขาย · ค่าใช้จ่าย</div>
+          </div>
+          <span style={{ marginLeft: 'auto', color: '#2E7D32', fontSize: 18 }}>›</span>
+        </button>
+      )}
 
       <div style={{ marginTop: 24, display: 'flex', flexDirection: 'column', gap: 8 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '4px 0 8px' }}>
@@ -4977,6 +4988,342 @@ function SupervisorDetailRoute({ supervisors, history, verified, onGoBack, onOpe
   );
 }
 
+// ─── Wallet ───────────────────────────────────────────────────────────────────
+const WALLET_LABELS = { A_transfer: 'จ่ายทุเรียน (โอน)', A_cash: 'จ่ายทุเรียน (เงินสด)', B: 'รับเงินขาย', C: 'ค่าใช้จ่าย' };
+const EXPENSE_CATS = ['เงินเดือน', 'น้ำมัน', 'ค่าน้ำไฟ', 'อื่นๆ'];
+const TX_LABELS = { bill_pay: 'จ่ายค่าทุเรียน', sale_recv: 'รับเงินขาย', transfer: 'โอนระหว่างกระเป๋า', commission: 'ค่าคอมผู้ดูแล', expense: 'ค่าใช้จ่าย', topup: 'เติมเงินเริ่มต้น' };
+
+function WalletActionModal({ title, onClose, children }) {
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 90, background: 'rgba(30,20,10,.6)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+      <div style={{ background: '#FFFDF8', borderRadius: '20px 20px 0 0', padding: '20px 18px 32px', width: '100%', maxWidth: 480, maxHeight: '90dvh', overflowY: 'auto', animation: 'popIn .2s' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+          <h3 style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 17, margin: 0, color: '#2E3A28' }}>{title}</h3>
+          <button onClick={onClose} style={{ fontSize: 22, background: 'none', border: 'none', cursor: 'pointer', color: '#9A8662' }}>×</button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function WalletSlipUpload({ slipUrl, onUpload, uploading }) {
+  const ref = useRef();
+  return (
+    <div style={{ marginBottom: 12 }}>
+      <div style={{ fontSize: 13, color: '#6B5740', marginBottom: 6, fontWeight: 500 }}>สลิป / หลักฐาน</div>
+      {slipUrl ? (
+        <div style={{ position: 'relative', display: 'inline-block' }}>
+          <img src={slipUrl} alt="slip" style={{ width: 100, height: 100, objectFit: 'cover', borderRadius: 10, border: '2px solid #A8D5A2' }} />
+          <button onClick={() => onUpload(null)} style={{ position: 'absolute', top: -6, right: -6, background: '#C0392B', color: '#fff', border: 'none', borderRadius: '50%', width: 20, height: 20, fontSize: 12, cursor: 'pointer', lineHeight: '20px', textAlign: 'center' }}>×</button>
+        </div>
+      ) : (
+        <button onClick={() => ref.current?.click()} disabled={uploading} style={{ border: '1.5px dashed #A8C5A0', background: '#F4FAF4', borderRadius: 10, padding: '14px 20px', cursor: 'pointer', fontSize: 13, color: '#4A7A44', opacity: uploading ? 0.6 : 1 }}>
+          {uploading ? 'กำลังอัปโหลด…' : '📷 แนบรูป'}
+        </button>
+      )}
+      <input ref={ref} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={e => { if (e.target.files[0]) onUpload(e.target.files[0]); }} />
+    </div>
+  );
+}
+
+function WalletView({ onGoHome, recorderName }) {
+  const [balances, setBalances] = useState({ A_transfer: 0, A_cash: 0, B: 0, C: 0 });
+  const [txs, setTxs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [modal, setModal] = useState(null); // 'transfer_a'|'transfer_c'|'expense'|'topup'|'detail'
+  const [selTx, setSelTx] = useState(null);
+
+  // transfer modal state
+  const [trAmt, setTrAmt] = useState('');
+  const [trNote, setTrNote] = useState('');
+  const [trSlip, setTrSlip] = useState(null);
+  const [trSlipUpload, setTrSlipUpload] = useState(false);
+  const [trTo, setTrTo] = useState('A_transfer');
+  const [busy, setBusy] = useState(false);
+  // expense modal state
+  const [exAmt, setExAmt] = useState('');
+  const [exCat, setExCat] = useState('เงินเดือน');
+  const [exNote, setExNote] = useState('');
+  const [exSlip, setExSlip] = useState(null);
+  const [exSlipUpload, setExSlipUpload] = useState(false);
+  // topup modal state
+  const [tpWallet, setTpWallet] = useState('A_transfer');
+  const [tpAmt, setTpAmt] = useState('');
+  const [tpNote, setTpNote] = useState('');
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [bal, allTxs] = await Promise.all([db.computeAllBalances(), db.fetchWalletTxs(null, 100)]);
+      setBalances(bal);
+      setTxs(allTxs);
+    } catch(e) { console.error(e); }
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const uploadSlip = async (file, folder) => {
+    if (!file) return null;
+    const reader = new FileReader();
+    return new Promise((resolve) => {
+      reader.onload = async (e) => {
+        const base64 = e.target.result;
+        const path = `${folder}/${Date.now()}.jpg`;
+        const res = await fetch('/api/upload', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ base64, path }) });
+        const d = await res.json();
+        resolve(d.ok ? d.url : null);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleTransfer = async () => {
+    const amt = parseFloat(trAmt);
+    if (!amt || amt <= 0) return;
+    setBusy(true);
+    try {
+      let slipUrl = null;
+      if (trSlip) { setTrSlipUpload(true); slipUrl = await uploadSlip(trSlip, 'wallet/transfers'); setTrSlipUpload(false); }
+      await db.insertTransferTx('B', trTo, amt, slipUrl, trNote || null, recorderName);
+      setModal(null); setTrAmt(''); setTrNote(''); setTrSlip(null);
+      await load();
+    } catch(e) { alert('เกิดข้อผิดพลาด: ' + e.message); }
+    setBusy(false);
+  };
+
+  const handleExpense = async () => {
+    const amt = parseFloat(exAmt);
+    if (!amt || amt <= 0) return;
+    setBusy(true);
+    try {
+      let slipUrl = null;
+      if (exSlip) { setExSlipUpload(true); slipUrl = await uploadSlip(exSlip, 'expenses'); setExSlipUpload(false); }
+      await db.insertWalletTx({ wallet: 'C', direction: 'out', amount: amt, txType: 'expense', status: 'confirmed', category: exCat, note: exNote || null, slipUrl, createdBy: recorderName });
+      setModal(null); setExAmt(''); setExNote(''); setExSlip(null); setExCat('เงินเดือน');
+      await load();
+    } catch(e) { alert('เกิดข้อผิดพลาด: ' + e.message); }
+    setBusy(false);
+  };
+
+  const handleTopup = async () => {
+    const amt = parseFloat(tpAmt);
+    if (!amt || amt <= 0) return;
+    setBusy(true);
+    try {
+      await db.insertWalletTx({ wallet: tpWallet, direction: 'in', amount: amt, txType: 'topup', status: 'confirmed', note: tpNote || 'เติมเงิน', createdBy: recorderName });
+      setModal(null); setTpAmt(''); setTpNote('');
+      await load();
+    } catch(e) { alert('เกิดข้อผิดพลาด: ' + e.message); }
+    setBusy(false);
+  };
+
+  const handleConfirmTx = async (tx) => {
+    setBusy(true);
+    try { await db.confirmWalletTx(tx.id, null); await load(); } catch(e) { alert(e.message); }
+    setBusy(false);
+  };
+
+  const pending = txs.filter(t => t.status === 'pending');
+  const confirmed = txs.filter(t => t.status === 'confirmed');
+  const fmtB = n => '฿' + Math.round(n).toLocaleString();
+  const walletColor = { A_transfer: '#1565C0', A_cash: '#2E7D32', B: '#E65100', C: '#6A1B9A' };
+  const walletBg = { A_transfer: '#E3F2FD', A_cash: '#E8F5E9', B: '#FFF3E0', C: '#F3E5F5' };
+
+  const inp = (val, set, placeholder, type = 'text') => (
+    <input value={val} onChange={e => set(e.target.value)} placeholder={placeholder} type={type}
+      style={{ width: '100%', border: '1.5px solid #D8C8A8', borderRadius: 10, padding: '11px 13px', fontSize: 15, fontFamily: 'Prompt', boxSizing: 'border-box', marginBottom: 10, outline: 'none', background: '#FFFDF8' }} />
+  );
+
+  const btn = (label, onClick, color = '#2E7D32', disabled = false) => (
+    <button onClick={onClick} disabled={disabled || busy}
+      style={{ width: '100%', background: color, color: '#fff', border: 'none', borderRadius: 12, padding: '14px', fontSize: 15, fontWeight: 600, cursor: 'pointer', fontFamily: 'Prompt', opacity: (disabled || busy) ? 0.6 : 1 }}>
+      {busy ? '…' : label}
+    </button>
+  );
+
+  return (
+    <div style={{ minHeight: '100dvh', background: '#EFE6D4', paddingBottom: 32 }}>
+      {/* Header */}
+      <div style={{ background: '#FFFDF8', borderBottom: '1px solid #E4D7BC', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, position: 'sticky', top: 0, zIndex: 10 }}>
+        <button onClick={onGoHome} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: '#7A5A22', padding: 4 }}>‹</button>
+        <span style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 17, color: '#3F2D1E' }}>💰 กระเป๋าเงิน</span>
+        <button onClick={load} style={{ marginLeft: 'auto', background: 'none', border: '1px solid #D8C8A8', borderRadius: 8, padding: '5px 10px', fontSize: 13, color: '#7A5A22', cursor: 'pointer' }}>↺</button>
+      </div>
+
+      <div style={{ padding: '16px 14px', maxWidth: 480, margin: '0 auto' }}>
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: 40, color: '#9A8662' }}>กำลังโหลด…</div>
+        ) : (
+          <>
+            {/* Balance Cards */}
+            <div style={{ marginBottom: 14 }}>
+              {/* กระเป๋า A combined */}
+              <div style={{ background: '#fff', borderRadius: 16, padding: '16px', marginBottom: 10, border: '1.5px solid #C8E6C9', boxShadow: '0 2px 8px rgba(0,0,0,.06)' }}>
+                <div style={{ fontSize: 12, color: '#4CAF50', fontWeight: 600, marginBottom: 6, letterSpacing: '.05em' }}>กระเป๋า A — จ่ายค่าทุเรียน</div>
+                <div style={{ fontSize: 26, fontWeight: 700, color: '#1B5E20', fontFamily: 'Prompt', marginBottom: 8 }}>{fmtB(balances.A_transfer + balances.A_cash)}</div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <div style={{ flex: 1, background: '#E3F2FD', borderRadius: 10, padding: '8px 10px' }}>
+                    <div style={{ fontSize: 10, color: '#1565C0', fontWeight: 600 }}>โอน</div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: '#1565C0' }}>{fmtB(balances.A_transfer)}</div>
+                  </div>
+                  <div style={{ flex: 1, background: '#E8F5E9', borderRadius: 10, padding: '8px 10px' }}>
+                    <div style={{ fontSize: 10, color: '#2E7D32', fontWeight: 600 }}>เงินสด</div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: '#2E7D32' }}>{fmtB(balances.A_cash)}</div>
+                  </div>
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
+                {['B', 'C'].map(w => (
+                  <div key={w} style={{ flex: 1, background: '#fff', borderRadius: 14, padding: '14px', border: `1.5px solid ${walletColor[w]}30`, boxShadow: '0 2px 6px rgba(0,0,0,.05)' }}>
+                    <div style={{ fontSize: 10, color: walletColor[w], fontWeight: 600, marginBottom: 4 }}>{w === 'B' ? 'B — รับเงินขาย' : 'C — ค่าใช้จ่าย'}</div>
+                    <div style={{ fontSize: 20, fontWeight: 700, color: walletColor[w], fontFamily: 'Prompt' }}>{fmtB(balances[w])}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 16 }}>
+              {[
+                { label: 'โอน B→A', color: '#1565C0', onClick: () => { setTrTo('A_transfer'); setModal('transfer'); } },
+                { label: 'โอน B→C', color: '#6A1B9A', onClick: () => { setTrTo('C'); setModal('transfer'); } },
+                { label: 'รายจ่าย C', color: '#E65100', onClick: () => setModal('expense') },
+                { label: 'เติมเงิน', color: '#5D4037', onClick: () => setModal('topup') },
+              ].map(a => (
+                <button key={a.label} onClick={a.onClick} style={{ background: a.color, color: '#fff', border: 'none', borderRadius: 12, padding: '13px', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'Prompt' }}>{a.label}</button>
+              ))}
+            </div>
+
+            {/* Pending */}
+            {pending.length > 0 && (
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 13, color: '#E65100', marginBottom: 8 }}>⏳ รอยืนยัน ({pending.length})</div>
+                {pending.map(tx => (
+                  <div key={tx.id} style={{ background: '#FFF8E1', border: '1px solid #FFE082', borderRadius: 12, padding: '12px 14px', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: '#5D4037' }}>{TX_LABELS[tx.tx_type] || tx.tx_type}</div>
+                      <div style={{ fontSize: 11, color: '#9A8662' }}>{WALLET_LABELS[tx.wallet]} · {tx.ref_id || ''}</div>
+                    </div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: tx.direction === 'in' ? '#2E7D32' : '#C0392B' }}>
+                      {tx.direction === 'in' ? '+' : '-'}{fmtB(tx.amount)}
+                    </div>
+                    <button onClick={() => handleConfirmTx(tx)} disabled={busy} style={{ background: '#2E7D32', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 10px', fontSize: 12, cursor: 'pointer' }}>ยืนยัน</button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* History */}
+            <div>
+              <div style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 13, color: '#7A5A22', marginBottom: 8 }}>ประวัติรายการ</div>
+              {confirmed.length === 0 && <div style={{ textAlign: 'center', color: '#B0A090', padding: 20, fontSize: 13 }}>ยังไม่มีรายการ</div>}
+              {confirmed.slice(0, 50).map(tx => (
+                <button key={tx.id} onClick={() => { setSelTx(tx); setModal('detail'); }}
+                  style={{ width: '100%', background: '#fff', border: '1px solid #EDE0CC', borderRadius: 12, padding: '11px 14px', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', textAlign: 'left' }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 10, background: walletBg[tx.wallet] || '#EEE', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>
+                    {tx.tx_type === 'bill_pay' ? '🧾' : tx.tx_type === 'sale_recv' ? '💵' : tx.tx_type === 'transfer' ? '↔️' : tx.tx_type === 'commission' ? '👤' : tx.tx_type === 'expense' ? '📋' : '➕'}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: '#3F2D1E', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {TX_LABELS[tx.tx_type] || tx.tx_type}{tx.category ? ` · ${tx.category}` : ''}
+                    </div>
+                    <div style={{ fontSize: 11, color: '#9A8662' }}>{WALLET_LABELS[tx.wallet]} · {new Date(tx.created_at).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })}</div>
+                  </div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: tx.direction === 'in' ? '#2E7D32' : '#C0392B', flexShrink: 0 }}>
+                    {tx.direction === 'in' ? '+' : '-'}{fmtB(tx.amount)}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Transfer Modal */}
+      {modal === 'transfer' && (
+        <WalletActionModal title={trTo === 'C' ? 'โอน B → C (ค่าใช้จ่าย)' : 'โอน B → A (จ่ายทุเรียน)'} onClose={() => { setModal(null); setTrAmt(''); setTrSlip(null); }}>
+          {trTo === 'A_transfer' && (
+            <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+              {['A_transfer', 'A_cash'].map(w => (
+                <button key={w} onClick={() => setTrTo(w)} style={{ flex: 1, padding: '10px', borderRadius: 10, border: `2px solid ${trTo === w ? '#1565C0' : '#E4D7BC'}`, background: trTo === w ? '#E3F2FD' : '#FFFDF8', color: trTo === w ? '#1565C0' : '#7A5A22', fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>
+                  {w === 'A_transfer' ? 'โอน' : 'เงินสด'}
+                </button>
+              ))}
+            </div>
+          )}
+          {inp(trAmt, setTrAmt, 'จำนวนเงิน (บาท)', 'number')}
+          {inp(trNote, setTrNote, 'หมายเหตุ (ถ้ามี)')}
+          <WalletSlipUpload slipUrl={trSlip ? URL.createObjectURL(trSlip) : null} uploading={trSlipUpload}
+            onUpload={f => setTrSlip(f)} />
+          {btn(`โอน ${fmtB(parseFloat(trAmt) || 0)}`, handleTransfer, '#1565C0', !trAmt)}
+        </WalletActionModal>
+      )}
+
+      {/* Expense Modal */}
+      {modal === 'expense' && (
+        <WalletActionModal title="บันทึกค่าใช้จ่าย (C)" onClose={() => { setModal(null); setExAmt(''); setExSlip(null); }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
+            {EXPENSE_CATS.map(c => (
+              <button key={c} onClick={() => setExCat(c)} style={{ padding: '7px 12px', borderRadius: 20, border: `1.5px solid ${exCat === c ? '#6A1B9A' : '#E4D7BC'}`, background: exCat === c ? '#F3E5F5' : '#FFFDF8', color: exCat === c ? '#6A1B9A' : '#7A5A22', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>{c}</button>
+            ))}
+          </div>
+          {inp(exAmt, setExAmt, 'จำนวนเงิน (บาท)', 'number')}
+          {inp(exNote, setExNote, 'หมายเหตุ (ถ้ามี)')}
+          <WalletSlipUpload slipUrl={exSlip ? URL.createObjectURL(exSlip) : null} uploading={exSlipUpload}
+            onUpload={f => setExSlip(f)} />
+          {btn(`บันทึก ${fmtB(parseFloat(exAmt) || 0)}`, handleExpense, '#6A1B9A', !exAmt)}
+        </WalletActionModal>
+      )}
+
+      {/* Topup Modal */}
+      {modal === 'topup' && (
+        <WalletActionModal title="เติมเงินเข้ากระเป๋า" onClose={() => { setModal(null); setTpAmt(''); }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
+            {['A_transfer', 'A_cash', 'C'].map(w => (
+              <button key={w} onClick={() => setTpWallet(w)} style={{ padding: '7px 12px', borderRadius: 20, border: `1.5px solid ${tpWallet === w ? walletColor[w] : '#E4D7BC'}`, background: tpWallet === w ? walletBg[w] : '#FFFDF8', color: tpWallet === w ? walletColor[w] : '#7A5A22', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>{WALLET_LABELS[w]}</button>
+            ))}
+          </div>
+          {inp(tpAmt, setTpAmt, 'จำนวนเงิน (บาท)', 'number')}
+          {inp(tpNote, setTpNote, 'หมายเหตุ')}
+          {btn(`เติม ${fmtB(parseFloat(tpAmt) || 0)}`, handleTopup, '#5D4037', !tpAmt)}
+        </WalletActionModal>
+      )}
+
+      {/* Detail Modal */}
+      {modal === 'detail' && selTx && (
+        <WalletActionModal title="รายละเอียด" onClose={() => setModal(null)}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {[
+              ['ประเภท', TX_LABELS[selTx.tx_type] || selTx.tx_type],
+              ['กระเป๋า', WALLET_LABELS[selTx.wallet]],
+              ['จำนวน', `${selTx.direction === 'in' ? '+' : '-'}${fmtB(selTx.amount)}`],
+              ['สถานะ', selTx.status === 'confirmed' ? '✅ ยืนยันแล้ว' : '⏳ รอยืนยัน'],
+              selTx.category && ['หมวด', selTx.category],
+              selTx.ref_id && ['อ้างอิง', selTx.ref_id],
+              selTx.note && ['หมายเหตุ', selTx.note],
+              ['วันที่', new Date(selTx.created_at).toLocaleString('th-TH')],
+              selTx.created_by && ['บันทึกโดย', selTx.created_by],
+            ].filter(Boolean).map(([k, v]) => (
+              <div key={k} style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #F0E8D8', paddingBottom: 6 }}>
+                <span style={{ fontSize: 13, color: '#9A8662' }}>{k}</span>
+                <span style={{ fontSize: 13, fontWeight: 600, color: '#3F2D1E', textAlign: 'right', maxWidth: '60%' }}>{v}</span>
+              </div>
+            ))}
+            {selTx.slip_url && (
+              <div>
+                <div style={{ fontSize: 12, color: '#9A8662', marginBottom: 6 }}>หลักฐาน</div>
+                <img src={selTx.slip_url} alt="slip" style={{ width: '100%', borderRadius: 10, border: '1px solid #E4D7BC', maxHeight: 300, objectFit: 'contain' }} />
+              </div>
+            )}
+          </div>
+        </WalletActionModal>
+      )}
+    </div>
+  );
+}
+
 // ─── App (root) ───────────────────────────────────────────────────────────────
 export default function App() {
   const navigate = useNavigate();
@@ -6009,7 +6356,7 @@ export default function App() {
             onGoSupervisors={() => { navigate('/supervisors'); syncNow(true); }}
             onChangePin={changePin} onSetEmployeePin={setEmployeePinAction}
             onOpenHistory={openHistory} onOpenSaleHistory={openSaleHistoryDetail} onPayment={handlePayment} onDeleteBill={handleDeleteBill} onDeleteSaleBill={handleDeleteSaleBill} pin={pin} isEmployee={authRole === 'employee'} onLogout={handleLogout}
-            onExport={handleExport} onImport={handleImport} onGoHistory={() => navigate('/history')} onResetData={() => setResetModalOpen(true)} />
+            onExport={handleExport} onImport={handleImport} onGoHistory={() => navigate('/history')} onResetData={() => setResetModalOpen(true)} onGoWallet={() => navigate('/wallet')} />
         } />
         <Route path="/record" element={session ? (
           <RecordView session={session} activeCat={activeCat} input={input} onInput={setInput} onCommit={commitEntry}
@@ -6129,6 +6476,9 @@ export default function App() {
             onDeleteBill={handleDeleteBill}
             onDeleteSaleBill={handleDeleteSaleBill}
           />
+        } />
+        <Route path="/wallet" element={
+          <WalletView onGoHome={() => navigate('/')} recorderName={recorderName} />
         } />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
