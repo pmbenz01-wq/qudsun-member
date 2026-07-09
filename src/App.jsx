@@ -413,14 +413,24 @@ function HomeView({ session, history, saleHistory, payments, syncing, syncStatus
       </button>
 
       {!isEmployee && (
-        <button onClick={onGoWallet} style={{ width: '100%', border: '1.5px solid #2E7D32', background: 'linear-gradient(135deg,#F1F8F1,#E8F5E9)', borderRadius: 14, padding: '14px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
-          <span style={{ fontSize: 22 }}>💰</span>
-          <div style={{ textAlign: 'left' }}>
-            <div style={{ fontWeight: 700, fontSize: 15, color: '#1B5E20' }}>กระเป๋าเงิน</div>
-            <div style={{ fontSize: 12, color: '#4CAF50' }}>จ่ายทุเรียน · รับขาย · ค่าใช้จ่าย</div>
-          </div>
-          <span style={{ marginLeft: 'auto', color: '#2E7D32', fontSize: 18 }}>›</span>
-        </button>
+        <>
+          <button onClick={onGoDashboard} style={{ width: '100%', border: '1.5px solid #8A5E00', background: 'linear-gradient(135deg,#FFFBF0,#FFF3D4)', borderRadius: 14, padding: '14px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+            <span style={{ fontSize: 22 }}>🧾</span>
+            <div style={{ textAlign: 'left' }}>
+              <div style={{ fontWeight: 700, fontSize: 15, color: '#5B3A29' }}>ยอดซื้อ / รอจ่าย</div>
+              <div style={{ fontSize: 12, color: '#9A7A4A' }}>บิลซื้อ · สลิปโอน · batch pay</div>
+            </div>
+            <span style={{ marginLeft: 'auto', color: '#C9A24B', fontSize: 18 }}>›</span>
+          </button>
+          <button onClick={onGoWallet} style={{ width: '100%', border: '1.5px solid #2E7D32', background: 'linear-gradient(135deg,#F1F8F1,#E8F5E9)', borderRadius: 14, padding: '14px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+            <span style={{ fontSize: 22 }}>💰</span>
+            <div style={{ textAlign: 'left' }}>
+              <div style={{ fontWeight: 700, fontSize: 15, color: '#1B5E20' }}>กระเป๋าเงิน</div>
+              <div style={{ fontSize: 12, color: '#4CAF50' }}>จ่ายทุเรียน · รับขาย · ค่าใช้จ่าย</div>
+            </div>
+            <span style={{ marginLeft: 'auto', color: '#2E7D32', fontSize: 18 }}>›</span>
+          </button>
+        </>
       )}
 
       <div style={{ marginTop: 24, display: 'flex', flexDirection: 'column', gap: 8 }}>
