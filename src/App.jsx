@@ -1947,7 +1947,7 @@ function DashboardView({ payments, pin, onPayment, onBatchPayment, onDeleteBill,
   const toDateStr = ts => { const d = new Date(ts); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
 
   const allDayBills = billsData
-    .filter(h => { if (!h.date) return false; const ds = toDateStr(h.date); return ds >= startDate && ds <= endDate; })
+    .filter(h => { if (!h.date) return false; if (statusFilter === 'unpaid') return true; const ds = toDateStr(h.date); return ds >= startDate && ds <= endDate; })
     .map(h => ({ ...h, pay: payments[h.billNo] || { status: 'unpaid' } }))
     .sort((a, b) => (b.date || 0) - (a.date || 0));
 
