@@ -1605,6 +1605,73 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
   );
 }
 
+// ─── BatchTransferModal ────────────────────────────────────────────────────────
+function BatchTransferModal({ bills, onConfirm, onClose }) {
+  const [slip, setSlip] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const totalBaht = bills.reduce((s, b) => s + (parseFloat(String(b.baht || '0').replace(/,/g, '')) || 0), 0);
+
+  const uploadSlip = async (file) => {
+    if (!file) return null;
+    const reader = new FileReader();
+    return new Promise((resolve, reject) => {
+      reader.onload = async (e) => {
+        try {
+          const base64 = e.target.result;
+          const path = `QudsunTransfers/${Date.now()}_batch.jpg`;
+          const res = await fetch('/api/upload', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ base64, path }) });
+          const d = await res.json();
+          if (!d.ok) reject(new Error(d.error || 'อัปโหลดไม่สำเร็จ'));
+          else resolve(d.url);
+        } catch (err) { reject(err); }
+      };
+      reader.onerror = () => reject(new Error('อ่านไฟล์ไม่สำเร็จ'));
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleConfirm = async () => {
+    setBusy(true);
+    try {
+      let slipUrl = null;
+      if (slip) { setUploading(true); slipUrl = await uploadSlip(slip); setUploading(false); }
+      onConfirm(slipUrl);
+    } catch(e) { alert('เกิดข้อผิดพลาด: ' + e.message); setBusy(false); setUploading(false); }
+  };
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+      <div style={{ background: '#FFFDF8', borderRadius: '20px 20px 0 0', padding: '20px 18px 32px', width: '100%', maxWidth: 480, maxHeight: '85dvh', overflowY: 'auto' }}>
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 16 }}>
+          <span style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 16, color: '#3F2D1E', flex: 1 }}>📎 จ่ายรวม {bills.length} บิล</span>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: '#9A8662' }}>✕</button>
+        </div>
+
+        <div style={{ background: '#F9F5EC', borderRadius: 12, padding: '10px 12px', marginBottom: 14, maxHeight: 160, overflowY: 'auto' }}>
+          {bills.map(b => (
+            <div key={b.billNo} style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: 6, marginBottom: 6, borderBottom: '1px solid #EDE0CC', fontSize: 13 }}>
+              <span style={{ color: '#5B3A29' }}>{b.seller || 'ไม่ระบุ'} · {b.billNo}</span>
+              <span style={{ fontWeight: 600, color: '#3F2D1E' }}>฿{parseFloat(String(b.baht || '0').replace(/,/g, '')).toLocaleString()}</span>
+            </div>
+          ))}
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: 14, color: '#C0392B', paddingTop: 4 }}>
+            <span>รวม</span><span>฿{totalBaht.toLocaleString()}</span>
+          </div>
+        </div>
+
+        <div style={{ fontSize: 13, color: '#7A5A22', fontWeight: 600, marginBottom: 8 }}>สลิปโอนเงิน (ไม่บังคับ)</div>
+        <WalletSlipUpload file={slip} uploading={uploading} onUpload={f => setSlip(f)} />
+
+        <button onClick={handleConfirm} disabled={busy}
+          style={{ width: '100%', background: busy ? '#aaa' : '#3F2D1E', color: '#fff', border: 'none', borderRadius: 12, padding: '14px', fontSize: 15, fontWeight: 700, cursor: busy ? 'not-allowed' : 'pointer', fontFamily: 'Prompt', marginTop: 12 }}>
+          {busy ? (uploading ? 'กำลังอัปโหลด…' : 'กำลังบันทึก…') : `✅ ยืนยันโอน ${bills.length} บิล · ฿${totalBaht.toLocaleString()}`}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ─── DashboardView ────────────────────────────────────────────────────────────
 function TransferSlipModal({ bill, onConfirm, onClose }) {
   const [step, setStep] = useState(1); // 1=ใบเสร็จ 2=สลิป 3=ทะเบียน 4=สรุป
@@ -1852,7 +1919,7 @@ function ResetDataModal({ pin, onConfirm, onClose }) {
   );
 }
 
-function DashboardView({ payments, pin, onPayment, onDeleteBill, onGoHome, onOpenHistory, isEmployee }) {
+function DashboardView({ payments, pin, onPayment, onBatchPayment, onDeleteBill, onGoHome, onOpenHistory, isEmployee }) {
   const todayStr = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
   const [startDate, setStartDate] = useState(todayStr);
   const [endDate, setEndDate] = useState(todayStr);
@@ -1861,6 +1928,10 @@ function DashboardView({ payments, pin, onPayment, onDeleteBill, onGoHome, onOpe
   const [deleteBill, setDeleteBill] = useState(null);
   const [billsData, setBillsData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [batchMode, setBatchMode] = useState(false);
+  const [selectedBills, setSelectedBills] = useState(new Set());
+  const [batchModalBills, setBatchModalBills] = useState(null);
   const loadBills = useCallback(() => {
     setLoading(true);
     db.getBills().then(d => { setBillsData(d); setLoading(false); }).catch(() => setLoading(false));
@@ -1875,15 +1946,30 @@ function DashboardView({ payments, pin, onPayment, onDeleteBill, onGoHome, onOpe
 
   const toDateStr = ts => { const d = new Date(ts); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
 
-  const dayBills = billsData
+  const allDayBills = billsData
     .filter(h => { if (!h.date) return false; const ds = toDateStr(h.date); return ds >= startDate && ds <= endDate; })
     .map(h => ({ ...h, pay: payments[h.billNo] || { status: 'unpaid' } }))
     .sort((a, b) => (b.date || 0) - (a.date || 0));
 
-  const totalKg   = dayBills.reduce((s, b) => s + (parseFloat((b.kg || '0').replace(/,/g, '')) || 0), 0);
-  const totalBaht = dayBills.reduce((s, b) => s + (parseFloat((b.baht || '0').replace(/,/g, '')) || 0), 0);
-  const nUnpaid   = dayBills.filter(b => b.pay.status === 'unpaid').length;
-  const nPaid     = dayBills.length - nUnpaid;
+  const dayBills = statusFilter === 'unpaid' ? allDayBills.filter(b => b.pay.status === 'unpaid')
+    : statusFilter === 'paid' ? allDayBills.filter(b => b.pay.status !== 'unpaid')
+    : allDayBills;
+
+  const totalKg   = allDayBills.reduce((s, b) => s + (parseFloat((b.kg || '0').replace(/,/g, '')) || 0), 0);
+  const totalBaht = allDayBills.reduce((s, b) => s + (parseFloat((b.baht || '0').replace(/,/g, '')) || 0), 0);
+  const nUnpaid   = allDayBills.filter(b => b.pay.status === 'unpaid').length;
+  const nPaid     = allDayBills.length - nUnpaid;
+
+  const selectedBaht = [...selectedBills].reduce((s, bn) => {
+    const b = allDayBills.find(x => x.billNo === bn);
+    return s + (b ? parseFloat(String(b.baht || '0').replace(/,/g, '')) || 0 : 0);
+  }, 0);
+
+  const toggleBill = (billNo) => {
+    const next = new Set(selectedBills);
+    if (next.has(billNo)) next.delete(billNo); else next.add(billNo);
+    setSelectedBills(next);
+  };
 
   const fmt    = n => n.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const fmtKg2 = n => n.toLocaleString('th-TH', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
@@ -1923,10 +2009,20 @@ function DashboardView({ payments, pin, onPayment, onDeleteBill, onGoHome, onOpe
         </div>
       </div>
 
-      {/* Bill list header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-        <span style={{ fontSize: 13, fontWeight: 600, color: '#4A3526' }}>รายการบิล</span>
-        <div style={{ flex: 1, height: 1, background: '#E4D7BC' }} />
+      {/* Filter tabs + batch mode */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+        {[['all','ทั้งหมด'], ['unpaid','รอจ่าย'], ['paid','จ่ายแล้ว']].map(([v,l]) => (
+          <button key={v} onClick={() => { setStatusFilter(v); setBatchMode(false); setSelectedBills(new Set()); }}
+            style={{ padding: '6px 12px', borderRadius: 20, border: `1.5px solid ${statusFilter === v ? '#5B3A29' : '#E4D7BC'}`, background: statusFilter === v ? '#5B3A29' : '#FFFDF8', color: statusFilter === v ? '#fff' : '#7A6450', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+            {l}{v === 'unpaid' && nUnpaid > 0 ? ` (${nUnpaid})` : ''}
+          </button>
+        ))}
+        {!isEmployee && nUnpaid > 0 && (
+          <button onClick={() => { setBatchMode(!batchMode); setSelectedBills(new Set()); if (!batchMode && statusFilter === 'paid') setStatusFilter('unpaid'); }}
+            style={{ marginLeft: 'auto', padding: '6px 12px', borderRadius: 20, border: `1.5px solid ${batchMode ? '#DC743C' : '#E4D7BC'}`, background: batchMode ? '#FFF3E6' : '#FFFDF8', color: batchMode ? '#DC743C' : '#7A6450', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+            {batchMode ? '✕ ยกเลิก' : '☑ เลือกหลายบิล'}
+          </button>
+        )}
       </div>
 
       {loading && <div style={{ textAlign: 'center', color: '#B7A684', fontSize: 13, padding: '20px 0' }}>กำลังโหลด…</div>}
@@ -1938,8 +2034,12 @@ function DashboardView({ payments, pin, onPayment, onDeleteBill, onGoHome, onOpe
         const st = STATUS[b.pay.status] || STATUS.unpaid;
         const billTime = b.date ? new Date(b.date).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) + ' น.' : '';
         const billDateLabel = b.date ? new Date(b.date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' }) : '';
+        const isUnpaid = b.pay.status === 'unpaid';
+        const isSelected = selectedBills.has(b.billNo);
         return (
-          <div key={b.billNo} style={{ background: '#FFFDF8', border: `1px solid #E4D7BC`, borderLeft: `4px solid ${st.color}`, borderRadius: 14, marginBottom: 10, overflow: 'hidden' }}>
+          <div key={b.billNo}
+            onClick={batchMode && isUnpaid ? () => toggleBill(b.billNo) : undefined}
+            style={{ background: isSelected ? '#FFF3E6' : '#FFFDF8', border: `1px solid ${isSelected ? '#DC743C' : '#E4D7BC'}`, borderLeft: `4px solid ${isSelected ? '#DC743C' : st.color}`, borderRadius: 14, marginBottom: 10, overflow: 'hidden', cursor: batchMode && isUnpaid ? 'pointer' : 'default', position: 'relative' }}>
             <div style={{ padding: '14px 16px' }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
               {b.pay.slipUrl && (
@@ -1956,26 +2056,29 @@ function DashboardView({ payments, pin, onPayment, onDeleteBill, onGoHome, onOpe
                 <div style={{ fontSize: 12, color: '#8A7A66' }}>{b.billNo} · {b.kg} กก.{billDateLabel ? ` · ${billDateLabel}` : ''}{billTime ? ` · ${billTime}` : ''}</div>
               </button>
               <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
-                <div style={{ fontWeight: 700, fontSize: 16, color: '#3F2D1E' }}>฿{b.baht}</div>
-                {!isEmployee && <button onClick={() => setDeleteBill(b)} style={{ border: 'none', background: 'none', padding: '2px 4px', cursor: 'pointer', fontSize: 14, color: '#C8B89A', lineHeight: 1 }}>🗑</button>}
+                {batchMode && isUnpaid
+                  ? <div style={{ width: 24, height: 24, borderRadius: 6, border: `2px solid ${isSelected ? '#DC743C' : '#C8B89A'}`, background: isSelected ? '#DC743C' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, color: '#fff' }}>{isSelected ? '✓' : ''}</div>
+                  : <div style={{ fontWeight: 700, fontSize: 16, color: '#3F2D1E' }}>฿{b.baht}</div>
+                }
+                {!isEmployee && !batchMode && <button onClick={(e) => { e.stopPropagation(); setDeleteBill(b); }} style={{ border: 'none', background: 'none', padding: '2px 4px', cursor: 'pointer', fontSize: 14, color: '#C8B89A', lineHeight: 1 }}>🗑</button>}
               </div>
             </div>
             </div>
-            {!isEmployee && (
+            {!isEmployee && !batchMode && (
             <div style={{ padding: '0 16px 14px' }}>
               {b.pay.status === 'unpaid' ? (
                 <div style={{ display: 'flex', gap: 8 }}>
-                  <button onClick={() => setTransferBill(b)}
+                  <button onClick={(e) => { e.stopPropagation(); setTransferBill(b); }}
                     style={{ flex: 2, border: 'none', borderRadius: 10, padding: '9px 0', background: '#3F2D1E', color: '#F6EEDD', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
                     📎 อัปโหลดหลักฐาน
                   </button>
-                  <button onClick={() => onPayment(b.billNo, 'cash')}
+                  <button onClick={(e) => { e.stopPropagation(); onPayment(b.billNo, 'cash'); }}
                     style={{ flex: 1, border: '1px solid #5A7FA8', borderRadius: 10, padding: '9px 0', background: '#E8EEF8', color: '#1A4D80', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
                     💵 เงินสด
                   </button>
                 </div>
               ) : (
-                <button onClick={() => setCancelBill(b)}
+                <button onClick={(e) => { e.stopPropagation(); setCancelBill(b); }}
                   style={{ width: '100%', border: '1px solid #D0C8C0', borderRadius: 10, padding: '8px 0', background: '#fff', color: '#8A7A66', fontSize: 12, cursor: 'pointer' }}>
                   🔒 ยกเลิกการชำระ
                 </button>
@@ -1985,6 +2088,31 @@ function DashboardView({ payments, pin, onPayment, onDeleteBill, onGoHome, onOpe
           </div>
         );
       })}
+
+      {/* Batch sticky bar */}
+      {batchMode && selectedBills.size > 0 && (
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: '#3F2D1E', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, zIndex: 50, boxShadow: '0 -2px 12px rgba(0,0,0,.2)' }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ color: '#F6EEDD', fontSize: 13, fontWeight: 600 }}>เลือก {selectedBills.size} บิล</div>
+            <div style={{ color: '#DC743C', fontSize: 12 }}>฿{selectedBaht.toLocaleString()}</div>
+          </div>
+          <button onClick={() => {
+            const bills = allDayBills.filter(b => selectedBills.has(b.billNo));
+            setBatchModalBills(bills);
+          }} style={{ background: '#DC743C', color: '#fff', border: 'none', borderRadius: 12, padding: '12px 20px', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+            📎 จ่ายรวม
+          </button>
+        </div>
+      )}
+
+      {batchModalBills && (
+        <BatchTransferModal bills={batchModalBills}
+          onConfirm={(slipUrl) => {
+            onBatchPayment(batchModalBills.map(b => b.billNo), slipUrl);
+            setBatchModalBills(null); setBatchMode(false); setSelectedBills(new Set());
+          }}
+          onClose={() => setBatchModalBills(null)} />
+      )}
 
       {transferBill && (
         <TransferSlipModal bill={transferBill}
@@ -5874,6 +6002,10 @@ export default function App() {
     }
   }, [history, pushPayment]);
 
+  const handleBatchPayment = useCallback((billNos, slipUrl) => {
+    billNos.forEach(billNo => handlePayment(billNo, 'transferred', slipUrl, null, null, null, null));
+  }, [handlePayment]);
+
   const handleDeleteBill = useCallback((billNo) => {
     storage.addDeletedBill(billNo);
     const nextHistory = storage.loadHistory().filter(h => h.billNo !== billNo);
@@ -6514,7 +6646,7 @@ export default function App() {
             supervisors={supervisors} customerInfo={customerInfo} />
         ) : <Navigate to="/" replace />} />
         <Route path="/purchases" element={
-          <DashboardView payments={payments} pin={pin} onPayment={handlePayment} onDeleteBill={handleDeleteBill} onGoHome={() => { navigate('/'); syncNow(true); }} onOpenHistory={openHistory} isEmployee={authRole === 'employee'} />
+          <DashboardView payments={payments} pin={pin} onPayment={handlePayment} onBatchPayment={handleBatchPayment} onDeleteBill={handleDeleteBill} onGoHome={() => { navigate('/'); syncNow(true); }} onOpenHistory={openHistory} isEmployee={authRole === 'employee'} />
         } />
         <Route path="/sales" element={
           <SalesView accounts={accounts} pin={pin} onGoHome={() => navigate('/')} onAddSale={handleAddSale} onDeleteSale={handleDeleteSale} onUpdateSale={handleUpdateSale} onSaveAccount={handleSaveAccount} onOpenHistory={openHistory}
