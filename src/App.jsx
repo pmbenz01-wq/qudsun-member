@@ -5780,8 +5780,9 @@ export default function App() {
   const refreshHomeCount = useCallback(async () => {
     try {
       const [bills, pmts] = await Promise.all([db.getBills(), db.getPayments()]);
+      const cutoff = new Date('2026-07-09').getTime();
       const count = bills.filter(b => {
-        if (b.date < '2026-07-09') return false;
+        if (Number(b.date) < cutoff) return false;
         const p = pmts[b.billNo];
         return !p || p.status === 'unpaid';
       }).length;
