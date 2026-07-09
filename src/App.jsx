@@ -294,10 +294,12 @@ function EmployeeManager({ employees, onSave, onCancel }) {
 }
 
 // ─── HomeView ─────────────────────────────────────────────────────────────────
-function HomeView({ session, history, saleHistory, payments, syncing, syncStatus, onSyncNow, onOpenSheet, onNew, onResume, onGoCustomers, onGoDashboard, onGoSupervisors, onGoSales, onNewSale, saleSession, onResumeSale, onChangePin, onSetEmployeePin, onOpenHistory, onOpenSaleHistory, onPayment, onDeleteBill, onDeleteSaleBill, pin, verified, supervisors, isEmployee, onLogout, onExport, onImport, onGoHistory, onResetData, onGoWallet }) {
+function HomeView({ session, history, saleHistory, payments, pendingPurchaseCount, syncing, syncStatus, onSyncNow, onOpenSheet, onNew, onResume, onGoCustomers, onGoDashboard, onGoSupervisors, onGoSales, onNewSale, saleSession, onResumeSale, onChangePin, onSetEmployeePin, onOpenHistory, onOpenSaleHistory, onPayment, onDeleteBill, onDeleteSaleBill, pin, verified, supervisors, isEmployee, onLogout, onExport, onImport, onGoHistory, onResetData, onGoWallet }) {
   const customerCount = Object.keys(loadCustomers(history)).length;
   const supervisorCount = Object.values(supervisors || {}).filter(Boolean).reduce((set, n) => (set.add(n), set), new Set()).size;
-  const nUnpaidPurchase = history.filter(b => { const p = payments[b.billNo]; return !p || p.status === 'unpaid'; }).length;
+  const nUnpaidPurchase = pendingPurchaseCount !== null && pendingPurchaseCount !== undefined
+    ? pendingPurchaseCount
+    : history.filter(b => { const p = payments[b.billNo]; return !p || p.status === 'unpaid'; }).length;
   const nRecentSale = saleHistory.length;
   if (isEmployee) {
     return (
@@ -422,7 +424,7 @@ function HomeView({ session, history, saleHistory, payments, syncing, syncStatus
               <div style={{ textAlign: 'left', flex: 1 }}>
                 <div style={{ fontWeight: 700, fontSize: 14, color: '#5B3A29' }}>ยอดซื้อ</div>
                 <div style={{ fontSize: 12, color: nUnpaidPurchase > 0 ? '#C0392B' : '#9A7A4A', fontWeight: nUnpaidPurchase > 0 ? 700 : 400 }}>
-                  {nUnpaidPurchase > 0 ? `รอจ่าย ${nUnpaidPurchase} บิล` : 'ชำระครบแล้ว'}
+                  {pendingPurchaseCount === null ? 'กำลังโหลด...' : nUnpaidPurchase > 0 ? `รอจ่าย ${nUnpaidPurchase} บิล` : 'ชำระครบแล้ว'}
                 </div>
               </div>
               <span style={{ color: '#C9A24B', fontSize: 18 }}>›</span>
@@ -5593,6 +5595,7 @@ export default function App() {
   const [vehiclePlates, setVehiclePlates] = useState({});
   const [customerInfo, setCustomerInfo] = useState({});
   const [payments, setPayments] = useState({});
+  const [homeUnpaidCount, setHomeUnpaidCount] = useState(null);
   const [vehiclePhotoUrl, setVehiclePhotoUrl] = useState(null);
   const [sales, setSales] = useState([]);
   const [accounts, setAccounts] = useState(() => storage.loadAccounts());
@@ -5773,6 +5776,18 @@ export default function App() {
     const unsubRealtime = db.subscribeChanges(() => syncNow(true));
     return () => { clearInterval(autoSync); document.removeEventListener('visibilitychange', onVisible); unsubRealtime(); };
   }, []);
+
+  const refreshHomeCount = useCallback(async () => {
+    try {
+      const [bills, pmts] = await Promise.all([db.getBills(), db.getPayments()]);
+      const count = bills.filter(b => { const p = pmts[b.billNo]; return !p || p.status === 'unpaid'; }).length;
+      setHomeUnpaidCount(count);
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    if (location.pathname === '/') refreshHomeCount();
+  }, [location.pathname, refreshHomeCount]);
 
   // Helper: load all data from Google Sheets
   const syncFromSheets = useCallback(async () => {
@@ -6609,7 +6624,7 @@ export default function App() {
 
       <Routes>
         <Route path="/" element={
-          <HomeView session={session} history={history} saleHistory={saleHistory} payments={payments} verified={verified} supervisors={supervisors} syncing={syncing} syncStatus={syncStatus} onSyncNow={() => syncNow(false)} onOpenSheet={() => setSheetModal(true)}
+          <HomeView session={session} history={history} saleHistory={saleHistory} payments={payments} pendingPurchaseCount={homeUnpaidCount} verified={verified} supervisors={supervisors} syncing={syncing} syncStatus={syncStatus} onSyncNow={() => syncNow(false)} onOpenSheet={() => setSheetModal(true)}
             onNew={startNew} onResume={() => { navigate('/record'); if (session?.entries?.length > 0) { setActiveCat(session.entries[session.entries.length - 1].cat); } else { setActiveCat('AB'); } }}
             onGoCustomers={() => { navigate('/customers'); syncNow(true); }}
             onGoDashboard={() => { navigate('/purchases'); syncNow(true); }}
