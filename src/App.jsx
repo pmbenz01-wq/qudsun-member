@@ -297,6 +297,8 @@ function EmployeeManager({ employees, onSave, onCancel }) {
 function HomeView({ session, history, saleHistory, payments, syncing, syncStatus, onSyncNow, onOpenSheet, onNew, onResume, onGoCustomers, onGoDashboard, onGoSupervisors, onGoSales, onNewSale, saleSession, onResumeSale, onChangePin, onSetEmployeePin, onOpenHistory, onOpenSaleHistory, onPayment, onDeleteBill, onDeleteSaleBill, pin, verified, supervisors, isEmployee, onLogout, onExport, onImport, onGoHistory, onResetData, onGoWallet }) {
   const customerCount = Object.keys(loadCustomers(history)).length;
   const supervisorCount = Object.values(supervisors || {}).filter(Boolean).reduce((set, n) => (set.add(n), set), new Set()).size;
+  const nUnpaidPurchase = history.filter(b => { const p = payments[b.billNo]; return !p || p.status === 'unpaid'; }).length;
+  const nRecentSale = saleHistory.length;
   if (isEmployee) {
     return (
       <div style={{ flex: 1, maxWidth: 480, width: '100%', margin: '0 auto', padding: '32px 14px 40px', display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -414,14 +416,26 @@ function HomeView({ session, history, saleHistory, payments, syncing, syncStatus
 
       {!isEmployee && (
         <>
-          <button onClick={onGoDashboard} style={{ width: '100%', border: '1.5px solid #8A5E00', background: 'linear-gradient(135deg,#FFFBF0,#FFF3D4)', borderRadius: 14, padding: '14px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
-            <span style={{ fontSize: 22 }}>🧾</span>
-            <div style={{ textAlign: 'left' }}>
-              <div style={{ fontWeight: 700, fontSize: 15, color: '#5B3A29' }}>ยอดซื้อ / รอจ่าย</div>
-              <div style={{ fontSize: 12, color: '#9A7A4A' }}>บิลซื้อ · สลิปโอน · batch pay</div>
-            </div>
-            <span style={{ marginLeft: 'auto', color: '#C9A24B', fontSize: 18 }}>›</span>
-          </button>
+          <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
+            <button onClick={onGoDashboard} style={{ flex: 1, border: `1.5px solid ${nUnpaidPurchase > 0 ? '#C0392B' : '#8A5E00'}`, background: nUnpaidPurchase > 0 ? 'linear-gradient(135deg,#FFF5F5,#FDECEA)' : 'linear-gradient(135deg,#FFFBF0,#FFF3D4)', borderRadius: 14, padding: '14px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontSize: 20 }}>🧾</span>
+              <div style={{ textAlign: 'left', flex: 1 }}>
+                <div style={{ fontWeight: 700, fontSize: 14, color: '#5B3A29' }}>ยอดซื้อ</div>
+                <div style={{ fontSize: 12, color: nUnpaidPurchase > 0 ? '#C0392B' : '#9A7A4A', fontWeight: nUnpaidPurchase > 0 ? 700 : 400 }}>
+                  {nUnpaidPurchase > 0 ? `รอจ่าย ${nUnpaidPurchase} บิล` : 'ชำระครบแล้ว'}
+                </div>
+              </div>
+              <span style={{ color: '#C9A24B', fontSize: 18 }}>›</span>
+            </button>
+            <button onClick={onGoSales} style={{ flex: 1, border: '1.5px solid #2E5C1A', background: 'linear-gradient(135deg,#F5FAF0,#EBF5E0)', borderRadius: 14, padding: '14px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontSize: 20 }}>📤</span>
+              <div style={{ textAlign: 'left', flex: 1 }}>
+                <div style={{ fontWeight: 700, fontSize: 14, color: '#2E5C1A' }}>ยอดขาย</div>
+                <div style={{ fontSize: 12, color: '#6A9A4E' }}>{nRecentSale > 0 ? `${nRecentSale} บิล` : 'ยังไม่มีบิล'}</div>
+              </div>
+              <span style={{ color: '#4A7A2E', fontSize: 18 }}>›</span>
+            </button>
+          </div>
           <button onClick={onGoWallet} style={{ width: '100%', border: '1.5px solid #2E7D32', background: 'linear-gradient(135deg,#F1F8F1,#E8F5E9)', borderRadius: 14, padding: '14px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
             <span style={{ fontSize: 22 }}>💰</span>
             <div style={{ textAlign: 'left' }}>
