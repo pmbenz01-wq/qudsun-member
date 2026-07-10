@@ -14,6 +14,12 @@ import { savePhoto, loadPhoto, resizeImage } from './utils/photoDB.js';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 
+const extractStoragePath = url => {
+  if (!url || !url.includes('supabase.co/storage')) return null;
+  const m = url.match(/\/storage\/v1\/object\/public\/[^/]+\/(.+)/);
+  return m ? m[1] : null;
+};
+
 // ─── Keypad ───────────────────────────────────────────────────────────────────
 function Keypad({ value, onChange, onConfirm, confirmLabel }) {
   const D = { border: '1px solid #E4D7BC', background: '#FBF6EC', borderRadius: 13, padding: '18px 0', fontFamily: 'Prompt', fontWeight: 500, fontSize: 24, color: '#3F2D1E', cursor: 'pointer' };
@@ -5957,7 +5963,12 @@ export default function App() {
 
   const handlePayment = useCallback((billNo, status, slipPhotoUrl, slipData, cancelNote, receiptPhotoUrl, vehiclePhotoUrl) => {
     const paidAt = Date.now();
-    const next = { ...storage.loadPayments(), [billNo]: { status, paidAt, ...(slipPhotoUrl ? { slipUrl: slipPhotoUrl } : {}), ...(slipData ? { slipData } : {}), ...(cancelNote ? { cancelNote } : {}), ...(receiptPhotoUrl ? { receiptUrl: receiptPhotoUrl } : {}), ...(vehiclePhotoUrl ? { vehicleUrl: vehiclePhotoUrl } : {}) } };
+    const prevPayments = storage.loadPayments();
+    if (slipPhotoUrl) {
+      const oldPath = extractStoragePath(prevPayments[billNo]?.slipUrl);
+      if (oldPath && prevPayments[billNo]?.slipUrl !== slipPhotoUrl) db.deletePhoto(oldPath).catch(() => {});
+    }
+    const next = { ...prevPayments, [billNo]: { status, paidAt, ...(slipPhotoUrl ? { slipUrl: slipPhotoUrl } : {}), ...(slipData ? { slipData } : {}), ...(cancelNote ? { cancelNote } : {}), ...(receiptPhotoUrl ? { receiptUrl: receiptPhotoUrl } : {}), ...(vehiclePhotoUrl ? { vehicleUrl: vehiclePhotoUrl } : {}) } };
     if (status === 'unpaid') delete next[billNo];
     storage.savePayments(next);
     setPayments(next);
@@ -6227,6 +6238,11 @@ export default function App() {
       uploadOne(slipUrl, 'slip', 'QudsunTransfers'),
       uploadOne(vehicleUrl, 'vehicle', 'QudsunVehicles'),
     ]);
+
+    if (sUrl && existing.slipUrl && existing.slipUrl !== sUrl) {
+      const oldPath = extractStoragePath(existing.slipUrl);
+      if (oldPath) db.deletePhoto(oldPath).catch(() => {});
+    }
 
     const updated = {
       ...existing,

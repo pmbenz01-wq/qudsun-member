@@ -568,6 +568,11 @@ export const db = {
   },
 
   // ─── Storage ──────────────────────────────────────────────────────────────
+  async deletePhoto(path) {
+    const { error } = await supabase.storage.from('qudsun-photos').remove([path]);
+    if (error) throw error;
+  },
+
   async uploadPhoto(base64DataUrl, path) {
     const res = await fetch('/api/upload', {
       method: 'POST',
