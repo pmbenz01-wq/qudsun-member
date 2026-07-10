@@ -3380,7 +3380,7 @@ function SupervisorsView({ supervisors, supervisorNames, history, onGoHome, onOp
   const list = Object.entries(supMap).sort((a, b) => b[1].length - a[1].length);
 
   React.useEffect(() => {
-    db.fetchSupervisorBillStats().then(setBillStats).catch(() => {});
+    db.fetchSupervisorBillStats(new Date('2026-07-09').getTime()).then(setBillStats).catch(() => {});
   }, []);
 
   const handleAdd = () => {

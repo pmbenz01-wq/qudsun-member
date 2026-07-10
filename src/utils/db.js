@@ -362,13 +362,15 @@ export const db = {
     }));
   },
 
-  async fetchSupervisorBillStats() {
-    const { data, error } = await supabase
+  async fetchSupervisorBillStats(dateFrom = null) {
+    let q = supabase
       .from('qm_bills')
       .select('supervisor, kg')
       .eq('deleted', false)
       .not('supervisor', 'is', null)
       .neq('supervisor', '');
+    if (dateFrom) q = q.gte('date', dateFrom);
+    const { data, error } = await q;
     if (error) throw error;
     const stats = {};
     for (const row of data) {
