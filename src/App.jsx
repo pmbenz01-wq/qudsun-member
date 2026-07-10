@@ -3673,6 +3673,9 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
   const [selectedWageDates, setSelectedWageDates] = React.useState(new Set());
   const [showWagePaySlip, setShowWagePaySlip] = React.useState(false);
   const [pendingWageRecords, setPendingWageRecords] = React.useState([]);
+  const [showAdvanceForm, setShowAdvanceForm] = React.useState(false);
+  const [advanceAmount, setAdvanceAmount] = React.useState('');
+  const [advanceSaving, setAdvanceSaving] = React.useState(false);
 
   React.useEffect(() => {
     db.getSetting('sup_base_rates').then(v => {
@@ -4721,6 +4724,39 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
             <button onClick={() => setShowPaySlip(true)} style={{ background: '#fff', color: '#9A8662', border: '1px solid #E4D7BC', borderRadius: 10, padding: '10px 12px', fontSize: 13, cursor: 'pointer' }}>📋</button>
           </div>
 
+          {/* Advance pay button row */}
+          <div style={{ marginBottom: 10 }}>
+            <button onClick={() => { setShowAdvanceForm(v => !v); setAdvanceAmount(''); }} style={{ width: '100%', background: showAdvanceForm ? '#5B3A29' : '#FFF8F0', color: showAdvanceForm ? '#fff' : '#B85C00', border: '1px solid #F5CBA7', borderRadius: 10, padding: '10px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+              🏧 เบิกล่วงหน้า
+            </button>
+          </div>
+
+          {/* Advance pay form */}
+          {showAdvanceForm && (
+            <div style={{ background: '#FFF8F0', borderRadius: 14, border: '1px solid #F5CBA7', padding: '14px', marginBottom: 12 }}>
+              <div style={{ fontWeight: 700, fontSize: 13, color: '#B85C00', marginBottom: 10 }}>🏧 บันทึกการเบิกล่วงหน้า</div>
+              <input
+                type="number" value={advanceAmount} onChange={e => setAdvanceAmount(e.target.value)}
+                placeholder="จำนวนเงิน (บาท)"
+                style={{ width: '100%', border: '1.5px solid #F5CBA7', borderRadius: 9, padding: '10px 12px', fontSize: 15, outline: 'none', boxSizing: 'border-box', marginBottom: 10 }}
+              />
+              <button
+                disabled={advanceSaving || !advanceAmount || Number(advanceAmount) <= 0}
+                onClick={async () => {
+                  setAdvanceSaving(true);
+                  try {
+                    await db.savePayment({ supervisor_name: supervisorName, paid_date: toDateStr(new Date()), amount: Number(advanceAmount), note: 'เบิกล่วงหน้า' });
+                    setAdvanceAmount(''); setShowAdvanceForm(false);
+                    await loadLedger();
+                  } catch { alert('บันทึกไม่สำเร็จ'); }
+                  setAdvanceSaving(false);
+                }}
+                style={{ width: '100%', background: advanceAmount && Number(advanceAmount) > 0 ? '#B85C00' : '#ccc', color: '#fff', border: 'none', borderRadius: 10, padding: '12px 0', fontSize: 14, fontWeight: 700, cursor: advanceAmount && Number(advanceAmount) > 0 ? 'pointer' : 'default' }}>
+                {advanceSaving ? '...' : `✓ เบิก ฿${Number(advanceAmount || 0).toLocaleString()}`}
+              </button>
+            </div>
+          )}
+
           {/* Period pay form */}
           {showPeriodPay && (
             <div style={{ background: '#fff', borderRadius: 14, border: '1px solid #E4D7BC', padding: '14px', marginBottom: 12 }}>
@@ -4806,8 +4842,10 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
           {payments.map(p => {
             const isEditing = editingPayment?.id === p.id;
             const isCommBill = p.note && p.note.startsWith('COMM_BILLS:');
+            const isAdvance = p.note === 'เบิกล่วงหน้า';
+            const leftColor = isCommBill ? '#E65100' : isAdvance ? '#F57C00' : '#2E7D32';
             return (
-              <div key={p.id} style={{ background: '#fff', borderRadius: 12, border: `1px solid ${isEditing ? '#DC743C' : '#E4D7BC'}`, borderLeft: `4px solid ${isCommBill ? '#E65100' : '#2E7D32'}`, padding: '12px 14px', marginBottom: 8 }}>
+              <div key={p.id} style={{ background: isAdvance ? '#FFF8F0' : '#fff', borderRadius: 12, border: `1px solid ${isEditing ? '#DC743C' : isAdvance ? '#F5CBA7' : '#E4D7BC'}`, borderLeft: `4px solid ${leftColor}`, padding: '12px 14px', marginBottom: 8 }}>
                 {isEditing ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                     <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 2 }}>{fmtThDate(p.paid_date)}</div>
@@ -4848,7 +4886,7 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
                       {p.note && <div style={{ fontSize: 11, color: '#9A8662', marginTop: 2 }}>{fmtPayNote(p.note)}</div>}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <div style={{ fontWeight: 700, fontSize: 16, color: isCommBill ? '#E65100' : '#2E7D32' }}>฿{(p.amount||0).toLocaleString()}</div>
+                      <div style={{ fontWeight: 700, fontSize: 16, color: leftColor }}>฿{(p.amount||0).toLocaleString()}</div>
                       <button onClick={() => { setEditingPayment(p); setEditPayAmount(String(p.amount || '')); setEditPayNote(p.note && !isCommBill ? p.note : ''); }}
                         style={{ background: '#F5EFE4', border: '1px solid #E4D7BC', borderRadius: 7, padding: '4px 10px', fontSize: 12, color: '#7A6450', cursor: 'pointer' }}>แก้</button>
                     </div>
