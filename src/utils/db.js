@@ -45,6 +45,12 @@ export const db = {
     if (error) throw error;
   },
 
+  async deleteBills(billNos) {
+    if (!billNos.length) return;
+    const { error } = await supabase.from('qm_bills').update({ deleted: true }).in('bill_no', billNos);
+    if (error) throw error;
+  },
+
   async getDeletedBillNos() {
     const { data, error } = await supabase
       .from('qm_bills')
@@ -247,6 +253,12 @@ export const db = {
 
   async deleteSaleSession(billNo) {
     const { error } = await supabase.from('qm_sale_sessions').update({ deleted: true }).eq('bill_no', billNo);
+    if (error) throw error;
+  },
+
+  async deleteSaleSessions(billNos) {
+    if (!billNos.length) return;
+    const { error } = await supabase.from('qm_sale_sessions').update({ deleted: true }).in('bill_no', billNos);
     if (error) throw error;
   },
 

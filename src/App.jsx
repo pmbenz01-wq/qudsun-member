@@ -3027,6 +3027,8 @@ function SalePrintView({ saleSession, onGoBack, onFinish, onEditPrice, onStartEd
 }
 
 // ─── HistoryPageView ──────────────────────────────────────────────────────────
+const HISTORY_CUTOFF_MS = new Date('2026-07-09').getTime();
+
 function HistoryPageView({ onGoHome, onOpenBill, onOpenSaleBill, isEmployee, onDeleteBill, onDeleteSaleBill }) {
   const [items, setItems] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
@@ -3037,6 +3039,9 @@ function HistoryPageView({ onGoHome, onOpenBill, onOpenSaleBill, isEmployee, onD
   const [rangeToDate, setRangeToDate] = React.useState('');
   const [rangeToTime, setRangeToTime] = React.useState('');
   const [deleteTarget, setDeleteTarget] = React.useState(null);
+  const [selectionMode, setSelectionMode] = React.useState(false);
+  const [selected, setSelected] = React.useState(new Set());
+  const [bulkDeleting, setBulkDeleting] = React.useState(false);
 
   const load = React.useCallback(async () => {
     setLoading(true);
@@ -3045,7 +3050,9 @@ function HistoryPageView({ onGoHome, onOpenBill, onOpenSaleBill, isEmployee, onD
         db.fetchHistoryBills(300),
         db.fetchHistorySaleSessions(300),
       ]);
-      const merged = [...bills, ...sessions].sort((a, b) => new Date(b.date) - new Date(a.date));
+      const merged = [...bills, ...sessions]
+        .filter(i => i.date && i.billNo && i.billNo !== 'billNo')
+        .sort((a, b) => new Date(b.date) - new Date(a.date));
       setItems(merged);
     } catch {}
     setLoading(false);
@@ -3069,6 +3076,28 @@ function HistoryPageView({ onGoHome, onOpenBill, onOpenSaleBill, isEmployee, onD
     }
   }, [onDeleteBill, onDeleteSaleBill]);
 
+  const handleBulkDelete = React.useCallback(async () => {
+    if (!selected.size) return;
+    if (!window.confirm(`ยืนยันลบ ${selected.size} รายการ?`)) return;
+    setBulkDeleting(true);
+    try {
+      const buyNos = items.filter(i => selected.has(i.billNo) && i.type === 'buy').map(i => i.billNo);
+      const saleNos = items.filter(i => selected.has(i.billNo) && i.type === 'sale').map(i => i.billNo);
+      await Promise.all([
+        buyNos.length ? db.deleteBills(buyNos) : Promise.resolve(),
+        saleNos.length ? db.deleteSaleSessions(saleNos) : Promise.resolve(),
+      ]);
+      buyNos.forEach(bn => onDeleteBill?.(bn));
+      saleNos.forEach(bn => onDeleteSaleBill?.(bn));
+      setItems(prev => prev.filter(i => !selected.has(i.billNo)));
+      setSelected(new Set());
+      setSelectionMode(false);
+    } catch (err) {
+      alert('ลบไม่สำเร็จ: ' + (err?.message || String(err)));
+    }
+    setBulkDeleting(false);
+  }, [selected, items, onDeleteBill, onDeleteSaleBill]);
+
   const fmtDate = (d) => {
     if (!d) return '';
     const dt = new Date(d);
@@ -3091,9 +3120,10 @@ function HistoryPageView({ onGoHome, onOpenBill, onOpenSaleBill, isEmployee, onD
       if (toDt && d > toDt) return false;
       return true;
     }
-    if (dateFilter === 'today') return d && d.toDateString() === now.toDateString();
-    if (dateFilter === '7d') return d && (now - d) <= 7 * 86400000;
-    if (dateFilter === '30d') return d && (now - d) <= 30 * 86400000;
+    if (!d || d.getTime() < HISTORY_CUTOFF_MS) return false;
+    if (dateFilter === 'today') return d.toDateString() === now.toDateString();
+    if (dateFilter === '7d') return (now - d) <= 7 * 86400000;
+    if (dateFilter === '30d') return (now - d) <= 30 * 86400000;
     return true;
   });
 
@@ -3119,7 +3149,12 @@ function HistoryPageView({ onGoHome, onOpenBill, onOpenSaleBill, isEmployee, onD
       <div style={{ background: '#fff', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid #E4D7BC', position: 'sticky', top: 0, zIndex: 10 }}>
         <button onClick={onGoHome} style={{ width: 32, height: 32, borderRadius: '50%', background: '#F5EFE4', border: 'none', fontSize: 18, cursor: 'pointer', color: '#5B3A29' }}>‹</button>
         <span style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 17, color: '#2A2118', flex: 1 }}>ประวัติบิล</span>
-        <button onClick={load} style={{ fontSize: 12, color: '#4CAF50', fontWeight: 600, border: 'none', background: 'none', cursor: 'pointer' }}>⟳ รีเฟรช</button>
+        {!isEmployee && (
+          <button onClick={() => { setSelectionMode(s => !s); setSelected(new Set()); }} style={{ fontSize: 12, color: selectionMode ? '#C0392B' : '#7A5A22', fontWeight: 600, border: '1px solid', borderColor: selectionMode ? '#C0392B' : '#D0C8C0', borderRadius: 8, padding: '3px 10px', background: selectionMode ? '#FDF0EE' : 'none', cursor: 'pointer', marginRight: 6 }}>
+            {selectionMode ? '✕ ยกเลิก' : '☑ เลือก'}
+          </button>
+        )}
+        <button onClick={load} style={{ fontSize: 12, color: '#4CAF50', fontWeight: 600, border: 'none', background: 'none', cursor: 'pointer' }}>⟳</button>
       </div>
 
       <div style={{ display: 'flex', gap: 8, padding: '10px 16px', background: '#fff', borderBottom: '1px solid #E4D7BC' }}>
@@ -3192,12 +3227,32 @@ function HistoryPageView({ onGoHome, onOpenBill, onOpenSaleBill, isEmployee, onD
 
       {loading && <div style={{ textAlign: 'center', padding: 32, color: '#9A8662' }}>กำลังโหลด...</div>}
 
+      {selectionMode && selected.size > 0 && (
+        <div style={{ position: 'sticky', top: 60, zIndex: 9, margin: '8px 12px 0', background: '#C0392B', borderRadius: 12, padding: '10px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span style={{ color: '#fff', fontWeight: 700, fontSize: 14 }}>เลือกแล้ว {selected.size} รายการ</span>
+          <button onClick={handleBulkDelete} disabled={bulkDeleting} style={{ background: '#fff', color: '#C0392B', border: 'none', borderRadius: 8, padding: '6px 16px', fontWeight: 700, fontSize: 13, cursor: 'pointer', opacity: bulkDeleting ? 0.6 : 1 }}>
+            {bulkDeleting ? 'กำลังลบ…' : '🗑 ลบที่เลือก'}
+          </button>
+        </div>
+      )}
+
       {!loading && grouped.map((item, i) => {
         if (item._header) return <div key={'h-'+i} style={{ padding: '10px 16px 4px', fontSize: 11, fontWeight: 700, color: '#9A8662', letterSpacing: '0.5px' }}>{item._header}</div>;
         const isBuy = item.type === 'buy';
+        const isSelected = selected.has(item.billNo);
+        const toggleSelect = () => setSelected(prev => {
+          const next = new Set(prev);
+          next.has(item.billNo) ? next.delete(item.billNo) : next.add(item.billNo);
+          return next;
+        });
         return (
-          <div key={item.billNo} style={{ margin: '0 12px 8px', background: isBuy ? '#FFFAF5' : '#F5FBF6', borderRadius: 14, border: `1px solid ${isBuy ? '#F0DECA' : '#C8E6C9'}`, borderLeft: `4px solid ${isBuy ? '#DC743C' : '#4CAF50'}`, overflow: 'hidden' }}>
-            <button onClick={() => isBuy ? onOpenBill?.(item.billNo) : onOpenSaleBill?.(item.billNo)} style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', padding: '12px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div key={item.billNo} style={{ margin: '0 12px 8px', background: isSelected ? '#FFF0EE' : isBuy ? '#FFFAF5' : '#F5FBF6', borderRadius: 14, border: `1px solid ${isSelected ? '#E8A49A' : isBuy ? '#F0DECA' : '#C8E6C9'}`, borderLeft: `4px solid ${isSelected ? '#C0392B' : isBuy ? '#DC743C' : '#4CAF50'}`, overflow: 'hidden' }}>
+            <button onClick={() => selectionMode ? toggleSelect() : (isBuy ? onOpenBill?.(item.billNo) : onOpenSaleBill?.(item.billNo))} style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', padding: '12px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10 }}>
+              {selectionMode && (
+                <div style={{ width: 22, height: 22, borderRadius: 6, border: `2px solid ${isSelected ? '#C0392B' : '#D0C8C0'}`, background: isSelected ? '#C0392B' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  {isSelected && <span style={{ color: '#fff', fontSize: 13, fontWeight: 700 }}>✓</span>}
+                </div>
+              )}
               <div style={{ width: 36, height: 36, borderRadius: 10, background: isBuy ? '#FDE8D4' : '#D4EDDA', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>{isBuy ? '📥' : '📤'}</div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -3211,7 +3266,7 @@ function HistoryPageView({ onGoHome, onOpenBill, onOpenSaleBill, isEmployee, onD
                 <div style={{ fontSize: 11, color: '#9A8662' }}>{fmtKg(parseNum(item.kg))} กก.</div>
               </div>
             </button>
-            {!isEmployee && (
+            {!isEmployee && !selectionMode && (
               <div style={{ padding: '0 12px 10px', display: 'flex', justifyContent: 'flex-end' }}>
                 <button onClick={() => setDeleteTarget(item)} style={{ border: '1px solid #E8C8C2', background: '#FDF0EE', borderRadius: 8, padding: '4px 12px', fontSize: 11, color: '#C0392B', cursor: 'pointer' }}>🗑 ลบ</button>
               </div>
