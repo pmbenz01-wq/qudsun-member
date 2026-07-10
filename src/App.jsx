@@ -5765,19 +5765,6 @@ export default function App() {
       const bills = [...sheetParsed, ...localOnly];
       storage.saveHistory(bills); setHistory(bills);
     }
-    if (sheetPayments.ok) {
-      // Merge: Sheets data takes priority, but keep any local-only entries not yet in Sheets
-      const local = storage.loadPayments();
-      const merged = { ...local, ...(sheetPayments.payments || {}) };
-      storage.savePayments(merged); setPayments(merged);
-    }
-    if (sheetSales.ok) {
-      const sheetSalesData = sheetSales.sales || [];
-      const sheetIds = new Set(sheetSalesData.map(s => s.id));
-      const localOnly = storage.loadSales().filter(s => s.id && !sheetIds.has(s.id));
-      const merged = [...sheetSalesData, ...localOnly];
-      if (merged.length > 0) { storage.saveSales(merged); setSales(merged); }
-    }
     if (sheetCI.ok) { const merged = { ...(sheetCI.info || {}), ...storage.loadCustomerInfo() }; storage.saveCustomerInfo(merged); setCustomerInfo(merged); }
   }, []); // eslint-disable-line
 
@@ -5786,8 +5773,13 @@ export default function App() {
     setSyncing(true); if (!silent) setSyncStatus('กำลังซิงก์…');
     try {
       await syncFromSheets();
+      // Supabase is source of truth for payments + sales — always wins over Sheets
+      Promise.all([db.getPayments(), db.getSales()]).then(([sbPay, sbSales]) => {
+        storage.savePayments(sbPay); setPayments(sbPay);
+        storage.saveSales(sbSales); setSales(sbSales);
+      }).catch(() => {});
       setSyncStatus('✓ ซิงก์แล้ว ' + new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }));
-      // Background: also sync Supabase (best-effort, silent)
+      // Background: also sync Supabase bills (best-effort, silent)
       db.getBills().then(remoteBills => {
         if (!remoteBills?.length) return;
         const remoteNos = new Set(remoteBills.map(c => c.billNo));
