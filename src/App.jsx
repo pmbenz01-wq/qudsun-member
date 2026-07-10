@@ -1640,21 +1640,13 @@ function BatchTransferModal({ bills, onConfirm, onClose }) {
 
   const uploadSlip = async (file) => {
     if (!file) return null;
-    const reader = new FileReader();
-    return new Promise((resolve, reject) => {
-      reader.onload = async (e) => {
-        try {
-          const base64 = e.target.result;
-          const path = `QudsunTransfers/${Date.now()}_batch.jpg`;
-          const res = await fetch('/api/upload', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ base64, path }) });
-          const d = await res.json();
-          if (!d.ok) reject(new Error(d.error || 'อัปโหลดไม่สำเร็จ'));
-          else resolve(d.url);
-        } catch (err) { reject(err); }
-      };
-      reader.onerror = () => reject(new Error('อ่านไฟล์ไม่สำเร็จ'));
-      reader.readAsDataURL(file);
-    });
+    const base64 = await resizeImage(file, 1200);
+    const path = `QudsunTransfers/${Date.now()}_batch.jpg`;
+    const res = await fetch('/api/upload', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ base64, path }) });
+    const text = await res.text();
+    let d; try { d = JSON.parse(text); } catch { throw new Error('อัพโหลดไม่สำเร็จ'); }
+    if (!d.ok) throw new Error(d.error || 'อัปโหลดไม่สำเร็จ');
+    return d.url;
   };
 
   const handleConfirm = async () => {
@@ -1700,45 +1692,43 @@ function BatchTransferModal({ bills, onConfirm, onClose }) {
 
 // ─── DashboardView ────────────────────────────────────────────────────────────
 function TransferSlipModal({ bill, onConfirm, onClose }) {
-  const [step, setStep] = useState(1); // 1=ใบเสร็จ 2=สลิป 3=ทะเบียน 4=สรุป
-  const [receiptUrl, setReceiptUrl] = useState(null);
-  const [slipUrl, setSlipUrl] = useState(null);
-  const [plateUrl, setPlateUrl] = useState(null);
+  const [slipFile, setSlipFile] = useState(null);
+  const [slipPreview, setSlipPreview] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const cam = useRef(); const gal = useRef();
 
-  const cam1 = useRef(); const gal1 = useRef();
-  const cam2 = useRef(); const gal2 = useRef();
-  const cam3 = useRef(); const gal3 = useRef();
-
-  const readFile = setter => e => {
+  const readFile = e => {
     const f = e.target.files[0]; if (!f) return;
-    const r = new FileReader(); r.onload = ev => setter(ev.target.result);
+    setSlipFile(f);
+    const r = new FileReader(); r.onload = ev => setSlipPreview(ev.target.result);
     r.readAsDataURL(f); e.target.value = '';
   };
 
-  const STEPS = [
-    { num: 1, label: 'ใบเสร็จลายเซ็น', emoji: '📄', hint: 'บังคับ — ถ่ายหรืออัปโหลด', url: receiptUrl, setUrl: setReceiptUrl, cam: cam1, gal: gal1, required: true },
-    { num: 2, label: 'สลิปโอนเงิน',     emoji: '💸', hint: 'บังคับ — ถ่ายหรืออัปโหลด', url: slipUrl,    setUrl: setSlipUrl,    cam: cam2, gal: gal2, required: true },
-    { num: 3, label: 'ทะเบียนรถ',        emoji: '🚗', hint: 'ไม่บังคับ — กดข้ามได้',   url: plateUrl,   setUrl: setPlateUrl,   cam: cam3, gal: gal3, required: false },
-  ];
-  const cur = STEPS[step - 1];
+  const handleConfirm = async () => {
+    if (!slipFile || uploading) return;
+    setUploading(true);
+    try {
+      const base64 = await resizeImage(slipFile, 1200);
+      const path = `QudsunTransfers/${Date.now()}.jpg`;
+      const res = await fetch('/api/upload', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ base64, path }) });
+      const text = await res.text();
+      let d; try { d = JSON.parse(text); } catch { throw new Error('อัพโหลดไม่สำเร็จ'); }
+      if (!d.ok) throw new Error(d.error || 'อัปโหลดไม่สำเร็จ');
+      onConfirm(d.url, null, null, null);
+    } catch (err) {
+      alert('เกิดข้อผิดพลาด: ' + err.message);
+      setUploading(false);
+    }
+  };
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 80, background: 'rgba(42,33,24,.6)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
       <div style={{ background: '#FFFDF8', borderRadius: '20px 20px 0 0', padding: '20px 18px 32px', width: '100%', maxWidth: 480, boxShadow: '0 -8px 30px rgba(42,33,24,.2)', maxHeight: '92dvh', overflowY: 'auto' }}>
 
-        {/* Progress bar */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 16 }}>
-          {[1,2,3,4].map(s => (
-            <React.Fragment key={s}>
-              <div style={{ width: 26, height: 26, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, flexShrink: 0,
-                background: step > s ? '#5A9A6A' : step === s ? '#3F2D1E' : '#E4D7BC',
-                color: step >= s ? '#F6EEDD' : '#9A8662' }}>
-                {step > s ? '✓' : s === 4 ? '📋' : s}
-              </div>
-              {s < 4 && <div style={{ flex: 1, height: 2, background: step > s ? '#5A9A6A' : '#E4D7BC', borderRadius: 1 }} />}
-            </React.Fragment>
-          ))}
-          <button onClick={onClose} style={{ border: 'none', background: 'none', fontSize: 20, cursor: 'pointer', color: '#9A8662', marginLeft: 6, flexShrink: 0 }}>✕</button>
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+          <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 16, color: '#3F2D1E' }}>💸 สลิปโอนเงิน</div>
+          <button onClick={onClose} style={{ border: 'none', background: 'none', fontSize: 20, cursor: 'pointer', color: '#9A8662' }}>✕</button>
         </div>
 
         {/* Bill info */}
@@ -1747,67 +1737,27 @@ function TransferSlipModal({ bill, onConfirm, onClose }) {
           <div style={{ color: '#5A4A38' }}>{bill.billNo} · ฿{bill.baht}</div>
         </div>
 
-        {/* Steps 1–3: upload */}
-        {step <= 3 && (
-          <>
-            <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 15, color: '#3F2D1E', marginBottom: 2 }}>{cur.emoji} {cur.label}</div>
-            <div style={{ fontSize: 12, color: '#9A8662', marginBottom: 14 }}>{cur.hint}</div>
+        <input ref={cam} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={readFile} />
+        <input ref={gal} type="file" accept="image/*" style={{ display: 'none' }} onChange={readFile} />
 
-            <input ref={cur.cam} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={readFile(cur.setUrl)} />
-            <input ref={cur.gal} type="file" accept="image/*" style={{ display: 'none' }} onChange={readFile(cur.setUrl)} />
-
-            {cur.url ? (
-              <div style={{ position: 'relative', marginBottom: 14 }}>
-                <img src={cur.url} alt={cur.label} style={{ width: '100%', maxHeight: 220, objectFit: 'contain', borderRadius: 12, border: '2px solid #5A9A6A', background: '#f5f5f5', display: 'block' }} />
-                <button onClick={() => cur.setUrl(null)} style={{ position: 'absolute', top: 8, right: 8, border: 'none', background: 'rgba(0,0,0,.45)', color: '#fff', borderRadius: '50%', width: 28, height: 28, cursor: 'pointer', fontSize: 16, lineHeight: '28px', textAlign: 'center' }}>×</button>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
-                <button onClick={() => cur.cam.current?.click()} style={{ flex: 1, border: '1.5px dashed #C9A24B', background: '#FBF6EC', borderRadius: 12, padding: '20px 0', fontSize: 14, fontWeight: 600, color: '#7A5A22', cursor: 'pointer' }}>📷 ถ่ายรูป</button>
-                <button onClick={() => cur.gal.current?.click()} style={{ flex: 1, border: '1.5px dashed #5A9A6A', background: '#EFF8F1', borderRadius: 12, padding: '20px 0', fontSize: 14, fontWeight: 600, color: '#2E7D32', cursor: 'pointer' }}>🖼 อัปโหลด</button>
-              </div>
-            )}
-
-            <div style={{ display: 'flex', gap: 8 }}>
-              {step > 1 && (
-                <button onClick={() => setStep(step - 1)} style={{ border: '1px solid #E4D7BC', background: '#fff', borderRadius: 12, padding: '13px 14px', fontSize: 13, color: '#7A6450', cursor: 'pointer' }}>←</button>
-              )}
-              <button
-                onClick={() => setStep(step + 1)}
-                disabled={cur.required && !cur.url}
-                style={{ flex: 1, border: 'none', borderRadius: 12, padding: '13px 0', fontSize: 15, fontWeight: 700, cursor: (cur.required && !cur.url) ? 'default' : 'pointer',
-                  background: (cur.required && !cur.url) ? '#C8C0B0' : '#3F2D1E', color: '#F6EEDD' }}>
-                {step === 3 ? (cur.url ? 'ดูสรุป →' : 'ข้าม →') : 'ถัดไป →'}
-              </button>
-            </div>
-          </>
+        {slipPreview ? (
+          <div style={{ position: 'relative', marginBottom: 14 }}>
+            <img src={slipPreview} alt="สลิป" style={{ width: '100%', maxHeight: 280, objectFit: 'contain', borderRadius: 12, border: '2px solid #5A9A6A', background: '#f5f5f5', display: 'block' }} />
+            <button onClick={() => { setSlipFile(null); setSlipPreview(null); }} style={{ position: 'absolute', top: 8, right: 8, border: 'none', background: 'rgba(0,0,0,.45)', color: '#fff', borderRadius: '50%', width: 28, height: 28, cursor: 'pointer', fontSize: 16, lineHeight: '28px', textAlign: 'center' }}>×</button>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
+            <button onClick={() => cam.current?.click()} style={{ flex: 1, border: '1.5px dashed #C9A24B', background: '#FBF6EC', borderRadius: 12, padding: '20px 0', fontSize: 14, fontWeight: 600, color: '#7A5A22', cursor: 'pointer' }}>📷 ถ่ายรูป</button>
+            <button onClick={() => gal.current?.click()} style={{ flex: 1, border: '1.5px dashed #5A9A6A', background: '#EFF8F1', borderRadius: 12, padding: '20px 0', fontSize: 14, fontWeight: 600, color: '#2E7D32', cursor: 'pointer' }}>🖼 อัปโหลด</button>
+          </div>
         )}
 
-        {/* Step 4: Review all */}
-        {step === 4 && (
-          <>
-            <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 15, color: '#3F2D1E', marginBottom: 14 }}>📋 ตรวจสอบหลักฐาน</div>
-            <div style={{ display: 'grid', gridTemplateColumns: plateUrl ? '1fr 1fr 1fr' : '1fr 1fr', gap: 10, marginBottom: 18 }}>
-              {[
-                { label: 'ใบเสร็จ', url: receiptUrl },
-                { label: 'สลิป',    url: slipUrl },
-                plateUrl ? { label: 'ทะเบียน', url: plateUrl } : null,
-              ].filter(Boolean).map(({ label, url }) => (
-                <div key={label} style={{ textAlign: 'center' }}>
-                  <img src={url} alt={label} style={{ width: '100%', aspectRatio: '1', objectFit: 'cover', borderRadius: 10, border: '1.5px solid #E4D7BC', display: 'block', marginBottom: 5 }} />
-                  <div style={{ fontSize: 11, color: '#7A6450', fontWeight: 600 }}>{label}</div>
-                </div>
-              ))}
-            </div>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button onClick={() => setStep(3)} style={{ border: '1px solid #E4D7BC', background: '#fff', borderRadius: 12, padding: '13px 14px', fontSize: 13, color: '#7A6450', cursor: 'pointer' }}>← แก้ไข</button>
-              <button onClick={() => onConfirm(slipUrl, null, receiptUrl, plateUrl)}
-                style={{ flex: 1, border: 'none', borderRadius: 12, padding: '13px 0', background: '#5A9A6A', color: '#fff', fontWeight: 700, fontSize: 16, cursor: 'pointer' }}>
-                ✓ ยืนยันโอนแล้ว
-              </button>
-            </div>
-          </>
-        )}
+        <button
+          onClick={handleConfirm}
+          disabled={!slipFile || uploading}
+          style={{ width: '100%', border: 'none', borderRadius: 12, padding: '14px 0', background: (!slipFile || uploading) ? '#C8C0B0' : '#5A9A6A', color: '#fff', fontWeight: 700, fontSize: 16, cursor: (!slipFile || uploading) ? 'default' : 'pointer' }}>
+          {uploading ? 'กำลังอัพโหลด…' : '✓ ยืนยันโอนแล้ว'}
+        </button>
       </div>
     </div>
   );
@@ -5247,21 +5197,13 @@ function WalletView({ onGoHome, recorderName }) {
 
   const uploadSlip = async (file, folder) => {
     if (!file) return null;
-    const reader = new FileReader();
-    return new Promise((resolve, reject) => {
-      reader.onload = async (e) => {
-        try {
-          const base64 = e.target.result;
-          const path = `${folder}/${Date.now()}.jpg`;
-          const res = await fetch('/api/upload', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ base64, path }) });
-          const d = await res.json();
-          if (!d.ok) reject(new Error(d.error || 'อัปโหลดรูปไม่สำเร็จ'));
-          else resolve(d.url);
-        } catch (err) { reject(err); }
-      };
-      reader.onerror = () => reject(new Error('อ่านไฟล์ไม่สำเร็จ'));
-      reader.readAsDataURL(file);
-    });
+    const base64 = await resizeImage(file, 1200);
+    const path = `${folder}/${Date.now()}.jpg`;
+    const res = await fetch('/api/upload', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ base64, path }) });
+    const text = await res.text();
+    let d; try { d = JSON.parse(text); } catch { throw new Error('อัพโหลดไม่สำเร็จ'); }
+    if (!d.ok) throw new Error(d.error || 'อัปโหลดรูปไม่สำเร็จ');
+    return d.url;
   };
 
   const handleTransfer = async () => {
@@ -6273,10 +6215,11 @@ export default function App() {
 
     const uploadOne = async (dataUrl, prefix, folder) => {
       if (!dataUrl) return null;
+      if (dataUrl.startsWith('https://')) return dataUrl;
       try {
         const filename = `${prefix}_${namePart}_${phone}_${datePart}_${timePart}.jpg`;
         return await db.uploadPhoto(dataUrl, `${folder}/${filename}`);
-      } catch { return dataUrl; } // keep base64 as fallback
+      } catch { return dataUrl; }
     };
 
     const [rUrl, sUrl, vUrl] = await Promise.all([
