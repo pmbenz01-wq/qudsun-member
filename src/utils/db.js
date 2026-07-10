@@ -195,6 +195,11 @@ export const db = {
     if (error) throw error;
   },
 
+  async updateSaleNote(saleId, note) {
+    const { error } = await supabase.from('qm_sales').update({ note }).eq('id', saleId);
+    if (error) throw error;
+  },
+
   async deleteSale(id) {
     const { error } = await supabase.from('qm_sales').update({ deleted: true }).eq('id', id);
     if (error) throw error;

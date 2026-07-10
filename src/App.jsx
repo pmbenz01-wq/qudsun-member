@@ -5164,7 +5164,7 @@ function WalletSlipUpload({ file, onUpload, uploading }) {
   );
 }
 
-function WalletView({ onGoHome, recorderName }) {
+function WalletView({ onGoHome, recorderName, onSaleRecvConfirmed }) {
   const [balances, setBalances] = useState({ A_transfer: 0, A_cash: 0, B: 0, C: 0 });
   const [txs, setTxs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -5269,6 +5269,7 @@ function WalletView({ onGoHome, recorderName }) {
       let slipUrl = null;
       if (pgSlip) { setPgSlipUpload(true); slipUrl = await uploadSlip(pgSlip, pendingSlipTx.tx_type === 'sale_recv' ? 'QudsunSaleRecv' : 'wages'); setPgSlipUpload(false); }
       await db.confirmWalletTx(pendingSlipTx.id, slipUrl);
+      if (pendingSlipTx.tx_type === 'sale_recv') onSaleRecvConfirmed?.(pendingSlipTx.ref_id);
       setPendingSlipTx(null); setPgSlip(null);
       await load();
     } catch(e) { alert('เกิดข้อผิดพลาด: ' + e.message); }
@@ -6018,6 +6019,15 @@ export default function App() {
     db.deletePayment(billNo).catch(() => {});
   }, []);
 
+  const handleSaleRecvConfirmed = useCallback((billNo) => {
+    setSales(prev => {
+      const updated = prev.map(s => s.id === billNo ? { ...s, note: 'transferred' } : s);
+      storage.saveSales(updated);
+      return updated;
+    });
+    db.updateSaleNote(billNo, 'transferred').catch(() => {});
+  }, []);
+
   const handleDeleteSaleBill = useCallback((billNo) => {
     const nextSh = storage.loadSaleHistory().filter(s => s.billNo !== billNo);
     storage.saveSaleHistory(nextSh);
@@ -6723,7 +6733,7 @@ export default function App() {
           />
         } />
         <Route path="/wallet" element={
-          <WalletView onGoHome={() => navigate('/')} recorderName={recorderName} />
+          <WalletView onGoHome={() => navigate('/')} recorderName={recorderName} onSaleRecvConfirmed={handleSaleRecvConfirmed} />
         } />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
