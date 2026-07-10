@@ -5536,6 +5536,7 @@ export default function App() {
   const [custPhone, setCustPhone] = useState(null);
   const [readonly, setReadonly] = useState(false);
   const [isHandoff, setIsHandoff] = useState(false);
+  const [appReady, setAppReady] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [syncStatus, setSyncStatus] = useState('');
   const [sheetModal, setSheetModal] = useState(false);
@@ -5658,59 +5659,31 @@ export default function App() {
     if (savedRole) { setAuthRole(savedRole); setRecorderName(savedRecorder); }
     if (s) { setSession(s); if (s.vehiclePhotoKey) loadPhoto(s.vehiclePhotoKey).then(u => { if (u) setVehiclePhotoUrl(u); }); }
 
-    db.getPayments().then(remote => {
-      storage.savePayments(remote); setPayments(remote);
-    }).catch(() => {});
-    db.getVehiclePlates().then(remote => {
-      storage.saveVehiclePlates(remote); setVehiclePlates(remote);
-    }).catch(() => {});
-    db.getCustomerInfo().then(remote => {
-      storage.saveCustomerInfo(remote); setCustomerInfo(remote);
-    }).catch(() => {});
-    db.getSales().then(remote => {
-      storage.saveSales(remote); setSales(remote);
-    }).catch(() => {});
-    db.getVerified().then(remote => {
-      storage.saveVerified(remote); setVerified(remote);
-    }).catch(() => {});
-    db.getBills().then(remoteBills => {
-      if (!remoteBills?.length) return;
-      storage.saveHistory(remoteBills); setHistory(remoteBills);
-    }).catch(() => {});
-    db.getSaleSessions().then(remoteSessions => {
-      if (!remoteSessions?.length) return;
-      setSaleSessions(remoteSessions);
-      const summaries = remoteSessions.map(s => {
-        const totalKg = (s.entries || []).reduce((sum, e) => sum + (e.kg || 0), 0);
-        const totalBaht = grandBaht(s);
-        return { billNo: s.billNo, date: s.date, customerName: s.customerName || '', customerPhone: s.customerPhone || '', kg: totalKg || s.kg || 0, baht: totalBaht || s.baht || 0 };
-      });
-      storage.saveSaleHistory(summaries); setSaleHistory(summaries);
-    }).catch(() => {});
-    db.getSetting('accounts').then(remote => {
-      if (!Array.isArray(remote)) return;
-      storage.saveAccounts(remote); setAccounts(remote);
-    }).catch(() => {});
-    db.getSetting('employees').then(remote => {
-      if (!Array.isArray(remote) || !remote.length) return;
-      storage.saveEmployees(remote); setEmployees(remote);
-    }).catch(() => {});
-    db.getSetting('supervisors').then(remote => {
-      if (!remote || typeof remote !== 'object') return;
-      storage.saveSupervisors(remote); setSupervisors(remote);
-    }).catch(() => {});
-    db.getSetting('supervisor_names').then(remote => {
-      if (!Array.isArray(remote)) return;
-      setSupervisorNames(remote);
-    }).catch(() => {});
-    db.getSetting('custom_cat_labels').then(remote => {
-      if (!Array.isArray(remote)) return;
-      setCustomCatLabels(remote);
-    }).catch(() => {});
-    db.getSetting('hidden_cats').then(remote => {
-      if (!Array.isArray(remote)) return;
-      setHiddenCats(remote);
-    }).catch(() => {});
+    const sbFetches = Promise.allSettled([
+      db.getPayments().then(r => { storage.savePayments(r); setPayments(r); }),
+      db.getSales().then(r => { storage.saveSales(r); setSales(r); }),
+      db.getBills().then(r => { if (r?.length) { storage.saveHistory(r); setHistory(r); } }),
+      db.getSaleSessions().then(r => {
+        if (!r?.length) return;
+        setSaleSessions(r);
+        const summaries = r.map(s => {
+          const totalKg = (s.entries || []).reduce((sum, e) => sum + (e.kg || 0), 0);
+          const totalBaht = grandBaht(s);
+          return { billNo: s.billNo, date: s.date, customerName: s.customerName || '', customerPhone: s.customerPhone || '', kg: totalKg || s.kg || 0, baht: totalBaht || s.baht || 0 };
+        });
+        storage.saveSaleHistory(summaries); setSaleHistory(summaries);
+      }),
+      db.getVehiclePlates().then(r => { storage.saveVehiclePlates(r); setVehiclePlates(r); }),
+      db.getCustomerInfo().then(r => { storage.saveCustomerInfo(r); setCustomerInfo(r); }),
+      db.getVerified().then(r => { storage.saveVerified(r); setVerified(r); }),
+      db.getSetting('accounts').then(r => { if (Array.isArray(r)) { storage.saveAccounts(r); setAccounts(r); } }),
+      db.getSetting('employees').then(r => { if (Array.isArray(r) && r.length) { storage.saveEmployees(r); setEmployees(r); } }),
+      db.getSetting('supervisors').then(r => { if (r && typeof r === 'object') { storage.saveSupervisors(r); setSupervisors(r); } }),
+      db.getSetting('supervisor_names').then(r => { if (Array.isArray(r)) setSupervisorNames(r); }),
+      db.getSetting('custom_cat_labels').then(r => { if (Array.isArray(r)) setCustomCatLabels(r); }),
+      db.getSetting('hidden_cats').then(r => { if (Array.isArray(r)) setHiddenCats(r); }),
+    ]);
+    Promise.race([sbFetches, new Promise(res => setTimeout(res, 6000))]).then(() => setAppReady(true));
     const m = (window.location.hash || '').match(/bill=([^&]+)/);
     if (m) {
       try {
@@ -6579,6 +6552,22 @@ export default function App() {
     setAuthRole(null); setRecorderName('');
     localStorage.removeItem('qudsun_role'); localStorage.removeItem('qudsun_recorder');
   }, []);
+
+  if (!appReady) {
+    return (
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#FFF6ED' }}>
+        <div style={{ fontSize: 52, marginBottom: 12 }}>🌿</div>
+        <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 24, color: '#5B3A29', marginBottom: 4 }}>Qudsun</div>
+        <div style={{ fontFamily: 'Prompt', fontSize: 13, color: '#9A8662', marginBottom: 36 }}>ทุเรียนคัดสรร</div>
+        <div style={{ display: 'flex', gap: 10 }}>
+          {[0, 1, 2].map(i => (
+            <div key={i} style={{ width: 11, height: 11, borderRadius: '50%', background: '#DC743C', animation: `qsBounce 1.2s ease-in-out ${i * 0.2}s infinite` }} />
+          ))}
+        </div>
+        <style>{`@keyframes qsBounce{0%,80%,100%{transform:translateY(0);opacity:.35}40%{transform:translateY(-12px);opacity:1}}`}</style>
+      </div>
+    );
+  }
 
   if (!authRole) {
     return <LoginScreen onLogin={handleLogin} error={loginError} onErrorClear={() => setLoginError('')} />;
