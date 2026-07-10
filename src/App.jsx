@@ -3714,7 +3714,7 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
   React.useEffect(() => { loadLedger(); }, [loadLedger]);
 
   React.useEffect(() => {
-    db.fetchBillsBySupervisor(supervisorName).then(b => setAllTimeBills(b)).catch(() => {});
+    db.fetchBillsBySupervisor(supervisorName, '2026-07-09').then(b => setAllTimeBills(b)).catch(() => {});
   }, [supervisorName]);
 
   React.useEffect(() => {
