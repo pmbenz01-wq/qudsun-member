@@ -1928,8 +1928,9 @@ function DashboardView({ payments, pin, onPayment, onBatchPayment, onDeleteBill,
 
   const toDateStr = ts => { const d = new Date(ts); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
 
+  const SEASON_START = '2026-07-09';
   const allDayBills = billsData
-    .filter(h => { if (!h.date) return false; if (statusFilter === 'unpaid') return true; const ds = toDateStr(h.date); return ds >= startDate && ds <= endDate; })
+    .filter(h => { if (!h.date) return false; if (toDateStr(h.date) < SEASON_START) return false; if (statusFilter === 'unpaid') return true; const ds = toDateStr(h.date); return ds >= startDate && ds <= endDate; })
     .map(h => ({ ...h, pay: payments[h.billNo] || { status: 'unpaid' } }))
     .sort((a, b) => (b.date || 0) - (a.date || 0));
 
@@ -1966,10 +1967,10 @@ function DashboardView({ payments, pin, onPayment, onBatchPayment, onDeleteBill,
           <button onClick={loadBills} disabled={loading} style={{ marginLeft: 'auto', border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 8, padding: '5px 10px', fontSize: 12, color: '#7A6450', cursor: 'pointer', opacity: loading ? 0.5 : 1 }}>⟳ รีเฟรช</button>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <input type="date" value={startDate} onChange={e => { setStartDate(e.target.value); if (e.target.value > endDate) setEndDate(e.target.value); }}
+          <input type="date" value={startDate} min="2026-07-09" onChange={e => { setStartDate(e.target.value); if (e.target.value > endDate) setEndDate(e.target.value); }}
             style={{ flex: 1, border: '1px solid #E4D7BC', borderRadius: 8, padding: '6px 8px', fontSize: 12, fontFamily: 'Prompt', color: '#4A3526', background: '#FFFDF8' }} />
           <span style={{ color: '#9A8662', fontSize: 13 }}>→</span>
-          <input type="date" value={endDate} onChange={e => { setEndDate(e.target.value); if (e.target.value < startDate) setStartDate(e.target.value); }}
+          <input type="date" value={endDate} min="2026-07-09" onChange={e => { setEndDate(e.target.value); if (e.target.value < startDate) setStartDate(e.target.value); }}
             style={{ flex: 1, border: '1px solid #E4D7BC', borderRadius: 8, padding: '6px 8px', fontSize: 12, fontFamily: 'Prompt', color: '#4A3526', background: '#FFFDF8' }} />
         </div>
       </div>
@@ -2299,10 +2300,10 @@ function SalesView({ accounts, pin, onGoHome, onAddSale, onDeleteSale, onUpdateS
           <button onClick={loadData} disabled={loading} style={{ marginLeft: 'auto', border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 8, padding: '5px 10px', fontSize: 12, color: '#7A6450', cursor: 'pointer', opacity: loading ? 0.5 : 1 }}>⟳ รีเฟรช</button>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <input type="date" value={startDate} onChange={e => { setStartDate(e.target.value); if (e.target.value > endDate) setEndDate(e.target.value); }}
+          <input type="date" value={startDate} min="2026-07-09" onChange={e => { setStartDate(e.target.value); if (e.target.value > endDate) setEndDate(e.target.value); }}
             style={{ flex: 1, border: '1px solid #E4D7BC', borderRadius: 8, padding: '6px 8px', fontSize: 12, fontFamily: 'Prompt', color: '#4A3526', background: '#FFFDF8' }} />
           <span style={{ color: '#9A8662', fontSize: 13 }}>→</span>
-          <input type="date" value={endDate} onChange={e => { setEndDate(e.target.value); if (e.target.value < startDate) setStartDate(e.target.value); }}
+          <input type="date" value={endDate} min="2026-07-09" onChange={e => { setEndDate(e.target.value); if (e.target.value < startDate) setStartDate(e.target.value); }}
             style={{ flex: 1, border: '1px solid #E4D7BC', borderRadius: 8, padding: '6px 8px', fontSize: 12, fontFamily: 'Prompt', color: '#4A3526', background: '#FFFDF8' }} />
         </div>
       </div>
@@ -3721,7 +3722,8 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
     setLoadingBills(true);
     const mm = String(calMonth+1).padStart(2,'0');
     const lastD = new Date(calYear, calMonth+1, 0).getDate();
-    const from = `${calYear}-${mm}-01T00:00:00`;
+    const fromRaw = `${calYear}-${mm}-01T00:00:00`;
+    const from = fromRaw < '2026-07-09T00:00:00' ? '2026-07-09T00:00:00' : fromRaw;
     const to = `${calYear}-${mm}-${String(lastD).padStart(2,'0')}T23:59:59`;
     db.fetchBillsBySupervisor(supervisorName, from, to).then(b => setMonthBills(b)).catch(() => setMonthBills([])).finally(() => setLoadingBills(false));
   }, [supervisorName, calYear, calMonth]);
@@ -3903,7 +3905,7 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
     } catch { alert('บันทึกไม่สำเร็จ'); }
   };
 
-  const prevMonth = () => { if (calMonth === 0) { setCalYear(y => y-1); setCalMonth(11); } else setCalMonth(m => m-1); setSelectedDay(null); };
+  const prevMonth = () => { if (calYear === 2026 && calMonth === 6) return; if (calMonth === 0) { setCalYear(y => y-1); setCalMonth(11); } else setCalMonth(m => m-1); setSelectedDay(null); };
   const nextMonth = () => { if (calMonth === 11) { setCalYear(y => y+1); setCalMonth(0); } else setCalMonth(m => m+1); setSelectedDay(null); };
 
   const firstDow = new Date(calYear, calMonth, 1).getDay();
