@@ -5267,7 +5267,7 @@ function WalletView({ onGoHome, recorderName }) {
     setBusy(true);
     try {
       let slipUrl = null;
-      if (pgSlip) { setPgSlipUpload(true); slipUrl = await uploadSlip(pgSlip, 'wages'); setPgSlipUpload(false); }
+      if (pgSlip) { setPgSlipUpload(true); slipUrl = await uploadSlip(pgSlip, pendingSlipTx.tx_type === 'sale_recv' ? 'QudsunSaleRecv' : 'wages'); setPgSlipUpload(false); }
       await db.confirmWalletTx(pendingSlipTx.id, slipUrl);
       setPendingSlipTx(null); setPgSlip(null);
       await load();
@@ -5351,7 +5351,7 @@ function WalletView({ onGoHome, recorderName }) {
               <div style={{ marginBottom: 16 }}>
                 <div style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 13, color: '#E65100', marginBottom: 8 }}>⏳ รอยืนยัน ({pending.length})</div>
                 {pending.map(tx => {
-                  const isWageOrComm = tx.tx_type === 'commission' || (tx.tx_type === 'expense' && tx.category === 'เงินเดือน');
+                  const isWageOrComm = tx.tx_type === 'commission' || (tx.tx_type === 'expense' && tx.category === 'เงินเดือน') || tx.tx_type === 'sale_recv';
                   return (
                     <div key={tx.id} style={{ background: '#FFF8E1', border: '1px solid #FFE082', borderRadius: 12, padding: '12px 14px', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 10 }}>
                       <div style={{ flex: 1 }}>
@@ -5451,11 +5451,11 @@ function WalletView({ onGoHome, recorderName }) {
 
       {/* Wage/Commission Slip Upload Modal */}
       {modal === 'wage_slip' && pendingSlipTx && (
-        <WalletActionModal title={pendingSlipTx.tx_type === 'commission' ? 'อัปโหลดสลิปค่าคอม' : 'อัปโหลดสลิปค่าแรง'}
+        <WalletActionModal title={pendingSlipTx.tx_type === 'commission' ? 'อัปโหลดสลิปค่าคอม' : pendingSlipTx.tx_type === 'sale_recv' ? 'อัปโหลดสลิปรับเงินขาย' : 'อัปโหลดสลิปค่าแรง'}
           onClose={() => { setModal(null); setPendingSlipTx(null); setPgSlip(null); }}>
           <div style={{ background: '#F9F5EC', borderRadius: 10, padding: '10px 12px', marginBottom: 12 }}>
             <div style={{ fontSize: 13, fontWeight: 600, color: '#3F2D1E' }}>{pendingSlipTx.note || (TX_LABELS[pendingSlipTx.tx_type] || pendingSlipTx.tx_type)}</div>
-            <div style={{ fontSize: 13, color: '#C0392B', fontWeight: 700, marginTop: 4 }}>-{fmtB(pendingSlipTx.amount)}</div>
+            <div style={{ fontSize: 13, color: pendingSlipTx.direction === 'in' ? '#2E7D32' : '#C0392B', fontWeight: 700, marginTop: 4 }}>{pendingSlipTx.direction === 'in' ? '+' : '-'}{fmtB(pendingSlipTx.amount)}</div>
           </div>
           <WalletSlipUpload file={pgSlip} uploading={pgSlipUpload} onUpload={f => setPgSlip(f)} />
           <div style={{ fontSize: 12, color: '#9A8662', marginBottom: 10, textAlign: 'center' }}>แนบสลิปโอนเงินแล้วกดยืนยัน (ถ้าไม่มีสลิปกดยืนยันได้เลย)</div>
