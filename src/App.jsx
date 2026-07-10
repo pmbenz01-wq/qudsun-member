@@ -1640,28 +1640,21 @@ function BatchTransferModal({ bills, onConfirm, onClose }) {
 
   const uploadSlip = async (file) => {
     if (!file) return null;
-    const base64 = await new Promise((resolve, reject) => {
-      const img = new Image();
-      const url = URL.createObjectURL(file);
-      img.onload = () => {
-        URL.revokeObjectURL(url);
-        const scale = Math.min(1, 1200 / img.width);
-        const canvas = document.createElement('canvas');
-        canvas.width = Math.round(img.width * scale);
-        canvas.height = Math.round(img.height * scale);
-        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-        resolve(canvas.toDataURL('image/jpeg', 0.75));
+    const reader = new FileReader();
+    return new Promise((resolve, reject) => {
+      reader.onload = async (e) => {
+        try {
+          const base64 = e.target.result;
+          const path = `QudsunTransfers/${Date.now()}_batch.jpg`;
+          const res = await fetch('/api/upload', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ base64, path }) });
+          const d = await res.json();
+          if (!d.ok) reject(new Error(d.error || 'อัปโหลดไม่สำเร็จ'));
+          else resolve(d.url);
+        } catch (err) { reject(err); }
       };
-      img.onerror = reject;
-      img.src = url;
+      reader.onerror = () => reject(new Error('อ่านไฟล์ไม่สำเร็จ'));
+      reader.readAsDataURL(file);
     });
-    const path = `QudsunTransfers/${Date.now()}_batch.jpg`;
-    const res = await fetch('/api/upload', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ base64, path }) });
-    const text = await res.text();
-    let d;
-    try { d = JSON.parse(text); } catch { throw new Error(`อัปโหลดไม่สำเร็จ (${res.status})`); }
-    if (!d.ok) throw new Error(d.error || 'อัปโหลดไม่สำเร็จ');
-    return d.url;
   };
 
   const handleConfirm = async () => {
@@ -5254,28 +5247,21 @@ function WalletView({ onGoHome, recorderName }) {
 
   const uploadSlip = async (file, folder) => {
     if (!file) return null;
-    const base64 = await new Promise((resolve, reject) => {
-      const img = new Image();
-      const url = URL.createObjectURL(file);
-      img.onload = () => {
-        URL.revokeObjectURL(url);
-        const scale = Math.min(1, 1200 / img.width);
-        const canvas = document.createElement('canvas');
-        canvas.width = Math.round(img.width * scale);
-        canvas.height = Math.round(img.height * scale);
-        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-        resolve(canvas.toDataURL('image/jpeg', 0.75));
+    const reader = new FileReader();
+    return new Promise((resolve, reject) => {
+      reader.onload = async (e) => {
+        try {
+          const base64 = e.target.result;
+          const path = `${folder}/${Date.now()}.jpg`;
+          const res = await fetch('/api/upload', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ base64, path }) });
+          const d = await res.json();
+          if (!d.ok) reject(new Error(d.error || 'อัปโหลดรูปไม่สำเร็จ'));
+          else resolve(d.url);
+        } catch (err) { reject(err); }
       };
-      img.onerror = reject;
-      img.src = url;
+      reader.onerror = () => reject(new Error('อ่านไฟล์ไม่สำเร็จ'));
+      reader.readAsDataURL(file);
     });
-    const path = `${folder}/${Date.now()}.jpg`;
-    const res = await fetch('/api/upload', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ base64, path }) });
-    const text = await res.text();
-    let d;
-    try { d = JSON.parse(text); } catch { throw new Error(`อัปโหลดไม่สำเร็จ (${res.status})`); }
-    if (!d.ok) throw new Error(d.error || 'อัปโหลดรูปไม่สำเร็จ');
-    return d.url;
   };
 
   const handleTransfer = async () => {

@@ -574,9 +574,7 @@ export const db = {
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ base64: base64DataUrl, path }),
     });
-    const text = await res.text();
-    let data;
-    try { data = JSON.parse(text); } catch { throw new Error(`อัปโหลดไม่สำเร็จ (${res.status})`); }
+    const data = await res.json();
     if (!data.ok) throw new Error(data.error || 'upload failed');
     return data.url;
   },
