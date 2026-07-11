@@ -3678,6 +3678,8 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
   const [advanceSaving, setAdvanceSaving] = React.useState(false);
   const [advanceSlip, setAdvanceSlip] = React.useState(null);
   const advanceSlipRef = React.useRef();
+  const [showAdvanceSlip, setShowAdvanceSlip] = React.useState(false);
+  const [pendingAdvanceRecord, setPendingAdvanceRecord] = React.useState(null);
 
   React.useEffect(() => {
     db.getSetting('sup_base_rates').then(v => {
@@ -4101,6 +4103,83 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
           </button>
           <button onClick={() => setShowWagePaySlip(false)} style={{ background: '#E0D5C8', color: '#5B3A29', border: 'none', borderRadius: 12, padding: '13px', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
             ← ย้อนกลับ (ยังไม่จ่าย)
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (showAdvanceSlip && pendingAdvanceRecord) {
+    const slipDate = new Date(pendingAdvanceRecord.date + 'T00:00:00').toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' });
+    const amt = pendingAdvanceRecord.amount;
+    return (
+      <div style={{ minHeight: '100vh', background: '#F5EFE4' }}>
+        <div id="advance-slip" style={{ maxWidth: 420, margin: '0 auto', background: '#fff', padding: '24px 20px' }}>
+          <div style={{ textAlign: 'center', marginBottom: 20 }}>
+            <div style={{ fontSize: 18, fontWeight: 800, color: '#B85C00' }}>ใบเบิกล่วงหน้า</div>
+            <div style={{ fontSize: 13, color: '#9A8662' }}>{supervisorName} · {slipDate}</div>
+          </div>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
+            <tbody>
+              <tr style={{ borderBottom: '1px solid #F0E8DC' }}>
+                <td style={{ padding: '10px 4px', color: '#9A8662' }}>ชื่อผู้ดูแล</td>
+                <td style={{ padding: '10px 4px', textAlign: 'right', fontWeight: 600, color: '#5B3A29' }}>{supervisorName}</td>
+              </tr>
+              <tr style={{ borderBottom: '1px solid #F0E8DC' }}>
+                <td style={{ padding: '10px 4px', color: '#9A8662' }}>วันที่เบิก</td>
+                <td style={{ padding: '10px 4px', textAlign: 'right', color: '#5B3A29' }}>{slipDate}</td>
+              </tr>
+              <tr>
+                <td style={{ padding: '12px 4px', color: '#B85C00', fontWeight: 700, fontSize: 15 }}>ยอดเบิกล่วงหน้า</td>
+                <td style={{ padding: '12px 4px', textAlign: 'right', fontWeight: 800, fontSize: 18, color: '#B85C00' }}>฿{amt.toLocaleString()}</td>
+              </tr>
+            </tbody>
+          </table>
+          <div style={{ marginTop: 32, display: 'flex', justifyContent: 'space-between', paddingTop: 16, borderTop: '1px dashed #F5CBA7' }}>
+            <div style={{ textAlign: 'center', flex: 1 }}>
+              <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 24 }}>ผู้จ่าย</div>
+              <div style={{ borderTop: '1px solid #5B3A29', paddingTop: 4, fontSize: 11, color: '#9A8662' }}>ลายเซ็น</div>
+            </div>
+            <div style={{ textAlign: 'center', flex: 1 }}>
+              <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 24 }}>ผู้รับ ({supervisorName})</div>
+              <div style={{ borderTop: '1px solid #5B3A29', paddingTop: 4, fontSize: 11, color: '#9A8662' }}>ลายเซ็น</div>
+            </div>
+          </div>
+        </div>
+        <div className="no-print" style={{ maxWidth: 420, margin: '0 auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <button onClick={() => window.print()} style={{ background: '#5B3A29', color: '#fff', border: 'none', borderRadius: 12, padding: '13px', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
+            🖨️ พิมพ์บิล
+          </button>
+          <button
+            disabled={advanceSaving}
+            onClick={async () => {
+              setAdvanceSaving(true);
+              try {
+                const payId = await db.savePayment({ supervisor_name: supervisorName, paid_date: pendingAdvanceRecord.date, amount: amt, note: 'เบิกล่วงหน้า' });
+                let slipUrl = null;
+                if (pendingAdvanceRecord.slip) {
+                  try {
+                    const base64 = await resizeImage(pendingAdvanceRecord.slip, 1200);
+                    const path = `QudsunTransfers/${Date.now()}_advance.jpg`;
+                    const res = await fetch('/api/upload', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ base64, path }) });
+                    const d = await res.json();
+                    if (d.ok) slipUrl = d.url;
+                  } catch {}
+                }
+                db.upsertWalletTxIfNew({ wallet: 'C', direction: 'out', amount: amt, txType: 'advance', category: 'เบิกล่วงหน้า', status: slipUrl ? 'confirmed' : 'pending', refId: String(payId), note: `เบิกล่วงหน้า ${supervisorName}`, slipUrl: slipUrl || undefined }).catch(() => {});
+                await loadLedger();
+                setShowAdvanceSlip(false);
+                setPendingAdvanceRecord(null);
+                setAdvanceAmount('');
+                setAdvanceSlip(null);
+              } catch { alert('บันทึกไม่สำเร็จ'); }
+              setAdvanceSaving(false);
+            }}
+            style={{ background: '#B85C00', color: '#fff', border: 'none', borderRadius: 12, padding: '13px', fontSize: 15, fontWeight: 700, cursor: advanceSaving ? 'not-allowed' : 'pointer' }}>
+            {advanceSaving ? '...' : `✅ บันทึกเบิกแล้ว ฿${amt.toLocaleString()}`}
+          </button>
+          <button onClick={() => { setShowAdvanceSlip(false); setPendingAdvanceRecord(null); setShowAdvanceForm(true); }} style={{ background: '#E0D5C8', color: '#5B3A29', border: 'none', borderRadius: 12, padding: '13px', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+            ← ย้อนกลับ (ยังไม่เบิก)
           </button>
         </div>
       </div>
@@ -4749,29 +4828,15 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
                 {advanceSlip ? `📎 ${advanceSlip.name}` : '📎 แนบสลิป (ไม่บังคับ)'}
               </button>
               <button
-                disabled={advanceSaving || !advanceAmount || Number(advanceAmount) <= 0}
-                onClick={async () => {
-                  setAdvanceSaving(true);
-                  try {
-                    const payId = await db.savePayment({ supervisor_name: supervisorName, paid_date: toDateStr(new Date()), amount: Number(advanceAmount), note: 'เบิกล่วงหน้า' });
-                    let slipUrl = null;
-                    if (advanceSlip) {
-                      try {
-                        const base64 = await resizeImage(advanceSlip, 1200);
-                        const path = `QudsunTransfers/${Date.now()}_advance.jpg`;
-                        const res = await fetch('/api/upload', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ base64, path }) });
-                        const d = await res.json();
-                        if (d.ok) slipUrl = d.url;
-                      } catch {}
-                    }
-                    db.upsertWalletTxIfNew({ wallet: 'C', direction: 'out', amount: Number(advanceAmount), txType: 'advance', category: 'เบิกล่วงหน้า', status: slipUrl ? 'confirmed' : 'pending', refId: String(payId), note: `เบิกล่วงหน้า ${supervisorName}`, slipUrl: slipUrl || undefined }).catch(() => {});
-                    setAdvanceAmount(''); setAdvanceSlip(null); setShowAdvanceForm(false);
-                    await loadLedger();
-                  } catch { alert('บันทึกไม่สำเร็จ'); }
-                  setAdvanceSaving(false);
+                disabled={!advanceAmount || Number(advanceAmount) <= 0}
+                onClick={() => {
+                  if (!advanceAmount || Number(advanceAmount) <= 0) return;
+                  setPendingAdvanceRecord({ amount: Number(advanceAmount), slip: advanceSlip, date: toDateStr(new Date()) });
+                  setShowAdvanceSlip(true);
+                  setShowAdvanceForm(false);
                 }}
                 style={{ width: '100%', background: advanceAmount && Number(advanceAmount) > 0 ? '#B85C00' : '#ccc', color: '#fff', border: 'none', borderRadius: 10, padding: '12px 0', fontSize: 14, fontWeight: 700, cursor: advanceAmount && Number(advanceAmount) > 0 ? 'pointer' : 'default' }}>
-                {advanceSaving ? '...' : `✓ เบิก ฿${Number(advanceAmount || 0).toLocaleString()}`}
+                {`📋 ออกบิลเบิก ฿${Number(advanceAmount || 0).toLocaleString()}`}
               </button>
             </div>
           )}
