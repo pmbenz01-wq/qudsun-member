@@ -4112,8 +4112,44 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
   if (showAdvanceSlip && pendingAdvanceRecord) {
     const slipDate = new Date(pendingAdvanceRecord.date + 'T00:00:00').toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' });
     const amt = pendingAdvanceRecord.amount;
+    const doSave = async () => {
+      setAdvanceSaving(true);
+      try {
+        const payId = await db.savePayment({ supervisor_name: supervisorName, paid_date: pendingAdvanceRecord.date, amount: amt, note: 'เบิกล่วงหน้า' });
+        let slipUrl = null;
+        if (pendingAdvanceRecord.slip) {
+          try {
+            const base64 = await resizeImage(pendingAdvanceRecord.slip, 1200);
+            const path = `QudsunTransfers/${Date.now()}_advance.jpg`;
+            const res = await fetch('/api/upload', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ base64, path }) });
+            const d = await res.json();
+            if (d.ok) slipUrl = d.url;
+          } catch {}
+        }
+        db.upsertWalletTxIfNew({ wallet: 'C', direction: 'out', amount: amt, txType: 'advance', category: 'เบิกล่วงหน้า', status: slipUrl ? 'confirmed' : 'pending', refId: String(payId), note: `เบิกล่วงหน้า ${supervisorName}`, slipUrl: slipUrl || undefined }).catch(() => {});
+        await loadLedger();
+        setShowAdvanceSlip(false);
+        setPendingAdvanceRecord(null);
+        setAdvanceAmount('');
+        setAdvanceSlip(null);
+      } catch { alert('บันทึกไม่สำเร็จ'); }
+      setAdvanceSaving(false);
+    };
     return (
       <div className="advance-slip-wrapper" style={{ minHeight: '100vh', background: '#F5EFE4' }}>
+        {/* Sticky action bar — hidden when printing */}
+        <div className="no-print" style={{ position: 'sticky', top: 0, zIndex: 20, background: '#fff', borderBottom: '1px solid #E4D7BC', padding: '10px 16px', display: 'flex', gap: 8 }}>
+          <button onClick={() => { setShowAdvanceSlip(false); setPendingAdvanceRecord(null); setShowAdvanceForm(true); }} style={{ background: '#F5EFE4', color: '#5B3A29', border: '1px solid #E4D7BC', borderRadius: 10, padding: '8px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+            ← ย้อนกลับ
+          </button>
+          <button onClick={() => window.print()} style={{ flex: 1, background: '#5B3A29', color: '#fff', border: 'none', borderRadius: 10, padding: '8px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+            🖨️ พิมพ์บิล
+          </button>
+          <button disabled={advanceSaving} onClick={doSave} style={{ flex: 1, background: '#B85C00', color: '#fff', border: 'none', borderRadius: 10, padding: '8px 14px', fontSize: 13, fontWeight: 700, cursor: advanceSaving ? 'not-allowed' : 'pointer' }}>
+            {advanceSaving ? '...' : '✅ บันทึกเบิกแล้ว'}
+          </button>
+        </div>
+
         <div id="advance-slip" style={{ maxWidth: 420, margin: '0 auto', background: '#fff', minHeight: '100vh', display: 'flex', flexDirection: 'column', padding: '36px 28px' }}>
           {/* Header */}
           <div style={{ textAlign: 'center', marginBottom: 28, paddingBottom: 20, borderBottom: '2px solid #F5CBA7' }}>
@@ -4137,10 +4173,16 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
               <span style={{ fontSize: 28, fontWeight: 800, color: '#B85C00' }}>฿{amt.toLocaleString()}</span>
             </div>
 
-            {/* Note area */}
+            {/* Note area — editable on screen, prints as-is */}
             <div style={{ marginTop: 28 }}>
               <div style={{ fontSize: 12, color: '#9A8662', marginBottom: 8 }}>หมายเหตุ</div>
-              <div style={{ border: '1px solid #E4D7BC', borderRadius: 8, minHeight: 60, padding: 10 }}></div>
+              <textarea
+                value={pendingAdvanceRecord.note || ''}
+                onChange={e => setPendingAdvanceRecord(r => ({ ...r, note: e.target.value }))}
+                placeholder="ระบุหมายเหตุ (ถ้ามี)..."
+                rows={3}
+                style={{ width: '100%', border: '1px solid #E4D7BC', borderRadius: 8, padding: '10px', fontSize: 13, color: '#5B3A29', resize: 'none', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit', background: '#FDFAF5' }}
+              />
             </div>
           </div>
 
@@ -4155,42 +4197,6 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
               <div style={{ borderTop: '1px solid #5B3A29', paddingTop: 6, fontSize: 11, color: '#9A8662' }}>ลายเซ็น / วันที่</div>
             </div>
           </div>
-        </div>
-        <div className="no-print" style={{ maxWidth: 420, margin: '0 auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <button onClick={() => window.print()} style={{ background: '#5B3A29', color: '#fff', border: 'none', borderRadius: 12, padding: '13px', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
-            🖨️ พิมพ์บิล
-          </button>
-          <button
-            disabled={advanceSaving}
-            onClick={async () => {
-              setAdvanceSaving(true);
-              try {
-                const payId = await db.savePayment({ supervisor_name: supervisorName, paid_date: pendingAdvanceRecord.date, amount: amt, note: 'เบิกล่วงหน้า' });
-                let slipUrl = null;
-                if (pendingAdvanceRecord.slip) {
-                  try {
-                    const base64 = await resizeImage(pendingAdvanceRecord.slip, 1200);
-                    const path = `QudsunTransfers/${Date.now()}_advance.jpg`;
-                    const res = await fetch('/api/upload', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ base64, path }) });
-                    const d = await res.json();
-                    if (d.ok) slipUrl = d.url;
-                  } catch {}
-                }
-                db.upsertWalletTxIfNew({ wallet: 'C', direction: 'out', amount: amt, txType: 'advance', category: 'เบิกล่วงหน้า', status: slipUrl ? 'confirmed' : 'pending', refId: String(payId), note: `เบิกล่วงหน้า ${supervisorName}`, slipUrl: slipUrl || undefined }).catch(() => {});
-                await loadLedger();
-                setShowAdvanceSlip(false);
-                setPendingAdvanceRecord(null);
-                setAdvanceAmount('');
-                setAdvanceSlip(null);
-              } catch { alert('บันทึกไม่สำเร็จ'); }
-              setAdvanceSaving(false);
-            }}
-            style={{ background: '#B85C00', color: '#fff', border: 'none', borderRadius: 12, padding: '13px', fontSize: 15, fontWeight: 700, cursor: advanceSaving ? 'not-allowed' : 'pointer' }}>
-            {advanceSaving ? '...' : `✅ บันทึกเบิกแล้ว ฿${amt.toLocaleString()}`}
-          </button>
-          <button onClick={() => { setShowAdvanceSlip(false); setPendingAdvanceRecord(null); setShowAdvanceForm(true); }} style={{ background: '#E0D5C8', color: '#5B3A29', border: 'none', borderRadius: 12, padding: '13px', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
-            ← ย้อนกลับ (ยังไม่เบิก)
-          </button>
         </div>
       </div>
     );

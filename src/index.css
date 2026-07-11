@@ -70,4 +70,12 @@ input  { font-family: 'IBM Plex Sans Thai', sans-serif; }
     padding: 10mm 12mm !important;
     box-sizing: border-box !important;
   }
+  #advance-slip textarea {
+    border: none !important;
+    border-bottom: 1px solid #E4D7BC !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    padding: 4px 0 !important;
+    resize: none !important;
+  }
 }
