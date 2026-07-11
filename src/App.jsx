@@ -3676,6 +3676,8 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
   const [showAdvanceForm, setShowAdvanceForm] = React.useState(false);
   const [advanceAmount, setAdvanceAmount] = React.useState('');
   const [advanceSaving, setAdvanceSaving] = React.useState(false);
+  const [advanceSlip, setAdvanceSlip] = React.useState(null);
+  const advanceSlipRef = React.useRef();
 
   React.useEffect(() => {
     db.getSetting('sup_base_rates').then(v => {
@@ -4740,13 +4742,30 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
                 placeholder="จำนวนเงิน (บาท)"
                 style={{ width: '100%', border: '1.5px solid #F5CBA7', borderRadius: 9, padding: '10px 12px', fontSize: 15, outline: 'none', boxSizing: 'border-box', marginBottom: 10 }}
               />
+              {/* Slip upload */}
+              <input ref={advanceSlipRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => setAdvanceSlip(e.target.files[0] || null)} />
+              <button onClick={() => advanceSlipRef.current?.click()}
+                style={{ width: '100%', background: advanceSlip ? '#E8F5E9' : '#FFF', border: `1.5px solid ${advanceSlip ? '#4CAF50' : '#F5CBA7'}`, borderRadius: 9, padding: '9px 12px', fontSize: 13, color: advanceSlip ? '#2E7D32' : '#9A8662', cursor: 'pointer', marginBottom: 10, textAlign: 'left' }}>
+                {advanceSlip ? `📎 ${advanceSlip.name}` : '📎 แนบสลิป (ไม่บังคับ)'}
+              </button>
               <button
                 disabled={advanceSaving || !advanceAmount || Number(advanceAmount) <= 0}
                 onClick={async () => {
                   setAdvanceSaving(true);
                   try {
-                    await db.savePayment({ supervisor_name: supervisorName, paid_date: toDateStr(new Date()), amount: Number(advanceAmount), note: 'เบิกล่วงหน้า' });
-                    setAdvanceAmount(''); setShowAdvanceForm(false);
+                    const payId = await db.savePayment({ supervisor_name: supervisorName, paid_date: toDateStr(new Date()), amount: Number(advanceAmount), note: 'เบิกล่วงหน้า' });
+                    let slipUrl = null;
+                    if (advanceSlip) {
+                      try {
+                        const base64 = await resizeImage(advanceSlip, 1200);
+                        const path = `QudsunTransfers/${Date.now()}_advance.jpg`;
+                        const res = await fetch('/api/upload', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ base64, path }) });
+                        const d = await res.json();
+                        if (d.ok) slipUrl = d.url;
+                      } catch {}
+                    }
+                    db.upsertWalletTxIfNew({ wallet: 'C', direction: 'out', amount: Number(advanceAmount), txType: 'advance', category: 'เบิกล่วงหน้า', status: slipUrl ? 'confirmed' : 'pending', refId: String(payId), note: `เบิกล่วงหน้า ${supervisorName}`, slipUrl: slipUrl || undefined }).catch(() => {});
+                    setAdvanceAmount(''); setAdvanceSlip(null); setShowAdvanceForm(false);
                     await loadLedger();
                   } catch { alert('บันทึกไม่สำเร็จ'); }
                   setAdvanceSaving(false);
@@ -5209,7 +5228,7 @@ function SupervisorDetailRoute({ supervisors, history, verified, onGoBack, onOpe
 // ─── Wallet ───────────────────────────────────────────────────────────────────
 const WALLET_LABELS = { A_transfer: 'จ่ายทุเรียน (โอน)', A_cash: 'จ่ายทุเรียน (เงินสด)', B: 'รับเงินขาย', C: 'ค่าใช้จ่าย' };
 const EXPENSE_CATS = ['เงินเดือน', 'น้ำมัน', 'ค่าน้ำไฟ', 'อื่นๆ'];
-const TX_LABELS = { bill_pay: 'จ่ายค่าทุเรียน', sale_recv: 'รับเงินขาย', transfer: 'โอนระหว่างกระเป๋า', commission: 'ค่าคอมผู้ดูแล', expense: 'ค่าใช้จ่าย', topup: 'เติมเงินเริ่มต้น' };
+const TX_LABELS = { bill_pay: 'จ่ายค่าทุเรียน', sale_recv: 'รับเงินขาย', transfer: 'โอนระหว่างกระเป๋า', commission: 'ค่าคอมผู้ดูแล', expense: 'ค่าใช้จ่าย', topup: 'เติมเงินเริ่มต้น', advance: 'เบิกล่วงหน้า' };
 
 function WalletActionModal({ title, onClose, children }) {
   return (
@@ -5447,7 +5466,7 @@ function WalletView({ onGoHome, recorderName, onSaleRecvConfirmed }) {
               <div style={{ marginBottom: 16 }}>
                 <div style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 13, color: '#E65100', marginBottom: 8 }}>⏳ รอยืนยัน ({pending.length})</div>
                 {pending.map(tx => {
-                  const isWageOrComm = tx.tx_type === 'commission' || (tx.tx_type === 'expense' && tx.category === 'เงินเดือน') || tx.tx_type === 'sale_recv';
+                  const isWageOrComm = tx.tx_type === 'commission' || (tx.tx_type === 'expense' && tx.category === 'เงินเดือน') || tx.tx_type === 'sale_recv' || tx.tx_type === 'advance';
                   return (
                     <div key={tx.id} style={{ background: '#FFF8E1', border: '1px solid #FFE082', borderRadius: 12, padding: '12px 14px', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 10 }}>
                       <div style={{ flex: 1 }}>
@@ -5479,7 +5498,7 @@ function WalletView({ onGoHome, recorderName, onSaleRecvConfirmed }) {
                 <button key={tx.id} onClick={() => { setSelTx(tx); setModal('detail'); }}
                   style={{ width: '100%', background: '#fff', border: '1px solid #EDE0CC', borderRadius: 12, padding: '11px 14px', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', textAlign: 'left' }}>
                   <div style={{ width: 36, height: 36, borderRadius: 10, background: walletBg[tx.wallet] || '#EEE', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>
-                    {tx.tx_type === 'bill_pay' ? '🧾' : tx.tx_type === 'sale_recv' ? '💵' : tx.tx_type === 'transfer' ? '↔️' : tx.tx_type === 'commission' ? '👤' : tx.tx_type === 'expense' ? '📋' : '➕'}
+                    {tx.tx_type === 'bill_pay' ? '🧾' : tx.tx_type === 'sale_recv' ? '💵' : tx.tx_type === 'transfer' ? '↔️' : tx.tx_type === 'commission' ? '👤' : tx.tx_type === 'advance' ? '🏧' : tx.tx_type === 'expense' ? '📋' : '➕'}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 13, fontWeight: 600, color: '#3F2D1E', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -5547,7 +5566,7 @@ function WalletView({ onGoHome, recorderName, onSaleRecvConfirmed }) {
 
       {/* Wage/Commission Slip Upload Modal */}
       {modal === 'wage_slip' && pendingSlipTx && (
-        <WalletActionModal title={pendingSlipTx.tx_type === 'commission' ? 'อัปโหลดสลิปค่าคอม' : pendingSlipTx.tx_type === 'sale_recv' ? 'อัปโหลดสลิปรับเงินขาย' : 'อัปโหลดสลิปค่าแรง'}
+        <WalletActionModal title={pendingSlipTx.tx_type === 'commission' ? 'อัปโหลดสลิปค่าคอม' : pendingSlipTx.tx_type === 'sale_recv' ? 'อัปโหลดสลิปรับเงินขาย' : pendingSlipTx.tx_type === 'advance' ? 'อัปโหลดสลิปเบิกล่วงหน้า' : 'อัปโหลดสลิปค่าแรง'}
           onClose={() => { setModal(null); setPendingSlipTx(null); setPgSlip(null); }}>
           <div style={{ background: '#F9F5EC', borderRadius: 10, padding: '10px 12px', marginBottom: 12 }}>
             <div style={{ fontSize: 13, fontWeight: 600, color: '#3F2D1E' }}>{pendingSlipTx.note || (TX_LABELS[pendingSlipTx.tx_type] || pendingSlipTx.tx_type)}</div>
