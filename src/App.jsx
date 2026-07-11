@@ -4113,7 +4113,7 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
     const slipDate = new Date(pendingAdvanceRecord.date + 'T00:00:00').toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' });
     const amt = pendingAdvanceRecord.amount;
     return (
-      <div style={{ minHeight: '100vh', background: '#F5EFE4' }}>
+      <div className="advance-slip-wrapper" style={{ minHeight: '100vh', background: '#F5EFE4' }}>
         <div id="advance-slip" style={{ maxWidth: 420, margin: '0 auto', background: '#fff', minHeight: '100vh', display: 'flex', flexDirection: 'column', padding: '36px 28px' }}>
           {/* Header */}
           <div style={{ textAlign: 'center', marginBottom: 28, paddingBottom: 20, borderBottom: '2px solid #F5CBA7' }}>

@@ -56,4 +56,18 @@ input  { font-family: 'IBM Plex Sans Thai', sans-serif; }
     border-radius: 0 !important;
     box-shadow: none !important;
   }
+  .advance-slip-wrapper {
+    background: #fff !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    min-height: unset !important;
+  }
+  #advance-slip {
+    max-width: 100% !important;
+    min-height: unset !important;
+    height: calc(297mm - 24mm) !important;
+    margin: 0 !important;
+    padding: 10mm 12mm !important;
+    box-sizing: border-box !important;
+  }
 }
