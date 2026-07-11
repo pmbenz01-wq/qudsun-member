@@ -4114,35 +4114,45 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
     const amt = pendingAdvanceRecord.amount;
     return (
       <div style={{ minHeight: '100vh', background: '#F5EFE4' }}>
-        <div id="advance-slip" style={{ maxWidth: 420, margin: '0 auto', background: '#fff', padding: '24px 20px' }}>
-          <div style={{ textAlign: 'center', marginBottom: 20 }}>
-            <div style={{ fontSize: 18, fontWeight: 800, color: '#B85C00' }}>ใบเบิกล่วงหน้า</div>
-            <div style={{ fontSize: 13, color: '#9A8662' }}>{supervisorName} · {slipDate}</div>
+        <div id="advance-slip" style={{ maxWidth: 420, margin: '0 auto', background: '#fff', minHeight: '100vh', display: 'flex', flexDirection: 'column', padding: '36px 28px' }}>
+          {/* Header */}
+          <div style={{ textAlign: 'center', marginBottom: 28, paddingBottom: 20, borderBottom: '2px solid #F5CBA7' }}>
+            <div style={{ fontFamily: 'Prompt', fontWeight: 800, fontSize: 26, color: '#5B3A29', letterSpacing: 2 }}>QUDSUN</div>
+            <div style={{ fontSize: 12, color: '#9A8662', marginTop: 2, letterSpacing: 1 }}>ทุเรียนคัดสรร</div>
+            <div style={{ marginTop: 14, fontSize: 16, fontWeight: 700, color: '#B85C00', background: '#FFF3E0', display: 'inline-block', padding: '4px 20px', borderRadius: 20, border: '1px solid #F5CBA7' }}>ใบเบิกล่วงหน้า</div>
           </div>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
-            <tbody>
-              <tr style={{ borderBottom: '1px solid #F0E8DC' }}>
-                <td style={{ padding: '10px 4px', color: '#9A8662' }}>ชื่อผู้ดูแล</td>
-                <td style={{ padding: '10px 4px', textAlign: 'right', fontWeight: 600, color: '#5B3A29' }}>{supervisorName}</td>
-              </tr>
-              <tr style={{ borderBottom: '1px solid #F0E8DC' }}>
-                <td style={{ padding: '10px 4px', color: '#9A8662' }}>วันที่เบิก</td>
-                <td style={{ padding: '10px 4px', textAlign: 'right', color: '#5B3A29' }}>{slipDate}</td>
-              </tr>
-              <tr>
-                <td style={{ padding: '12px 4px', color: '#B85C00', fontWeight: 700, fontSize: 15 }}>ยอดเบิกล่วงหน้า</td>
-                <td style={{ padding: '12px 4px', textAlign: 'right', fontWeight: 800, fontSize: 18, color: '#B85C00' }}>฿{amt.toLocaleString()}</td>
-              </tr>
-            </tbody>
-          </table>
-          <div style={{ marginTop: 32, display: 'flex', justifyContent: 'space-between', paddingTop: 16, borderTop: '1px dashed #F5CBA7' }}>
-            <div style={{ textAlign: 'center', flex: 1 }}>
-              <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 24 }}>ผู้จ่าย</div>
-              <div style={{ borderTop: '1px solid #5B3A29', paddingTop: 4, fontSize: 11, color: '#9A8662' }}>ลายเซ็น</div>
+
+          {/* Info rows */}
+          <div style={{ flex: 1 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', borderBottom: '1px solid #F0E8DC' }}>
+              <span style={{ fontSize: 13, color: '#9A8662' }}>ชื่อผู้ดูแล</span>
+              <span style={{ fontSize: 14, fontWeight: 700, color: '#5B3A29' }}>{supervisorName}</span>
             </div>
-            <div style={{ textAlign: 'center', flex: 1 }}>
-              <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 24 }}>ผู้รับ ({supervisorName})</div>
-              <div style={{ borderTop: '1px solid #5B3A29', paddingTop: 4, fontSize: 11, color: '#9A8662' }}>ลายเซ็น</div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', borderBottom: '1px solid #F0E8DC' }}>
+              <span style={{ fontSize: 13, color: '#9A8662' }}>วันที่เบิก</span>
+              <span style={{ fontSize: 13, color: '#5B3A29' }}>{slipDate}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 0', borderBottom: '2px solid #DC743C', marginTop: 4 }}>
+              <span style={{ fontSize: 16, fontWeight: 700, color: '#B85C00' }}>ยอดเบิกล่วงหน้า</span>
+              <span style={{ fontSize: 28, fontWeight: 800, color: '#B85C00' }}>฿{amt.toLocaleString()}</span>
+            </div>
+
+            {/* Note area */}
+            <div style={{ marginTop: 28 }}>
+              <div style={{ fontSize: 12, color: '#9A8662', marginBottom: 8 }}>หมายเหตุ</div>
+              <div style={{ border: '1px solid #E4D7BC', borderRadius: 8, minHeight: 60, padding: 10 }}></div>
+            </div>
+          </div>
+
+          {/* Signature */}
+          <div style={{ marginTop: 48, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32, paddingTop: 24, borderTop: '1px dashed #C9A24B' }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 12, color: '#9A8662', marginBottom: 40 }}>ผู้จ่าย</div>
+              <div style={{ borderTop: '1px solid #5B3A29', paddingTop: 6, fontSize: 11, color: '#9A8662' }}>ลายเซ็น / วันที่</div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 12, color: '#9A8662', marginBottom: 40 }}>ผู้รับ ({supervisorName})</div>
+              <div style={{ borderTop: '1px solid #5B3A29', paddingTop: 6, fontSize: 11, color: '#9A8662' }}>ลายเซ็น / วันที่</div>
             </div>
           </div>
         </div>
