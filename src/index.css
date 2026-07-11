@@ -78,4 +78,28 @@ input  { font-family: 'IBM Plex Sans Thai', sans-serif; }
     padding: 4px 0 !important;
     resize: none !important;
   }
+  .pay-slip-wrapper {
+    background: #fff !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    min-height: unset !important;
+  }
+  .pay-slip-wrapper > div {
+    max-width: 100% !important;
+    margin: 0 !important;
+  }
+  #pay-slip-print {
+    max-width: 100% !important;
+    height: calc(297mm - 24mm) !important;
+    min-height: unset !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 10mm 12mm !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  #pay-slip-print > div:last-child {
+    margin-top: auto !important;
+  }
 }

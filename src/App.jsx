@@ -4203,12 +4203,14 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
   }
 
   if (showPaySlip) return (
-    <div style={{ minHeight: '100vh', background: '#F5EFE4', padding: 16 }}>
-      <div style={{ maxWidth: 420, margin: '0 auto' }}>
-        <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
+    <div className="pay-slip-wrapper" style={{ minHeight: '100vh', background: '#F5EFE4', padding: 16 }}>
+      <div className="no-print" style={{ maxWidth: 420, margin: '0 auto 12px' }}>
+        <div style={{ display: 'flex', gap: 10 }}>
           <button onClick={() => setShowPaySlip(false)} style={{ border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 10, padding: '8px 14px', fontSize: 13, color: '#7A6450', cursor: 'pointer' }}>‹ กลับ</button>
           <button onClick={() => window.print()} style={{ flex: 1, background: '#5B3A29', color: '#fff', border: 'none', borderRadius: 10, padding: '8px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>🖨️ พิมพ์</button>
         </div>
+      </div>
+      <div style={{ maxWidth: 420, margin: '0 auto' }}>
         <div id="pay-slip-print" style={{ background: '#fff', borderRadius: 16, padding: '24px 20px', border: '1px solid #E4D7BC' }}>
           <div style={{ textAlign: 'center', marginBottom: 16 }}>
             <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 20, color: '#5B3A29' }}>QUDSUN</div>
