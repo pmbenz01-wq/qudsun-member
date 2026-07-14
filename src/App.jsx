@@ -22,8 +22,8 @@ const extractStoragePath = url => {
 
 // ─── Keypad ───────────────────────────────────────────────────────────────────
 function Keypad({ value, onChange, onConfirm, confirmLabel }) {
-  const D = { border: '1px solid #E4D7BC', background: '#FBF6EC', borderRadius: 13, padding: '18px 0', fontFamily: 'Prompt', fontWeight: 500, fontSize: 24, color: '#3F2D1E', cursor: 'pointer' };
-  const F = { border: '1px solid #E0D2B4', background: '#F3E9D2', borderRadius: 13, padding: '18px 0', fontSize: 22, color: '#7A5A22', cursor: 'pointer' };
+  const D = { border: '1px solid #e4d9c8', background: '#fbf7f1', borderRadius: 13, padding: '18px 0', fontFamily: 'Prompt', fontWeight: 500, fontSize: 24, color: '#26190f', cursor: 'pointer' };
+  const F = { border: '1px solid #e4d9c8', background: '#f3ece0', borderRadius: 13, padding: '18px 0', fontSize: 22, color: '#c4491c', cursor: 'pointer' };
   const keys = [
     { ch: '1', s: D }, { ch: '2', s: D }, { ch: '3', s: D },
     { ch: '4', s: D }, { ch: '5', s: D }, { ch: '6', s: D },
@@ -54,23 +54,23 @@ function hashColor(str) {
 
 // ─── PinModal ─────────────────────────────────────────────────────────────────
 function PinModal({ title, error, value, onKey, onCancel }) {
-  const S = { border: '1px solid #E4D7BC', background: '#FBF6EC', borderRadius: 13, padding: '16px 0', fontFamily: 'Prompt', fontWeight: 500, fontSize: 22, color: '#3F2D1E', cursor: 'pointer' };
-  const F = { border: '1px solid #E0D2B4', background: '#F3E9D2', borderRadius: 13, padding: '16px 0', fontSize: 20, color: '#7A5A22', cursor: 'pointer' };
+  const S = { border: '1px solid #e4d9c8', background: '#fbf7f1', borderRadius: 13, padding: '16px 0', fontFamily: 'Prompt', fontWeight: 500, fontSize: 22, color: '#26190f', cursor: 'pointer' };
+  const F = { border: '1px solid #e4d9c8', background: '#f3ece0', borderRadius: 13, padding: '16px 0', fontSize: 20, color: '#c4491c', cursor: 'pointer' };
   const keys = ['1','2','3','4','5','6','7','8','9','⌫','0','✓'];
   return (
     <div className="no-print" style={{ position: 'fixed', inset: 0, zIndex: 60, background: 'rgba(42,33,24,.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 18, animation: 'fadeIn .2s' }}>
-      <div style={{ background: '#FFFDF8', borderRadius: 20, padding: 24, width: '100%', maxWidth: 340, animation: 'popIn .25s' }}>
+      <div style={{ background: '#ffffff', borderRadius: 20, padding: 24, width: '100%', maxWidth: 340, animation: 'popIn .25s' }}>
         <div style={{ textAlign: 'center', marginBottom: 6, fontSize: 26 }}>🔒</div>
-        <h3 style={{ textAlign: 'center', fontFamily: 'Prompt', fontWeight: 500, fontSize: 18, margin: '0 0 4px', color: '#4A3526' }}>ใส่รหัสเพื่อแก้ไข</h3>
-        <p style={{ textAlign: 'center', fontSize: 13, color: '#9A8662', margin: '0 0 16px' }}>{title}</p>
+        <h3 style={{ textAlign: 'center', fontFamily: 'Prompt', fontWeight: 500, fontSize: 18, margin: '0 0 4px', color: '#3a2718' }}>ใส่รหัสเพื่อแก้ไข</h3>
+        <p style={{ textAlign: 'center', fontSize: 13, color: '#8a7767', margin: '0 0 16px' }}>{title}</p>
         <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginBottom: 8 }}>
-          {[0,1,2,3].map(i => <span key={i} style={{ width: 14, height: 14, borderRadius: '50%', background: i < value.length ? '#C9A24B' : '#E4D7BC', border: '1.5px solid #C9A24B', display: 'inline-block' }} />)}
+          {[0,1,2,3].map(i => <span key={i} style={{ width: 14, height: 14, borderRadius: '50%', background: i < value.length ? '#e8692e' : '#e4d9c8', border: '1.5px solid #e8692e', display: 'inline-block' }} />)}
         </div>
         <p style={{ textAlign: 'center', fontSize: 12, color: '#C0392B', minHeight: 16, margin: '0 0 10px' }}>{error}</p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8 }}>
           {keys.map(k => <button key={k} onClick={() => onKey(k === '⌫' ? 'del' : k === '✓' ? 'ok' : k)} style={k === '⌫' || k === '✓' ? F : S}>{k}</button>)}
         </div>
-        <button onClick={onCancel} style={{ width: '100%', marginTop: 12, border: 'none', background: 'transparent', color: '#9A8662', fontSize: 14, cursor: 'pointer', padding: 8 }}>ยกเลิก</button>
+        <button onClick={onCancel} style={{ width: '100%', marginTop: 12, border: 'none', background: 'transparent', color: '#8a7767', fontSize: 14, cursor: 'pointer', padding: 8 }}>ยกเลิก</button>
       </div>
     </div>
   );
@@ -80,20 +80,20 @@ function PinModal({ title, error, value, onKey, onCancel }) {
 function NumModal({ title, unit, value, onChange, onSave, onCancel, onDelete, saveLabel, canDelete }) {
   return (
     <div className="no-print" style={{ position: 'fixed', inset: 0, zIndex: 55, background: 'rgba(42,33,24,.5)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', animation: 'fadeIn .2s' }}>
-      <div style={{ background: '#FFFDF8', borderRadius: '22px 22px 0 0', padding: '20px 18px calc(20px + env(safe-area-inset-bottom))', width: '100%', maxWidth: 480, animation: 'slideUp .28s' }}>
-        <div style={{ width: 42, height: 4, background: '#E0D2B4', borderRadius: 4, margin: '0 auto 16px' }} />
+      <div style={{ background: '#ffffff', borderRadius: '22px 22px 0 0', padding: '20px 18px calc(20px + env(safe-area-inset-bottom))', width: '100%', maxWidth: 480, animation: 'slideUp .28s' }}>
+        <div style={{ width: 42, height: 4, background: '#e4d9c8', borderRadius: 4, margin: '0 auto 16px' }} />
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-          <span style={{ fontWeight: 600, color: '#4A3526' }}>{title}</span>
+          <span style={{ fontWeight: 600, color: '#3a2718' }}>{title}</span>
           {canDelete && <button onClick={onDelete} style={{ border: '1px solid #E0B4A2', background: '#FBEEE8', color: '#B5503A', borderRadius: 10, padding: '7px 12px', fontSize: 13, cursor: 'pointer' }}>🗑 ลบเข่งนี้</button>}
         </div>
-        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 8, background: '#FBF6EC', borderRadius: 14, padding: 14, marginBottom: 14 }}>
-          <span style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 40, color: '#3F2D1E' }}>{value || '0'}</span>
-          <span style={{ fontSize: 15, color: '#A6925E' }}>{unit}</span>
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 8, background: '#fbf7f1', borderRadius: 14, padding: 14, marginBottom: 14 }}>
+          <span style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 40, color: '#26190f' }}>{value || '0'}</span>
+          <span style={{ fontSize: 15, color: '#a99a88' }}>{unit}</span>
         </div>
         <Keypad value={value} onChange={onChange} />
         <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
-          <button onClick={onCancel} style={{ flex: 1, border: '1px solid #E4D7BC', background: '#fff', borderRadius: 13, padding: 15, fontSize: 15, color: '#7A6450', cursor: 'pointer' }}>ยกเลิก</button>
-          <button onClick={onSave} style={{ flex: 2, border: 'none', borderRadius: 13, padding: 15, background: 'linear-gradient(135deg,#C9A24B,#A8763E)', color: '#fff', fontWeight: 700, fontSize: 16, cursor: 'pointer' }}>{saveLabel}</button>
+          <button onClick={onCancel} style={{ flex: 1, border: '1px solid #e4d9c8', background: '#fff', borderRadius: 13, padding: 15, fontSize: 15, color: '#6b4a38', cursor: 'pointer' }}>ยกเลิก</button>
+          <button onClick={onSave} style={{ flex: 2, border: 'none', borderRadius: 13, padding: 15, background: 'linear-gradient(135deg,#e8692e,#A8763E)', color: '#fff', fontWeight: 700, fontSize: 16, cursor: 'pointer' }}>{saveLabel}</button>
         </div>
       </div>
     </div>
@@ -104,7 +104,7 @@ function NumModal({ title, unit, value, onChange, onSave, onCancel, onDelete, sa
 function Toast({ msg }) {
   if (!msg) return null;
   return (
-    <div className="no-print" style={{ position: 'fixed', bottom: 90, left: '50%', transform: 'translateX(-50%)', zIndex: 70, background: '#2A2118', color: '#F6EEDD', padding: '12px 20px', borderRadius: 30, fontSize: 14, boxShadow: '0 8px 20px rgba(0,0,0,.25)', animation: 'popIn .25s', whiteSpace: 'nowrap' }}>
+    <div className="no-print" style={{ position: 'fixed', bottom: 90, left: '50%', transform: 'translateX(-50%)', zIndex: 70, background: '#241009', color: '#fffbf4', padding: '12px 20px', borderRadius: 30, fontSize: 14, boxShadow: '0 8px 20px rgba(0,0,0,.25)', animation: 'popIn .25s', whiteSpace: 'nowrap' }}>
       {msg}
     </div>
   );
@@ -113,11 +113,11 @@ function Toast({ msg }) {
 // ─── Header ───────────────────────────────────────────────────────────────────
 function Header() {
   return (
-    <div className="no-print" style={{ background: '#FBF6EC', borderBottom: '1px solid #E4D7BC', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
+    <div className="no-print" style={{ background: '#fbf7f1', borderBottom: '1px solid #e4d9c8', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
       <img src="/logo.jpg" alt="Qudsun" style={{ width: 32, height: 32, borderRadius: 8, objectFit: 'cover' }} />
       <div>
-        <div style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 15, color: '#4A3526', letterSpacing: '.04em' }}>QUDSUN</div>
-        <div style={{ fontSize: 10, color: '#A6925E', letterSpacing: '.1em' }}>ระบบรับซื้อทุเรียน</div>
+        <div style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 15, color: '#3a2718', letterSpacing: '.04em' }}>QUDSUN</div>
+        <div style={{ fontSize: 10, color: '#a99a88', letterSpacing: '.1em' }}>ระบบรับซื้อทุเรียน</div>
       </div>
     </div>
   );
@@ -151,7 +151,7 @@ function tierBgColor(t) {
   const m = t.badge.match(/background:([^;]+)/); return m ? m[1].trim() : '#F0E9DA';
 }
 function tierTextColor(t) {
-  const m = t.badge.match(/color:([^;]+)/); return m ? m[1].trim() : '#A6925E';
+  const m = t.badge.match(/color:([^;]+)/); return m ? m[1].trim() : '#a99a88';
 }
 function tierBorder(t) {
   const m = t.badge.match(/border:([^;]+)/); return m ? m[1].trim() : 'none';
@@ -160,8 +160,8 @@ function tierBorder(t) {
 // ─── LoginScreen ──────────────────────────────────────────────────────────────
 function LoginScreen({ onLogin, error, onErrorClear }) {
   const [value, setValue] = useState('');
-  const D = { border: '1px solid #E4D7BC', background: '#FBF6EC', borderRadius: 13, padding: '18px 0', fontFamily: 'Prompt', fontWeight: 500, fontSize: 22, color: '#3F2D1E', cursor: 'pointer' };
-  const F = { border: '1px solid #E0D2B4', background: '#F3E9D2', borderRadius: 13, padding: '18px 0', fontSize: 20, color: '#7A5A22', cursor: 'pointer' };
+  const D = { border: '1px solid #e4d9c8', background: '#fbf7f1', borderRadius: 13, padding: '18px 0', fontFamily: 'Prompt', fontWeight: 500, fontSize: 22, color: '#26190f', cursor: 'pointer' };
+  const F = { border: '1px solid #e4d9c8', background: '#f3ece0', borderRadius: 13, padding: '18px 0', fontSize: 20, color: '#c4491c', cursor: 'pointer' };
   const keys = ['1','2','3','4','5','6','7','8','9','⌫','0','✓'];
 
   const handleKey = k => {
@@ -177,21 +177,21 @@ function LoginScreen({ onLogin, error, onErrorClear }) {
   };
 
   return (
-    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#EFE6D4', padding: 24 }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#ede6db', padding: 24 }}>
       <img src="/logo.jpg" alt="Qudsun" style={{ width: 80, borderRadius: 16, marginBottom: 14 }} />
-      <div style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 22, color: '#4A3526', marginBottom: 2 }}>QUDSUN</div>
-      <div style={{ fontSize: 13, color: '#A6925E', marginBottom: 28, letterSpacing: '.08em' }}>ระบบรับซื้อทุเรียน</div>
-      <div style={{ background: '#FFFDF8', borderRadius: 20, padding: '22px 20px', width: '100%', maxWidth: 320, boxShadow: '0 12px 32px rgba(95,70,40,.12)' }}>
-        <h3 style={{ textAlign: 'center', fontFamily: 'Prompt', fontWeight: 500, fontSize: 17, margin: '0 0 16px', color: '#4A3526' }}>ใส่รหัสเข้าใช้งาน</h3>
+      <div style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 22, color: '#3a2718', marginBottom: 2 }}>QUDSUN</div>
+      <div style={{ fontSize: 13, color: '#a99a88', marginBottom: 28, letterSpacing: '.08em' }}>ระบบรับซื้อทุเรียน</div>
+      <div style={{ background: '#ffffff', borderRadius: 20, padding: '22px 20px', width: '100%', maxWidth: 320, boxShadow: '0 12px 32px rgba(95,70,40,.12)' }}>
+        <h3 style={{ textAlign: 'center', fontFamily: 'Prompt', fontWeight: 500, fontSize: 17, margin: '0 0 16px', color: '#3a2718' }}>ใส่รหัสเข้าใช้งาน</h3>
         <div style={{ display: 'flex', justifyContent: 'center', gap: 12, marginBottom: 6 }}>
-          {[0,1,2,3].map(i => <span key={i} style={{ width: 14, height: 14, borderRadius: '50%', background: i < value.length ? '#C9A24B' : '#E4D7BC', border: '1.5px solid #C9A24B', display: 'inline-block', transition: 'background .15s' }} />)}
+          {[0,1,2,3].map(i => <span key={i} style={{ width: 14, height: 14, borderRadius: '50%', background: i < value.length ? '#e8692e' : '#e4d9c8', border: '1.5px solid #e8692e', display: 'inline-block', transition: 'background .15s' }} />)}
         </div>
         <p style={{ textAlign: 'center', fontSize: 12, color: '#C0392B', minHeight: 18, margin: '0 0 12px' }}>{error}</p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8 }}>
           {keys.map(k => <button key={k} onClick={() => handleKey(k)} style={k === '⌫' || k === '✓' ? F : D}>{k}</button>)}
         </div>
       </div>
-      <p style={{ marginTop: 20, fontSize: 11, color: '#B7A684' }}>ผู้ดูแลระบบ: ใส่รหัส Admin · พนักงาน: ใส่รหัส Employee</p>
+      <p style={{ marginTop: 20, fontSize: 11, color: '#b9a88f' }}>ผู้ดูแลระบบ: ใส่รหัส Admin · พนักงาน: ใส่รหัส Employee</p>
     </div>
   );
 }
@@ -201,21 +201,21 @@ function RecorderModal({ onSave, onSkip }) {
   const [name, setName] = useState('');
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 80, background: 'rgba(42,33,24,.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 18, animation: 'fadeIn .2s' }}>
-      <div style={{ background: '#FFFDF8', borderRadius: 20, padding: 24, width: '100%', maxWidth: 320, animation: 'popIn .25s' }}>
+      <div style={{ background: '#ffffff', borderRadius: 20, padding: 24, width: '100%', maxWidth: 320, animation: 'popIn .25s' }}>
         <div style={{ textAlign: 'center', fontSize: 28, marginBottom: 8 }}>✍️</div>
-        <h3 style={{ textAlign: 'center', fontFamily: 'Prompt', fontWeight: 500, fontSize: 17, margin: '0 0 4px', color: '#4A3526' }}>ชื่อผู้บันทึก</h3>
-        <p style={{ textAlign: 'center', fontSize: 12, color: '#9A8662', margin: '0 0 16px' }}>ชื่อจะแสดงบนทุกบิลที่บันทึกในรอบนี้</p>
+        <h3 style={{ textAlign: 'center', fontFamily: 'Prompt', fontWeight: 500, fontSize: 17, margin: '0 0 4px', color: '#3a2718' }}>ชื่อผู้บันทึก</h3>
+        <p style={{ textAlign: 'center', fontSize: 12, color: '#8a7767', margin: '0 0 16px' }}>ชื่อจะแสดงบนทุกบิลที่บันทึกในรอบนี้</p>
         <input
           autoFocus
           value={name}
           onChange={e => setName(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter' && name.trim()) onSave(name.trim()); }}
           placeholder="เช่น พี่โอ๋, น้องมิ้น…"
-          style={{ width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 12, padding: 14, fontSize: 16, color: '#3F2D1E', outline: 'none', boxSizing: 'border-box', marginBottom: 12 }}
+          style={{ width: '100%', border: '1.5px solid #e4d9c8', borderRadius: 12, padding: 14, fontSize: 16, color: '#26190f', outline: 'none', boxSizing: 'border-box', marginBottom: 12 }}
         />
         <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={onSkip} style={{ flex: 1, border: '1px solid #E4D7BC', background: '#fff', borderRadius: 12, padding: 12, fontSize: 14, color: '#9A8662', cursor: 'pointer' }}>ข้าม</button>
-          <button onClick={() => name.trim() && onSave(name.trim())} style={{ flex: 2, border: 'none', background: name.trim() ? '#3F2D1E' : '#C8B998', color: '#F6EEDD', borderRadius: 12, padding: 12, fontWeight: 600, fontSize: 15, cursor: name.trim() ? 'pointer' : 'default' }}>ยืนยัน →</button>
+          <button onClick={onSkip} style={{ flex: 1, border: '1px solid #e4d9c8', background: '#fff', borderRadius: 12, padding: 12, fontSize: 14, color: '#8a7767', cursor: 'pointer' }}>ข้าม</button>
+          <button onClick={() => name.trim() && onSave(name.trim())} style={{ flex: 2, border: 'none', background: name.trim() ? '#26190f' : '#C8B998', color: '#fffbf4', borderRadius: 12, padding: 12, fontWeight: 600, fontSize: 15, cursor: name.trim() ? 'pointer' : 'default' }}>ยืนยัน →</button>
         </div>
       </div>
     </div>
@@ -251,48 +251,48 @@ function EmployeeManager({ employees, onSave, onCancel }) {
 
   const remove = id => setList(l => l.filter(e => e.id !== id));
 
-  const rowStyle = { display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: '#FBF6EC', borderRadius: 11, marginBottom: 8, border: '1px solid #EDE0C8' };
+  const rowStyle = { display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: '#fbf7f1', borderRadius: 11, marginBottom: 8, border: '1px solid #EDE0C8' };
   const btnSm = (bg, color) => ({ border: 'none', background: bg, color, borderRadius: 8, padding: '4px 10px', fontSize: 12, cursor: 'pointer', fontFamily: 'Prompt' });
-  const inp = { width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 10, padding: '10px 12px', fontSize: 15, color: '#3F2D1E', outline: 'none', boxSizing: 'border-box', marginBottom: 8 };
+  const inp = { width: '100%', border: '1.5px solid #e4d9c8', borderRadius: 10, padding: '10px 12px', fontSize: 15, color: '#26190f', outline: 'none', boxSizing: 'border-box', marginBottom: 8 };
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 80, background: 'rgba(42,33,24,.55)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', padding: 18, animation: 'fadeIn .2s' }}>
-      <div style={{ background: '#FFFDF8', borderRadius: 20, padding: 22, width: '100%', maxWidth: 380, maxHeight: '85dvh', display: 'flex', flexDirection: 'column', animation: 'popIn .25s' }}>
+      <div style={{ background: '#ffffff', borderRadius: 20, padding: 22, width: '100%', maxWidth: 380, maxHeight: '85dvh', display: 'flex', flexDirection: 'column', animation: 'popIn .25s' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-          <h3 style={{ margin: 0, fontFamily: 'Prompt', fontWeight: 600, fontSize: 17, color: '#4A3526' }}>👥 จัดการพนักงาน</h3>
-          <button onClick={openAdd} style={{ border: 'none', background: '#3F2D1E', color: '#F6EEDD', borderRadius: 10, padding: '6px 14px', fontSize: 13, cursor: 'pointer', fontWeight: 600 }}>+ เพิ่ม</button>
+          <h3 style={{ margin: 0, fontFamily: 'Prompt', fontWeight: 600, fontSize: 17, color: '#3a2718' }}>👥 จัดการพนักงาน</h3>
+          <button onClick={openAdd} style={{ border: 'none', background: '#26190f', color: '#fffbf4', borderRadius: 10, padding: '6px 14px', fontSize: 13, cursor: 'pointer', fontWeight: 600 }}>+ เพิ่ม</button>
         </div>
 
         <div style={{ flex: 1, overflowY: 'auto', marginBottom: 12 }}>
-          {list.length === 0 && <p style={{ textAlign: 'center', color: '#B7A684', fontSize: 13 }}>ยังไม่มีพนักงาน</p>}
+          {list.length === 0 && <p style={{ textAlign: 'center', color: '#b9a88f', fontSize: 13 }}>ยังไม่มีพนักงาน</p>}
           {list.map(emp => (
             <div key={emp.id} style={rowStyle}>
               <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 600, fontSize: 14, color: '#3F2D1E' }}>{emp.name}</div>
-                <div style={{ fontSize: 12, color: '#A6925E', letterSpacing: '0.1em' }}>PIN: {'●'.repeat(emp.pin.length)}</div>
+                <div style={{ fontWeight: 600, fontSize: 14, color: '#26190f' }}>{emp.name}</div>
+                <div style={{ fontSize: 12, color: '#a99a88', letterSpacing: '0.1em' }}>PIN: {'●'.repeat(emp.pin.length)}</div>
               </div>
-              <button onClick={() => openEdit(emp)} style={btnSm('#F3E9D2', '#7A5A22')}>แก้ไข</button>
+              <button onClick={() => openEdit(emp)} style={btnSm('#f3ece0', '#c4491c')}>แก้ไข</button>
               <button onClick={() => remove(emp.id)} style={btnSm('#FBEEE8', '#B5503A')}>ลบ</button>
             </div>
           ))}
 
           {(adding || editId) && (
             <div style={{ background: '#F0E9D8', borderRadius: 13, padding: 14, marginTop: 8, border: '1.5px solid #DDD0B0' }}>
-              <p style={{ margin: '0 0 10px', fontSize: 13, fontWeight: 600, color: '#4A3526' }}>{editId ? 'แก้ไขพนักงาน' : 'เพิ่มพนักงานใหม่'}</p>
+              <p style={{ margin: '0 0 10px', fontSize: 13, fontWeight: 600, color: '#3a2718' }}>{editId ? 'แก้ไขพนักงาน' : 'เพิ่มพนักงานใหม่'}</p>
               <input style={inp} placeholder="ชื่อพนักงาน เช่น จด1" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
               <input style={inp} placeholder="PIN 4 หลัก" type="number" maxLength={4} value={form.pin} onChange={e => setForm(f => ({ ...f, pin: e.target.value.slice(0, 4) }))} />
               {formErr && <p style={{ color: '#C0392B', fontSize: 12, margin: '-4px 0 8px' }}>{formErr}</p>}
               <div style={{ display: 'flex', gap: 8 }}>
-                <button onClick={closeForm} style={{ flex: 1, border: '1px solid #E4D7BC', background: '#fff', borderRadius: 10, padding: 10, fontSize: 13, color: '#9A8662', cursor: 'pointer' }}>ยกเลิก</button>
-                <button onClick={saveForm} style={{ flex: 2, border: 'none', background: '#3F2D1E', color: '#F6EEDD', borderRadius: 10, padding: 10, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>บันทึก</button>
+                <button onClick={closeForm} style={{ flex: 1, border: '1px solid #e4d9c8', background: '#fff', borderRadius: 10, padding: 10, fontSize: 13, color: '#8a7767', cursor: 'pointer' }}>ยกเลิก</button>
+                <button onClick={saveForm} style={{ flex: 2, border: 'none', background: '#26190f', color: '#fffbf4', borderRadius: 10, padding: 10, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>บันทึก</button>
               </div>
             </div>
           )}
         </div>
 
         <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={onCancel} style={{ flex: 1, border: '1px solid #E4D7BC', background: '#fff', borderRadius: 12, padding: 12, fontSize: 14, color: '#9A8662', cursor: 'pointer' }}>ยกเลิก</button>
-          <button onClick={() => onSave(list.map(({ pin, name }) => ({ pin, name })))} style={{ flex: 2, border: 'none', background: '#3F2D1E', color: '#F6EEDD', borderRadius: 12, padding: 12, fontWeight: 600, fontSize: 15, cursor: 'pointer' }}>บันทึกทั้งหมด ✓</button>
+          <button onClick={onCancel} style={{ flex: 1, border: '1px solid #e4d9c8', background: '#fff', borderRadius: 12, padding: 12, fontSize: 14, color: '#8a7767', cursor: 'pointer' }}>ยกเลิก</button>
+          <button onClick={() => onSave(list.map(({ pin, name }) => ({ pin, name })))} style={{ flex: 2, border: 'none', background: '#26190f', color: '#fffbf4', borderRadius: 12, padding: 12, fontWeight: 600, fontSize: 15, cursor: 'pointer' }}>บันทึกทั้งหมด ✓</button>
         </div>
       </div>
     </div>
@@ -311,22 +311,22 @@ function HomeView({ session, history, saleHistory, payments, pendingPurchaseCoun
     return (
       <div style={{ flex: 1, maxWidth: 480, width: '100%', margin: '0 auto', padding: '32px 14px 40px', display: 'flex', flexDirection: 'column', gap: 12 }}>
         <div style={{ textAlign: 'center', marginBottom: 8 }}>
-          <div style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 16, color: '#4A3526' }}>โหมดพนักงาน</div>
-          <div style={{ fontSize: 12, color: '#9A8662' }}>เปิดบิล → จดกิโล → ปริ้น เท่านั้น</div>
+          <div style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 16, color: '#3a2718' }}>โหมดพนักงาน</div>
+          <div style={{ fontSize: 12, color: '#8a7767' }}>เปิดบิล → จดกิโล → ปริ้น เท่านั้น</div>
         </div>
-        <button onClick={onNew} style={{ border: 'none', borderRadius: 16, padding: '22px 14px', background: 'linear-gradient(135deg,#5C4326,#3F2D1E)', color: '#F6EEDD', cursor: 'pointer', textAlign: 'left' }}>
+        <button onClick={onNew} style={{ border: 'none', borderRadius: 16, padding: '22px 14px', background: 'linear-gradient(135deg,#5C4326,#26190f)', color: '#fffbf4', cursor: 'pointer', textAlign: 'left' }}>
           <div style={{ fontSize: 24, marginBottom: 6 }}>＋</div>
           <div style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 18 }}>เปิดบิลใหม่</div>
           <div style={{ fontSize: 12, opacity: .7, marginTop: 2 }}>บันทึกรับซื้อทุเรียน</div>
         </button>
         {session && (
-          <button onClick={onResume} style={{ border: '2px solid #C9A24B', borderRadius: 16, padding: '20px 14px', background: '#FFFDF8', color: '#4A3526', cursor: 'pointer', textAlign: 'left' }}>
+          <button onClick={onResume} style={{ border: '2px solid #e8692e', borderRadius: 16, padding: '20px 14px', background: '#ffffff', color: '#3a2718', cursor: 'pointer', textAlign: 'left' }}>
             <div style={{ fontSize: 24, marginBottom: 6 }}>↩</div>
             <div style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 18 }}>ทำบิลต่อ</div>
-            <div style={{ fontSize: 12, color: '#A6925E', marginTop: 2 }}>{session.billNo}</div>
+            <div style={{ fontSize: 12, color: '#a99a88', marginTop: 2 }}>{session.billNo}</div>
           </button>
         )}
-        <button onClick={onLogout} style={{ border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 13, padding: '12px 16px', cursor: 'pointer', fontSize: 14, color: '#9A8662', marginTop: 8 }}>
+        <button onClick={onLogout} style={{ border: '1px solid #e4d9c8', background: '#ffffff', borderRadius: 13, padding: '12px 16px', cursor: 'pointer', fontSize: 14, color: '#8a7767', marginTop: 8 }}>
           ออกจากระบบ
         </button>
       </div>
@@ -336,19 +336,19 @@ function HomeView({ session, history, saleHistory, payments, pendingPurchaseCoun
   return (
     <div style={{ flex: 1, maxWidth: 720, width: '100%', margin: '0 auto', padding: '16px 14px 40px' }}>
       {syncStatus && (
-        <div onClick={onSyncNow} style={{ marginBottom: 10, padding: '8px 14px', borderRadius: 10, background: syncStatus.startsWith('⚠') ? '#FFF0F0' : '#F0FFF4', border: `1px solid ${syncStatus.startsWith('⚠') ? '#FFBBBB' : '#B8E6C8'}`, fontSize: 12, color: syncStatus.startsWith('⚠') ? '#C0392B' : '#2E7D32', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div onClick={onSyncNow} style={{ marginBottom: 10, padding: '8px 14px', borderRadius: 10, background: syncStatus.startsWith('⚠') ? '#FFF0F0' : '#F0FFF4', border: `1px solid ${syncStatus.startsWith('⚠') ? '#FFBBBB' : '#B8E6C8'}`, fontSize: 12, color: syncStatus.startsWith('⚠') ? '#C0392B' : '#2f9b58', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>{syncStatus}</span>
           <span style={{ fontSize: 11, opacity: 0.7 }}>{syncing ? '…' : 'กดซิงก์อีกครั้ง'}</span>
         </div>
       )}
       {/* Primary action: Buy or Sell */}
       <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
-        <button onClick={onNew} style={{ flex: 1, border: 'none', borderRadius: 18, padding: '22px 14px', background: 'linear-gradient(135deg,#5C4326,#3F2D1E)', color: '#F6EEDD', cursor: 'pointer', textAlign: 'left' }}>
+        <button onClick={onNew} style={{ flex: 1, border: 'none', borderRadius: 18, padding: '22px 14px', background: 'linear-gradient(135deg,#5C4326,#26190f)', color: '#fffbf4', cursor: 'pointer', textAlign: 'left' }}>
           <div style={{ fontSize: 28, marginBottom: 6 }}>📥</div>
           <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 19 }}>รับซื้อ</div>
           <div style={{ fontSize: 12, opacity: .7, marginTop: 3 }}>บันทึกรับซื้อทุเรียน</div>
         </button>
-        <button onClick={onNewSale} style={{ flex: 1, border: 'none', borderRadius: 18, padding: '22px 14px', background: 'linear-gradient(135deg,#2E5C1A,#4A7A2E)', color: '#F0FAE8', cursor: 'pointer', textAlign: 'left' }}>
+        <button onClick={onNewSale} style={{ flex: 1, border: 'none', borderRadius: 18, padding: '22px 14px', background: 'linear-gradient(135deg,#237947,#2f9b58)', color: '#F0FAE8', cursor: 'pointer', textAlign: 'left' }}>
           <div style={{ fontSize: 28, marginBottom: 6 }}>📤</div>
           <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 19 }}>ขาย</div>
           <div style={{ fontSize: 12, opacity: .75, marginTop: 3 }}>ออกใบเสร็จขายทุเรียน</div>
@@ -361,15 +361,15 @@ function HomeView({ session, history, saleHistory, payments, pendingPurchaseCoun
         const totalEntries = entries.length;
         const totalKg = entries.reduce((s, e) => s + (parseFloat(e.kg) || 0), 0);
         return (
-          <button onClick={onResume} style={{ width: '100%', border: '2px solid #C9A24B', borderRadius: 14, padding: '14px 16px', background: '#FFFDF8', color: '#4A3526', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+          <button onClick={onResume} style={{ width: '100%', border: '2px solid #e8692e', borderRadius: 14, padding: '14px 16px', background: '#ffffff', color: '#3a2718', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
             <span style={{ fontSize: 22 }}>↩</span>
             <div style={{ flex: 1 }}>
               <div style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 15 }}>ทำบิลรับซื้อต่อ</div>
-              <div style={{ fontSize: 12, color: '#A6925E', marginTop: 1 }}>
+              <div style={{ fontSize: 12, color: '#a99a88', marginTop: 1 }}>
                 {session.billNo}{totalEntries > 0 ? ` · ${totalEntries} เข่ง · ${totalKg % 1 === 0 ? totalKg : totalKg.toFixed(1)} กก.` : ' · ยังไม่มีเข่ง'}
               </div>
             </div>
-            <span style={{ color: '#C9A24B', fontSize: 18 }}>›</span>
+            <span style={{ color: '#e8692e', fontSize: 18 }}>›</span>
           </button>
         );
       })()}
@@ -378,7 +378,7 @@ function HomeView({ session, history, saleHistory, payments, pendingPurchaseCoun
         const entries = saleSession.entries || [];
         const totalKg = entries.reduce((s, e) => s + (parseFloat(e.kg) || 0), 0);
         return (
-          <button onClick={onResumeSale} style={{ width: '100%', border: '2px solid #4A7A2E', borderRadius: 14, padding: '14px 16px', background: '#F5FAF0', color: '#2E5C1A', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+          <button onClick={onResumeSale} style={{ width: '100%', border: '2px solid #2f9b58', borderRadius: 14, padding: '14px 16px', background: '#F5FAF0', color: '#237947', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
             <span style={{ fontSize: 22 }}>↩</span>
             <div style={{ flex: 1 }}>
               <div style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 15 }}>ทำบิลขายต่อ</div>
@@ -387,7 +387,7 @@ function HomeView({ session, history, saleHistory, payments, pendingPurchaseCoun
                 {saleSession.customerName ? ` · ${saleSession.customerName}` : ''}
               </div>
             </div>
-            <span style={{ color: '#4A7A2E', fontSize: 18 }}>›</span>
+            <span style={{ color: '#2f9b58', fontSize: 18 }}>›</span>
           </button>
         );
       })()}
@@ -395,31 +395,31 @@ function HomeView({ session, history, saleHistory, payments, pendingPurchaseCoun
 
 
       <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
-        <button onClick={onGoCustomers} style={{ flex: 1, border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 14, padding: '15px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
+        <button onClick={onGoCustomers} style={{ flex: 1, border: '1px solid #e4d9c8', background: '#ffffff', borderRadius: 14, padding: '15px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
           <span style={{ fontSize: 22 }}>👥</span>
           <div style={{ textAlign: 'left' }}>
-            <div style={{ fontWeight: 600, fontSize: 15, color: '#4A3526' }}>ทะเบียนลูกค้า</div>
-            <div style={{ fontSize: 12, color: '#9A8662' }}>{syncing && customerCount === 0 ? '…' : `${customerCount} ราย`}</div>
+            <div style={{ fontWeight: 600, fontSize: 15, color: '#3a2718' }}>ทะเบียนลูกค้า</div>
+            <div style={{ fontSize: 12, color: '#8a7767' }}>{syncing && customerCount === 0 ? '…' : `${customerCount} ราย`}</div>
           </div>
-          <span style={{ marginLeft: 'auto', color: '#C9A24B', fontSize: 18 }}>›</span>
+          <span style={{ marginLeft: 'auto', color: '#e8692e', fontSize: 18 }}>›</span>
         </button>
-        <button onClick={onGoSupervisors} style={{ flex: 1, border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 14, padding: '15px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
+        <button onClick={onGoSupervisors} style={{ flex: 1, border: '1px solid #e4d9c8', background: '#ffffff', borderRadius: 14, padding: '15px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
           <span style={{ fontSize: 22 }}>🧑‍💼</span>
           <div style={{ textAlign: 'left' }}>
-            <div style={{ fontWeight: 600, fontSize: 15, color: '#4A3526' }}>ผู้ดูแล</div>
-            <div style={{ fontSize: 12, color: '#9A8662' }}>{syncing && supervisorCount === 0 ? '…' : `${supervisorCount} คน`}</div>
+            <div style={{ fontWeight: 600, fontSize: 15, color: '#3a2718' }}>ผู้ดูแล</div>
+            <div style={{ fontSize: 12, color: '#8a7767' }}>{syncing && supervisorCount === 0 ? '…' : `${supervisorCount} คน`}</div>
           </div>
-          <span style={{ marginLeft: 'auto', color: '#C9A24B', fontSize: 18 }}>›</span>
+          <span style={{ marginLeft: 'auto', color: '#e8692e', fontSize: 18 }}>›</span>
         </button>
       </div>
 
-      <button onClick={onGoHistory} style={{ width: '100%', border: '1.5px solid #C9A24B', background: 'linear-gradient(135deg,#FFFBF0,#FFF3D4)', borderRadius: 14, padding: '14px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+      <button onClick={onGoHistory} style={{ width: '100%', border: '1.5px solid #e8692e', background: 'linear-gradient(135deg,#FFFBF0,#FFF3D4)', borderRadius: 14, padding: '14px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
         <span style={{ fontSize: 22 }}>📋</span>
         <div style={{ textAlign: 'left' }}>
-          <div style={{ fontWeight: 700, fontSize: 15, color: '#5B3A29' }}>ประวัติบิล</div>
+          <div style={{ fontWeight: 700, fontSize: 15, color: '#3a2718' }}>ประวัติบิล</div>
           <div style={{ fontSize: 12, color: '#9A7A4A' }}>ซื้อ / ขาย · ทั้งหมด</div>
         </div>
-        <span style={{ marginLeft: 'auto', color: '#C9A24B', fontSize: 18 }}>›</span>
+        <span style={{ marginLeft: 'auto', color: '#e8692e', fontSize: 18 }}>›</span>
       </button>
 
       {!isEmployee && (
@@ -428,53 +428,53 @@ function HomeView({ session, history, saleHistory, payments, pendingPurchaseCoun
             <button onClick={onGoDashboard} style={{ flex: 1, border: `1.5px solid ${nUnpaidPurchase > 0 ? '#C0392B' : '#8A5E00'}`, background: nUnpaidPurchase > 0 ? 'linear-gradient(135deg,#FFF5F5,#FDECEA)' : 'linear-gradient(135deg,#FFFBF0,#FFF3D4)', borderRadius: 14, padding: '14px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10 }}>
               <span style={{ fontSize: 20 }}>🧾</span>
               <div style={{ textAlign: 'left', flex: 1 }}>
-                <div style={{ fontWeight: 700, fontSize: 14, color: '#5B3A29' }}>ยอดซื้อ</div>
+                <div style={{ fontWeight: 700, fontSize: 14, color: '#3a2718' }}>ยอดซื้อ</div>
                 <div style={{ fontSize: 12, color: nUnpaidPurchase > 0 ? '#C0392B' : '#9A7A4A', fontWeight: nUnpaidPurchase > 0 ? 700 : 400 }}>
                   {pendingPurchaseCount === null ? 'กำลังโหลด...' : nUnpaidPurchase > 0 ? `รอจ่าย ${nUnpaidPurchase} บิล` : 'ชำระครบแล้ว'}
                 </div>
               </div>
-              <span style={{ color: '#C9A24B', fontSize: 18 }}>›</span>
+              <span style={{ color: '#e8692e', fontSize: 18 }}>›</span>
             </button>
-            <button onClick={onGoSales} style={{ flex: 1, border: '1.5px solid #2E5C1A', background: 'linear-gradient(135deg,#F5FAF0,#EBF5E0)', borderRadius: 14, padding: '14px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10 }}>
+            <button onClick={onGoSales} style={{ flex: 1, border: '1.5px solid #237947', background: 'linear-gradient(135deg,#F5FAF0,#EBF5E0)', borderRadius: 14, padding: '14px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10 }}>
               <span style={{ fontSize: 20 }}>📤</span>
               <div style={{ textAlign: 'left', flex: 1 }}>
-                <div style={{ fontWeight: 700, fontSize: 14, color: '#2E5C1A' }}>ยอดขาย</div>
+                <div style={{ fontWeight: 700, fontSize: 14, color: '#237947' }}>ยอดขาย</div>
                 <div style={{ fontSize: 12, color: '#6A9A4E' }}>{nRecentSale > 0 ? `${nRecentSale} บิล` : 'ยังไม่มีบิล'}</div>
               </div>
-              <span style={{ color: '#4A7A2E', fontSize: 18 }}>›</span>
+              <span style={{ color: '#2f9b58', fontSize: 18 }}>›</span>
             </button>
           </div>
-          <button onClick={onGoWallet} style={{ width: '100%', border: '1.5px solid #2E7D32', background: 'linear-gradient(135deg,#F1F8F1,#E8F5E9)', borderRadius: 14, padding: '14px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+          <button onClick={onGoWallet} style={{ width: '100%', border: '1.5px solid #2f9b58', background: 'linear-gradient(135deg,#F1F8F1,#e6f3ea)', borderRadius: 14, padding: '14px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
             <span style={{ fontSize: 22 }}>💰</span>
             <div style={{ textAlign: 'left' }}>
               <div style={{ fontWeight: 700, fontSize: 15, color: '#1B5E20' }}>กระเป๋าเงิน</div>
               <div style={{ fontSize: 12, color: '#4CAF50' }}>จ่ายทุเรียน · รับขาย · ค่าใช้จ่าย</div>
             </div>
-            <span style={{ marginLeft: 'auto', color: '#2E7D32', fontSize: 18 }}>›</span>
+            <span style={{ marginLeft: 'auto', color: '#2f9b58', fontSize: 18 }}>›</span>
           </button>
         </>
       )}
 
       <div style={{ marginTop: 24, display: 'flex', flexDirection: 'column', gap: 8 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '4px 0 8px' }}>
-          <span style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 13, letterSpacing: '.14em', color: '#A6925E' }}>ตั้งค่า</span>
-          <div style={{ flex: 1, height: 1, background: '#E4D7BC' }} />
+          <span style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 13, letterSpacing: '.14em', color: '#a99a88' }}>ตั้งค่า</span>
+          <div style={{ flex: 1, height: 1, background: '#e4d9c8' }} />
         </div>
-        <button onClick={onChangePin} style={{ border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 13, padding: '13px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10 }}>
+        <button onClick={onChangePin} style={{ border: '1px solid #e4d9c8', background: '#ffffff', borderRadius: 13, padding: '13px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10 }}>
           <span style={{ fontSize: 18 }}>🔒</span>
-          <span style={{ fontSize: 14, color: '#4A3526', fontWeight: 500 }}>เปลี่ยนรหัส Admin PIN</span>
+          <span style={{ fontSize: 14, color: '#3a2718', fontWeight: 500 }}>เปลี่ยนรหัส Admin PIN</span>
         </button>
-        <button onClick={onSetEmployeePin} style={{ border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 13, padding: '13px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10 }}>
+        <button onClick={onSetEmployeePin} style={{ border: '1px solid #e4d9c8', background: '#ffffff', borderRadius: 13, padding: '13px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10 }}>
           <span style={{ fontSize: 18 }}>🧑‍💼</span>
-          <span style={{ fontSize: 14, color: '#4A3526', fontWeight: 500 }}>จัดการพนักงาน</span>
+          <span style={{ fontSize: 14, color: '#3a2718', fontWeight: 500 }}>จัดการพนักงาน</span>
         </button>
-        <button onClick={onOpenSheet} style={{ border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 13, padding: '13px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10 }}>
+        <button onClick={onOpenSheet} style={{ border: '1px solid #e4d9c8', background: '#ffffff', borderRadius: 13, padding: '13px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10 }}>
           <span style={{ fontSize: 18 }}>📊</span>
           <div style={{ flex: 1, textAlign: 'left' }}>
-            <div style={{ fontSize: 14, color: '#4A3526', fontWeight: 500 }}>Google Sheet · ซิงก์อัตโนมัติ</div>
-            {syncStatus && <div style={{ fontSize: 12, color: syncStatus.startsWith('⚠') ? '#C0392B' : '#9A8662', marginTop: 2 }}>{syncStatus}</div>}
+            <div style={{ fontSize: 14, color: '#3a2718', fontWeight: 500 }}>Google Sheet · ซิงก์อัตโนมัติ</div>
+            {syncStatus && <div style={{ fontSize: 12, color: syncStatus.startsWith('⚠') ? '#C0392B' : '#8a7767', marginTop: 2 }}>{syncStatus}</div>}
           </div>
-          <button onClick={e => { e.stopPropagation(); onSyncNow(); }} disabled={syncing} style={{ border: '1px solid #D8C8A8', background: '#F3E9D2', borderRadius: 9, padding: '6px 10px', fontSize: 12, color: '#7A5A22', cursor: 'pointer', opacity: syncing ? 0.5 : 1 }}>
+          <button onClick={e => { e.stopPropagation(); onSyncNow(); }} disabled={syncing} style={{ border: '1px solid #d5c8b4', background: '#f3ece0', borderRadius: 9, padding: '6px 10px', fontSize: 12, color: '#c4491c', cursor: 'pointer', opacity: syncing ? 0.5 : 1 }}>
             {syncing ? '…' : '↺ ซิงก์'}
           </button>
         </button>
@@ -526,16 +526,16 @@ function PinEditor({ customCatLabels, onSave, onCancel }) {
 
   return (
     <div className="no-print" style={{ position: 'fixed', inset: 0, zIndex: 65, background: 'rgba(42,33,24,.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 18, animation: 'fadeIn .2s' }}>
-      <div style={{ background: '#FFFDF8', borderRadius: 20, padding: 22, width: '100%', maxWidth: 380, maxHeight: '85dvh', display: 'flex', flexDirection: 'column', animation: 'popIn .25s' }}>
+      <div style={{ background: '#ffffff', borderRadius: 20, padding: 22, width: '100%', maxWidth: 380, maxHeight: '85dvh', display: 'flex', flexDirection: 'column', animation: 'popIn .25s' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-          <h3 style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 17, margin: 0, color: '#4A3526' }}>🏷️ จัดการหมวดกำหนดเอง</h3>
-          <button onClick={onCancel} style={{ border: 'none', background: 'none', fontSize: 20, color: '#9A8662', cursor: 'pointer', lineHeight: 1 }}>✕</button>
+          <h3 style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 17, margin: 0, color: '#3a2718' }}>🏷️ จัดการหมวดกำหนดเอง</h3>
+          <button onClick={onCancel} style={{ border: 'none', background: 'none', fontSize: 20, color: '#8a7767', cursor: 'pointer', lineHeight: 1 }}>✕</button>
         </div>
-        <p style={{ fontSize: 12, color: '#9A8662', margin: '0 0 14px' }}>แตะชื่อเพื่อแก้ไข · ลูกศรเรียงลำดับ · ถังขยะลบ</p>
+        <p style={{ fontSize: 12, color: '#8a7767', margin: '0 0 14px' }}>แตะชื่อเพื่อแก้ไข · ลูกศรเรียงลำดับ · ถังขยะลบ</p>
 
         <div style={{ flex: 1, overflowY: 'auto', marginBottom: 14 }}>
           {labels.map((lbl, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '8px 10px', background: '#FBF6EC', borderRadius: 10, marginBottom: 7, border: '1px solid #E4D7BC' }}>
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '8px 10px', background: '#fbf7f1', borderRadius: 10, marginBottom: 7, border: '1px solid #e4d9c8' }}>
               <span style={{ width: 9, height: 9, borderRadius: '50%', background: '#7C8C9A', flexShrink: 0 }} />
               {editIdx === i ? (
                 <input
@@ -544,17 +544,17 @@ function PinEditor({ customCatLabels, onSave, onCancel }) {
                   onChange={e => setEditVal(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter') saveEdit(i); if (e.key === 'Escape') setEditIdx(null); }}
                   onBlur={() => saveEdit(i)}
-                  style={{ flex: 1, border: '1.5px solid #C9A24B', borderRadius: 7, padding: '4px 8px', fontSize: 14, fontWeight: 600, outline: 'none', fontFamily: 'inherit', color: '#2A2118', background: '#fff' }}
+                  style={{ flex: 1, border: '1.5px solid #e8692e', borderRadius: 7, padding: '4px 8px', fontSize: 14, fontWeight: 600, outline: 'none', fontFamily: 'inherit', color: '#241009', background: '#fff' }}
                 />
               ) : (
-                <span onClick={() => startEdit(i)} style={{ flex: 1, fontSize: 14, fontWeight: 600, color: '#4A3526', cursor: 'text' }}>{lbl}</span>
+                <span onClick={() => startEdit(i)} style={{ flex: 1, fontSize: 14, fontWeight: 600, color: '#3a2718', cursor: 'text' }}>{lbl}</span>
               )}
-              <button onClick={() => move(i, -1)} disabled={i === 0} style={{ border: '1px solid #E4D7BC', background: '#fff', borderRadius: 7, padding: '4px 8px', fontSize: 13, cursor: i === 0 ? 'default' : 'pointer', opacity: i === 0 ? .3 : 1 }}>↑</button>
-              <button onClick={() => move(i, 1)} disabled={i === labels.length - 1} style={{ border: '1px solid #E4D7BC', background: '#fff', borderRadius: 7, padding: '4px 8px', fontSize: 13, cursor: i === labels.length - 1 ? 'default' : 'pointer', opacity: i === labels.length - 1 ? .3 : 1 }}>↓</button>
+              <button onClick={() => move(i, -1)} disabled={i === 0} style={{ border: '1px solid #e4d9c8', background: '#fff', borderRadius: 7, padding: '4px 8px', fontSize: 13, cursor: i === 0 ? 'default' : 'pointer', opacity: i === 0 ? .3 : 1 }}>↑</button>
+              <button onClick={() => move(i, 1)} disabled={i === labels.length - 1} style={{ border: '1px solid #e4d9c8', background: '#fff', borderRadius: 7, padding: '4px 8px', fontSize: 13, cursor: i === labels.length - 1 ? 'default' : 'pointer', opacity: i === labels.length - 1 ? .3 : 1 }}>↓</button>
               <button onClick={() => setLabels(p => p.filter((_, j) => j !== i))} style={{ border: '1px solid #E0B4A2', background: '#FBEEE8', borderRadius: 7, padding: '4px 8px', fontSize: 13, color: '#B5503A', cursor: 'pointer' }}>🗑</button>
             </div>
           ))}
-          {labels.length === 0 && <div style={{ textAlign: 'center', fontSize: 13, color: '#B7A684', padding: '16px 0' }}>ยังไม่มีหมวดกำหนดเอง</div>}
+          {labels.length === 0 && <div style={{ textAlign: 'center', fontSize: 13, color: '#b9a88f', padding: '16px 0' }}>ยังไม่มีหมวดกำหนดเอง</div>}
         </div>
 
         <div style={{ display: 'flex', gap: 7, marginBottom: 14 }}>
@@ -563,14 +563,14 @@ function PinEditor({ customCatLabels, onSave, onCancel }) {
             onChange={e => setNewLabel(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && add()}
             placeholder="ชื่อหมวดใหม่…"
-            style={{ flex: 1, border: '1.5px solid #C9A24B', borderRadius: 10, padding: '9px 12px', fontSize: 14, fontFamily: 'inherit', outline: 'none', background: '#FBF6EC', color: '#2A2118' }}
+            style={{ flex: 1, border: '1.5px solid #e8692e', borderRadius: 10, padding: '9px 12px', fontSize: 14, fontFamily: 'inherit', outline: 'none', background: '#fbf7f1', color: '#241009' }}
           />
-          <button onClick={add} disabled={!newLabel.trim()} style={{ border: 'none', background: newLabel.trim() ? '#C9A24B' : '#D8C8A8', color: '#fff', borderRadius: 10, padding: '9px 16px', fontSize: 14, fontWeight: 700, cursor: newLabel.trim() ? 'pointer' : 'default' }}>+ เพิ่ม</button>
+          <button onClick={add} disabled={!newLabel.trim()} style={{ border: 'none', background: newLabel.trim() ? '#e8692e' : '#d5c8b4', color: '#fff', borderRadius: 10, padding: '9px 16px', fontSize: 14, fontWeight: 700, cursor: newLabel.trim() ? 'pointer' : 'default' }}>+ เพิ่ม</button>
         </div>
 
         <div style={{ display: 'flex', gap: 10 }}>
-          <button onClick={onCancel} style={{ flex: 1, border: '1px solid #E4D7BC', background: '#fff', borderRadius: 12, padding: 13, color: '#7A6450', cursor: 'pointer', fontSize: 14 }}>ยกเลิก</button>
-          <button onClick={() => onSave(labels)} style={{ flex: 2, border: 'none', background: '#3F2D1E', color: '#F6EEDD', borderRadius: 12, padding: 13, fontWeight: 700, cursor: 'pointer', fontSize: 14 }}>บันทึก</button>
+          <button onClick={onCancel} style={{ flex: 1, border: '1px solid #e4d9c8', background: '#fff', borderRadius: 12, padding: 13, color: '#6b4a38', cursor: 'pointer', fontSize: 14 }}>ยกเลิก</button>
+          <button onClick={() => onSave(labels)} style={{ flex: 2, border: 'none', background: '#26190f', color: '#fffbf4', borderRadius: 12, padding: 13, fontWeight: 700, cursor: 'pointer', fontSize: 14 }}>บันทึก</button>
         </div>
       </div>
     </div>
@@ -602,10 +602,10 @@ function VehicleModal({ plate, photoUrl, onSave, onPhoto, onClose }) {
 
   return (
     <div className="no-print" style={{ position: 'fixed', inset: 0, zIndex: 70, background: 'rgba(42,33,24,.55)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', padding: '0 0 env(safe-area-inset-bottom)', animation: 'fadeIn .2s' }}>
-      <div style={{ background: '#FFFDF8', borderRadius: '20px 20px 0 0', padding: '20px 18px 28px', width: '100%', maxWidth: 480, boxShadow: '0 -8px 30px rgba(42,33,24,.18)' }}>
+      <div style={{ background: '#ffffff', borderRadius: '20px 20px 0 0', padding: '20px 18px 28px', width: '100%', maxWidth: 480, boxShadow: '0 -8px 30px rgba(42,33,24,.18)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-          <span style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 17, color: '#3F2D1E' }}>🚗 ทะเบียนรถ</span>
-          <button onClick={onClose} style={{ border: 'none', background: 'none', fontSize: 20, cursor: 'pointer', color: '#9A8662' }}>✕</button>
+          <span style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 17, color: '#26190f' }}>🚗 ทะเบียนรถ</span>
+          <button onClick={onClose} style={{ border: 'none', background: 'none', fontSize: 20, cursor: 'pointer', color: '#8a7767' }}>✕</button>
         </div>
         <div style={{ position: 'relative', marginBottom: 12 }}>
           <input
@@ -613,11 +613,11 @@ function VehicleModal({ plate, photoUrl, onSave, onPhoto, onClose }) {
             onChange={e => setText(e.target.value.toUpperCase())}
             placeholder={ocrStatus === 'reading' ? 'กำลังอ่านทะเบียน…' : 'เช่น กข 1234 กทม'}
             disabled={ocrStatus === 'reading'}
-            style={{ width: '100%', boxSizing: 'border-box', border: `1.5px solid ${ocrStatus === 'done' ? '#7EB87E' : '#D8C8A8'}`, borderRadius: 12, padding: '13px 14px', fontSize: 18, fontFamily: 'Prompt', fontWeight: 600, letterSpacing: '.1em', color: '#2A2118', background: ocrStatus === 'reading' ? '#F5F0E8' : '#FBF6EC', opacity: ocrStatus === 'reading' ? .7 : 1 }}
+            style={{ width: '100%', boxSizing: 'border-box', border: `1.5px solid ${ocrStatus === 'done' ? '#7EB87E' : '#d5c8b4'}`, borderRadius: 12, padding: '13px 14px', fontSize: 18, fontFamily: 'Prompt', fontWeight: 600, letterSpacing: '.1em', color: '#241009', background: ocrStatus === 'reading' ? '#F5F0E8' : '#fbf7f1', opacity: ocrStatus === 'reading' ? .7 : 1 }}
             autoFocus={!ocrStatus}
           />
           {ocrStatus === 'reading' && (
-            <span style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: '#A6925E' }}>กำลังอ่าน…</span>
+            <span style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: '#a99a88' }}>กำลังอ่าน…</span>
           )}
           {ocrStatus === 'done' && (
             <span style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: '#5A9A5A' }}>✓ อ่านแล้ว แก้ได้</span>
@@ -631,7 +631,7 @@ function VehicleModal({ plate, photoUrl, onSave, onPhoto, onClose }) {
         <input ref={galleryRef} type="file" accept="image/*" style={{ display: 'none' }}
           onChange={e => { const file = e.target.files[0]; if (!file) return; onPhoto(file); runOcr(file); e.target.value = ''; }} />
         <div style={{ display: 'flex', gap: 8, marginBottom: photoUrl ? 10 : 14 }}>
-          <button onClick={() => fileRef.current?.click()} style={{ flex: 1, border: '1.5px dashed #C9A24B', background: '#FBF3E2', borderRadius: 12, padding: '13px 0', fontSize: 14, fontWeight: 600, color: '#7A5A22', cursor: 'pointer' }}>
+          <button onClick={() => fileRef.current?.click()} style={{ flex: 1, border: '1.5px dashed #e8692e', background: '#FBF3E2', borderRadius: 12, padding: '13px 0', fontSize: 14, fontWeight: 600, color: '#c4491c', cursor: 'pointer' }}>
             📷 ถ่ายภาพ
           </button>
           <button onClick={() => galleryRef.current?.click()} style={{ flex: 1, border: '1.5px dashed #9AB87A', background: '#F2F8EC', borderRadius: 12, padding: '13px 0', fontSize: 14, fontWeight: 600, color: '#4A7A2A', cursor: 'pointer' }}>
@@ -639,9 +639,9 @@ function VehicleModal({ plate, photoUrl, onSave, onPhoto, onClose }) {
           </button>
         </div>
         {photoUrl && (
-          <img src={photoUrl} alt="ทะเบียนรถ" style={{ width: '100%', maxHeight: 160, objectFit: 'cover', borderRadius: 10, border: '1px solid #E4D7BC', marginBottom: 14, display: 'block' }} />
+          <img src={photoUrl} alt="ทะเบียนรถ" style={{ width: '100%', maxHeight: 160, objectFit: 'cover', borderRadius: 10, border: '1px solid #e4d9c8', marginBottom: 14, display: 'block' }} />
         )}
-        <button onClick={() => { onSave(text); onClose(); }} style={{ width: '100%', border: 'none', borderRadius: 13, padding: 15, background: 'linear-gradient(135deg,#C9A24B,#A8763E)', color: '#fff', fontWeight: 700, fontSize: 16, cursor: 'pointer', boxShadow: '0 6px 16px rgba(168,118,62,.28)' }}>
+        <button onClick={() => { onSave(text); onClose(); }} style={{ width: '100%', border: 'none', borderRadius: 13, padding: 15, background: 'linear-gradient(135deg,#e8692e,#A8763E)', color: '#fff', fontWeight: 700, fontSize: 16, cursor: 'pointer', boxShadow: '0 6px 16px rgba(168,118,62,.28)' }}>
           บันทึกทะเบียน
         </button>
       </div>
@@ -663,14 +663,14 @@ function BankModal({ bankName, bankAccount, fullName, onSave, onClose }) {
   const [acct, setAcct] = useState(bankAccount || '');
   const [fName, setFName] = useState(fullName || '');
   const name = selectVal === 'อื่นๆ' ? customBank : selectVal;
-  const inp = { width: '100%', boxSizing: 'border-box', border: '1.5px solid #D8C8A8', borderRadius: 12, padding: '12px 14px', fontSize: 15, fontFamily: 'Prompt', color: '#2A2118', background: '#FBF6EC', marginBottom: 10 };
-  const selStyle = { ...inp, appearance: 'none', WebkitAppearance: 'none', backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'10\' height=\'6\'%3E%3Cpath fill=\'%239A8662\' d=\'M5 6L0 0h10z\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 14px center', paddingRight: 36, color: selectVal ? '#2A2118' : '#9A8662' };
+  const inp = { width: '100%', boxSizing: 'border-box', border: '1.5px solid #d5c8b4', borderRadius: 12, padding: '12px 14px', fontSize: 15, fontFamily: 'Prompt', color: '#241009', background: '#fbf7f1', marginBottom: 10 };
+  const selStyle = { ...inp, appearance: 'none', WebkitAppearance: 'none', backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'10\' height=\'6\'%3E%3Cpath fill=\'%239A8662\' d=\'M5 6L0 0h10z\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 14px center', paddingRight: 36, color: selectVal ? '#241009' : '#8a7767' };
   return (
     <div className="no-print" style={{ position: 'fixed', inset: 0, zIndex: 70, background: 'rgba(42,33,24,.55)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', padding: '0 0 env(safe-area-inset-bottom)', animation: 'fadeIn .2s' }}>
-      <div style={{ background: '#FFFDF8', borderRadius: '20px 20px 0 0', padding: '20px 18px 28px', width: '100%', maxWidth: 480, boxShadow: '0 -8px 30px rgba(42,33,24,.18)' }}>
+      <div style={{ background: '#ffffff', borderRadius: '20px 20px 0 0', padding: '20px 18px 28px', width: '100%', maxWidth: 480, boxShadow: '0 -8px 30px rgba(42,33,24,.18)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-          <span style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 17, color: '#3F2D1E' }}>🏦 ข้อมูลธนาคาร</span>
-          <button onClick={onClose} style={{ border: 'none', background: 'none', fontSize: 20, cursor: 'pointer', color: '#9A8662' }}>✕</button>
+          <span style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 17, color: '#26190f' }}>🏦 ข้อมูลธนาคาร</span>
+          <button onClick={onClose} style={{ border: 'none', background: 'none', fontSize: 20, cursor: 'pointer', color: '#8a7767' }}>✕</button>
         </div>
         <input value={fName} onChange={e => setFName(e.target.value)} placeholder="ชื่อ-นามสกุลเจ้าของบัญชี" style={inp} />
         <select value={selectVal} onChange={e => setSelectVal(e.target.value)} style={selStyle}>
@@ -724,21 +724,21 @@ function RecordView({ session, activeCat, input, onInput, onCommit, onPickCat, o
   return (
     <div style={{ flex: 1, maxWidth: 880, width: '100%', margin: '0 auto', padding: '14px 14px 130px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-        <button onClick={onGoHome} style={{ border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 10, padding: '8px 12px', fontSize: 13, color: '#7A6450', cursor: 'pointer' }}>‹ หน้าหลัก</button>
+        <button onClick={onGoHome} style={{ border: '1px solid #e4d9c8', background: '#ffffff', borderRadius: 10, padding: '8px 12px', fontSize: 13, color: '#6b4a38', cursor: 'pointer' }}>‹ หน้าหลัก</button>
         <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.2 }}>
-          <span style={{ fontWeight: 600, fontSize: 14, color: '#4A3526' }}>{session?.billNo}</span>
+          <span style={{ fontWeight: 600, fontSize: 14, color: '#3a2718' }}>{session?.billNo}</span>
           {onChangeDate ? (
             <input type="date"
               value={session?.date ? (() => { const d = new Date(session.date); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })() : ''}
               onChange={e => { if (e.target.value) { const [y,m,d] = e.target.value.split('-').map(Number); const prev = new Date(session.date); const nd = new Date(y,m-1,d,prev.getHours(),prev.getMinutes(),prev.getSeconds()); onChangeDate(nd.getTime()); } }}
-              style={{ fontSize: 12, color: '#DC743C', border: 'none', background: 'none', padding: 0, cursor: 'pointer', outline: 'none', fontWeight: 600 }} />
+              style={{ fontSize: 12, color: '#e8692e', border: 'none', background: 'none', padding: 0, cursor: 'pointer', outline: 'none', fontWeight: 600 }} />
           ) : (
-            <span style={{ fontSize: 12, color: '#9A8662' }}>{session ? dateStr(session.date) : ''}</span>
+            <span style={{ fontSize: 12, color: '#8a7767' }}>{session ? dateStr(session.date) : ''}</span>
           )}
         </div>
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
           {tier && tier.key !== 'silver' && <TierBadge tier={tier} />}
-          <button onClick={onEditSeller} style={{ border: '1px dashed #D8C8A8', background: '#FBF6EC', borderRadius: 10, padding: '8px 12px', fontSize: 13, color: '#7A5A22', cursor: 'pointer' }}>แก้ไข</button>
+          <button onClick={onEditSeller} style={{ border: '1px dashed #d5c8b4', background: '#fbf7f1', borderRadius: 10, padding: '8px 12px', fontSize: 13, color: '#c4491c', cursor: 'pointer' }}>แก้ไข</button>
         </div>
       </div>
 
@@ -753,7 +753,7 @@ function RecordView({ session, activeCat, input, onInput, onCommit, onPickCat, o
         {session?.supervisor && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: '#FBF3E2', border: '1px solid #E0C97A', borderRadius: 20, padding: '5px 12px' }}>
             <span style={{ fontSize: 13 }}>👤</span>
-            <span style={{ fontSize: 13, fontWeight: 600, color: '#7A5A22' }}>{session.supervisor}</span>
+            <span style={{ fontSize: 13, fontWeight: 600, color: '#c4491c' }}>{session.supervisor}</span>
           </div>
         )}
         <div onClick={onEditSeller} style={{ display: 'flex', alignItems: 'center', gap: 5, background: (session?.seller || session?.sellerPhone) ? '#F0EAFA' : '#F5F5F5', border: `1px solid ${(session?.seller || session?.sellerPhone) ? '#C9B8E8' : '#D0C8C0'}`, borderRadius: 20, padding: '5px 12px', cursor: 'pointer' }}>
@@ -762,7 +762,7 @@ function RecordView({ session, activeCat, input, onInput, onCommit, onPickCat, o
             {session?.seller || session?.sellerPhone || '+ เพิ่มลูกค้า'}
           </span>
         </div>
-        <div onClick={() => setVehicleModalOpen(true)} style={{ display: 'flex', alignItems: 'center', gap: 5, background: vehiclePlate ? '#FFF3E0' : '#F5F5F5', border: `1px solid ${vehiclePlate ? '#FFB74D' : '#D0C8C0'}`, borderRadius: 20, padding: '5px 12px', cursor: 'pointer' }}>
+        <div onClick={() => setVehicleModalOpen(true)} style={{ display: 'flex', alignItems: 'center', gap: 5, background: vehiclePlate ? '#fce0d0' : '#F5F5F5', border: `1px solid ${vehiclePlate ? '#FFB74D' : '#D0C8C0'}`, borderRadius: 20, padding: '5px 12px', cursor: 'pointer' }}>
           {(vehiclePhotoUrl || session?.vehicleSupaUrl)
             ? <img src={vehiclePhotoUrl || session?.vehicleSupaUrl} style={{ width: 22, height: 22, borderRadius: 4, objectFit: 'cover', flexShrink: 0 }} alt="" />
             : <span style={{ fontSize: 13 }}>🚗</span>
@@ -799,7 +799,7 @@ function RecordView({ session, activeCat, input, onInput, onCommit, onPickCat, o
         />
       )}
 
-      <div style={{ background: 'linear-gradient(135deg,#5C4326,#3F2D1E)', color: '#F6EEDD', borderRadius: 16, padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, boxShadow: '0 8px 20px rgba(63,45,30,.22)' }}>
+      <div style={{ background: 'linear-gradient(135deg,#5C4326,#26190f)', color: '#fffbf4', borderRadius: 16, padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, boxShadow: '0 8px 20px rgba(63,45,30,.22)' }}>
         <div>
           <span style={{ fontSize: 12, opacity: .7, letterSpacing: '.08em', display: 'block' }}>รวมน้ำหนักทั้งหมด</span>
           <span style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 30, lineHeight: 1.1 }}>{fmtKg(totalKg)} <span style={{ fontSize: 15, opacity: .7 }}>กก.</span></span>
@@ -816,7 +816,7 @@ function RecordView({ session, activeCat, input, onInput, onCommit, onPickCat, o
           const active = activeCat === c.key;
           return (
             <div key={c.key} style={{ position: 'relative' }}>
-              <button onClick={() => onPickCat(c.key)} style={{ width: '100%', border: active ? `2px solid ${c.accent}` : '1px solid #E4D7BC', background: active ? '#FFFDF8' : '#FBF6EC', borderRadius: 12, padding: '10px 4px', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: active ? `0 4px 12px ${c.accent}40` : 'none' }}>
+              <button onClick={() => onPickCat(c.key)} style={{ width: '100%', border: active ? `2px solid ${c.accent}` : '1px solid #e4d9c8', background: active ? '#ffffff' : '#fbf7f1', borderRadius: 12, padding: '10px 4px', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: active ? `0 4px 12px ${c.accent}40` : 'none' }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'center' }}>
                   <span style={{ width: 8, height: 8, borderRadius: '50%', background: c.accent, display: 'inline-block', flexShrink: 0 }} />
                   <span style={{ fontWeight: 600, fontSize: 13 }}>{c.label}</span>
@@ -824,7 +824,7 @@ function RecordView({ session, activeCat, input, onInput, onCommit, onPickCat, o
                 <span style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 16, marginTop: 3 }}>{fmtKg(d.kg)}</span>
                 <span style={{ fontSize: 10, opacity: .7 }}>{d.count} เข่ง</span>
               </button>
-              {onHideCat && d.count === 0 && <button onClick={() => onHideCat(c.key)} style={{ position: 'absolute', top: 3, right: 3, border: 'none', background: 'rgba(160,144,128,.18)', borderRadius: 8, width: 18, height: 18, fontSize: 9, cursor: 'pointer', color: '#9A8662', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>}
+              {onHideCat && d.count === 0 && <button onClick={() => onHideCat(c.key)} style={{ position: 'absolute', top: 3, right: 3, border: 'none', background: 'rgba(160,144,128,.18)', borderRadius: 8, width: 18, height: 18, fontSize: 9, cursor: 'pointer', color: '#8a7767', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>}
             </div>
           );
         })}
@@ -834,7 +834,7 @@ function RecordView({ session, activeCat, input, onInput, onCommit, onPickCat, o
           const accent = hashColor(lbl);
           return (
             <div key={lbl} style={{ position: 'relative' }}>
-              <button onClick={() => { onCustomLabelChange(lbl); onPickCat('custom'); }} style={{ width: '100%', border: active ? `2px solid ${accent}` : '1px solid #E4D7BC', background: active ? '#FFFDF8' : '#FBF6EC', borderRadius: 12, padding: '10px 4px', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: active ? `0 4px 12px ${accent}40` : 'none' }}>
+              <button onClick={() => { onCustomLabelChange(lbl); onPickCat('custom'); }} style={{ width: '100%', border: active ? `2px solid ${accent}` : '1px solid #e4d9c8', background: active ? '#ffffff' : '#fbf7f1', borderRadius: 12, padding: '10px 4px', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: active ? `0 4px 12px ${accent}40` : 'none' }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'center' }}>
                   <span style={{ width: 8, height: 8, borderRadius: '50%', background: accent, display: 'inline-block', flexShrink: 0 }} />
                   <span style={{ fontWeight: 600, fontSize: 13 }}>{lbl}</span>
@@ -842,7 +842,7 @@ function RecordView({ session, activeCat, input, onInput, onCommit, onPickCat, o
                 <span style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 16, marginTop: 3 }}>{fmtKg(d.kg)}</span>
                 <span style={{ fontSize: 10, opacity: .7 }}>{d.count} เข่ง</span>
               </button>
-              {onRemoveCustomCatLabel && <button onClick={() => onRemoveCustomCatLabel(lbl)} style={{ position: 'absolute', top: 3, right: 3, border: 'none', background: 'rgba(160,144,128,.18)', borderRadius: 8, width: 18, height: 18, fontSize: 9, cursor: 'pointer', color: '#9A8662', lineHeight: '18px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>}
+              {onRemoveCustomCatLabel && <button onClick={() => onRemoveCustomCatLabel(lbl)} style={{ position: 'absolute', top: 3, right: 3, border: 'none', background: 'rgba(160,144,128,.18)', borderRadius: 8, width: 18, height: 18, fontSize: 9, cursor: 'pointer', color: '#8a7767', lineHeight: '18px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>}
             </div>
           );
         })}
@@ -859,62 +859,62 @@ function RecordView({ session, activeCat, input, onInput, onCommit, onPickCat, o
                 onKeyDown={e => { if (e.key === 'Enter' && newLabelText.trim()) { onAddCustomCatLabel(newLabelText.trim()); setNewLabelText(''); setAddingNewLabel(false); } if (e.key === 'Escape') { setNewLabelText(''); setAddingNewLabel(false); } }}
                 placeholder="ชื่อหมวดใหม่…"
                 autoFocus
-                style={{ flex: 1, border: '1px solid #C9A24B', borderRadius: 12, padding: '8px 12px', fontSize: 14, fontWeight: 600, outline: 'none', fontFamily: 'inherit', color: '#4A3526' }}
+                style={{ flex: 1, border: '1px solid #e8692e', borderRadius: 12, padding: '8px 12px', fontSize: 14, fontWeight: 600, outline: 'none', fontFamily: 'inherit', color: '#3a2718' }}
               />
-              <button onClick={() => { if (newLabelText.trim()) { onAddCustomCatLabel(newLabelText.trim()); setNewLabelText(''); setAddingNewLabel(false); } }} style={{ border: 'none', borderRadius: 12, padding: '8px 14px', background: '#C9A24B', color: '#fff', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>บันทึก</button>
-              <button onClick={() => { setNewLabelText(''); setAddingNewLabel(false); }} style={{ border: '1px solid #E4D7BC', borderRadius: 12, padding: '8px 12px', background: '#FBF6EC', color: '#9A8662', fontSize: 13, cursor: 'pointer' }}>ยกเลิก</button>
+              <button onClick={() => { if (newLabelText.trim()) { onAddCustomCatLabel(newLabelText.trim()); setNewLabelText(''); setAddingNewLabel(false); } }} style={{ border: 'none', borderRadius: 12, padding: '8px 14px', background: '#e8692e', color: '#fff', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>บันทึก</button>
+              <button onClick={() => { setNewLabelText(''); setAddingNewLabel(false); }} style={{ border: '1px solid #e4d9c8', borderRadius: 12, padding: '8px 12px', background: '#fbf7f1', color: '#8a7767', fontSize: 13, cursor: 'pointer' }}>ยกเลิก</button>
             </div>
           ) : (
             <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-              <button onClick={() => setAddingNewLabel(true)} style={{ padding: '6px 14px', borderRadius: 16, border: '1px dashed #C9A24B', background: '#FBF6EC', color: '#9A8662', fontSize: 13, cursor: 'pointer', fontWeight: 600 }}>+ เพิ่มหมวดใหม่</button>
+              <button onClick={() => setAddingNewLabel(true)} style={{ padding: '6px 14px', borderRadius: 16, border: '1px dashed #e8692e', background: '#fbf7f1', color: '#8a7767', fontSize: 13, cursor: 'pointer', fontWeight: 600 }}>+ เพิ่มหมวดใหม่</button>
               {(customCatLabels || []).length > 0 && onOpenPinEditor && (
-                <button onClick={onOpenPinEditor} style={{ padding: '6px 12px', borderRadius: 16, border: '1px solid #E4D7BC', background: '#fff', color: '#7A6450', fontSize: 13, cursor: 'pointer' }}>⚙ จัดการ</button>
+                <button onClick={onOpenPinEditor} style={{ padding: '6px 12px', borderRadius: 16, border: '1px solid #e4d9c8', background: '#fff', color: '#6b4a38', fontSize: 13, cursor: 'pointer' }}>⚙ จัดการ</button>
               )}
               {(hiddenCats || []).length > 0 && onShowAllCats && (
-                <button onClick={onShowAllCats} style={{ padding: '6px 12px', borderRadius: 16, border: '1px solid #C9A24B', background: '#FBF3DF', color: '#7A5A22', fontSize: 13, cursor: 'pointer' }}>↩ แสดงทั้งหมด</button>
+                <button onClick={onShowAllCats} style={{ padding: '6px 12px', borderRadius: 16, border: '1px solid #e8692e', background: '#FBF3DF', color: '#c4491c', fontSize: 13, cursor: 'pointer' }}>↩ แสดงทั้งหมด</button>
               )}
             </div>
           )}
         </div>
       )}
 
-      <div style={{ background: '#FFFDF8', border: '1px solid #E4D7BC', borderRadius: 18, padding: 16, boxShadow: '0 4px 14px rgba(95,70,40,.06)' }}>
+      <div style={{ background: '#ffffff', border: '1px solid #e4d9c8', borderRadius: 18, padding: 16, boxShadow: '0 4px 14px rgba(95,70,40,.06)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-          <span style={{ display: 'flex', alignItems: 'center', gap: 7, fontWeight: 600, color: '#4A3526' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 7, fontWeight: 600, color: '#3a2718' }}>
             <span style={{ width: 11, height: 11, borderRadius: '50%', background: catAccent(activeCat), display: 'inline-block' }} />
             กำลังจด: {activeCat === 'custom' ? (customLabel || 'หมวดพิเศษ') : catLabel(activeCat)}
           </span>
-          <span style={{ fontSize: 12, color: '#9A8662' }}>เคาะตัวเลข แล้วกด "บันทึกเข่ง"</span>
+          <span style={{ fontSize: 12, color: '#8a7767' }}>เคาะตัวเลข แล้วกด "บันทึกเข่ง"</span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 8, background: '#FBF6EC', borderRadius: 14, padding: 14, marginBottom: 14, minHeight: 60 }}>
-          <span style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 42, color: '#3F2D1E', lineHeight: 1 }}>{input || '0'}</span>
-          <span style={{ fontSize: 16, color: '#A6925E' }}>กก.</span>
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 8, background: '#fbf7f1', borderRadius: 14, padding: 14, marginBottom: 14, minHeight: 60 }}>
+          <span style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 42, color: '#26190f', lineHeight: 1 }}>{input || '0'}</span>
+          <span style={{ fontSize: 16, color: '#a99a88' }}>กก.</span>
         </div>
         <Keypad value={input} onChange={onInput} onConfirm={onCommit} />
       </div>
 
       {recent.length > 0 && (
         <div style={{ marginTop: 16 }}>
-          <span style={{ fontSize: 12, color: '#A6925E', letterSpacing: '.08em' }}>เข่งล่าสุด ({activeCat === 'custom' ? (customLabel || 'หมวดพิเศษ') : catLabel(activeCat)}) — แตะเพื่อแก้/ลบ</span>
+          <span style={{ fontSize: 12, color: '#a99a88', letterSpacing: '.08em' }}>เข่งล่าสุด ({activeCat === 'custom' ? (customLabel || 'หมวดพิเศษ') : catLabel(activeCat)}) — แตะเพื่อแก้/ลบ</span>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
             {recent.map(e => (
-              <button key={e.id} onClick={() => onEditEntry(e)} style={{ border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 10, padding: '8px 12px', fontSize: 14, color: '#4A3526', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <button key={e.id} onClick={() => onEditEntry(e)} style={{ border: '1px solid #e4d9c8', background: '#ffffff', borderRadius: 10, padding: '8px 12px', fontSize: 14, color: '#3a2718', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
                 <span style={{ fontFamily: 'Prompt', fontWeight: 500 }}>{fmtKg(e.kg)}</span>
-                <span style={{ fontSize: 11, color: '#B7A684' }}>กก. · {timeStr(e.t)}</span>
+                <span style={{ fontSize: 11, color: '#b9a88f' }}>กก. · {timeStr(e.t)}</span>
               </button>
             ))}
           </div>
         </div>
       )}
 
-      <div className="no-print" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 25, background: '#FBF6EC', borderTop: '1px solid #E4D7BC', padding: 'calc(env(safe-area-inset-bottom) + 10px) 14px 10px', display: 'flex', gap: 10 }}>
+      <div className="no-print" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 25, background: '#fbf7f1', borderTop: '1px solid #e4d9c8', padding: 'calc(env(safe-area-inset-bottom) + 10px) 14px 10px', display: 'flex', gap: 10 }}>
         <button
           onClick={onCommit}
           disabled={!input || parseFloat(input) <= 0}
-          style={{ flex: 1, border: 'none', borderRadius: 13, padding: 15, background: (!input || parseFloat(input) <= 0) ? '#D9CDB8' : 'linear-gradient(135deg,#C9A24B,#A8763E)', color: (!input || parseFloat(input) <= 0) ? '#A89880' : '#fff', fontWeight: 700, fontSize: 16, cursor: (!input || parseFloat(input) <= 0) ? 'not-allowed' : 'pointer', transition: 'background .2s' }}>
+          style={{ flex: 1, border: 'none', borderRadius: 13, padding: 15, background: (!input || parseFloat(input) <= 0) ? '#D9CDB8' : 'linear-gradient(135deg,#e8692e,#A8763E)', color: (!input || parseFloat(input) <= 0) ? '#A89880' : '#fff', fontWeight: 700, fontSize: 16, cursor: (!input || parseFloat(input) <= 0) ? 'not-allowed' : 'pointer', transition: 'background .2s' }}>
           ＋ บันทึกเข่งนี้
         </button>
-        <button onClick={onGoSummary} style={{ flex: 1, border: 'none', borderRadius: 13, padding: 15, background: '#3F2D1E', color: '#F6EEDD', fontWeight: 600, fontSize: 16, cursor: 'pointer' }}>ดูสรุป & ตั้งราคา →</button>
+        <button onClick={onGoSummary} style={{ flex: 1, border: 'none', borderRadius: 13, padding: 15, background: '#26190f', color: '#fffbf4', fontWeight: 600, fontSize: 16, cursor: 'pointer' }}>ดูสรุป & ตั้งราคา →</button>
       </div>
     </div>
   );
@@ -935,13 +935,13 @@ function SummaryView({ session, onGoRecord, onGoConfirm, onSetPrice, logOpen, on
   return (
     <div style={{ flex: 1, maxWidth: 820, width: '100%', margin: '0 auto', padding: '16px 14px 120px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-        <button onClick={onGoRecord} style={{ border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 10, padding: '8px 12px', fontSize: 13, color: '#7A6450', cursor: 'pointer' }}>‹ กลับไปจด</button>
-        <h2 style={{ fontFamily: 'Prompt', fontWeight: 400, fontSize: 20, color: '#4A3526', margin: 0 }}>สรุปยอด · ตั้งราคา</h2>
+        <button onClick={onGoRecord} style={{ border: '1px solid #e4d9c8', background: '#ffffff', borderRadius: 10, padding: '8px 12px', fontSize: 13, color: '#6b4a38', cursor: 'pointer' }}>‹ กลับไปจด</button>
+        <h2 style={{ fontFamily: 'Prompt', fontWeight: 400, fontSize: 20, color: '#3a2718', margin: 0 }}>สรุปยอด · ตั้งราคา</h2>
       </div>
-      <p style={{ margin: '0 0 14px', fontSize: 13, color: '#9A8662' }}>แตะช่อง "ราคา" เพื่อใส่ราคารับซื้อวันนี้ของแต่ละหมวด · ยอดรวมคำนวณให้อัตโนมัติ</p>
+      <p style={{ margin: '0 0 14px', fontSize: 13, color: '#8a7767' }}>แตะช่อง "ราคา" เพื่อใส่ราคารับซื้อวันนี้ของแต่ละหมวด · ยอดรวมคำนวณให้อัตโนมัติ</p>
 
-      <div style={{ background: '#FFFDF8', border: '1px solid #E4D7BC', borderRadius: 16, overflow: 'hidden', boxShadow: '0 4px 14px rgba(95,70,40,.06)' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1.3fr .7fr 1fr 1.1fr 1.2fr', background: '#F3E9D2', padding: '11px 14px', fontSize: 12, fontWeight: 600, color: '#7A5A22' }}>
+      <div style={{ background: '#ffffff', border: '1px solid #e4d9c8', borderRadius: 16, overflow: 'hidden', boxShadow: '0 4px 14px rgba(95,70,40,.06)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1.3fr .7fr 1fr 1.1fr 1.2fr', background: '#f3ece0', padding: '11px 14px', fontSize: 12, fontWeight: 600, color: '#c4491c' }}>
           <span>หมวด</span><span style={{ textAlign: 'center' }}>เข่ง</span><span style={{ textAlign: 'right' }}>น้ำหนัก</span><span style={{ textAlign: 'right' }}>ราคา/กก.</span><span style={{ textAlign: 'right' }}>ยอด (฿)</span>
         </div>
         {stdRows.map(c => {
@@ -949,15 +949,15 @@ function SummaryView({ session, onGoRecord, onGoConfirm, onSetPrice, logOpen, on
           const price = session?.prices[c.key] || 0;
           return (
             <div key={c.key} style={{ display: 'grid', gridTemplateColumns: '1.3fr .7fr 1fr 1.1fr 1.2fr', alignItems: 'center', padding: '12px 14px', borderTop: '1px solid #EFE4CD' }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 7, fontWeight: 600, fontSize: 14, color: '#4A3526' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 7, fontWeight: 600, fontSize: 14, color: '#3a2718' }}>
                 <span style={{ width: 9, height: 9, borderRadius: '50%', background: c.accent, display: 'inline-block', flexShrink: 0 }} />{c.label}
               </span>
-              <span style={{ textAlign: 'center', fontSize: 13, color: '#9A8662' }}>{d.count}</span>
+              <span style={{ textAlign: 'center', fontSize: 13, color: '#8a7767' }}>{d.count}</span>
               <span style={{ textAlign: 'right', fontFamily: 'Prompt', fontSize: 14 }}>{fmtKg(d.kg)}</span>
-              <button onClick={() => onSetPrice(c.key)} style={{ textAlign: 'right', border: price ? '1px solid #E4D7BC' : '1.5px dashed #C9A24B', background: price ? '#FFFDF8' : '#FBF3DF', borderRadius: 8, padding: '5px 8px', fontSize: 13, color: price ? '#3F2D1E' : '#9A7A12', cursor: 'pointer', fontFamily: 'Prompt' }}>
+              <button onClick={() => onSetPrice(c.key)} style={{ textAlign: 'right', border: price ? '1px solid #e4d9c8' : '1.5px dashed #e8692e', background: price ? '#ffffff' : '#FBF3DF', borderRadius: 8, padding: '5px 8px', fontSize: 13, color: price ? '#26190f' : '#9A7A12', cursor: 'pointer', fontFamily: 'Prompt' }}>
                 {price ? fmtPrice(price) : 'ตั้งราคา'}
               </button>
-              <span style={{ textAlign: 'right', fontFamily: 'Prompt', fontWeight: 500, fontSize: 14, color: '#3F2D1E' }}>{price ? fmtBaht(d.kg * price) : '—'}</span>
+              <span style={{ textAlign: 'right', fontFamily: 'Prompt', fontWeight: 500, fontSize: 14, color: '#26190f' }}>{price ? fmtBaht(d.kg * price) : '—'}</span>
             </div>
           );
         })}
@@ -965,20 +965,20 @@ function SummaryView({ session, onGoRecord, onGoConfirm, onSetPrice, logOpen, on
           const price = session?.prices[r.priceKey] || session?.prices['custom'] || 0;
           return (
             <div key={r.priceKey} style={{ display: 'grid', gridTemplateColumns: '1.3fr .7fr 1fr 1.1fr 1.2fr', alignItems: 'center', padding: '12px 14px', borderTop: '1px solid #EFE4CD' }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 7, fontWeight: 600, fontSize: 14, color: '#4A3526' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 7, fontWeight: 600, fontSize: 14, color: '#3a2718' }}>
                 <span style={{ width: 9, height: 9, borderRadius: '50%', background: '#7C8C9A', display: 'inline-block', flexShrink: 0 }} />{r.label || 'หมวดพิเศษ'}
               </span>
-              <span style={{ textAlign: 'center', fontSize: 13, color: '#9A8662' }}>{r.count}</span>
+              <span style={{ textAlign: 'center', fontSize: 13, color: '#8a7767' }}>{r.count}</span>
               <span style={{ textAlign: 'right', fontFamily: 'Prompt', fontSize: 14 }}>{fmtKg(r.kg)}</span>
-              <button onClick={() => onSetPrice(r.priceKey)} style={{ textAlign: 'right', border: price ? '1px solid #E4D7BC' : '1.5px dashed #C9A24B', background: price ? '#FFFDF8' : '#FBF3DF', borderRadius: 8, padding: '5px 8px', fontSize: 13, color: price ? '#3F2D1E' : '#9A7A12', cursor: 'pointer', fontFamily: 'Prompt' }}>
+              <button onClick={() => onSetPrice(r.priceKey)} style={{ textAlign: 'right', border: price ? '1px solid #e4d9c8' : '1.5px dashed #e8692e', background: price ? '#ffffff' : '#FBF3DF', borderRadius: 8, padding: '5px 8px', fontSize: 13, color: price ? '#26190f' : '#9A7A12', cursor: 'pointer', fontFamily: 'Prompt' }}>
                 {price ? fmtPrice(price) : 'ตั้งราคา'}
               </button>
-              <span style={{ textAlign: 'right', fontFamily: 'Prompt', fontWeight: 500, fontSize: 14, color: '#3F2D1E' }}>{price ? fmtBaht(r.kg * price) : '—'}</span>
+              <span style={{ textAlign: 'right', fontFamily: 'Prompt', fontWeight: 500, fontSize: 14, color: '#26190f' }}>{price ? fmtBaht(r.kg * price) : '—'}</span>
             </div>
           );
         })}
-        {stdRows.length === 0 && custRows.length === 0 && <div style={{ padding: '20px 14px', textAlign: 'center', color: '#B7A684', fontSize: 14 }}>ยังไม่มีรายการ — กลับไปบันทึกก่อน</div>}
-        <div style={{ display: 'grid', gridTemplateColumns: '1.3fr .7fr 1fr 1.1fr 1.2fr', alignItems: 'center', padding: 14, background: '#3F2D1E', color: '#F6EEDD' }}>
+        {stdRows.length === 0 && custRows.length === 0 && <div style={{ padding: '20px 14px', textAlign: 'center', color: '#b9a88f', fontSize: 14 }}>ยังไม่มีรายการ — กลับไปบันทึกก่อน</div>}
+        <div style={{ display: 'grid', gridTemplateColumns: '1.3fr .7fr 1fr 1.1fr 1.2fr', alignItems: 'center', padding: 14, background: '#26190f', color: '#fffbf4' }}>
           <span style={{ fontWeight: 600, gridColumn: 'span 2' }}>รวมทั้งสิ้น</span>
           <span style={{ textAlign: 'right', fontFamily: 'Prompt', fontWeight: 500 }}>{fmtKg(totalKg)}</span>
           <span style={{ textAlign: 'right', fontSize: 12, opacity: .65 }}>บาท</span>
@@ -986,30 +986,30 @@ function SummaryView({ session, onGoRecord, onGoConfirm, onSetPrice, logOpen, on
         </div>
       </div>
 
-      <button onClick={onToggleLog} style={{ flex: 1, width: '100%', border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 13, padding: 14, fontWeight: 600, fontSize: 14, color: '#7A6450', cursor: 'pointer', marginTop: 16 }}>
+      <button onClick={onToggleLog} style={{ flex: 1, width: '100%', border: '1px solid #e4d9c8', background: '#ffffff', borderRadius: 13, padding: 14, fontWeight: 600, fontSize: 14, color: '#6b4a38', cursor: 'pointer', marginTop: 16 }}>
         📋 ประวัติการบันทึก/แก้ไข ({log.length})
       </button>
 
       {logOpen && (
-        <div style={{ marginTop: 12, background: '#FBF6EC', border: '1px solid #E4D7BC', borderRadius: 14, padding: '6px 4px', maxHeight: 280, overflowY: 'auto' }}>
+        <div style={{ marginTop: 12, background: '#fbf7f1', border: '1px solid #e4d9c8', borderRadius: 14, padding: '6px 4px', maxHeight: 280, overflowY: 'auto' }}>
           {log.map((l, i) => (
             <div key={i} style={{ display: 'flex', gap: 10, padding: '9px 12px', borderBottom: '1px solid #EFE4CD', alignItems: 'flex-start' }}>
               <span style={{ fontSize: 16 }}>{l.kind === 'add' ? '＋' : l.kind === 'edit' ? '✏️' : l.kind === 'delete' ? '🗑' : l.kind === 'price' ? '💰' : l.kind === 'confirm' ? '✓' : l.kind === 'verify' ? '★' : '📌'}</span>
               <div>
-                <div style={{ fontSize: 13, color: '#4A3526' }}>{l.text}</div>
-                <div style={{ fontSize: 11, color: '#B7A684' }}>{timeStr(l.t)}</div>
+                <div style={{ fontSize: 13, color: '#3a2718' }}>{l.text}</div>
+                <div style={{ fontSize: 11, color: '#b9a88f' }}>{timeStr(l.t)}</div>
               </div>
             </div>
           ))}
-          {log.length === 0 && <div style={{ padding: '12px 14px', color: '#B7A684', fontSize: 13 }}>ยังไม่มีประวัติ</div>}
+          {log.length === 0 && <div style={{ padding: '12px 14px', color: '#b9a88f', fontSize: 13 }}>ยังไม่มีประวัติ</div>}
         </div>
       )}
 
-      <button onClick={onGoConfirm} style={{ width: '100%', marginTop: 18, border: 'none', borderRadius: 15, padding: 18, background: 'linear-gradient(135deg,#C9A24B,#A8763E)', color: '#fff', fontWeight: 700, fontSize: 18, cursor: 'pointer', boxShadow: '0 8px 18px rgba(168,118,62,.3)' }}>
+      <button onClick={onGoConfirm} style={{ width: '100%', marginTop: 18, border: 'none', borderRadius: 15, padding: 18, background: 'linear-gradient(135deg,#e8692e,#A8763E)', color: '#fff', fontWeight: 700, fontSize: 18, cursor: 'pointer', boxShadow: '0 8px 18px rgba(168,118,62,.3)' }}>
         ส่งให้ลูกค้าตรวจสอบ →
       </button>
       {!allPriced && (stdRows.length + custRows.length) > 0 && (
-        <p style={{ textAlign: 'center', fontSize: 12, color: '#B7A684', marginTop: 8 }}>⚠ ยังมีบางหมวดที่ยังไม่ได้ตั้งราคา</p>
+        <p style={{ textAlign: 'center', fontSize: 12, color: '#b9a88f', marginTop: 8 }}>⚠ ยังมีบางหมวดที่ยังไม่ได้ตั้งราคา</p>
       )}
     </div>
   );
@@ -1027,11 +1027,11 @@ function ConfirmView({ session, verified, history, onConfirm, onGoSummary, custo
 
   return (
     <div style={{ flex: 1, background: '#F4ECDD', padding: '18px 14px 60px' }}>
-      <div style={{ maxWidth: 560, margin: '0 auto', background: '#FFFDF8', borderRadius: 20, boxShadow: '0 12px 32px rgba(95,70,40,.16)', overflow: 'hidden', animation: 'popIn .35s' }}>
-        <div style={{ background: '#FBF6EC', padding: 22, textAlign: 'center', borderBottom: '1px solid #E4D7BC' }}>
+      <div style={{ maxWidth: 560, margin: '0 auto', background: '#ffffff', borderRadius: 20, boxShadow: '0 12px 32px rgba(95,70,40,.16)', overflow: 'hidden', animation: 'popIn .35s' }}>
+        <div style={{ background: '#fbf7f1', padding: 22, textAlign: 'center', borderBottom: '1px solid #e4d9c8' }}>
           <img src="/logo.jpg" style={{ width: 120, height: 'auto', borderRadius: 10 }} alt="Qudsun" />
-          <h2 style={{ fontFamily: 'Prompt', fontWeight: 400, fontSize: 20, margin: '14px 0 4px', color: '#4A3526' }}>กรุณาตรวจสอบยอดของท่าน</h2>
-          <p style={{ fontSize: 13, color: '#9A8662', margin: 0 }}>
+          <h2 style={{ fontFamily: 'Prompt', fontWeight: 400, fontSize: 20, margin: '14px 0 4px', color: '#3a2718' }}>กรุณาตรวจสอบยอดของท่าน</h2>
+          <p style={{ fontSize: 13, color: '#8a7767', margin: 0 }}>
             {session?.billNo} · {session ? dateStr(session.date) : ''} · ผู้ขาย {session?.seller || '—'}
             {session?.sellerPhone ? ` · ${session.sellerPhone}` : ''}
           </p>
@@ -1044,9 +1044,9 @@ function ConfirmView({ session, verified, history, onConfirm, onGoSummary, custo
             return (
               <div key={c.key} style={{ display: 'flex', alignItems: 'center', padding: '13px 0', borderBottom: '1px solid #EFE4CD', gap: 10 }}>
                 <span style={{ width: 10, height: 10, borderRadius: '50%', background: c.accent, display: 'inline-block', flexShrink: 0 }} />
-                <span style={{ fontWeight: 600, color: '#4A3526', flex: 1 }}>{c.label}</span>
-                <span style={{ fontFamily: 'Prompt', color: '#9A8662', fontSize: 14 }}>{fmtKg(d.kg)} กก. × {fmtPrice(price)} บาท</span>
-                <span style={{ fontFamily: 'Prompt', fontWeight: 600, color: '#3F2D1E', minWidth: 84, textAlign: 'right' }}>฿{fmtBaht(d.kg * price)}</span>
+                <span style={{ fontWeight: 600, color: '#3a2718', flex: 1 }}>{c.label}</span>
+                <span style={{ fontFamily: 'Prompt', color: '#8a7767', fontSize: 14 }}>{fmtKg(d.kg)} กก. × {fmtPrice(price)} บาท</span>
+                <span style={{ fontFamily: 'Prompt', fontWeight: 600, color: '#26190f', minWidth: 84, textAlign: 'right' }}>฿{fmtBaht(d.kg * price)}</span>
               </div>
             );
           })}
@@ -1055,14 +1055,14 @@ function ConfirmView({ session, verified, history, onConfirm, onGoSummary, custo
             return (
               <div key={r.priceKey} style={{ display: 'flex', alignItems: 'center', padding: '13px 0', borderBottom: '1px solid #EFE4CD', gap: 10 }}>
                 <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#7C8C9A', display: 'inline-block', flexShrink: 0 }} />
-                <span style={{ fontWeight: 600, color: '#4A3526', flex: 1 }}>{r.label || 'หมวดพิเศษ'}</span>
-                <span style={{ fontFamily: 'Prompt', color: '#9A8662', fontSize: 14 }}>{fmtKg(r.kg)} กก. × {fmtPrice(price)} บาท</span>
-                <span style={{ fontFamily: 'Prompt', fontWeight: 600, color: '#3F2D1E', minWidth: 84, textAlign: 'right' }}>฿{fmtBaht(r.kg * price)}</span>
+                <span style={{ fontWeight: 600, color: '#3a2718', flex: 1 }}>{r.label || 'หมวดพิเศษ'}</span>
+                <span style={{ fontFamily: 'Prompt', color: '#8a7767', fontSize: 14 }}>{fmtKg(r.kg)} กก. × {fmtPrice(price)} บาท</span>
+                <span style={{ fontFamily: 'Prompt', fontWeight: 600, color: '#26190f', minWidth: 84, textAlign: 'right' }}>฿{fmtBaht(r.kg * price)}</span>
               </div>
             );
           })}
         </div>
-        <div style={{ background: '#3F2D1E', color: '#F6EEDD', padding: '20px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ background: '#26190f', color: '#fffbf4', padding: '20px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
             <div style={{ fontSize: 12, opacity: .7 }}>รวม {fmtKg(totalKg)} กก.</div>
             <div style={{ fontSize: 13, opacity: .7 }}>ยอดสุทธิที่ต้องชำระ</div>
@@ -1148,7 +1148,7 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
 
   useEffect(() => {
     if (!link) return;
-    QRCode.toDataURL(link, { width: 180, margin: 1, color: { dark: '#2A2118', light: '#FFFFFF' } })
+    QRCode.toDataURL(link, { width: 180, margin: 1, color: { dark: '#241009', light: '#FFFFFF' } })
       .then(setQrDataUrl).catch(() => {});
   }, [link]);
 
@@ -1241,38 +1241,38 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
               const verifiedName = verified?.[phone];
               const supervisor = session?.supervisor || supervisors?.[phone] || '';
               return (
-                <div style={{ background: '#FFFDF8', border: '1px solid #E4D7BC', borderRadius: 16, padding: '16px 18px', marginBottom: 12 }}>
+                <div style={{ background: '#ffffff', border: '1px solid #e4d9c8', borderRadius: 16, padding: '16px 18px', marginBottom: 12 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                     <span style={{ fontSize: 18 }}>👁</span>
-                    <span style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 14, color: '#7A5A22' }}>ดูบิลย้อนหลัง</span>
-                    {onStartEdit && <button onClick={onStartEdit} style={{ marginLeft: 'auto', border: 'none', background: 'linear-gradient(135deg,#5C4326,#3F2D1E)', color: '#F6EEDD', borderRadius: 9, padding: '5px 13px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>✏️ แก้ไข</button>}
-                    {!onStartEdit && <span style={{ marginLeft: 'auto', fontSize: 11, color: '#B7A684' }}>ยืนยัน {confirmTime}</span>}
+                    <span style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 14, color: '#c4491c' }}>ดูบิลย้อนหลัง</span>
+                    {onStartEdit && <button onClick={onStartEdit} style={{ marginLeft: 'auto', border: 'none', background: 'linear-gradient(135deg,#5C4326,#26190f)', color: '#fffbf4', borderRadius: 9, padding: '5px 13px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>✏️ แก้ไข</button>}
+                    {!onStartEdit && <span style={{ marginLeft: 'auto', fontSize: 11, color: '#b9a88f' }}>ยืนยัน {confirmTime}</span>}
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 14px' }}>
                     <div>
-                      <div style={{ fontSize: 10, color: '#B7A684', marginBottom: 1 }}>ชื่อ</div>
-                      <div style={{ fontSize: 14, fontWeight: 600, color: '#3F2D1E' }}>{verifiedName || session?.seller || '—'}</div>
+                      <div style={{ fontSize: 10, color: '#b9a88f', marginBottom: 1 }}>ชื่อ</div>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: '#26190f' }}>{verifiedName || session?.seller || '—'}</div>
                     </div>
                     <div>
-                      <div style={{ fontSize: 10, color: '#B7A684', marginBottom: 1 }}>เบอร์โทร</div>
-                      <div style={{ fontSize: 13, color: '#3F2D1E', fontFamily: 'Prompt' }}>{phone || '—'}</div>
+                      <div style={{ fontSize: 10, color: '#b9a88f', marginBottom: 1 }}>เบอร์โทร</div>
+                      <div style={{ fontSize: 13, color: '#26190f', fontFamily: 'Prompt' }}>{phone || '—'}</div>
                     </div>
                     {supervisor ? <div>
-                      <div style={{ fontSize: 10, color: '#B7A684', marginBottom: 1 }}>ผู้ดูแล</div>
-                      <div style={{ fontSize: 13, color: '#3F2D1E' }}>{supervisor}</div>
+                      <div style={{ fontSize: 10, color: '#b9a88f', marginBottom: 1 }}>ผู้ดูแล</div>
+                      <div style={{ fontSize: 13, color: '#26190f' }}>{supervisor}</div>
                     </div> : null}
                     {info.bankName || info.bankAccount ? <>
                       <div>
-                        <div style={{ fontSize: 10, color: '#B7A684', marginBottom: 1 }}>ธนาคาร</div>
-                        <div style={{ fontSize: 13, color: '#3F2D1E' }}>{info.bankName || '—'}</div>
+                        <div style={{ fontSize: 10, color: '#b9a88f', marginBottom: 1 }}>ธนาคาร</div>
+                        <div style={{ fontSize: 13, color: '#26190f' }}>{info.bankName || '—'}</div>
                       </div>
                       <div>
-                        <div style={{ fontSize: 10, color: '#B7A684', marginBottom: 1 }}>เลขบัญชี</div>
-                        <div style={{ fontSize: 13, color: '#3F2D1E', fontFamily: 'Prompt', letterSpacing: '.04em' }}>{info.bankAccount || '—'}</div>
+                        <div style={{ fontSize: 10, color: '#b9a88f', marginBottom: 1 }}>เลขบัญชี</div>
+                        <div style={{ fontSize: 13, color: '#26190f', fontFamily: 'Prompt', letterSpacing: '.04em' }}>{info.bankAccount || '—'}</div>
                       </div>
                       {info.note ? <div style={{ gridColumn: '1/-1' }}>
-                        <div style={{ fontSize: 10, color: '#B7A684', marginBottom: 1 }}>ชื่อผู้รับ / หมายเหตุ</div>
-                        <div style={{ fontSize: 13, color: '#3F2D1E' }}>{info.note}</div>
+                        <div style={{ fontSize: 10, color: '#b9a88f', marginBottom: 1 }}>ชื่อผู้รับ / หมายเหตุ</div>
+                        <div style={{ fontSize: 13, color: '#26190f' }}>{info.note}</div>
                       </div> : null}
                     </> : null}
                   </div>
@@ -1281,15 +1281,15 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
             })()}
             {(() => {
               const pay = payments?.[session?.billNo];
-              const noPhoto = { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: 80, borderRadius: 10, border: '1.5px dashed #D8C8A8', color: '#C0A87A', fontSize: 11, gap: 4 };
-              const upBtn = { border: 'none', background: 'rgba(168,118,62,.12)', color: '#7A5A22', borderRadius: 6, padding: '2px 8px', fontSize: 10, cursor: 'pointer', marginTop: 4 };
+              const noPhoto = { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: 80, borderRadius: 10, border: '1.5px dashed #d5c8b4', color: '#C0A87A', fontSize: 11, gap: 4 };
+              const upBtn = { border: 'none', background: 'rgba(168,118,62,.12)', color: '#c4491c', borderRadius: 6, padding: '2px 8px', fontSize: 10, cursor: 'pointer', marginTop: 4 };
               return (
-              <div style={{ background: '#FFFDF8', border: '1px solid #E4D7BC', borderRadius: 14, padding: '14px 16px', marginBottom: 16 }}>
+              <div style={{ background: '#ffffff', border: '1px solid #e4d9c8', borderRadius: 14, padding: '14px 16px', marginBottom: 16 }}>
                 <div style={{ display: 'flex', alignItems: 'center', marginBottom: 10 }}>
-                  <span style={{ fontSize: 12, color: '#A6925E', fontWeight: 600, flex: 1 }}>รูปหลักฐาน</span>
+                  <span style={{ fontSize: 12, color: '#a99a88', fontWeight: 600, flex: 1 }}>รูปหลักฐาน</span>
                   {onBulkUpload && (
                     <button onClick={() => setShowBulkUpload(true)}
-                      style={{ border: 'none', background: '#3F2D1E', color: '#F6EEDD', borderRadius: 10, padding: '6px 14px', fontSize: 12, cursor: 'pointer', fontFamily: 'Prompt' }}>
+                      style={{ border: 'none', background: '#26190f', color: '#fffbf4', borderRadius: 10, padding: '6px 14px', fontSize: 12, cursor: 'pointer', fontFamily: 'Prompt' }}>
                       📎 อัปโหลดหลักฐาน
                     </button>
                   )}
@@ -1300,54 +1300,54 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
                 {/* Row 1: ใบเสร็จ + สลิป */}
                 <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 4 }}>📄 ใบเสร็จลายเซ็น</div>
+                    <div style={{ fontSize: 11, color: '#8a7767', marginBottom: 4 }}>📄 ใบเสร็จลายเซ็น</div>
                     {pay?.receiptUrl
                       ? <div style={{ position: 'relative' }}>
                           <a href={pay.receiptUrl} target="_blank" rel="noreferrer"><img src={pay.receiptUrl} alt="ใบเสร็จ" style={{ width: '100%', maxHeight: 140, objectFit: 'cover', borderRadius: 10, border: '1px solid #C8E6C9', display: 'block' }} /></a>
                           {onUploadEvidence && <button onClick={() => receiptUpRef.current?.click()} style={{ position: 'absolute', top: 4, right: 4, ...upBtn }}>{uploading === 'receipt' ? '…' : 'เปลี่ยน'}</button>}
                         </div>
                       : <div>
-                          <div style={{ ...noPhoto, cursor: onUploadEvidence ? 'pointer' : 'default', border: onUploadEvidence ? '1.5px dashed #C9A24B' : noPhoto.border }} onClick={() => onUploadEvidence && receiptUpRef.current?.click()}>
+                          <div style={{ ...noPhoto, cursor: onUploadEvidence ? 'pointer' : 'default', border: onUploadEvidence ? '1.5px dashed #e8692e' : noPhoto.border }} onClick={() => onUploadEvidence && receiptUpRef.current?.click()}>
                             {uploading === 'receipt' ? 'กำลัง upload…' : onUploadEvidence ? <><span>📤</span><span style={{ fontSize: 10 }}>แตะเพื่ออัพโหลด</span></> : 'ไม่มีรูป'}
                           </div>
                           {onReusePhoto && priorPhotos.receiptUrl && (
-                            <button onClick={() => onReusePhoto('receipt', priorPhotos.receiptUrl)} style={{ marginTop: 4, width: '100%', border: '1px solid #C9A24B', background: '#FFFDF8', color: '#8A5E00', borderRadius: 8, padding: '5px 0', fontSize: 11, cursor: 'pointer', fontFamily: 'Prompt' }}>📋 ใช้รูปเดิม</button>
+                            <button onClick={() => onReusePhoto('receipt', priorPhotos.receiptUrl)} style={{ marginTop: 4, width: '100%', border: '1px solid #e8692e', background: '#ffffff', color: '#8A5E00', borderRadius: 8, padding: '5px 0', fontSize: 11, cursor: 'pointer', fontFamily: 'Prompt' }}>📋 ใช้รูปเดิม</button>
                           )}
                         </div>}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 4 }}>💸 สลิปโอน</div>
+                    <div style={{ fontSize: 11, color: '#8a7767', marginBottom: 4 }}>💸 สลิปโอน</div>
                     {pay?.slipUrl
                       ? <div style={{ position: 'relative' }}>
                           <a href={pay.slipUrl} target="_blank" rel="noreferrer"><img src={pay.slipUrl} alt="สลิป" style={{ width: '100%', maxHeight: 140, objectFit: 'cover', borderRadius: 10, border: '1px solid #C8E6C9', display: 'block' }} /></a>
                           {onUploadEvidence && <button onClick={() => slipUpRef.current?.click()} style={{ position: 'absolute', top: 4, right: 4, ...upBtn }}>{uploading === 'slip' ? '…' : 'เปลี่ยน'}</button>}
                         </div>
                       : <div>
-                          <div style={{ ...noPhoto, cursor: onUploadEvidence ? 'pointer' : 'default', border: onUploadEvidence ? '1.5px dashed #C9A24B' : noPhoto.border }} onClick={() => onUploadEvidence && slipUpRef.current?.click()}>
+                          <div style={{ ...noPhoto, cursor: onUploadEvidence ? 'pointer' : 'default', border: onUploadEvidence ? '1.5px dashed #e8692e' : noPhoto.border }} onClick={() => onUploadEvidence && slipUpRef.current?.click()}>
                             {uploading === 'slip' ? 'กำลัง upload…' : onUploadEvidence ? <><span>📤</span><span style={{ fontSize: 10 }}>แตะเพื่ออัพโหลด</span></> : 'ไม่มีรูป'}
                           </div>
                           {onReusePhoto && priorPhotos.slipUrl && (
-                            <button onClick={() => onReusePhoto('slip', priorPhotos.slipUrl)} style={{ marginTop: 4, width: '100%', border: '1px solid #C9A24B', background: '#FFFDF8', color: '#8A5E00', borderRadius: 8, padding: '5px 0', fontSize: 11, cursor: 'pointer', fontFamily: 'Prompt' }}>📋 ใช้รูปเดิม</button>
+                            <button onClick={() => onReusePhoto('slip', priorPhotos.slipUrl)} style={{ marginTop: 4, width: '100%', border: '1px solid #e8692e', background: '#ffffff', color: '#8A5E00', borderRadius: 8, padding: '5px 0', fontSize: 11, cursor: 'pointer', fontFamily: 'Prompt' }}>📋 ใช้รูปเดิม</button>
                           )}
                         </div>}
                   </div>
                 </div>
                 {/* Row 2: ทะเบียนรถ full-width */}
                 <div>
-                  <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 4 }}>🚗 ทะเบียนรถ {session?.vehiclePlate ? `· ${session.vehiclePlate}` : ''}</div>
+                  <div style={{ fontSize: 11, color: '#8a7767', marginBottom: 4 }}>🚗 ทะเบียนรถ {session?.vehiclePlate ? `· ${session.vehiclePlate}` : ''}</div>
                   {(() => {
                     const vUrl = pay?.vehicleUrl || session?.vehicleSupaUrl || vehiclePhotoUrl;
                     return vUrl
                       ? <div style={{ position: 'relative' }}>
-                          <a href={vUrl} target="_blank" rel="noreferrer"><img src={vUrl} alt="ทะเบียน" style={{ width: '100%', maxHeight: 160, objectFit: 'cover', borderRadius: 10, border: '1px solid #E4D7BC', display: 'block' }} /></a>
+                          <a href={vUrl} target="_blank" rel="noreferrer"><img src={vUrl} alt="ทะเบียน" style={{ width: '100%', maxHeight: 160, objectFit: 'cover', borderRadius: 10, border: '1px solid #e4d9c8', display: 'block' }} /></a>
                           {onUploadEvidence && <button onClick={() => vehicleUpRef.current?.click()} style={{ position: 'absolute', top: 4, right: 4, ...upBtn }}>{uploading === 'vehicle' ? '…' : 'เปลี่ยน'}</button>}
                         </div>
                       : <div>
-                          <div style={{ ...noPhoto, cursor: onUploadEvidence ? 'pointer' : 'default', border: onUploadEvidence ? '1.5px dashed #C9A24B' : noPhoto.border }} onClick={() => onUploadEvidence && vehicleUpRef.current?.click()}>
+                          <div style={{ ...noPhoto, cursor: onUploadEvidence ? 'pointer' : 'default', border: onUploadEvidence ? '1.5px dashed #e8692e' : noPhoto.border }} onClick={() => onUploadEvidence && vehicleUpRef.current?.click()}>
                             {uploading === 'vehicle' ? 'กำลัง upload…' : onUploadEvidence ? <><span>📤</span><span style={{ fontSize: 10 }}>แตะเพื่ออัพโหลด</span></> : 'ไม่มีรูป'}
                           </div>
                           {onReusePhoto && priorPhotos.vehicleUrl && (
-                            <button onClick={() => onReusePhoto('vehicle', priorPhotos.vehicleUrl)} style={{ marginTop: 4, width: '100%', border: '1px solid #C9A24B', background: '#FFFDF8', color: '#8A5E00', borderRadius: 8, padding: '5px 0', fontSize: 11, cursor: 'pointer', fontFamily: 'Prompt' }}>📋 ใช้รูปเดิม</button>
+                            <button onClick={() => onReusePhoto('vehicle', priorPhotos.vehicleUrl)} style={{ marginTop: 4, width: '100%', border: '1px solid #e8692e', background: '#ffffff', color: '#8A5E00', borderRadius: 8, padding: '5px 0', fontSize: 11, cursor: 'pointer', fontFamily: 'Prompt' }}>📋 ใช้รูปเดิม</button>
                           )}
                         </div>;
                   })()}
@@ -1355,7 +1355,7 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
                 {payments?.[session?.billNo]?.slipData && (() => {
                   const sd = payments[session.billNo].slipData;
                   return (
-                    <div style={{ marginTop: 10, background: '#EFF8F1', borderRadius: 10, padding: '8px 12px', fontSize: 11.5, color: '#2E7D32', lineHeight: 1.8 }}>
+                    <div style={{ marginTop: 10, background: '#EFF8F1', borderRadius: 10, padding: '8px 12px', fontSize: 11.5, color: '#2f9b58', lineHeight: 1.8 }}>
                       {sd.amount && <div>ยอด: {sd.amount} บาท</div>}
                       {sd.sender && <div>ผู้โอน: {sd.sender}</div>}
                       {sd.recipient && <div>ผู้รับ: {sd.recipient}</div>}
@@ -1377,22 +1377,22 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
           </div>
         )}
         {isHandoff && (
-          <div style={{ background: '#FBF3DF', border: '1px solid #E6CF94', borderRadius: 14, padding: '14px 16px', marginBottom: 16, fontSize: 13, color: '#7A5A22' }}>
+          <div style={{ background: '#FBF3DF', border: '1px solid #E6CF94', borderRadius: 14, padding: '14px 16px', marginBottom: 16, fontSize: 13, color: '#c4491c' }}>
             📥 บิลนี้รับเข้ามาจากแท็บเล็ต — พร้อมสั่งปริ้นจากเครื่องนี้ได้เลย
           </div>
         )}
-        <button onClick={() => window.print()} style={{ width: '100%', border: 'none', borderRadius: 15, padding: 18, background: 'linear-gradient(135deg,#5C4326,#3F2D1E)', color: '#F6EEDD', fontWeight: 700, fontSize: 18, cursor: 'pointer', boxShadow: '0 8px 18px rgba(63,45,30,.26)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+        <button onClick={() => window.print()} style={{ width: '100%', border: 'none', borderRadius: 15, padding: 18, background: 'linear-gradient(135deg,#5C4326,#26190f)', color: '#fffbf4', fontWeight: 700, fontSize: 18, cursor: 'pointer', boxShadow: '0 8px 18px rgba(63,45,30,.26)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
           🖨 ปริ้นบิลจากเครื่องนี้
         </button>
-        <p style={{ textAlign: 'center', fontSize: 12, color: '#9A8662', margin: '8px 0 0' }}>เครื่องนี้ต้องต่อกับเครื่องปริ้น · ขนาดกระดาษ A5 (ครึ่ง A4)</p>
+        <p style={{ textAlign: 'center', fontSize: 12, color: '#8a7767', margin: '8px 0 0' }}>เครื่องนี้ต้องต่อกับเครื่องปริ้น · ขนาดกระดาษ A5 (ครึ่ง A4)</p>
 
         <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
           {readonly ? (
-            <button onClick={onGoBack} style={{ width: '100%', border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 12, padding: 14, fontSize: 15, color: '#7A6450', cursor: 'pointer' }}>‹ กลับ</button>
+            <button onClick={onGoBack} style={{ width: '100%', border: '1px solid #e4d9c8', background: '#ffffff', borderRadius: 12, padding: 14, fontSize: 15, color: '#6b4a38', cursor: 'pointer' }}>‹ กลับ</button>
           ) : (
             <>
-              <button onClick={onGoSummary} style={{ flex: 1, border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 12, padding: 13, fontSize: 14, color: '#7A6450', cursor: 'pointer' }}>‹ กลับไปแก้</button>
-              <button onClick={onFinish} style={{ flex: 1, border: 'none', background: '#C9A24B', color: '#fff', borderRadius: 12, padding: 13, fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>เสร็จสิ้น · บันทึกบิล</button>
+              <button onClick={onGoSummary} style={{ flex: 1, border: '1px solid #e4d9c8', background: '#ffffff', borderRadius: 12, padding: 13, fontSize: 14, color: '#6b4a38', cursor: 'pointer' }}>‹ กลับไปแก้</button>
+              <button onClick={onFinish} style={{ flex: 1, border: 'none', background: '#e8692e', color: '#fff', borderRadius: 12, padding: 13, fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>เสร็จสิ้น · บันทึกบิล</button>
             </>
           )}
         </div>
@@ -1400,8 +1400,8 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
 
       {/* The Bill A5 */}
       <div className="bill-doc-wrapper" style={{ maxWidth: 420, margin: '0 auto' }}>
-      <div className="bill-doc" style={{ background: '#fff', border: '1px solid #E4D7BC', borderRadius: 6, boxShadow: '0 10px 30px rgba(95,70,40,.14)', padding: '22px 22px 18px', color: '#2A2118', fontSize: 13 }}>
-        <div className="bill-doc-header" style={{ display: 'flex', alignItems: 'flex-start', gap: 12, borderBottom: '2px solid #2A2118', paddingBottom: 12 }}>
+      <div className="bill-doc" style={{ background: '#fff', border: '1px solid #e4d9c8', borderRadius: 6, boxShadow: '0 10px 30px rgba(95,70,40,.14)', padding: '22px 22px 18px', color: '#241009', fontSize: 13 }}>
+        <div className="bill-doc-header" style={{ display: 'flex', alignItems: 'flex-start', gap: 12, borderBottom: '2px solid #241009', paddingBottom: 12 }}>
           <img src="/logo.jpg" className="bill-doc-logo" style={{ width: 72, height: 72, borderRadius: 8, objectFit: 'cover' }} alt="Qudsun" />
           <div style={{ flex: 1 }}>
             <div className="bill-doc-title" style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 19, letterSpacing: '.04em' }}>ทุเรียนคัดสรร <span style={{ color: '#8A6A2E' }}>QUDSUN</span></div>
@@ -1419,7 +1419,7 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
               return (
                 <div style={{ marginTop: 5, display: 'flex', flexDirection: 'column', gap: 1, fontSize: 11 }}>
                   {items.map(it => (
-                    <div key={it.label}><span style={{ color: '#9A8662' }}>{it.label}: </span><b>{it.value}</b></div>
+                    <div key={it.label}><span style={{ color: '#8a7767' }}>{it.label}: </span><b>{it.value}</b></div>
                   ))}
                 </div>
               );
@@ -1469,11 +1469,11 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
                   const label = grp.label ? grp.label : (catObj?.label || grp.catKey);
                   return (
                     <div key={gKey} className="bill-entries-group" style={{ marginBottom: 0 }}>
-                      <div className="bill-entry-label" style={{ fontSize: 15, color: '#8A7A66', fontWeight: 600, marginBottom: 5, letterSpacing: '.03em' }}>{label} — {grp.ents.length} เข่ง</div>
+                      <div className="bill-entry-label" style={{ fontSize: 15, color: '#8a7767', fontWeight: 600, marginBottom: 5, letterSpacing: '.03em' }}>{label} — {grp.ents.length} เข่ง</div>
                       <div className="bill-entry-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, max-content)', gap: 5 }}>
                         {grp.ents.map((e, i) => (
-                          <div key={e.id || i} className="bill-entry-chip" style={{ border: '1px solid #D8C8A8', borderRadius: 6, padding: '7px 12px', background: '#FFFDF8', textAlign: 'center', lineHeight: 1.15 }}>
-                            <span className="bill-entry-kg" style={{ fontWeight: 700, fontSize: 20, color: '#2A2118' }}>{fmtKg(e.kg)}</span>
+                          <div key={e.id || i} className="bill-entry-chip" style={{ border: '1px solid #d5c8b4', borderRadius: 6, padding: '7px 12px', background: '#ffffff', textAlign: 'center', lineHeight: 1.15 }}>
+                            <span className="bill-entry-kg" style={{ fontWeight: 700, fontSize: 20, color: '#241009' }}>{fmtKg(e.kg)}</span>
                           </div>
                         ))}
                       </div>
@@ -1504,7 +1504,7 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
                 <tr key={c.key}>
                   <td style={{ padding: '6px 8px', border: '1px solid #C9BBA0' }}>
                     <div>{c.label}</div>
-                    {d.count > 0 && <div style={{ fontSize: 11, color: '#8A7A66', marginTop: 1 }}>{d.count} เข่ง</div>}
+                    {d.count > 0 && <div style={{ fontSize: 11, color: '#8a7767', marginTop: 1 }}>{d.count} เข่ง</div>}
                   </td>
                   <td style={{ padding: '6px 8px', border: '1px solid #C9BBA0', textAlign: 'right' }}>{fmtKg(d.kg)}</td>
                   <td style={{ padding: '6px 8px', border: '1px solid #C9BBA0', textAlign: 'right' }}>{fmtPrice(price)}</td>
@@ -1514,7 +1514,7 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
             })}
           </tbody>
           <tfoot>
-            <tr style={{ background: '#2A2118', color: '#fff' }}>
+            <tr style={{ background: '#241009', color: '#fff' }}>
               <td style={{ padding: 8, fontWeight: 700 }}>
                 <div>รวม</div>
                 <div style={{ fontSize: 11, opacity: .75, fontWeight: 400, marginTop: 1 }}>{(session?.entries || []).length} เข่ง</div>
@@ -1540,17 +1540,17 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 36, gap: 20 }}>
           <div style={{ flex: 1, textAlign: 'center' }}>
             <div style={{ height: 48 }} />
-            <div style={{ borderTop: '1px dotted #2A2118', paddingTop: 8, fontSize: 12 }}>ลายเซ็นผู้ขาย</div>
+            <div style={{ borderTop: '1px dotted #241009', paddingTop: 8, fontSize: 12 }}>ลายเซ็นผู้ขาย</div>
           </div>
           <div style={{ flex: 1, textAlign: 'center' }}>
             <div style={{ height: 48 }} />
-            <div style={{ borderTop: '1px dotted #2A2118', paddingTop: 8, fontSize: 12 }}>ลายเซ็นผู้ซื้อ</div>
+            <div style={{ borderTop: '1px dotted #241009', paddingTop: 8, fontSize: 12 }}>ลายเซ็นผู้ซื้อ</div>
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 14 }}>
           <div>
-            <div style={{ fontSize: 11.5, color: '#8A7A66' }}>ขอบคุณที่ไว้วางใจ · ทุเรียนคัดสรร Qudsun</div>
-            <div style={{ fontSize: 11.5, color: '#8A7A66', marginTop: 2 }}>โทร. 094-149-1914 (วิน) · 082-691-4414 (เบนซ์)</div>
+            <div style={{ fontSize: 11.5, color: '#8a7767' }}>ขอบคุณที่ไว้วางใจ · ทุเรียนคัดสรร Qudsun</div>
+            <div style={{ fontSize: 11.5, color: '#8a7767', marginTop: 2 }}>โทร. 094-149-1914 (วิน) · 082-691-4414 (เบนซ์)</div>
           </div>
           <img src="/qr-bill.png" alt="QR" style={{ width: 88, height: 88, objectFit: 'contain' }} onError={e => { e.target.style.display = 'none'; }} />
         </div>
@@ -1569,20 +1569,20 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
       {slipOcr && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 200, display: 'flex', alignItems: 'flex-end' }}
           onClick={e => { if (e.target === e.currentTarget) setSlipOcr(null); }}>
-          <div style={{ background: '#FFFDF8', width: '100%', maxWidth: 520, margin: '0 auto', borderRadius: '20px 20px 0 0', padding: '22px 18px 36px', maxHeight: '90vh', overflowY: 'auto' }}>
-            <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 16, color: '#3F2D1E', marginBottom: 3 }}>ตรวจสอบข้อมูลก่อนบันทึก</div>
-            <div style={{ fontSize: 12, color: '#9A8662', marginBottom: 12 }}>แก้ไขข้อมูลธนาคาร แล้วกด "บันทึก" เพื่อ save ลงโปรไฟล์ลูกค้า</div>
+          <div style={{ background: '#ffffff', width: '100%', maxWidth: 520, margin: '0 auto', borderRadius: '20px 20px 0 0', padding: '22px 18px 36px', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 16, color: '#26190f', marginBottom: 3 }}>ตรวจสอบข้อมูลก่อนบันทึก</div>
+            <div style={{ fontSize: 12, color: '#8a7767', marginBottom: 12 }}>แก้ไขข้อมูลธนาคาร แล้วกด "บันทึก" เพื่อ save ลงโปรไฟล์ลูกค้า</div>
 
-            <img src={slipOcr.dataUrl} alt="สลิป" style={{ width: '100%', maxHeight: 200, objectFit: 'contain', borderRadius: 10, border: '1px solid #E4D7BC', background: '#f5f5f5', display: 'block', marginBottom: 12 }} />
+            <img src={slipOcr.dataUrl} alt="สลิป" style={{ width: '100%', maxHeight: 200, objectFit: 'contain', borderRadius: 10, border: '1px solid #e4d9c8', background: '#f5f5f5', display: 'block', marginBottom: 12 }} />
 
             {slipOcr.loading && (
-              <div style={{ textAlign: 'center', color: '#B7A684', fontSize: 13, padding: '12px 0' }}>⏳ กำลังอ่านข้อมูลสลิป…</div>
+              <div style={{ textAlign: 'center', color: '#b9a88f', fontSize: 13, padding: '12px 0' }}>⏳ กำลังอ่านข้อมูลสลิป…</div>
             )}
 
             {!slipOcr.loading && slipOcr.slipData && (() => {
               const sd = slipOcr.slipData;
               return (
-                <div style={{ background: '#EFF8F1', borderRadius: 10, padding: '10px 14px', fontSize: 12, color: '#2E7D32', marginBottom: 14, lineHeight: 1.9 }}>
+                <div style={{ background: '#EFF8F1', borderRadius: 10, padding: '10px 14px', fontSize: 12, color: '#2f9b58', marginBottom: 14, lineHeight: 1.9 }}>
                   {sd.amount && <div>💰 ยอด: <b>{sd.amount}</b> บาท</div>}
                   {sd.sender && <div>📤 ผู้โอน: {sd.sender}</div>}
                   {sd.recipient && <div>📥 ผู้รับ: {sd.recipient}</div>}
@@ -1599,25 +1599,25 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
             )}
 
             <div style={{ marginBottom: 10 }}>
-              <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 3 }}>ธนาคาร</div>
+              <div style={{ fontSize: 11, color: '#8a7767', marginBottom: 3 }}>ธนาคาร</div>
               <input value={slipOcr.bankName}
                 onChange={e => setSlipOcr(s => s ? { ...s, bankName: e.target.value } : s)}
                 placeholder="เช่น ธ.กสิกรไทย, ธนาคารกรุงไทย"
-                style={{ width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 8, padding: '9px 12px', fontSize: 13, fontFamily: 'Prompt', background: '#fff', boxSizing: 'border-box' }} />
+                style={{ width: '100%', border: '1.5px solid #e4d9c8', borderRadius: 8, padding: '9px 12px', fontSize: 13, fontFamily: 'Prompt', background: '#fff', boxSizing: 'border-box' }} />
             </div>
             <div style={{ marginBottom: 10 }}>
-              <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 3 }}>เลขบัญชี</div>
+              <div style={{ fontSize: 11, color: '#8a7767', marginBottom: 3 }}>เลขบัญชี</div>
               <input value={slipOcr.bankAccount}
                 onChange={e => setSlipOcr(s => s ? { ...s, bankAccount: e.target.value } : s)}
                 placeholder="xxx-x-xxxxx-x"
-                style={{ width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 8, padding: '9px 12px', fontSize: 13, fontFamily: 'Prompt', background: '#fff', boxSizing: 'border-box', letterSpacing: '.04em' }} />
+                style={{ width: '100%', border: '1.5px solid #e4d9c8', borderRadius: 8, padding: '9px 12px', fontSize: 13, fontFamily: 'Prompt', background: '#fff', boxSizing: 'border-box', letterSpacing: '.04em' }} />
             </div>
             <div style={{ marginBottom: 18 }}>
-              <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 3 }}>ชื่อผู้รับ / หมายเหตุ</div>
+              <div style={{ fontSize: 11, color: '#8a7767', marginBottom: 3 }}>ชื่อผู้รับ / หมายเหตุ</div>
               <input value={slipOcr.note}
                 onChange={e => setSlipOcr(s => s ? { ...s, note: e.target.value } : s)}
                 placeholder="ชื่อเจ้าของบัญชี"
-                style={{ width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 8, padding: '9px 12px', fontSize: 13, fontFamily: 'Prompt', background: '#fff', boxSizing: 'border-box' }} />
+                style={{ width: '100%', border: '1.5px solid #e4d9c8', borderRadius: 8, padding: '9px 12px', fontSize: 13, fontFamily: 'Prompt', background: '#fff', boxSizing: 'border-box' }} />
             </div>
 
             <div style={{ display: 'flex', gap: 8 }}>
@@ -1626,7 +1626,7 @@ function PrintView({ session, readonly, isHandoff, verified, history, payments, 
                 {slipOcr.loading ? 'รอสักครู่…' : '✓ บันทึกและอัพโหลด'}
               </button>
               <button onClick={skipSlipSave} disabled={slipOcr.loading}
-                style={{ background: '#F0EAE0', color: '#7A5A22', border: 'none', borderRadius: 12, padding: '13px 16px', fontSize: 13, fontFamily: 'Prompt', cursor: 'pointer', opacity: slipOcr.loading ? 0.6 : 1 }}>
+                style={{ background: '#F0EAE0', color: '#c4491c', border: 'none', borderRadius: 12, padding: '13px 16px', fontSize: 13, fontFamily: 'Prompt', cursor: 'pointer', opacity: slipOcr.loading ? 0.6 : 1 }}>
                 ข้ามไป
               </button>
             </div>
@@ -1666,17 +1666,17 @@ function BatchTransferModal({ bills, onConfirm, onClose }) {
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-      <div style={{ background: '#FFFDF8', borderRadius: '20px 20px 0 0', padding: '20px 18px 32px', width: '100%', maxWidth: 480, maxHeight: '85dvh', overflowY: 'auto' }}>
+      <div style={{ background: '#ffffff', borderRadius: '20px 20px 0 0', padding: '20px 18px 32px', width: '100%', maxWidth: 480, maxHeight: '85dvh', overflowY: 'auto' }}>
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: 16 }}>
-          <span style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 16, color: '#3F2D1E', flex: 1 }}>📎 จ่ายรวม {bills.length} บิล</span>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: '#9A8662' }}>✕</button>
+          <span style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 16, color: '#26190f', flex: 1 }}>📎 จ่ายรวม {bills.length} บิล</span>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: '#8a7767' }}>✕</button>
         </div>
 
         <div style={{ background: '#F9F5EC', borderRadius: 12, padding: '10px 12px', marginBottom: 14, maxHeight: 160, overflowY: 'auto' }}>
           {bills.map(b => (
             <div key={b.billNo} style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: 6, marginBottom: 6, borderBottom: '1px solid #EDE0CC', fontSize: 13 }}>
-              <span style={{ color: '#5B3A29' }}>{b.seller || 'ไม่ระบุ'} · {b.billNo}</span>
-              <span style={{ fontWeight: 600, color: '#3F2D1E' }}>฿{parseFloat(String(b.baht || '0').replace(/,/g, '')).toLocaleString()}</span>
+              <span style={{ color: '#3a2718' }}>{b.seller || 'ไม่ระบุ'} · {b.billNo}</span>
+              <span style={{ fontWeight: 600, color: '#26190f' }}>฿{parseFloat(String(b.baht || '0').replace(/,/g, '')).toLocaleString()}</span>
             </div>
           ))}
           <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: 14, color: '#C0392B', paddingTop: 4 }}>
@@ -1684,11 +1684,11 @@ function BatchTransferModal({ bills, onConfirm, onClose }) {
           </div>
         </div>
 
-        <div style={{ fontSize: 13, color: '#7A5A22', fontWeight: 600, marginBottom: 8 }}>สลิปโอนเงิน (ไม่บังคับ)</div>
+        <div style={{ fontSize: 13, color: '#c4491c', fontWeight: 600, marginBottom: 8 }}>สลิปโอนเงิน (ไม่บังคับ)</div>
         <WalletSlipUpload file={slip} uploading={uploading} onUpload={f => setSlip(f)} />
 
         <button onClick={handleConfirm} disabled={busy}
-          style={{ width: '100%', background: busy ? '#aaa' : '#3F2D1E', color: '#fff', border: 'none', borderRadius: 12, padding: '14px', fontSize: 15, fontWeight: 700, cursor: busy ? 'not-allowed' : 'pointer', fontFamily: 'Prompt', marginTop: 12 }}>
+          style={{ width: '100%', background: busy ? '#aaa' : '#26190f', color: '#fff', border: 'none', borderRadius: 12, padding: '14px', fontSize: 15, fontWeight: 700, cursor: busy ? 'not-allowed' : 'pointer', fontFamily: 'Prompt', marginTop: 12 }}>
           {busy ? (uploading ? 'กำลังอัปโหลด…' : 'กำลังบันทึก…') : `✅ ยืนยันโอน ${bills.length} บิล · ฿${totalBaht.toLocaleString()}`}
         </button>
       </div>
@@ -1729,17 +1729,17 @@ function TransferSlipModal({ bill, onConfirm, onClose }) {
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 80, background: 'rgba(42,33,24,.6)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-      <div style={{ background: '#FFFDF8', borderRadius: '20px 20px 0 0', padding: '20px 18px 32px', width: '100%', maxWidth: 480, boxShadow: '0 -8px 30px rgba(42,33,24,.2)', maxHeight: '92dvh', overflowY: 'auto' }}>
+      <div style={{ background: '#ffffff', borderRadius: '20px 20px 0 0', padding: '20px 18px 32px', width: '100%', maxWidth: 480, boxShadow: '0 -8px 30px rgba(42,33,24,.2)', maxHeight: '92dvh', overflowY: 'auto' }}>
 
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-          <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 16, color: '#3F2D1E' }}>💸 สลิปโอนเงิน</div>
-          <button onClick={onClose} style={{ border: 'none', background: 'none', fontSize: 20, cursor: 'pointer', color: '#9A8662' }}>✕</button>
+          <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 16, color: '#26190f' }}>💸 สลิปโอนเงิน</div>
+          <button onClick={onClose} style={{ border: 'none', background: 'none', fontSize: 20, cursor: 'pointer', color: '#8a7767' }}>✕</button>
         </div>
 
         {/* Bill info */}
         <div style={{ background: '#F0E9DA', borderRadius: 10, padding: '10px 14px', marginBottom: 16, fontSize: 13 }}>
-          <div style={{ fontWeight: 700, color: '#2A2118' }}>{bill.seller || '—'}</div>
+          <div style={{ fontWeight: 700, color: '#241009' }}>{bill.seller || '—'}</div>
           <div style={{ color: '#5A4A38' }}>{bill.billNo} · ฿{bill.baht}</div>
         </div>
 
@@ -1753,8 +1753,8 @@ function TransferSlipModal({ bill, onConfirm, onClose }) {
           </div>
         ) : (
           <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
-            <button onClick={() => cam.current?.click()} style={{ flex: 1, border: '1.5px dashed #C9A24B', background: '#FBF6EC', borderRadius: 12, padding: '20px 0', fontSize: 14, fontWeight: 600, color: '#7A5A22', cursor: 'pointer' }}>📷 ถ่ายรูป</button>
-            <button onClick={() => gal.current?.click()} style={{ flex: 1, border: '1.5px dashed #5A9A6A', background: '#EFF8F1', borderRadius: 12, padding: '20px 0', fontSize: 14, fontWeight: 600, color: '#2E7D32', cursor: 'pointer' }}>🖼 อัปโหลด</button>
+            <button onClick={() => cam.current?.click()} style={{ flex: 1, border: '1.5px dashed #e8692e', background: '#fbf7f1', borderRadius: 12, padding: '20px 0', fontSize: 14, fontWeight: 600, color: '#c4491c', cursor: 'pointer' }}>📷 ถ่ายรูป</button>
+            <button onClick={() => gal.current?.click()} style={{ flex: 1, border: '1.5px dashed #5A9A6A', background: '#EFF8F1', borderRadius: 12, padding: '20px 0', fontSize: 14, fontWeight: 600, color: '#2f9b58', cursor: 'pointer' }}>🖼 อัปโหลด</button>
           </div>
         )}
 
@@ -1774,8 +1774,8 @@ function CancelPaymentModal({ bill, pin, onConfirm, onClose }) {
   const [note, setNote] = useState('');
   const [pinErr, setPinErr] = useState('');
   const keys = ['1','2','3','4','5','6','7','8','9','⌫','0','✓'];
-  const S = { border: '1px solid #E4D7BC', background: '#FBF6EC', borderRadius: 11, padding: '13px 0', fontSize: 20, color: '#3F2D1E', cursor: 'pointer' };
-  const F = { border: '1px solid #E0D2B4', background: '#F3E9D2', borderRadius: 11, padding: '13px 0', fontSize: 18, color: '#7A5A22', cursor: 'pointer' };
+  const S = { border: '1px solid #e4d9c8', background: '#fbf7f1', borderRadius: 11, padding: '13px 0', fontSize: 20, color: '#26190f', cursor: 'pointer' };
+  const F = { border: '1px solid #e4d9c8', background: '#f3ece0', borderRadius: 11, padding: '13px 0', fontSize: 18, color: '#c4491c', cursor: 'pointer' };
   const handleKey = k => {
     if (k === '⌫') { setPinVal(v => v.slice(0, -1)); setPinErr(''); return; }
     if (k === '✓') {
@@ -1789,20 +1789,20 @@ function CancelPaymentModal({ bill, pin, onConfirm, onClose }) {
   };
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 80, background: 'rgba(42,33,24,.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 18 }}>
-      <div style={{ background: '#FFFDF8', borderRadius: 20, padding: '22px 18px', width: '100%', maxWidth: 340 }}>
+      <div style={{ background: '#ffffff', borderRadius: 20, padding: '22px 18px', width: '100%', maxWidth: 340 }}>
         <div style={{ textAlign: 'center', fontSize: 24, marginBottom: 4 }}>🔒</div>
-        <h3 style={{ textAlign: 'center', fontFamily: 'Prompt', fontWeight: 500, fontSize: 16, margin: '0 0 4px', color: '#4A3526' }}>ยกเลิกการชำระ</h3>
-        <p style={{ textAlign: 'center', fontSize: 12, color: '#9A8662', margin: '0 0 12px' }}>{bill.billNo} · ฿{bill.baht}</p>
+        <h3 style={{ textAlign: 'center', fontFamily: 'Prompt', fontWeight: 500, fontSize: 16, margin: '0 0 4px', color: '#3a2718' }}>ยกเลิกการชำระ</h3>
+        <p style={{ textAlign: 'center', fontSize: 12, color: '#8a7767', margin: '0 0 12px' }}>{bill.billNo} · ฿{bill.baht}</p>
         <textarea value={note} onChange={e => setNote(e.target.value)} placeholder="หมายเหตุ (บังคับ) เช่น โอนผิด, แก้ไขยอด" rows={2}
-          style={{ width: '100%', boxSizing: 'border-box', border: '1.5px solid #E4D7BC', borderRadius: 10, padding: '10px 12px', fontSize: 13, fontFamily: 'inherit', resize: 'none', marginBottom: 12, outline: 'none' }} />
+          style={{ width: '100%', boxSizing: 'border-box', border: '1.5px solid #e4d9c8', borderRadius: 10, padding: '10px 12px', fontSize: 13, fontFamily: 'inherit', resize: 'none', marginBottom: 12, outline: 'none' }} />
         <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginBottom: 6 }}>
-          {[0,1,2,3].map(i => <span key={i} style={{ width: 12, height: 12, borderRadius: '50%', background: i < pinVal.length ? '#C9A24B' : '#E4D7BC', border: '1.5px solid #C9A24B', display: 'inline-block' }} />)}
+          {[0,1,2,3].map(i => <span key={i} style={{ width: 12, height: 12, borderRadius: '50%', background: i < pinVal.length ? '#e8692e' : '#e4d9c8', border: '1.5px solid #e8692e', display: 'inline-block' }} />)}
         </div>
         <p style={{ textAlign: 'center', fontSize: 11, color: '#C0392B', minHeight: 14, margin: '0 0 8px' }}>{pinErr}</p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 7, marginBottom: 10 }}>
           {keys.map(k => <button key={k} onClick={() => handleKey(k)} style={k === '⌫' || k === '✓' ? F : S}>{k}</button>)}
         </div>
-        <button onClick={onClose} style={{ width: '100%', border: 'none', background: 'none', color: '#9A8662', fontSize: 13, cursor: 'pointer', padding: 6 }}>ยกเลิก</button>
+        <button onClick={onClose} style={{ width: '100%', border: 'none', background: 'none', color: '#8a7767', fontSize: 13, cursor: 'pointer', padding: 6 }}>ยกเลิก</button>
       </div>
     </div>
   );
@@ -1812,8 +1812,8 @@ function DeleteBillModal({ bill, pin, onConfirm, onClose }) {
   const [pinVal, setPinVal] = useState('');
   const [pinErr, setPinErr] = useState('');
   const keys = ['1','2','3','4','5','6','7','8','9','⌫','0','✓'];
-  const S = { border: '1px solid #E4D7BC', background: '#FBF6EC', borderRadius: 11, padding: '13px 0', fontSize: 20, color: '#3F2D1E', cursor: 'pointer' };
-  const F = { border: '1px solid #E0D2B4', background: '#F3E9D2', borderRadius: 11, padding: '13px 0', fontSize: 18, color: '#7A5A22', cursor: 'pointer' };
+  const S = { border: '1px solid #e4d9c8', background: '#fbf7f1', borderRadius: 11, padding: '13px 0', fontSize: 20, color: '#26190f', cursor: 'pointer' };
+  const F = { border: '1px solid #e4d9c8', background: '#f3ece0', borderRadius: 11, padding: '13px 0', fontSize: 18, color: '#c4491c', cursor: 'pointer' };
   const handleKey = k => {
     if (k === '⌫') { setPinVal(v => v.slice(0, -1)); setPinErr(''); return; }
     if (k === '✓') {
@@ -1826,22 +1826,22 @@ function DeleteBillModal({ bill, pin, onConfirm, onClose }) {
   };
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 80, background: 'rgba(42,33,24,.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 18 }}>
-      <div style={{ background: '#FFFDF8', borderRadius: 20, padding: '22px 18px', width: '100%', maxWidth: 340 }}>
+      <div style={{ background: '#ffffff', borderRadius: 20, padding: '22px 18px', width: '100%', maxWidth: 340 }}>
         <div style={{ textAlign: 'center', fontSize: 24, marginBottom: 4 }}>🗑️</div>
         <h3 style={{ textAlign: 'center', fontFamily: 'Prompt', fontWeight: 500, fontSize: 16, margin: '0 0 4px', color: '#C0392B' }}>ลบบิล</h3>
-        <p style={{ textAlign: 'center', fontSize: 12, color: '#9A8662', margin: '0 0 4px' }}>{bill.seller || '—'}</p>
-        <p style={{ textAlign: 'center', fontSize: 12, color: '#9A8662', margin: '0 0 14px' }}>{bill.billNo} · ฿{bill.baht}</p>
+        <p style={{ textAlign: 'center', fontSize: 12, color: '#8a7767', margin: '0 0 4px' }}>{bill.seller || '—'}</p>
+        <p style={{ textAlign: 'center', fontSize: 12, color: '#8a7767', margin: '0 0 14px' }}>{bill.billNo} · ฿{bill.baht}</p>
         <p style={{ textAlign: 'center', fontSize: 11, color: '#C0392B', margin: '0 0 14px', background: '#FDECEA', borderRadius: 8, padding: '8px 12px' }}>
           บิลจะถูกลบถาวรและไม่สามารถกู้คืนได้
         </p>
         <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginBottom: 6 }}>
-          {[0,1,2,3].map(i => <span key={i} style={{ width: 12, height: 12, borderRadius: '50%', background: i < pinVal.length ? '#C0392B' : '#E4D7BC', border: '1.5px solid #C0392B', display: 'inline-block' }} />)}
+          {[0,1,2,3].map(i => <span key={i} style={{ width: 12, height: 12, borderRadius: '50%', background: i < pinVal.length ? '#C0392B' : '#e4d9c8', border: '1.5px solid #C0392B', display: 'inline-block' }} />)}
         </div>
         <p style={{ textAlign: 'center', fontSize: 11, color: '#C0392B', minHeight: 14, margin: '0 0 8px' }}>{pinErr}</p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 7, marginBottom: 10 }}>
           {keys.map(k => <button key={k} onClick={() => handleKey(k)} style={k === '⌫' || k === '✓' ? F : S}>{k}</button>)}
         </div>
-        <button onClick={onClose} style={{ width: '100%', border: 'none', background: 'none', color: '#9A8662', fontSize: 13, cursor: 'pointer', padding: 6 }}>ยกเลิก</button>
+        <button onClick={onClose} style={{ width: '100%', border: 'none', background: 'none', color: '#8a7767', fontSize: 13, cursor: 'pointer', padding: 6 }}>ยกเลิก</button>
       </div>
     </div>
   );
@@ -1852,8 +1852,8 @@ function ResetDataModal({ pin, onConfirm, onClose }) {
   const [pinErr, setPinErr] = useState('');
   const [busy, setBusy] = useState(false);
   const keys = ['1','2','3','4','5','6','7','8','9','⌫','0','✓'];
-  const S = { border: '1px solid #E4D7BC', background: '#FBF6EC', borderRadius: 11, padding: '13px 0', fontSize: 20, color: '#3F2D1E', cursor: 'pointer' };
-  const F = { border: '1px solid #E0D2B4', background: '#F3E9D2', borderRadius: 11, padding: '13px 0', fontSize: 18, color: '#7A5A22', cursor: 'pointer' };
+  const S = { border: '1px solid #e4d9c8', background: '#fbf7f1', borderRadius: 11, padding: '13px 0', fontSize: 20, color: '#26190f', cursor: 'pointer' };
+  const F = { border: '1px solid #e4d9c8', background: '#f3ece0', borderRadius: 11, padding: '13px 0', fontSize: 18, color: '#c4491c', cursor: 'pointer' };
   const handleKey = async k => {
     if (busy) return;
     if (k === '⌫') { setPinVal(v => v.slice(0, -1)); setPinErr(''); return; }
@@ -1868,7 +1868,7 @@ function ResetDataModal({ pin, onConfirm, onClose }) {
   };
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 80, background: 'rgba(42,33,24,.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 18 }}>
-      <div style={{ background: '#FFFDF8', borderRadius: 20, padding: '22px 18px', width: '100%', maxWidth: 340 }}>
+      <div style={{ background: '#ffffff', borderRadius: 20, padding: '22px 18px', width: '100%', maxWidth: 340 }}>
         <div style={{ textAlign: 'center', fontSize: 28, marginBottom: 4 }}>⚠️</div>
         <h3 style={{ textAlign: 'center', fontFamily: 'Prompt', fontWeight: 600, fontSize: 16, margin: '0 0 6px', color: '#C0392B' }}>รีเซ็ตข้อมูลทั้งหมด</h3>
         <div style={{ background: '#FDECEA', borderRadius: 10, padding: '10px 14px', marginBottom: 12, fontSize: 12, color: '#7B1D1D', lineHeight: 1.7 }}>
@@ -1883,11 +1883,11 @@ function ResetDataModal({ pin, onConfirm, onClose }) {
           • รายชื่อผู้ดูแล / พนักงาน / บัญชี
         </div>
         {busy ? (
-          <div style={{ textAlign: 'center', padding: '20px 0', color: '#9A8662', fontSize: 14 }}>กำลังล้างข้อมูล…</div>
+          <div style={{ textAlign: 'center', padding: '20px 0', color: '#8a7767', fontSize: 14 }}>กำลังล้างข้อมูล…</div>
         ) : (
           <>
             <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginBottom: 6 }}>
-              {[0,1,2,3].map(i => <span key={i} style={{ width: 12, height: 12, borderRadius: '50%', background: i < pinVal.length ? '#C0392B' : '#E4D7BC', border: '1.5px solid #C0392B', display: 'inline-block' }} />)}
+              {[0,1,2,3].map(i => <span key={i} style={{ width: 12, height: 12, borderRadius: '50%', background: i < pinVal.length ? '#C0392B' : '#e4d9c8', border: '1.5px solid #C0392B', display: 'inline-block' }} />)}
             </div>
             <p style={{ textAlign: 'center', fontSize: 11, color: '#C0392B', minHeight: 14, margin: '0 0 8px' }}>{pinErr || 'กรอก Admin PIN เพื่อยืนยัน'}</p>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 7, marginBottom: 10 }}>
@@ -1895,7 +1895,7 @@ function ResetDataModal({ pin, onConfirm, onClose }) {
             </div>
           </>
         )}
-        <button onClick={onClose} disabled={busy} style={{ width: '100%', border: 'none', background: 'none', color: '#9A8662', fontSize: 13, cursor: 'pointer', padding: 6, opacity: busy ? 0.4 : 1 }}>ยกเลิก</button>
+        <button onClick={onClose} disabled={busy} style={{ width: '100%', border: 'none', background: 'none', color: '#8a7767', fontSize: 13, cursor: 'pointer', padding: 6, opacity: busy ? 0.4 : 1 }}>ยกเลิก</button>
       </div>
     </div>
   );
@@ -1922,7 +1922,7 @@ function DashboardView({ payments, pin, onPayment, onBatchPayment, onDeleteBill,
 
   const STATUS = {
     unpaid:      { label: 'ยังไม่โอน', color: '#E07A5F', bg: '#FDECEA', text: '#C0392B' },
-    transferred: { label: 'โอนแล้ว',   color: '#5A9A6A', bg: '#E6F4EA', text: '#2E7D32' },
+    transferred: { label: 'โอนแล้ว',   color: '#5A9A6A', bg: '#E6F4EA', text: '#2f9b58' },
     cash:        { label: 'เงินสด',    color: '#5A7FA8', bg: '#E8EEF8', text: '#1A4D80' },
   };
 
@@ -1962,32 +1962,32 @@ function DashboardView({ payments, pin, onPayment, onBatchPayment, onDeleteBill,
       {/* Header */}
       <div style={{ marginBottom: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-          <button onClick={onGoHome} style={{ border: 'none', background: 'none', fontSize: 22, cursor: 'pointer', color: '#7A6450' }}>‹</button>
-          <span style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 18, color: '#3F2D1E' }}>ยอดซื้อ</span>
-          <button onClick={loadBills} disabled={loading} style={{ marginLeft: 'auto', border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 8, padding: '5px 10px', fontSize: 12, color: '#7A6450', cursor: 'pointer', opacity: loading ? 0.5 : 1 }}>⟳ รีเฟรช</button>
+          <button onClick={onGoHome} style={{ border: 'none', background: 'none', fontSize: 22, cursor: 'pointer', color: '#6b4a38' }}>‹</button>
+          <span style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 18, color: '#26190f' }}>ยอดซื้อ</span>
+          <button onClick={loadBills} disabled={loading} style={{ marginLeft: 'auto', border: '1px solid #e4d9c8', background: '#ffffff', borderRadius: 8, padding: '5px 10px', fontSize: 12, color: '#6b4a38', cursor: 'pointer', opacity: loading ? 0.5 : 1 }}>⟳ รีเฟรช</button>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <input type="date" value={startDate} min="2026-07-09" onChange={e => { setStartDate(e.target.value); if (e.target.value > endDate) setEndDate(e.target.value); }}
-            style={{ flex: 1, border: '1px solid #E4D7BC', borderRadius: 8, padding: '6px 8px', fontSize: 12, fontFamily: 'Prompt', color: '#4A3526', background: '#FFFDF8' }} />
-          <span style={{ color: '#9A8662', fontSize: 13 }}>→</span>
+            style={{ flex: 1, border: '1px solid #e4d9c8', borderRadius: 8, padding: '6px 8px', fontSize: 12, fontFamily: 'Prompt', color: '#3a2718', background: '#ffffff' }} />
+          <span style={{ color: '#8a7767', fontSize: 13 }}>→</span>
           <input type="date" value={endDate} min="2026-07-09" onChange={e => { setEndDate(e.target.value); if (e.target.value < startDate) setStartDate(e.target.value); }}
-            style={{ flex: 1, border: '1px solid #E4D7BC', borderRadius: 8, padding: '6px 8px', fontSize: 12, fontFamily: 'Prompt', color: '#4A3526', background: '#FFFDF8' }} />
+            style={{ flex: 1, border: '1px solid #e4d9c8', borderRadius: 8, padding: '6px 8px', fontSize: 12, fontFamily: 'Prompt', color: '#3a2718', background: '#ffffff' }} />
         </div>
       </div>
 
       {/* Summary card */}
-      <div style={{ background: '#FFFDF8', border: '1px solid #E4D7BC', borderRadius: 16, padding: '16px 18px', marginBottom: 16 }}>
+      <div style={{ background: '#ffffff', border: '1px solid #e4d9c8', borderRadius: 16, padding: '16px 18px', marginBottom: 16 }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
-          <div style={{ background: '#FFF3E0', borderRadius: 12, padding: '12px 14px' }}>
+          <div style={{ background: '#fce0d0', borderRadius: 12, padding: '12px 14px' }}>
             <div style={{ fontSize: 11, color: '#8A5E00', marginBottom: 4 }}>📥 ซื้อรวม</div>
-            <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 17, color: '#4A3526' }}>{fmtKg2(totalKg)} กก.</div>
-            <div style={{ fontSize: 13, color: '#7A5A22', marginTop: 2 }}>฿{fmt(totalBaht)}</div>
-            {dayBills.length > 0 && <div style={{ fontSize: 10, color: '#B7A684', marginTop: 4 }}>{dayBills.length} บิล</div>}
+            <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 17, color: '#3a2718' }}>{fmtKg2(totalKg)} กก.</div>
+            <div style={{ fontSize: 13, color: '#c4491c', marginTop: 2 }}>฿{fmt(totalBaht)}</div>
+            {dayBills.length > 0 && <div style={{ fontSize: 10, color: '#b9a88f', marginTop: 4 }}>{dayBills.length} บิล</div>}
           </div>
           <div style={{ background: nUnpaid > 0 ? '#FDECEA' : '#E6F4EA', borderRadius: 12, padding: '12px 14px' }}>
             <div style={{ fontSize: 11, color: nUnpaid > 0 ? '#8A0000' : '#1B5E20', marginBottom: 4 }}>{nUnpaid > 0 ? '⏳ ค้างชำระ' : '✅ ชำระครบ'}</div>
             <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 17, color: nUnpaid > 0 ? '#C0392B' : '#1B5E20' }}>{nUnpaid > 0 ? `${nUnpaid} บิล` : `${nPaid} บิล`}</div>
-            <div style={{ fontSize: 13, color: nUnpaid > 0 ? '#C0392B' : '#2E7D32', marginTop: 2 }}>{nUnpaid > 0 ? `จ่ายแล้ว ${nPaid} บิล` : 'จ่ายครบแล้ว'}</div>
+            <div style={{ fontSize: 13, color: nUnpaid > 0 ? '#C0392B' : '#2f9b58', marginTop: 2 }}>{nUnpaid > 0 ? `จ่ายแล้ว ${nPaid} บิล` : 'จ่ายครบแล้ว'}</div>
           </div>
         </div>
       </div>
@@ -1996,21 +1996,21 @@ function DashboardView({ payments, pin, onPayment, onBatchPayment, onDeleteBill,
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
         {[['all','ทั้งหมด'], ['unpaid','รอจ่าย'], ['paid','จ่ายแล้ว']].map(([v,l]) => (
           <button key={v} onClick={() => { setStatusFilter(v); setBatchMode(false); setSelectedBills(new Set()); }}
-            style={{ padding: '6px 12px', borderRadius: 20, border: `1.5px solid ${statusFilter === v ? '#5B3A29' : '#E4D7BC'}`, background: statusFilter === v ? '#5B3A29' : '#FFFDF8', color: statusFilter === v ? '#fff' : '#7A6450', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+            style={{ padding: '6px 12px', borderRadius: 20, border: `1.5px solid ${statusFilter === v ? '#3a2718' : '#e4d9c8'}`, background: statusFilter === v ? '#3a2718' : '#ffffff', color: statusFilter === v ? '#fff' : '#6b4a38', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
             {l}{v === 'unpaid' && nUnpaid > 0 ? ` (${nUnpaid})` : ''}
           </button>
         ))}
         {!isEmployee && nUnpaid > 0 && (
           <button onClick={() => { setBatchMode(!batchMode); setSelectedBills(new Set()); if (!batchMode && statusFilter === 'paid') setStatusFilter('unpaid'); }}
-            style={{ marginLeft: 'auto', padding: '6px 12px', borderRadius: 20, border: `1.5px solid ${batchMode ? '#DC743C' : '#E4D7BC'}`, background: batchMode ? '#FFF3E6' : '#FFFDF8', color: batchMode ? '#DC743C' : '#7A6450', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+            style={{ marginLeft: 'auto', padding: '6px 12px', borderRadius: 20, border: `1.5px solid ${batchMode ? '#e8692e' : '#e4d9c8'}`, background: batchMode ? '#FFF3E6' : '#ffffff', color: batchMode ? '#e8692e' : '#6b4a38', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
             {batchMode ? '✕ ยกเลิก' : '☑ เลือกหลายบิล'}
           </button>
         )}
       </div>
 
-      {loading && <div style={{ textAlign: 'center', color: '#B7A684', fontSize: 13, padding: '20px 0' }}>กำลังโหลด…</div>}
+      {loading && <div style={{ textAlign: 'center', color: '#b9a88f', fontSize: 13, padding: '20px 0' }}>กำลังโหลด…</div>}
       {!loading && dayBills.length === 0 && (
-        <div style={{ textAlign: 'center', color: '#B7A684', fontSize: 13, padding: '20px 0' }}>ไม่มีบิลในช่วงวันที่เลือก</div>
+        <div style={{ textAlign: 'center', color: '#b9a88f', fontSize: 13, padding: '20px 0' }}>ไม่มีบิลในช่วงวันที่เลือก</div>
       )}
 
       {dayBills.map(b => {
@@ -2022,7 +2022,7 @@ function DashboardView({ payments, pin, onPayment, onBatchPayment, onDeleteBill,
         return (
           <div key={b.billNo}
             onClick={batchMode && isUnpaid ? () => toggleBill(b.billNo) : undefined}
-            style={{ background: isSelected ? '#FFF3E6' : '#FFFDF8', border: `1px solid ${isSelected ? '#DC743C' : '#E4D7BC'}`, borderLeft: `4px solid ${isSelected ? '#DC743C' : st.color}`, borderRadius: 14, marginBottom: 10, overflow: 'hidden', cursor: batchMode && isUnpaid ? 'pointer' : 'default', position: 'relative' }}>
+            style={{ background: isSelected ? '#FFF3E6' : '#ffffff', border: `1px solid ${isSelected ? '#e8692e' : '#e4d9c8'}`, borderLeft: `4px solid ${isSelected ? '#e8692e' : st.color}`, borderRadius: 14, marginBottom: 10, overflow: 'hidden', cursor: batchMode && isUnpaid ? 'pointer' : 'default', position: 'relative' }}>
             <div style={{ padding: '14px 16px' }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
               {b.pay.slipUrl && (
@@ -2033,15 +2033,15 @@ function DashboardView({ payments, pin, onPayment, onBatchPayment, onDeleteBill,
               <button onClick={() => onOpenHistory && onOpenHistory(b)}
                 style={{ flex: 1, textAlign: 'left', background: 'none', border: 'none', padding: 0, cursor: onOpenHistory ? 'pointer' : 'default' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
-                  <div style={{ fontWeight: 700, fontSize: 15, color: '#2A2118' }}>{b.seller || '—'}</div>
+                  <div style={{ fontWeight: 700, fontSize: 15, color: '#241009' }}>{b.seller || '—'}</div>
                   <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 20, background: st.bg, color: st.text, fontWeight: 600 }}>{st.label}</span>
                 </div>
-                <div style={{ fontSize: 12, color: '#8A7A66' }}>{b.billNo} · {b.kg} กก.{billDateLabel ? ` · ${billDateLabel}` : ''}{billTime ? ` · ${billTime}` : ''}</div>
+                <div style={{ fontSize: 12, color: '#8a7767' }}>{b.billNo} · {b.kg} กก.{billDateLabel ? ` · ${billDateLabel}` : ''}{billTime ? ` · ${billTime}` : ''}</div>
               </button>
               <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
                 {batchMode && isUnpaid
-                  ? <div style={{ width: 24, height: 24, borderRadius: 6, border: `2px solid ${isSelected ? '#DC743C' : '#C8B89A'}`, background: isSelected ? '#DC743C' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, color: '#fff' }}>{isSelected ? '✓' : ''}</div>
-                  : <div style={{ fontWeight: 700, fontSize: 16, color: '#3F2D1E' }}>฿{b.baht}</div>
+                  ? <div style={{ width: 24, height: 24, borderRadius: 6, border: `2px solid ${isSelected ? '#e8692e' : '#C8B89A'}`, background: isSelected ? '#e8692e' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, color: '#fff' }}>{isSelected ? '✓' : ''}</div>
+                  : <div style={{ fontWeight: 700, fontSize: 16, color: '#26190f' }}>฿{b.baht}</div>
                 }
                 {!isEmployee && !batchMode && <button onClick={(e) => { e.stopPropagation(); setDeleteBill(b); }} style={{ border: 'none', background: 'none', padding: '2px 4px', cursor: 'pointer', fontSize: 14, color: '#C8B89A', lineHeight: 1 }}>🗑</button>}
               </div>
@@ -2052,7 +2052,7 @@ function DashboardView({ payments, pin, onPayment, onBatchPayment, onDeleteBill,
               {b.pay.status === 'unpaid' ? (
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button onClick={(e) => { e.stopPropagation(); setTransferBill(b); }}
-                    style={{ flex: 2, border: 'none', borderRadius: 10, padding: '9px 0', background: '#3F2D1E', color: '#F6EEDD', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
+                    style={{ flex: 2, border: 'none', borderRadius: 10, padding: '9px 0', background: '#26190f', color: '#fffbf4', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
                     📎 อัปโหลดหลักฐาน
                   </button>
                   <button onClick={(e) => { e.stopPropagation(); onPayment(b.billNo, 'cash'); }}
@@ -2062,7 +2062,7 @@ function DashboardView({ payments, pin, onPayment, onBatchPayment, onDeleteBill,
                 </div>
               ) : (
                 <button onClick={(e) => { e.stopPropagation(); setCancelBill(b); }}
-                  style={{ width: '100%', border: '1px solid #D0C8C0', borderRadius: 10, padding: '8px 0', background: '#fff', color: '#8A7A66', fontSize: 12, cursor: 'pointer' }}>
+                  style={{ width: '100%', border: '1px solid #D0C8C0', borderRadius: 10, padding: '8px 0', background: '#fff', color: '#8a7767', fontSize: 12, cursor: 'pointer' }}>
                   🔒 ยกเลิกการชำระ
                 </button>
               )}
@@ -2074,15 +2074,15 @@ function DashboardView({ payments, pin, onPayment, onBatchPayment, onDeleteBill,
 
       {/* Batch sticky bar */}
       {batchMode && selectedBills.size > 0 && (
-        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: '#3F2D1E', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, zIndex: 50, boxShadow: '0 -2px 12px rgba(0,0,0,.2)' }}>
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: '#26190f', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, zIndex: 50, boxShadow: '0 -2px 12px rgba(0,0,0,.2)' }}>
           <div style={{ flex: 1 }}>
-            <div style={{ color: '#F6EEDD', fontSize: 13, fontWeight: 600 }}>เลือก {selectedBills.size} บิล</div>
-            <div style={{ color: '#DC743C', fontSize: 12 }}>฿{selectedBaht.toLocaleString()}</div>
+            <div style={{ color: '#fffbf4', fontSize: 13, fontWeight: 600 }}>เลือก {selectedBills.size} บิล</div>
+            <div style={{ color: '#e8692e', fontSize: 12 }}>฿{selectedBaht.toLocaleString()}</div>
           </div>
           <button onClick={() => {
             const bills = allDayBills.filter(b => selectedBills.has(b.billNo));
             setBatchModalBills(bills);
-          }} style={{ background: '#DC743C', color: '#fff', border: 'none', borderRadius: 12, padding: '12px 20px', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+          }} style={{ background: '#e8692e', color: '#fff', border: 'none', borderRadius: 12, padding: '12px 20px', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
             📎 จ่ายรวม
           </button>
         </div>
@@ -2154,41 +2154,41 @@ function AddSaleModal({ date, accounts, onSave, onClose, onSaveAccount }) {
     setLoading(false);
   };
 
-  const inp = { width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 8, padding: '11px 12px', fontSize: 15, fontFamily: 'Prompt', background: '#fff', boxSizing: 'border-box' };
+  const inp = { width: '100%', border: '1.5px solid #e4d9c8', borderRadius: 8, padding: '11px 12px', fontSize: 15, fontFamily: 'Prompt', background: '#fff', boxSizing: 'border-box' };
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 200, display: 'flex', alignItems: 'flex-end' }}
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div style={{ background: '#FFFDF8', width: '100%', maxWidth: 520, margin: '0 auto', borderRadius: '20px 20px 0 0', padding: '22px 18px 36px', maxHeight: '92vh', overflowY: 'auto' }}>
-        <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 16, color: '#3F2D1E', marginBottom: 14 }}>เพิ่มยอดขาย</div>
+      <div style={{ background: '#ffffff', width: '100%', maxWidth: 520, margin: '0 auto', borderRadius: '20px 20px 0 0', padding: '22px 18px 36px', maxHeight: '92vh', overflowY: 'auto' }}>
+        <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 16, color: '#26190f', marginBottom: 14 }}>เพิ่มยอดขาย</div>
 
         <input ref={camRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={e => { handleReceiptFile(e.target.files[0]); e.target.value = ''; }} />
         <input ref={galleryRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => { handleReceiptFile(e.target.files[0]); e.target.value = ''; }} />
 
         {receiptPreview ? (
           <div style={{ marginBottom: 14, position: 'relative' }}>
-            <img src={receiptPreview} alt="ใบเสร็จ" style={{ width: '100%', maxHeight: 180, objectFit: 'contain', borderRadius: 10, border: '1px solid #E4D7BC', background: '#f5f5f5', display: 'block' }} />
+            <img src={receiptPreview} alt="ใบเสร็จ" style={{ width: '100%', maxHeight: 180, objectFit: 'contain', borderRadius: 10, border: '1px solid #e4d9c8', background: '#f5f5f5', display: 'block' }} />
             <button onClick={() => { setReceiptPreview(''); setReceiptUrl(''); }} style={{ position: 'absolute', top: 6, right: 6, border: 'none', background: 'rgba(0,0,0,.4)', color: '#fff', borderRadius: '50%', width: 26, height: 26, cursor: 'pointer', fontSize: 15, lineHeight: '26px' }}>×</button>
           </div>
         ) : (
           <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
-            <button onClick={() => camRef.current?.click()} style={{ flex: 1, border: '1.5px dashed #C9A24B', background: 'none', borderRadius: 10, padding: '10px 0', fontSize: 13, color: '#7A5A22', cursor: 'pointer' }}>📷 ถ่ายรูปใบเสร็จ</button>
-            <button onClick={() => galleryRef.current?.click()} style={{ flex: 1, border: '1.5px dashed #9AB87A', background: 'none', borderRadius: 10, padding: '10px 0', fontSize: 13, color: '#4A7A2E', cursor: 'pointer' }}>🖼 อัพโหลด</button>
+            <button onClick={() => camRef.current?.click()} style={{ flex: 1, border: '1.5px dashed #e8692e', background: 'none', borderRadius: 10, padding: '10px 0', fontSize: 13, color: '#c4491c', cursor: 'pointer' }}>📷 ถ่ายรูปใบเสร็จ</button>
+            <button onClick={() => galleryRef.current?.click()} style={{ flex: 1, border: '1.5px dashed #9AB87A', background: 'none', borderRadius: 10, padding: '10px 0', fontSize: 13, color: '#2f9b58', cursor: 'pointer' }}>🖼 อัพโหลด</button>
           </div>
         )}
 
         <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 4 }}>น้ำหนัก (กก.)</div>
+            <div style={{ fontSize: 11, color: '#8a7767', marginBottom: 4 }}>น้ำหนัก (กก.)</div>
             <input value={kg} onChange={e => setKg(e.target.value)} type="number" placeholder="0.00" inputMode="decimal" autoFocus style={inp} />
           </div>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 4 }}>ยอดขาย (บาท)</div>
+            <div style={{ fontSize: 11, color: '#8a7767', marginBottom: 4 }}>ยอดขาย (บาท)</div>
             <input value={baht} onChange={e => setBaht(e.target.value)} type="number" placeholder="0.00" inputMode="decimal" style={inp} />
           </div>
         </div>
 
         <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 4 }}>เลขบัญชีที่รับเงิน</div>
+          <div style={{ fontSize: 11, color: '#8a7767', marginBottom: 4 }}>เลขบัญชีที่รับเงิน</div>
           {!isNew ? (
             <div style={{ display: 'flex', gap: 8 }}>
               <select value={account} onChange={e => {
@@ -2203,22 +2203,22 @@ function AddSaleModal({ date, accounts, onSave, onClose, onSaveAccount }) {
             <div style={{ display: 'flex', gap: 8 }}>
               <input value={newAcct} onChange={e => setNewAcct(e.target.value)} placeholder="เช่น 012-3-45678-9 ธ.กสิกร" style={{ ...inp, flex: 1 }} />
               {accounts.length > 0 && (
-                <button onClick={() => { setIsNew(false); setAccount(accounts[0]); }} style={{ border: '1px solid #E4D7BC', background: '#F5F0E8', borderRadius: 8, padding: '0 12px', fontSize: 13, color: '#7A5A22', cursor: 'pointer' }}>เลือก</button>
+                <button onClick={() => { setIsNew(false); setAccount(accounts[0]); }} style={{ border: '1px solid #e4d9c8', background: '#F5F0E8', borderRadius: 8, padding: '0 12px', fontSize: 13, color: '#c4491c', cursor: 'pointer' }}>เลือก</button>
               )}
             </div>
           )}
         </div>
 
         <div style={{ marginBottom: 18 }}>
-          <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 6 }}>สถานะการรับเงิน</div>
+          <div style={{ fontSize: 11, color: '#8a7767', marginBottom: 6 }}>สถานะการรับเงิน</div>
           <div style={{ display: 'flex', gap: 6 }}>
             {[
-              { key: 'cash',        label: '💵 เงินสด',         active: '#2E7D32', activeBg: '#E8F5E9' },
-              { key: 'transferred', label: '✅ โอนแล้ว',         active: '#1565C0', activeBg: '#E3F2FD' },
-              { key: 'pending',     label: '⏳ ยังไม่ได้โอน',   active: '#E65100', activeBg: '#FFF3E0' },
+              { key: 'cash',        label: '💵 เงินสด',         active: '#2f9b58', activeBg: '#e6f3ea' },
+              { key: 'transferred', label: '✅ โอนแล้ว',         active: '#2c69b0', activeBg: '#E3F2FD' },
+              { key: 'pending',     label: '⏳ ยังไม่ได้โอน',   active: '#c4491c', activeBg: '#fce0d0' },
             ].map(opt => (
               <button key={opt.key} onClick={() => setStatus(opt.key)}
-                style={{ flex: 1, border: `2px solid ${status === opt.key ? opt.active : '#E4D7BC'}`, background: status === opt.key ? opt.activeBg : '#fff', borderRadius: 10, padding: '10px 4px', fontSize: 12, fontFamily: 'Prompt', fontWeight: 600, color: status === opt.key ? opt.active : '#9A8662', cursor: 'pointer' }}>
+                style={{ flex: 1, border: `2px solid ${status === opt.key ? opt.active : '#e4d9c8'}`, background: status === opt.key ? opt.activeBg : '#fff', borderRadius: 10, padding: '10px 4px', fontSize: 12, fontFamily: 'Prompt', fontWeight: 600, color: status === opt.key ? opt.active : '#8a7767', cursor: 'pointer' }}>
                 {opt.label}
               </button>
             ))}
@@ -2230,7 +2230,7 @@ function AddSaleModal({ date, accounts, onSave, onClose, onSaveAccount }) {
             style={{ flex: 1, background: '#6B8E4E', color: '#fff', border: 'none', borderRadius: 12, padding: '14px 0', fontSize: 15, fontFamily: 'Prompt', fontWeight: 600, cursor: 'pointer', opacity: (!baht && !kg) ? 0.5 : 1 }}>
             {loading ? 'กำลังบันทึก…' : '✓ บันทึกยอดขาย'}
           </button>
-          <button onClick={onClose} style={{ background: '#F0EAE0', color: '#7A5A22', border: 'none', borderRadius: 12, padding: '14px 16px', fontSize: 13, cursor: 'pointer' }}>ยกเลิก</button>
+          <button onClick={onClose} style={{ background: '#F0EAE0', color: '#c4491c', border: 'none', borderRadius: 12, padding: '14px 16px', fontSize: 13, cursor: 'pointer' }}>ยกเลิก</button>
         </div>
       </div>
     </div>
@@ -2295,43 +2295,43 @@ function SalesView({ accounts, pin, onGoHome, onAddSale, onDeleteSale, onUpdateS
     <div style={{ flex: 1, padding: '14px 14px 60px', maxWidth: 620, margin: '0 auto', width: '100%' }}>
       <div style={{ marginBottom: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-          <button onClick={onGoHome} style={{ border: 'none', background: 'none', fontSize: 22, cursor: 'pointer', color: '#7A6450' }}>‹</button>
-          <span style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 18, color: '#3F2D1E' }}>ยอดขาย</span>
-          <button onClick={loadData} disabled={loading} style={{ marginLeft: 'auto', border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 8, padding: '5px 10px', fontSize: 12, color: '#7A6450', cursor: 'pointer', opacity: loading ? 0.5 : 1 }}>⟳ รีเฟรช</button>
+          <button onClick={onGoHome} style={{ border: 'none', background: 'none', fontSize: 22, cursor: 'pointer', color: '#6b4a38' }}>‹</button>
+          <span style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 18, color: '#26190f' }}>ยอดขาย</span>
+          <button onClick={loadData} disabled={loading} style={{ marginLeft: 'auto', border: '1px solid #e4d9c8', background: '#ffffff', borderRadius: 8, padding: '5px 10px', fontSize: 12, color: '#6b4a38', cursor: 'pointer', opacity: loading ? 0.5 : 1 }}>⟳ รีเฟรช</button>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <input type="date" value={startDate} min="2026-07-09" onChange={e => { setStartDate(e.target.value); if (e.target.value > endDate) setEndDate(e.target.value); }}
-            style={{ flex: 1, border: '1px solid #E4D7BC', borderRadius: 8, padding: '6px 8px', fontSize: 12, fontFamily: 'Prompt', color: '#4A3526', background: '#FFFDF8' }} />
-          <span style={{ color: '#9A8662', fontSize: 13 }}>→</span>
+            style={{ flex: 1, border: '1px solid #e4d9c8', borderRadius: 8, padding: '6px 8px', fontSize: 12, fontFamily: 'Prompt', color: '#3a2718', background: '#ffffff' }} />
+          <span style={{ color: '#8a7767', fontSize: 13 }}>→</span>
           <input type="date" value={endDate} min="2026-07-09" onChange={e => { setEndDate(e.target.value); if (e.target.value < startDate) setStartDate(e.target.value); }}
-            style={{ flex: 1, border: '1px solid #E4D7BC', borderRadius: 8, padding: '6px 8px', fontSize: 12, fontFamily: 'Prompt', color: '#4A3526', background: '#FFFDF8' }} />
+            style={{ flex: 1, border: '1px solid #e4d9c8', borderRadius: 8, padding: '6px 8px', fontSize: 12, fontFamily: 'Prompt', color: '#3a2718', background: '#ffffff' }} />
         </div>
       </div>
 
       {/* Summary */}
-      <div style={{ background: '#FFFDF8', border: '1px solid #E4D7BC', borderRadius: 16, padding: '16px 18px', marginBottom: 16 }}>
+      <div style={{ background: '#ffffff', border: '1px solid #e4d9c8', borderRadius: 16, padding: '16px 18px', marginBottom: 16 }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
-          <div style={{ background: '#FFF3E0', borderRadius: 12, padding: '12px 14px' }}>
+          <div style={{ background: '#fce0d0', borderRadius: 12, padding: '12px 14px' }}>
             <div style={{ fontSize: 11, color: '#8A5E00', marginBottom: 4 }}>📥 ขาเข้า (รับซื้อ)</div>
-            <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 17, color: '#4A3526' }}>{fmtKg(inKg)} กก.</div>
-            <div style={{ fontSize: 13, color: '#7A5A22', marginTop: 2 }}>฿{fmtBaht(inBaht)}</div>
-            {inBills.length > 0 && <div style={{ fontSize: 10, color: '#B7A684', marginTop: 4 }}>{inBills.length} บิล</div>}
+            <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 17, color: '#3a2718' }}>{fmtKg(inKg)} กก.</div>
+            <div style={{ fontSize: 13, color: '#c4491c', marginTop: 2 }}>฿{fmtBaht(inBaht)}</div>
+            {inBills.length > 0 && <div style={{ fontSize: 10, color: '#b9a88f', marginTop: 4 }}>{inBills.length} บิล</div>}
           </div>
-          <div style={{ background: '#E8F5E9', borderRadius: 12, padding: '12px 14px' }}>
-            <div style={{ fontSize: 11, color: '#2E7D32', marginBottom: 4 }}>📤 ขาออก (ขาย)</div>
+          <div style={{ background: '#e6f3ea', borderRadius: 12, padding: '12px 14px' }}>
+            <div style={{ fontSize: 11, color: '#2f9b58', marginBottom: 4 }}>📤 ขาออก (ขาย)</div>
             <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 17, color: '#1B5E20' }}>{fmtKg(outKg)} กก.</div>
-            <div style={{ fontSize: 13, color: '#2E7D32', marginTop: 2 }}>฿{fmtBaht(outBaht)}</div>
+            <div style={{ fontSize: 13, color: '#2f9b58', marginTop: 2 }}>฿{fmtBaht(outBaht)}</div>
             {outSales.length > 0 && <div style={{ fontSize: 10, color: '#81C784', marginTop: 4 }}>{outSales.length} รายการ</div>}
           </div>
         </div>
-        <div style={{ borderTop: '1px solid #E4D7BC', paddingTop: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ borderTop: '1px solid #e4d9c8', paddingTop: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <div style={{ fontSize: 11, color: '#9A8662' }}>กำไร / ขาดทุน</div>
+            <div style={{ fontSize: 11, color: '#8a7767' }}>กำไร / ขาดทุน</div>
             {inKg > 0 && outKg > 0 && (
-              <div style={{ fontSize: 10, color: '#B7A684', marginTop: 2 }}>น้ำหนักต่าง {fmtKg(Math.abs(inKg - outKg))} กก.</div>
+              <div style={{ fontSize: 10, color: '#b9a88f', marginTop: 2 }}>น้ำหนักต่าง {fmtKg(Math.abs(inKg - outKg))} กก.</div>
             )}
           </div>
-          <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 22, color: profit >= 0 ? '#2E7D32' : '#C62828' }}>
+          <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 22, color: profit >= 0 ? '#2f9b58' : '#C62828' }}>
             {profit >= 0 ? '+' : '-'}฿{fmtBaht(Math.abs(profit))}
           </div>
         </div>
@@ -2339,29 +2339,29 @@ function SalesView({ accounts, pin, onGoHome, onAddSale, onDeleteSale, onUpdateS
 
       {/* ขาออก */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-        <span style={{ fontSize: 13, fontWeight: 600, color: '#4A3526' }}>รายการขาย</span>
-        <div style={{ flex: 1, height: 1, background: '#E4D7BC' }} />
-        {!isEmployee && onNewSaleSession && <button onClick={onNewSaleSession} style={{ border: 'none', background: 'linear-gradient(135deg,#4A7A2E,#2E5C1A)', color: '#fff', borderRadius: 10, padding: '7px 14px', fontSize: 13, cursor: 'pointer', fontFamily: 'Prompt', fontWeight: 600 }}>🧾 ใบขายใหม่</button>}
+        <span style={{ fontSize: 13, fontWeight: 600, color: '#3a2718' }}>รายการขาย</span>
+        <div style={{ flex: 1, height: 1, background: '#e4d9c8' }} />
+        {!isEmployee && onNewSaleSession && <button onClick={onNewSaleSession} style={{ border: 'none', background: 'linear-gradient(135deg,#2f9b58,#237947)', color: '#fff', borderRadius: 10, padding: '7px 14px', fontSize: 13, cursor: 'pointer', fontFamily: 'Prompt', fontWeight: 600 }}>🧾 ใบขายใหม่</button>}
         {!isEmployee && <button onClick={() => setAddOpen(true)} style={{ border: '1px solid #6B8E4E', background: '#fff', color: '#4A6E30', borderRadius: 10, padding: '7px 14px', fontSize: 13, cursor: 'pointer', fontFamily: 'Prompt' }}>+ เพิ่ม</button>}
       </div>
 
       {outSales.length === 0 && (
-        <div style={{ textAlign: 'center', color: '#B7A684', fontSize: 13, padding: '20px 0' }}>ยังไม่มีรายการขาย</div>
+        <div style={{ textAlign: 'center', color: '#b9a88f', fontSize: 13, padding: '20px 0' }}>ยังไม่มีรายการขาย</div>
       )}
       {outSales.map(s => {
         const st = s.note || 'cash';
         const nextSt = st === 'cash' ? 'transferred' : st === 'transferred' ? 'pending' : 'cash';
         const stMap = {
-          cash:        { label: '💵 เงินสด',       bg: '#E8F5E9', color: '#2E7D32', border: '#C8E6C9' },
-          transferred: { label: '✅ โอนแล้ว',       bg: '#E3F2FD', color: '#1565C0', border: '#90CAF9' },
-          pending:     { label: '⏳ ยังไม่ได้โอน', bg: '#FFF3E0', color: '#E65100', border: '#FFB74D' },
+          cash:        { label: '💵 เงินสด',       bg: '#e6f3ea', color: '#2f9b58', border: '#C8E6C9' },
+          transferred: { label: '✅ โอนแล้ว',       bg: '#E3F2FD', color: '#2c69b0', border: '#90CAF9' },
+          pending:     { label: '⏳ ยังไม่ได้โอน', bg: '#fce0d0', color: '#c4491c', border: '#FFB74D' },
         };
         const badge = stMap[st] || stMap.cash;
         const expanded = expandedId === s.id;
         const timeStr = s.date ? new Date(s.date).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) + ' น.' : '';
         const saleDateLabel = s.date ? new Date(s.date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' }) : '';
         return (
-          <div key={s.id} style={{ background: '#FFFDF8', border: `1px solid ${badge.border}`, borderRadius: 14, marginBottom: 10, overflow: 'hidden' }}>
+          <div key={s.id} style={{ background: '#ffffff', border: `1px solid ${badge.border}`, borderRadius: 14, marginBottom: 10, overflow: 'hidden' }}>
             <button onClick={() => setExpandedId(expanded ? null : s.id)}
               style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', padding: '14px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10 }}>
               <div style={{ flex: 1 }}>
@@ -2369,23 +2369,23 @@ function SalesView({ accounts, pin, onGoHome, onAddSale, onDeleteSale, onUpdateS
                   <span style={{ fontWeight: 700, fontSize: 15, color: '#1B5E20' }}>{fmtKg(Number(s.kg))} กก. · ฿{fmtBaht(Number(s.baht))}</span>
                   <span style={{ borderRadius: 20, padding: '2px 9px', fontSize: 11, fontFamily: 'Prompt', fontWeight: 600, background: badge.bg, color: badge.color }}>{badge.label}</span>
                 </div>
-                <div style={{ fontSize: 11.5, color: '#9A8662', marginTop: 3 }}>
+                <div style={{ fontSize: 11.5, color: '#8a7767', marginTop: 3 }}>
                   {saleDateLabel ? `${saleDateLabel} · ` : ''}{timeStr}{s.buyer ? ` · ${s.buyer}` : ''}
                 </div>
               </div>
-              <span style={{ color: '#C9A24B', fontSize: 16, transition: 'transform .2s', display: 'inline-block', transform: expanded ? 'rotate(90deg)' : 'none' }}>›</span>
+              <span style={{ color: '#e8692e', fontSize: 16, transition: 'transform .2s', display: 'inline-block', transform: expanded ? 'rotate(90deg)' : 'none' }}>›</span>
             </button>
             {expanded && (
               <div style={{ padding: '0 16px 14px', borderTop: '1px solid #F0E8D8' }}>
                 {s.receiptUrl ? (
                   <a href={s.receiptUrl} target="_blank" rel="noreferrer">
-                    <img src={s.receiptUrl} alt="ใบเสร็จ" style={{ width: '100%', maxHeight: 180, objectFit: 'contain', borderRadius: 10, border: '1px solid #E4D7BC', background: '#f5f5f5', display: 'block', marginBottom: 10, marginTop: 10 }} />
+                    <img src={s.receiptUrl} alt="ใบเสร็จ" style={{ width: '100%', maxHeight: 180, objectFit: 'contain', borderRadius: 10, border: '1px solid #e4d9c8', background: '#f5f5f5', display: 'block', marginBottom: 10, marginTop: 10 }} />
                   </a>
                 ) : !isEmployee ? (
                   <div style={{ marginTop: 10, marginBottom: 10 }}>
                     <button onClick={() => { uploadTargetRef.current = s.id; receiptInputRef.current?.click(); }}
                       disabled={uploadingSaleId === s.id}
-                      style={{ width: '100%', border: '1.5px dashed #C9A24B', borderRadius: 10, padding: '10px 0', background: '#FFFBF0', color: '#7A5A22', fontSize: 13, cursor: 'pointer', fontFamily: 'Prompt' }}>
+                      style={{ width: '100%', border: '1.5px dashed #e8692e', borderRadius: 10, padding: '10px 0', background: '#FFFBF0', color: '#c4491c', fontSize: 13, cursor: 'pointer', fontFamily: 'Prompt' }}>
                       {uploadingSaleId === s.id ? '⏳ กำลังอัปโหลด...' : '📎 อัปโหลดใบเสร็จ'}
                     </button>
                   </div>
@@ -2399,7 +2399,7 @@ function SalesView({ accounts, pin, onGoHome, onAddSale, onDeleteSale, onUpdateS
                   {s.receiptUrl && (
                     <button onClick={() => { uploadTargetRef.current = s.id; receiptInputRef.current?.click(); }}
                       disabled={uploadingSaleId === s.id}
-                      style={{ border: '1px solid #C9A24B', background: '#FFFBF0', borderRadius: 9, padding: '8px 10px', fontSize: 12, color: '#7A5A22', cursor: 'pointer' }}>📎</button>
+                      style={{ border: '1px solid #e8692e', background: '#FFFBF0', borderRadius: 9, padding: '8px 10px', fontSize: 12, color: '#c4491c', cursor: 'pointer' }}>📎</button>
                   )}
                   <button onClick={() => { setDeleteTarget(s.id); setDeletePinVal(''); setDeletePinErr(''); setExpandedId(null); }}
                     style={{ border: '1px solid #E8C8C2', background: '#FDF0EE', borderRadius: 9, padding: '8px 14px', fontSize: 12, color: '#C0392B', cursor: 'pointer' }}>🗑 ลบ</button>
@@ -2415,21 +2415,21 @@ function SalesView({ accounts, pin, onGoHome, onAddSale, onDeleteSale, onUpdateS
       {inBills.length > 0 && (
         <>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '16px 0 10px' }}>
-            <span style={{ fontSize: 13, fontWeight: 600, color: '#4A3526' }}>บิลรับซื้อ</span>
-            <div style={{ flex: 1, height: 1, background: '#E4D7BC' }} />
+            <span style={{ fontSize: 13, fontWeight: 600, color: '#3a2718' }}>บิลรับซื้อ</span>
+            <div style={{ flex: 1, height: 1, background: '#e4d9c8' }} />
           </div>
           {inBills.map(h => (
             <button key={h.billNo} onClick={() => onOpenHistory && onOpenHistory(h)}
               style={{ width: '100%', textAlign: 'left', background: '#FFF8EE', border: '1px solid #E8D8B4', borderRadius: 14, padding: '12px 16px', marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: onOpenHistory ? 'pointer' : 'default' }}>
               <div>
-                <div style={{ fontWeight: 600, fontSize: 14, color: '#3F2D1E' }}>{h.seller || h.billNo}</div>
-                <div style={{ fontSize: 11.5, color: '#9A8662', marginTop: 2 }}>{h.billNo}</div>
-                {h.date && <div style={{ fontSize: 11, color: '#B7A684', marginTop: 1 }}>{new Date(h.date).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} น.</div>}
+                <div style={{ fontWeight: 600, fontSize: 14, color: '#26190f' }}>{h.seller || h.billNo}</div>
+                <div style={{ fontSize: 11.5, color: '#8a7767', marginTop: 2 }}>{h.billNo}</div>
+                {h.date && <div style={{ fontSize: 11, color: '#b9a88f', marginTop: 1 }}>{new Date(h.date).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} น.</div>}
               </div>
               <div style={{ textAlign: 'right' }}>
-                <div style={{ fontWeight: 700, fontSize: 14, color: '#7A5A22' }}>฿{h.baht}</div>
-                <div style={{ fontSize: 11.5, color: '#9A8662' }}>{h.kg}</div>
-                {onOpenHistory && <div style={{ fontSize: 11, color: '#C9A24B', marginTop: 2 }}>ดูบิล ›</div>}
+                <div style={{ fontWeight: 700, fontSize: 14, color: '#c4491c' }}>฿{h.baht}</div>
+                <div style={{ fontSize: 11.5, color: '#8a7767' }}>{h.kg}</div>
+                {onOpenHistory && <div style={{ fontSize: 11, color: '#e8692e', marginTop: 2 }}>ดูบิล ›</div>}
               </div>
             </button>
           ))}
@@ -2443,14 +2443,14 @@ function SalesView({ accounts, pin, onGoHome, onAddSale, onDeleteSale, onUpdateS
 
       {deleteTarget && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          <div style={{ background: '#FFFDF8', borderRadius: 18, padding: '24px 20px', width: '100%', maxWidth: 320 }}>
-            <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 15, color: '#3F2D1E', marginBottom: 6 }}>ลบรายการขาย</div>
-            <div style={{ fontSize: 13, color: '#9A8662', marginBottom: 16 }}>ใส่รหัส Admin เพื่อยืนยัน</div>
+          <div style={{ background: '#ffffff', borderRadius: 18, padding: '24px 20px', width: '100%', maxWidth: 320 }}>
+            <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 15, color: '#26190f', marginBottom: 6 }}>ลบรายการขาย</div>
+            <div style={{ fontSize: 13, color: '#8a7767', marginBottom: 16 }}>ใส่รหัส Admin เพื่อยืนยัน</div>
             <input type="password" inputMode="numeric" maxLength={6} value={deletePinVal}
               onChange={e => { setDeletePinVal(e.target.value); setDeletePinErr(''); }}
               placeholder="รหัส Admin"
               autoFocus
-              style={{ width: '100%', border: `1.5px solid ${deletePinErr ? '#C62828' : '#E4D7BC'}`, borderRadius: 10, padding: '11px 14px', fontSize: 18, fontFamily: 'Prompt', textAlign: 'center', letterSpacing: '0.3em', boxSizing: 'border-box', background: '#fff', marginBottom: 6 }} />
+              style={{ width: '100%', border: `1.5px solid ${deletePinErr ? '#C62828' : '#e4d9c8'}`, borderRadius: 10, padding: '11px 14px', fontSize: 18, fontFamily: 'Prompt', textAlign: 'center', letterSpacing: '0.3em', boxSizing: 'border-box', background: '#fff', marginBottom: 6 }} />
             {deletePinErr && <div style={{ color: '#C62828', fontSize: 12, marginBottom: 8, textAlign: 'center' }}>{deletePinErr}</div>}
             <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
               <button onClick={() => {
@@ -2458,7 +2458,7 @@ function SalesView({ accounts, pin, onGoHome, onAddSale, onDeleteSale, onUpdateS
                 onDeleteSale(deleteTarget);
                 setDeleteTarget(null);
               }} style={{ flex: 1, background: '#C62828', color: '#fff', border: 'none', borderRadius: 10, padding: '12px 0', fontFamily: 'Prompt', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>ลบ</button>
-              <button onClick={() => setDeleteTarget(null)} style={{ flex: 1, background: '#F0EAE0', color: '#7A5A22', border: 'none', borderRadius: 10, padding: '12px 0', fontSize: 13, cursor: 'pointer' }}>ยกเลิก</button>
+              <button onClick={() => setDeleteTarget(null)} style={{ flex: 1, background: '#F0EAE0', color: '#c4491c', border: 'none', borderRadius: 10, padding: '12px 0', fontSize: 13, cursor: 'pointer' }}>ยกเลิก</button>
             </div>
           </div>
         </div>
@@ -2474,49 +2474,49 @@ function SaleNewView({ onStart, onGoBack, defaultRecorder }) {
   const [recorder, setRecorder] = useState(defaultRecorder || '');
   const [prices, setPrices] = useState(Object.fromEntries(CATS.map(c => [c.key, ''])));
   const [showPrices, setShowPrices] = useState(false);
-  const inp = { width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 10, padding: '12px 14px', fontSize: 15, fontFamily: 'Prompt', background: '#fff', boxSizing: 'border-box' };
+  const inp = { width: '100%', border: '1.5px solid #e4d9c8', borderRadius: 10, padding: '12px 14px', fontSize: 15, fontFamily: 'Prompt', background: '#fff', boxSizing: 'border-box' };
   return (
     <div style={{ flex: 1, padding: '16px 16px 32px', maxWidth: 520, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
-      <button onClick={onGoBack} style={{ border: 'none', background: 'none', fontSize: 15, color: '#8A7A66', cursor: 'pointer', padding: '4px 0 14px', display: 'flex', alignItems: 'center', gap: 6 }}>‹ กลับ</button>
-      <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 20, color: '#3F2D1E', marginBottom: 4 }}>ใบเสร็จขายใหม่</div>
-      <div style={{ fontSize: 13, color: '#9A8662', marginBottom: 20 }}>กรอกข้อมูลลูกค้าแล้วเริ่มบันทึกเข่ง</div>
+      <button onClick={onGoBack} style={{ border: 'none', background: 'none', fontSize: 15, color: '#8a7767', cursor: 'pointer', padding: '4px 0 14px', display: 'flex', alignItems: 'center', gap: 6 }}>‹ กลับ</button>
+      <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 20, color: '#26190f', marginBottom: 4 }}>ใบเสร็จขายใหม่</div>
+      <div style={{ fontSize: 13, color: '#8a7767', marginBottom: 20 }}>กรอกข้อมูลลูกค้าแล้วเริ่มบันทึกเข่ง</div>
 
-      <div style={{ background: '#FFFDF8', border: '1px solid #E4D7BC', borderRadius: 14, padding: '16px 16px 20px', marginBottom: 14 }}>
+      <div style={{ background: '#ffffff', border: '1px solid #e4d9c8', borderRadius: 14, padding: '16px 16px 20px', marginBottom: 14 }}>
         <div style={{ fontWeight: 600, fontSize: 14, color: '#5A4A38', marginBottom: 12 }}>ข้อมูลลูกค้า</div>
         <div style={{ marginBottom: 10 }}>
-          <div style={{ fontSize: 12, color: '#9A8662', marginBottom: 4 }}>ชื่อลูกค้า</div>
+          <div style={{ fontSize: 12, color: '#8a7767', marginBottom: 4 }}>ชื่อลูกค้า</div>
           <input value={customerName} onChange={e => setCustomerName(e.target.value)} placeholder="ชื่อ (ไม่บังคับ)" style={inp} />
         </div>
         <div style={{ marginBottom: 10 }}>
-          <div style={{ fontSize: 12, color: '#9A8662', marginBottom: 4 }}>เบอร์โทร</div>
+          <div style={{ fontSize: 12, color: '#8a7767', marginBottom: 4 }}>เบอร์โทร</div>
           <input value={customerPhone} onChange={e => setCustomerPhone(e.target.value)} placeholder="0812345678 (ไม่บังคับ)" type="tel" style={inp} />
         </div>
         <div>
-          <div style={{ fontSize: 12, color: '#9A8662', marginBottom: 4 }}>ผู้จด</div>
+          <div style={{ fontSize: 12, color: '#8a7767', marginBottom: 4 }}>ผู้จด</div>
           <input value={recorder} onChange={e => setRecorder(e.target.value)} placeholder="ชื่อผู้จด (ไม่บังคับ)" style={inp} />
         </div>
       </div>
 
-      <button onClick={() => setShowPrices(v => !v)} style={{ width: '100%', border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 12, padding: '12px 16px', fontSize: 14, color: '#7A5A22', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: showPrices ? 0 : 14 }}>
+      <button onClick={() => setShowPrices(v => !v)} style={{ width: '100%', border: '1px solid #e4d9c8', background: '#ffffff', borderRadius: 12, padding: '12px 16px', fontSize: 14, color: '#c4491c', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: showPrices ? 0 : 14 }}>
         <span>⚙ ตั้งราคา/กก. (ไม่บังคับ)</span>
         <span>{showPrices ? '▲' : '▼'}</span>
       </button>
       {showPrices && (
-        <div style={{ background: '#FFFDF8', border: '1px solid #E4D7BC', borderRadius: '0 0 14px 14px', borderTop: 'none', padding: '12px 16px 16px', marginBottom: 14 }}>
+        <div style={{ background: '#ffffff', border: '1px solid #e4d9c8', borderRadius: '0 0 14px 14px', borderTop: 'none', padding: '12px 16px 16px', marginBottom: 14 }}>
           {CATS.map(c => (
             <div key={c.key} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-              <span style={{ flex: 1, fontSize: 14, color: '#4A3526' }}>{c.label}</span>
+              <span style={{ flex: 1, fontSize: 14, color: '#3a2718' }}>{c.label}</span>
               <input value={prices[c.key]} onChange={e => setPrices(p => ({ ...p, [c.key]: e.target.value }))}
                 type="number" placeholder="0" inputMode="numeric"
-                style={{ width: 80, border: '1.5px solid #E4D7BC', borderRadius: 8, padding: '8px 10px', fontSize: 14, textAlign: 'right', fontFamily: 'Prompt' }} />
-              <span style={{ fontSize: 12, color: '#9A8662', width: 24 }}>฿</span>
+                style={{ width: 80, border: '1.5px solid #e4d9c8', borderRadius: 8, padding: '8px 10px', fontSize: 14, textAlign: 'right', fontFamily: 'Prompt' }} />
+              <span style={{ fontSize: 12, color: '#8a7767', width: 24 }}>฿</span>
             </div>
           ))}
         </div>
       )}
 
       <button onClick={() => onStart({ customerName: customerName.trim(), customerPhone: customerPhone.trim(), recorder: recorder.trim(), prices: Object.fromEntries(CATS.map(c => [c.key, Number(prices[c.key]) || 0])) })}
-        style={{ width: '100%', border: 'none', borderRadius: 14, padding: 18, background: 'linear-gradient(135deg,#4A7A2E,#2E5C1A)', color: '#fff', fontWeight: 700, fontSize: 17, cursor: 'pointer', fontFamily: 'Prompt' }}>
+        style={{ width: '100%', border: 'none', borderRadius: 14, padding: 18, background: 'linear-gradient(135deg,#2f9b58,#237947)', color: '#fff', fontWeight: 700, fontSize: 17, cursor: 'pointer', fontFamily: 'Prompt' }}>
         เริ่มบันทึกเข่ง →
       </button>
     </div>
@@ -2554,16 +2554,16 @@ function SaleRecordView({ saleSession, activeCat, input, onInput, onCommit, onPi
     <div style={{ flex: 1, maxWidth: 880, width: '100%', margin: '0 auto', padding: '14px 14px 130px' }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-        <button onClick={onGoBack} style={{ border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 10, padding: '8px 12px', fontSize: 13, color: '#7A6450', cursor: 'pointer' }}>‹ หน้าหลัก</button>
+        <button onClick={onGoBack} style={{ border: '1px solid #e4d9c8', background: '#ffffff', borderRadius: 10, padding: '8px 12px', fontSize: 13, color: '#6b4a38', cursor: 'pointer' }}>‹ หน้าหลัก</button>
         <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.2 }}>
-          <span style={{ fontWeight: 600, fontSize: 14, color: '#4A3526' }}>{saleSession?.billNo}</span>
+          <span style={{ fontWeight: 600, fontSize: 14, color: '#3a2718' }}>{saleSession?.billNo}</span>
           {onChangeDate ? (
             <input type="date"
               value={saleSession?.date ? (() => { const d = new Date(saleSession.date); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })() : ''}
               onChange={e => { if (e.target.value) { const [y,m,d] = e.target.value.split('-').map(Number); const prev = new Date(saleSession.date); const nd = new Date(y,m-1,d,prev.getHours(),prev.getMinutes(),prev.getSeconds()); onChangeDate(nd.getTime()); } }}
-              style={{ fontSize: 12, color: '#DC743C', border: 'none', background: 'none', padding: 0, cursor: 'pointer', outline: 'none', fontWeight: 600 }} />
+              style={{ fontSize: 12, color: '#e8692e', border: 'none', background: 'none', padding: 0, cursor: 'pointer', outline: 'none', fontWeight: 600 }} />
           ) : (
-            <span style={{ fontSize: 12, color: '#9A8662' }}>{saleSession ? dateStr(saleSession.date) : ''}</span>
+            <span style={{ fontSize: 12, color: '#8a7767' }}>{saleSession ? dateStr(saleSession.date) : ''}</span>
           )}
         </div>
       </div>
@@ -2582,7 +2582,7 @@ function SaleRecordView({ saleSession, activeCat, input, onInput, onCommit, onPi
       </div>
 
       {/* Total bar */}
-      <div style={{ background: 'linear-gradient(135deg,#2E5C1A,#4A7A2E)', color: '#F0FAE8', borderRadius: 16, padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, boxShadow: '0 8px 20px rgba(46,92,26,.22)' }}>
+      <div style={{ background: 'linear-gradient(135deg,#237947,#2f9b58)', color: '#F0FAE8', borderRadius: 16, padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, boxShadow: '0 8px 20px rgba(46,92,26,.22)' }}>
         <div>
           <span style={{ fontSize: 12, opacity: .7, letterSpacing: '.08em', display: 'block' }}>รวมน้ำหนักทั้งหมด</span>
           <span style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 30, lineHeight: 1.1 }}>{fmtKg(totalKg)} <span style={{ fontSize: 15, opacity: .7 }}>กก.</span></span>
@@ -2600,7 +2600,7 @@ function SaleRecordView({ saleSession, activeCat, input, onInput, onCommit, onPi
           const active = activeCat === c.key;
           return (
             <div key={c.key} style={{ position: 'relative' }}>
-              <button onClick={() => onPickCat(c.key)} style={{ width: '100%', border: active ? `2px solid ${c.accent}` : '1px solid #E4D7BC', background: active ? '#FFFDF8' : '#FBF6EC', borderRadius: 12, padding: '10px 4px', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: active ? `0 4px 12px ${c.accent}40` : 'none' }}>
+              <button onClick={() => onPickCat(c.key)} style={{ width: '100%', border: active ? `2px solid ${c.accent}` : '1px solid #e4d9c8', background: active ? '#ffffff' : '#fbf7f1', borderRadius: 12, padding: '10px 4px', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: active ? `0 4px 12px ${c.accent}40` : 'none' }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'center' }}>
                   <span style={{ width: 8, height: 8, borderRadius: '50%', background: c.accent, display: 'inline-block', flexShrink: 0 }} />
                   <span style={{ fontWeight: 600, fontSize: 13 }}>{c.label}</span>
@@ -2608,7 +2608,7 @@ function SaleRecordView({ saleSession, activeCat, input, onInput, onCommit, onPi
                 <span style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 16, marginTop: 3 }}>{fmtKg(d.kg)}</span>
                 <span style={{ fontSize: 10, opacity: .7 }}>{d.count} เข่ง</span>
               </button>
-              {onHideCat && d.count === 0 && <button onClick={() => onHideCat(c.key)} style={{ position: 'absolute', top: 3, right: 3, border: 'none', background: 'rgba(160,144,128,.18)', borderRadius: 8, width: 18, height: 18, fontSize: 9, cursor: 'pointer', color: '#9A8662', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>}
+              {onHideCat && d.count === 0 && <button onClick={() => onHideCat(c.key)} style={{ position: 'absolute', top: 3, right: 3, border: 'none', background: 'rgba(160,144,128,.18)', borderRadius: 8, width: 18, height: 18, fontSize: 9, cursor: 'pointer', color: '#8a7767', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>}
             </div>
           );
         })}
@@ -2618,7 +2618,7 @@ function SaleRecordView({ saleSession, activeCat, input, onInput, onCommit, onPi
           const accent = hashColor(lbl);
           return (
             <div key={lbl} style={{ position: 'relative' }}>
-              <button onClick={() => { onCustomLabelChange(lbl); onPickCat('custom'); }} style={{ width: '100%', border: active ? `2px solid ${accent}` : '1px solid #E4D7BC', background: active ? '#FFFDF8' : '#FBF6EC', borderRadius: 12, padding: '10px 4px', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: active ? `0 4px 12px ${accent}40` : 'none' }}>
+              <button onClick={() => { onCustomLabelChange(lbl); onPickCat('custom'); }} style={{ width: '100%', border: active ? `2px solid ${accent}` : '1px solid #e4d9c8', background: active ? '#ffffff' : '#fbf7f1', borderRadius: 12, padding: '10px 4px', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: active ? `0 4px 12px ${accent}40` : 'none' }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'center' }}>
                   <span style={{ width: 8, height: 8, borderRadius: '50%', background: accent, display: 'inline-block', flexShrink: 0 }} />
                   <span style={{ fontWeight: 600, fontSize: 13 }}>{lbl}</span>
@@ -2626,7 +2626,7 @@ function SaleRecordView({ saleSession, activeCat, input, onInput, onCommit, onPi
                 <span style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 16, marginTop: 3 }}>{fmtKg(d.kg)}</span>
                 <span style={{ fontSize: 10, opacity: .7 }}>{d.count} เข่ง</span>
               </button>
-              {onRemoveCustomCatLabel && <button onClick={() => onRemoveCustomCatLabel(lbl)} style={{ position: 'absolute', top: 3, right: 3, border: 'none', background: 'rgba(160,144,128,.18)', borderRadius: 8, width: 18, height: 18, fontSize: 9, cursor: 'pointer', color: '#9A8662', lineHeight: '18px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>}
+              {onRemoveCustomCatLabel && <button onClick={() => onRemoveCustomCatLabel(lbl)} style={{ position: 'absolute', top: 3, right: 3, border: 'none', background: 'rgba(160,144,128,.18)', borderRadius: 8, width: 18, height: 18, fontSize: 9, cursor: 'pointer', color: '#8a7767', lineHeight: '18px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>}
             </div>
           );
         })}
@@ -2642,19 +2642,19 @@ function SaleRecordView({ saleSession, activeCat, input, onInput, onCommit, onPi
                 onKeyDown={e => { if (e.key === 'Enter' && newSaleLabelText.trim()) { onAddCustomCatLabel(newSaleLabelText.trim()); setNewSaleLabelText(''); setAddingNewSaleLabel(false); } if (e.key === 'Escape') { setNewSaleLabelText(''); setAddingNewSaleLabel(false); } }}
                 placeholder="ชื่อหมวดใหม่…"
                 autoFocus
-                style={{ flex: 1, border: '1px solid #C9A24B', borderRadius: 12, padding: '8px 12px', fontSize: 14, fontWeight: 600, outline: 'none', fontFamily: 'inherit', color: '#4A3526' }}
+                style={{ flex: 1, border: '1px solid #e8692e', borderRadius: 12, padding: '8px 12px', fontSize: 14, fontWeight: 600, outline: 'none', fontFamily: 'inherit', color: '#3a2718' }}
               />
-              <button onClick={() => { if (newSaleLabelText.trim()) { onAddCustomCatLabel(newSaleLabelText.trim()); setNewSaleLabelText(''); setAddingNewSaleLabel(false); } }} style={{ border: 'none', borderRadius: 12, padding: '8px 14px', background: '#C9A24B', color: '#fff', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>บันทึก</button>
-              <button onClick={() => { setNewSaleLabelText(''); setAddingNewSaleLabel(false); }} style={{ border: '1px solid #E4D7BC', borderRadius: 12, padding: '8px 12px', background: '#FBF6EC', color: '#9A8662', fontSize: 13, cursor: 'pointer' }}>ยกเลิก</button>
+              <button onClick={() => { if (newSaleLabelText.trim()) { onAddCustomCatLabel(newSaleLabelText.trim()); setNewSaleLabelText(''); setAddingNewSaleLabel(false); } }} style={{ border: 'none', borderRadius: 12, padding: '8px 14px', background: '#e8692e', color: '#fff', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>บันทึก</button>
+              <button onClick={() => { setNewSaleLabelText(''); setAddingNewSaleLabel(false); }} style={{ border: '1px solid #e4d9c8', borderRadius: 12, padding: '8px 12px', background: '#fbf7f1', color: '#8a7767', fontSize: 13, cursor: 'pointer' }}>ยกเลิก</button>
             </div>
           ) : (
             <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-              <button onClick={() => setAddingNewSaleLabel(true)} style={{ padding: '6px 14px', borderRadius: 16, border: '1px dashed #C9A24B', background: '#FBF6EC', color: '#9A8662', fontSize: 13, cursor: 'pointer', fontWeight: 600 }}>+ เพิ่มหมวดใหม่</button>
+              <button onClick={() => setAddingNewSaleLabel(true)} style={{ padding: '6px 14px', borderRadius: 16, border: '1px dashed #e8692e', background: '#fbf7f1', color: '#8a7767', fontSize: 13, cursor: 'pointer', fontWeight: 600 }}>+ เพิ่มหมวดใหม่</button>
               {(customCatLabels || []).length > 0 && onOpenPinEditor && (
-                <button onClick={onOpenPinEditor} style={{ padding: '6px 12px', borderRadius: 16, border: '1px solid #E4D7BC', background: '#fff', color: '#7A6450', fontSize: 13, cursor: 'pointer' }}>⚙ จัดการ</button>
+                <button onClick={onOpenPinEditor} style={{ padding: '6px 12px', borderRadius: 16, border: '1px solid #e4d9c8', background: '#fff', color: '#6b4a38', fontSize: 13, cursor: 'pointer' }}>⚙ จัดการ</button>
               )}
               {(hiddenCats || []).length > 0 && onShowAllCats && (
-                <button onClick={onShowAllCats} style={{ padding: '6px 12px', borderRadius: 16, border: '1px solid #C9A24B', background: '#FBF3DF', color: '#7A5A22', fontSize: 13, cursor: 'pointer' }}>↩ แสดงทั้งหมด</button>
+                <button onClick={onShowAllCats} style={{ padding: '6px 12px', borderRadius: 16, border: '1px solid #e8692e', background: '#FBF3DF', color: '#c4491c', fontSize: 13, cursor: 'pointer' }}>↩ แสดงทั้งหมด</button>
               )}
             </div>
           )}
@@ -2662,17 +2662,17 @@ function SaleRecordView({ saleSession, activeCat, input, onInput, onCommit, onPi
       )}
 
       {/* Input + Keypad */}
-      <div style={{ background: '#FFFDF8', border: '1px solid #E4D7BC', borderRadius: 18, padding: 16, boxShadow: '0 4px 14px rgba(95,70,40,.06)' }}>
+      <div style={{ background: '#ffffff', border: '1px solid #e4d9c8', borderRadius: 18, padding: 16, boxShadow: '0 4px 14px rgba(95,70,40,.06)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-          <span style={{ display: 'flex', alignItems: 'center', gap: 7, fontWeight: 600, color: '#4A3526' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 7, fontWeight: 600, color: '#3a2718' }}>
             <span style={{ width: 11, height: 11, borderRadius: '50%', background: catAccent(activeCat), display: 'inline-block' }} />
             กำลังจด: {activeCat === 'custom' ? (customLabel || 'หมวดพิเศษ') : catLabel(activeCat)}
           </span>
-          <span style={{ fontSize: 12, color: '#9A8662' }}>เคาะตัวเลข แล้วกด "บันทึกเข่ง"</span>
+          <span style={{ fontSize: 12, color: '#8a7767' }}>เคาะตัวเลข แล้วกด "บันทึกเข่ง"</span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 8, background: '#FBF6EC', borderRadius: 14, padding: 14, marginBottom: 14, minHeight: 60 }}>
-          <span style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 42, color: '#3F2D1E', lineHeight: 1 }}>{input || '0'}</span>
-          <span style={{ fontSize: 16, color: '#A6925E' }}>กก.</span>
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 8, background: '#fbf7f1', borderRadius: 14, padding: 14, marginBottom: 14, minHeight: 60 }}>
+          <span style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 42, color: '#26190f', lineHeight: 1 }}>{input || '0'}</span>
+          <span style={{ fontSize: 16, color: '#a99a88' }}>กก.</span>
         </div>
         <Keypad value={input} onChange={onInput} onConfirm={onCommit} />
       </div>
@@ -2680,12 +2680,12 @@ function SaleRecordView({ saleSession, activeCat, input, onInput, onCommit, onPi
       {/* Recent entries for active cat */}
       {recent.length > 0 && (
         <div style={{ marginTop: 16 }}>
-          <span style={{ fontSize: 12, color: '#A6925E', letterSpacing: '.08em' }}>เข่งล่าสุด ({activeCat === 'custom' ? (customLabel || 'หมวดพิเศษ') : catLabel(activeCat)}) — แตะเพื่อแก้/ลบ</span>
+          <span style={{ fontSize: 12, color: '#a99a88', letterSpacing: '.08em' }}>เข่งล่าสุด ({activeCat === 'custom' ? (customLabel || 'หมวดพิเศษ') : catLabel(activeCat)}) — แตะเพื่อแก้/ลบ</span>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
             {recent.map(e => (
-              <button key={e.id} onClick={() => onEditEntry(e)} style={{ border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 10, padding: '8px 12px', fontSize: 14, color: '#4A3526', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <button key={e.id} onClick={() => onEditEntry(e)} style={{ border: '1px solid #e4d9c8', background: '#ffffff', borderRadius: 10, padding: '8px 12px', fontSize: 14, color: '#3a2718', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
                 <span style={{ fontFamily: 'Prompt', fontWeight: 500 }}>{fmtKg(e.kg)}</span>
-                <span style={{ fontSize: 11, color: '#B7A684' }}>กก. · {timeStr(e.t)}</span>
+                <span style={{ fontSize: 11, color: '#b9a88f' }}>กก. · {timeStr(e.t)}</span>
               </button>
             ))}
           </div>
@@ -2693,14 +2693,14 @@ function SaleRecordView({ saleSession, activeCat, input, onInput, onCommit, onPi
       )}
 
       {/* Fixed bottom bar */}
-      <div className="no-print" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 25, background: '#FBF6EC', borderTop: '1px solid #E4D7BC', padding: 'calc(env(safe-area-inset-bottom) + 10px) 14px 10px', display: 'flex', gap: 10 }}>
+      <div className="no-print" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 25, background: '#fbf7f1', borderTop: '1px solid #e4d9c8', padding: 'calc(env(safe-area-inset-bottom) + 10px) 14px 10px', display: 'flex', gap: 10 }}>
         <button
           onClick={onCommit}
           disabled={!input || parseFloat(input) <= 0}
-          style={{ flex: 1, border: 'none', borderRadius: 13, padding: 15, background: (!input || parseFloat(input) <= 0) ? '#D9CDB8' : 'linear-gradient(135deg,#C9A24B,#A8763E)', color: (!input || parseFloat(input) <= 0) ? '#A89880' : '#fff', fontWeight: 700, fontSize: 16, cursor: (!input || parseFloat(input) <= 0) ? 'not-allowed' : 'pointer', transition: 'background .2s' }}>
+          style={{ flex: 1, border: 'none', borderRadius: 13, padding: 15, background: (!input || parseFloat(input) <= 0) ? '#D9CDB8' : 'linear-gradient(135deg,#e8692e,#A8763E)', color: (!input || parseFloat(input) <= 0) ? '#A89880' : '#fff', fontWeight: 700, fontSize: 16, cursor: (!input || parseFloat(input) <= 0) ? 'not-allowed' : 'pointer', transition: 'background .2s' }}>
           ＋ บันทึกเข่งนี้
         </button>
-        <button onClick={onGoSummary} style={{ flex: 1, border: 'none', borderRadius: 13, padding: 15, background: '#3F2D1E', color: '#F6EEDD', fontWeight: 600, fontSize: 16, cursor: 'pointer' }}>ดูสรุป & ตั้งราคา →</button>
+        <button onClick={onGoSummary} style={{ flex: 1, border: 'none', borderRadius: 13, padding: 15, background: '#26190f', color: '#fffbf4', fontWeight: 600, fontSize: 16, cursor: 'pointer' }}>ดูสรุป & ตั้งราคา →</button>
       </div>
     </div>
   );
@@ -2712,7 +2712,7 @@ function SaleCustomerModal({ customerName, customerPhone, recorder: initRecorder
   const [phone, setPhone] = useState(customerPhone || '');
   const [recorder, setRecorder] = useState(initRecorder || '');
   const [autoFilled, setAutoFilled] = useState(false);
-  const inp = { width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 10, padding: '12px 14px', fontSize: 15, fontFamily: 'Prompt', background: '#fff', boxSizing: 'border-box', outline: 'none' };
+  const inp = { width: '100%', border: '1.5px solid #e4d9c8', borderRadius: 10, padding: '12px 14px', fontSize: 15, fontFamily: 'Prompt', background: '#fff', boxSizing: 'border-box', outline: 'none' };
 
   const lookupName = (p) => {
     const digits = p.replace(/\D/g, '');
@@ -2730,26 +2730,26 @@ function SaleCustomerModal({ customerName, customerPhone, recorder: initRecorder
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.45)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-      <div style={{ background: '#FFFDF8', borderRadius: '18px 18px 0 0', padding: '22px 18px 36px', width: '100%', maxWidth: 520 }}>
-        <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 17, marginBottom: 16, color: '#3F2D1E' }}>ข้อมูลลูกค้า</div>
+      <div style={{ background: '#ffffff', borderRadius: '18px 18px 0 0', padding: '22px 18px 36px', width: '100%', maxWidth: 520 }}>
+        <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 17, marginBottom: 16, color: '#26190f' }}>ข้อมูลลูกค้า</div>
         <div style={{ marginBottom: 12 }}>
-          <div style={{ fontSize: 12, color: '#9A8662', marginBottom: 4 }}>เบอร์โทร</div>
+          <div style={{ fontSize: 12, color: '#8a7767', marginBottom: 4 }}>เบอร์โทร</div>
           <input value={phone} onChange={handlePhoneChange} placeholder="0812345678 (ไม่บังคับ)" type="tel" style={inp} autoFocus />
         </div>
         <div style={{ marginBottom: 12 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-            <span style={{ fontSize: 12, color: '#9A8662' }}>ชื่อลูกค้า</span>
-            {autoFilled && <span style={{ fontSize: 10, color: '#4A7A2E', background: '#EDF7E6', borderRadius: 4, padding: '1px 6px' }}>✓ ดึงข้อมูลอัตโนมัติ</span>}
+            <span style={{ fontSize: 12, color: '#8a7767' }}>ชื่อลูกค้า</span>
+            {autoFilled && <span style={{ fontSize: 10, color: '#2f9b58', background: '#EDF7E6', borderRadius: 4, padding: '1px 6px' }}>✓ ดึงข้อมูลอัตโนมัติ</span>}
           </div>
-          <input value={name} onChange={e => { setName(e.target.value); setAutoFilled(false); }} placeholder="ชื่อ (ไม่บังคับ)" style={{ ...inp, background: autoFilled ? '#F6FFF3' : '#fff', borderColor: autoFilled ? '#81C784' : '#E4D7BC' }} />
+          <input value={name} onChange={e => { setName(e.target.value); setAutoFilled(false); }} placeholder="ชื่อ (ไม่บังคับ)" style={{ ...inp, background: autoFilled ? '#F6FFF3' : '#fff', borderColor: autoFilled ? '#81C784' : '#e4d9c8' }} />
         </div>
         <div style={{ marginBottom: 18 }}>
-          <div style={{ fontSize: 12, color: '#9A8662', marginBottom: 4 }}>ผู้จด</div>
+          <div style={{ fontSize: 12, color: '#8a7767', marginBottom: 4 }}>ผู้จด</div>
           <input value={recorder} onChange={e => setRecorder(e.target.value)} placeholder="ชื่อผู้จด (ไม่บังคับ)" style={inp} />
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
-          <button onClick={onCancel} style={{ flex: 1, border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 12, padding: 14, fontSize: 15, color: '#9A8662', cursor: 'pointer' }}>ยกเลิก</button>
-          <button onClick={() => onSave(name.trim(), phone.trim(), recorder.trim())} style={{ flex: 2, border: 'none', borderRadius: 12, padding: 14, background: 'linear-gradient(135deg,#4A7A2E,#2E5C1A)', color: '#fff', fontWeight: 700, fontSize: 15, cursor: 'pointer' }}>บันทึก</button>
+          <button onClick={onCancel} style={{ flex: 1, border: '1px solid #e4d9c8', background: '#ffffff', borderRadius: 12, padding: 14, fontSize: 15, color: '#8a7767', cursor: 'pointer' }}>ยกเลิก</button>
+          <button onClick={() => onSave(name.trim(), phone.trim(), recorder.trim())} style={{ flex: 2, border: 'none', borderRadius: 12, padding: 14, background: 'linear-gradient(135deg,#2f9b58,#237947)', color: '#fff', fontWeight: 700, fontSize: 15, cursor: 'pointer' }}>บันทึก</button>
         </div>
       </div>
     </div>
@@ -2770,12 +2770,12 @@ function SaleSummaryView({ saleSession, onGoRecord, onGoPrint, onSetPrice, custo
   return (
     <div style={{ flex: 1, maxWidth: 820, width: '100%', margin: '0 auto', padding: '16px 14px 120px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-        <button onClick={onGoRecord} style={{ border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 10, padding: '8px 12px', fontSize: 13, color: '#7A6450', cursor: 'pointer' }}>‹ กลับไปจด</button>
-        <h2 style={{ fontFamily: 'Prompt', fontWeight: 400, fontSize: 20, color: '#4A3526', margin: 0 }}>สรุปยอดขาย · ตั้งราคา</h2>
+        <button onClick={onGoRecord} style={{ border: '1px solid #e4d9c8', background: '#ffffff', borderRadius: 10, padding: '8px 12px', fontSize: 13, color: '#6b4a38', cursor: 'pointer' }}>‹ กลับไปจด</button>
+        <h2 style={{ fontFamily: 'Prompt', fontWeight: 400, fontSize: 20, color: '#3a2718', margin: 0 }}>สรุปยอดขาย · ตั้งราคา</h2>
       </div>
-      <p style={{ margin: '0 0 14px', fontSize: 13, color: '#9A8662' }}>แตะช่อง "ราคา" เพื่อใส่ราคาขายของแต่ละหมวด · ยอดรวมคำนวณให้อัตโนมัติ</p>
+      <p style={{ margin: '0 0 14px', fontSize: 13, color: '#8a7767' }}>แตะช่อง "ราคา" เพื่อใส่ราคาขายของแต่ละหมวด · ยอดรวมคำนวณให้อัตโนมัติ</p>
 
-      <div style={{ background: '#FFFDF8', border: '1px solid #E4D7BC', borderRadius: 16, overflow: 'hidden', boxShadow: '0 4px 14px rgba(95,70,40,.06)' }}>
+      <div style={{ background: '#ffffff', border: '1px solid #e4d9c8', borderRadius: 16, overflow: 'hidden', boxShadow: '0 4px 14px rgba(95,70,40,.06)' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1.3fr .7fr 1fr 1.1fr 1.2fr', background: '#EAF4E0', padding: '11px 14px', fontSize: 12, fontWeight: 600, color: '#3A6020' }}>
           <span>หมวด</span><span style={{ textAlign: 'center' }}>เข่ง</span><span style={{ textAlign: 'right' }}>น้ำหนัก</span><span style={{ textAlign: 'right' }}>ราคา/กก.</span><span style={{ textAlign: 'right' }}>ยอด (฿)</span>
         </div>
@@ -2784,15 +2784,15 @@ function SaleSummaryView({ saleSession, onGoRecord, onGoPrint, onSetPrice, custo
           const price = prices[c.key] || 0;
           return (
             <div key={c.key} style={{ display: 'grid', gridTemplateColumns: '1.3fr .7fr 1fr 1.1fr 1.2fr', alignItems: 'center', padding: '12px 14px', borderTop: '1px solid #D8ECC8' }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 7, fontWeight: 600, fontSize: 14, color: '#4A3526' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 7, fontWeight: 600, fontSize: 14, color: '#3a2718' }}>
                 <span style={{ width: 9, height: 9, borderRadius: '50%', background: c.accent, display: 'inline-block', flexShrink: 0 }} />{c.label}
               </span>
-              <span style={{ textAlign: 'center', fontSize: 13, color: '#9A8662' }}>{d.count}</span>
+              <span style={{ textAlign: 'center', fontSize: 13, color: '#8a7767' }}>{d.count}</span>
               <span style={{ textAlign: 'right', fontFamily: 'Prompt', fontSize: 14 }}>{fmtKg(d.kg)}</span>
-              <button onClick={() => onSetPrice(c.key)} style={{ textAlign: 'right', border: price ? '1px solid #C8DFB0' : '1.5px dashed #4A7A2E', background: price ? '#F5FAF0' : '#EEFAE6', borderRadius: 8, padding: '5px 8px', fontSize: 13, color: price ? '#2E5C1A' : '#4A7A2E', cursor: 'pointer', fontFamily: 'Prompt' }}>
+              <button onClick={() => onSetPrice(c.key)} style={{ textAlign: 'right', border: price ? '1px solid #C8DFB0' : '1.5px dashed #2f9b58', background: price ? '#F5FAF0' : '#EEFAE6', borderRadius: 8, padding: '5px 8px', fontSize: 13, color: price ? '#237947' : '#2f9b58', cursor: 'pointer', fontFamily: 'Prompt' }}>
                 {price ? fmtPrice(price) : 'ตั้งราคา'}
               </button>
-              <span style={{ textAlign: 'right', fontFamily: 'Prompt', fontWeight: 500, fontSize: 14, color: '#3F2D1E' }}>{price ? fmtBaht(d.kg * price) : '—'}</span>
+              <span style={{ textAlign: 'right', fontFamily: 'Prompt', fontWeight: 500, fontSize: 14, color: '#26190f' }}>{price ? fmtBaht(d.kg * price) : '—'}</span>
             </div>
           );
         })}
@@ -2800,20 +2800,20 @@ function SaleSummaryView({ saleSession, onGoRecord, onGoPrint, onSetPrice, custo
           const price = prices[r.priceKey] || prices['custom'] || 0;
           return (
             <div key={r.priceKey} style={{ display: 'grid', gridTemplateColumns: '1.3fr .7fr 1fr 1.1fr 1.2fr', alignItems: 'center', padding: '12px 14px', borderTop: '1px solid #D8ECC8' }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 7, fontWeight: 600, fontSize: 14, color: '#4A3526' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 7, fontWeight: 600, fontSize: 14, color: '#3a2718' }}>
                 <span style={{ width: 9, height: 9, borderRadius: '50%', background: '#7C8C9A', display: 'inline-block', flexShrink: 0 }} />{r.label || 'หมวดพิเศษ'}
               </span>
-              <span style={{ textAlign: 'center', fontSize: 13, color: '#9A8662' }}>{r.count}</span>
+              <span style={{ textAlign: 'center', fontSize: 13, color: '#8a7767' }}>{r.count}</span>
               <span style={{ textAlign: 'right', fontFamily: 'Prompt', fontSize: 14 }}>{fmtKg(r.kg)}</span>
-              <button onClick={() => onSetPrice(r.priceKey)} style={{ textAlign: 'right', border: price ? '1px solid #C8DFB0' : '1.5px dashed #4A7A2E', background: price ? '#F5FAF0' : '#EEFAE6', borderRadius: 8, padding: '5px 8px', fontSize: 13, color: price ? '#2E5C1A' : '#4A7A2E', cursor: 'pointer', fontFamily: 'Prompt' }}>
+              <button onClick={() => onSetPrice(r.priceKey)} style={{ textAlign: 'right', border: price ? '1px solid #C8DFB0' : '1.5px dashed #2f9b58', background: price ? '#F5FAF0' : '#EEFAE6', borderRadius: 8, padding: '5px 8px', fontSize: 13, color: price ? '#237947' : '#2f9b58', cursor: 'pointer', fontFamily: 'Prompt' }}>
                 {price ? fmtPrice(price) : 'ตั้งราคา'}
               </button>
-              <span style={{ textAlign: 'right', fontFamily: 'Prompt', fontWeight: 500, fontSize: 14, color: '#3F2D1E' }}>{price ? fmtBaht(r.kg * price) : '—'}</span>
+              <span style={{ textAlign: 'right', fontFamily: 'Prompt', fontWeight: 500, fontSize: 14, color: '#26190f' }}>{price ? fmtBaht(r.kg * price) : '—'}</span>
             </div>
           );
         })}
-        {stdRows.length === 0 && custRows.length === 0 && <div style={{ padding: '20px 14px', textAlign: 'center', color: '#B7A684', fontSize: 14 }}>ยังไม่มีรายการ — กลับไปบันทึกเข่งก่อน</div>}
-        <div style={{ display: 'grid', gridTemplateColumns: '1.3fr .7fr 1fr 1.1fr 1.2fr', alignItems: 'center', padding: 14, background: '#2E5C1A', color: '#F0FAE8' }}>
+        {stdRows.length === 0 && custRows.length === 0 && <div style={{ padding: '20px 14px', textAlign: 'center', color: '#b9a88f', fontSize: 14 }}>ยังไม่มีรายการ — กลับไปบันทึกเข่งก่อน</div>}
+        <div style={{ display: 'grid', gridTemplateColumns: '1.3fr .7fr 1fr 1.1fr 1.2fr', alignItems: 'center', padding: 14, background: '#237947', color: '#F0FAE8' }}>
           <span style={{ fontWeight: 600, gridColumn: 'span 2' }}>รวมทั้งสิ้น</span>
           <span style={{ textAlign: 'right', fontFamily: 'Prompt', fontWeight: 500 }}>{fmtKg(totalKg)}</span>
           <span style={{ textAlign: 'right', fontSize: 12, opacity: .65 }}>บาท</span>
@@ -2821,7 +2821,7 @@ function SaleSummaryView({ saleSession, onGoRecord, onGoPrint, onSetPrice, custo
         </div>
       </div>
 
-      <button onClick={onGoPrint} style={{ width: '100%', marginTop: 18, border: 'none', borderRadius: 15, padding: 18, background: 'linear-gradient(135deg,#4A7A2E,#2E5C1A)', color: '#fff', fontWeight: 700, fontSize: 18, cursor: 'pointer', boxShadow: '0 8px 18px rgba(46,92,26,.3)' }}>
+      <button onClick={onGoPrint} style={{ width: '100%', marginTop: 18, border: 'none', borderRadius: 15, padding: 18, background: 'linear-gradient(135deg,#2f9b58,#237947)', color: '#fff', fontWeight: 700, fontSize: 18, cursor: 'pointer', boxShadow: '0 8px 18px rgba(46,92,26,.3)' }}>
         ดูใบเสร็จ & ปริ้น →
       </button>
     </div>
@@ -2857,23 +2857,23 @@ function SalePrintView({ saleSession, onGoBack, onFinish, onEditPrice, onStartEd
       <div className="sale-print-inner" style={{ padding: '16px 14px 32px', maxWidth: 680, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
       <div className="no-print" style={{ marginBottom: 14 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-          <button onClick={onGoBack} style={{ border: 'none', background: 'none', fontSize: 14, color: '#8A7A66', cursor: 'pointer', padding: '4px 0' }}>{onFinish ? '‹ กลับแก้ไข' : '‹ กลับ'}</button>
-          {onStartEdit && <button onClick={onStartEdit} style={{ marginLeft: 'auto', border: 'none', background: 'linear-gradient(135deg,#2E5C1A,#4A7A2E)', color: '#fff', borderRadius: 9, padding: '6px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>✏️ แก้ไข</button>}
+          <button onClick={onGoBack} style={{ border: 'none', background: 'none', fontSize: 14, color: '#8a7767', cursor: 'pointer', padding: '4px 0' }}>{onFinish ? '‹ กลับแก้ไข' : '‹ กลับ'}</button>
+          {onStartEdit && <button onClick={onStartEdit} style={{ marginLeft: 'auto', border: 'none', background: 'linear-gradient(135deg,#237947,#2f9b58)', color: '#fff', borderRadius: 9, padding: '6px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>✏️ แก้ไข</button>}
         </div>
-        <button onClick={() => window.print()} style={{ width: '100%', border: 'none', borderRadius: 15, padding: 18, background: 'linear-gradient(135deg,#4A7A2E,#2E5C1A)', color: '#fff', fontWeight: 700, fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+        <button onClick={() => window.print()} style={{ width: '100%', border: 'none', borderRadius: 15, padding: 18, background: 'linear-gradient(135deg,#2f9b58,#237947)', color: '#fff', fontWeight: 700, fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
           🖨 ปริ้นใบเสร็จ
         </button>
-        <p style={{ textAlign: 'center', fontSize: 12, color: '#9A8662', margin: '8px 0 12px' }}>ขนาดกระดาษ A4</p>
-        {onFinish && <button onClick={onFinish} style={{ width: '100%', border: '1px solid #4A7A2E', background: '#F0FAE8', borderRadius: 12, padding: 14, fontSize: 15, fontFamily: 'Prompt', fontWeight: 600, color: '#2E5C1A', cursor: 'pointer' }}>
+        <p style={{ textAlign: 'center', fontSize: 12, color: '#8a7767', margin: '8px 0 12px' }}>ขนาดกระดาษ A4</p>
+        {onFinish && <button onClick={onFinish} style={{ width: '100%', border: '1px solid #2f9b58', background: '#F0FAE8', borderRadius: 12, padding: 14, fontSize: 15, fontFamily: 'Prompt', fontWeight: 600, color: '#237947', cursor: 'pointer' }}>
           ✓ บันทึกบิลขาย
         </button>}
         {salePaymentStatus === 'confirmed' && (
-          <div style={{ width: '100%', border: '1px solid #2E7D32', background: '#E8F5E9', borderRadius: 12, padding: 14, fontSize: 15, fontWeight: 600, color: '#2E7D32', textAlign: 'center', marginTop: 8 }}>
+          <div style={{ width: '100%', border: '1px solid #2f9b58', background: '#e6f3ea', borderRadius: 12, padding: 14, fontSize: 15, fontWeight: 600, color: '#2f9b58', textAlign: 'center', marginTop: 8 }}>
             ✅ รับเงินแล้ว
           </div>
         )}
         {onConfirmPayment && (
-          <button onClick={onConfirmPayment} style={{ width: '100%', border: 'none', background: 'linear-gradient(135deg,#2E7D32,#4CAF50)', color: '#fff', borderRadius: 12, padding: 14, fontSize: 15, fontFamily: 'Prompt', fontWeight: 600, cursor: 'pointer', marginTop: 8 }}>
+          <button onClick={onConfirmPayment} style={{ width: '100%', border: 'none', background: 'linear-gradient(135deg,#2f9b58,#4CAF50)', color: '#fff', borderRadius: 12, padding: 14, fontSize: 15, fontFamily: 'Prompt', fontWeight: 600, cursor: 'pointer', marginTop: 8 }}>
             💰 ยืนยันรับเงินแล้ว
           </button>
         )}
@@ -2906,20 +2906,20 @@ function SalePrintView({ saleSession, onGoBack, onFinish, onEditPrice, onStartEd
           .footer-text { font-size: 12px !important; }
         }
       `}</style>
-      <div className="bill-doc sale-bill-doc" style={{ background: '#fff', border: '1px solid #E4D7BC', borderRadius: 6, boxShadow: '0 10px 30px rgba(95,70,40,.14)', padding: '18px 20px 14px', color: '#2A2118', fontSize: 13 }}>
-        <div className="bill-doc-header sale-bill-header" style={{ display: 'flex', alignItems: 'flex-start', gap: 12, borderBottom: '2px solid #2A2118', paddingBottom: 10 }}>
+      <div className="bill-doc sale-bill-doc" style={{ background: '#fff', border: '1px solid #e4d9c8', borderRadius: 6, boxShadow: '0 10px 30px rgba(95,70,40,.14)', padding: '18px 20px 14px', color: '#241009', fontSize: 13 }}>
+        <div className="bill-doc-header sale-bill-header" style={{ display: 'flex', alignItems: 'flex-start', gap: 12, borderBottom: '2px solid #241009', paddingBottom: 10 }}>
           <img src="/logo.jpg" className="bill-doc-logo sale-bill-logo" style={{ width: 60, height: 60, borderRadius: 8, objectFit: 'cover' }} alt="Qudsun" />
           <div style={{ flex: 1 }}>
             <div className="bill-doc-title sale-bill-title" style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 17, letterSpacing: '.04em' }}>ทุเรียนคัดสรร <span style={{ color: '#8A6A2E' }}>QUDSUN</span></div>
             <div className="sale-bill-subtitle" style={{ fontSize: 11.5, color: '#5A4A38', marginTop: 2 }}>Premium Durian Selection</div>
             {saleSession?.recorder && (
               <div style={{ marginTop: 4, fontSize: 11 }}>
-                <span style={{ color: '#9A8662' }}>ผู้จด: </span><b>{saleSession.recorder}</b>
+                <span style={{ color: '#8a7767' }}>ผู้จด: </span><b>{saleSession.recorder}</b>
               </div>
             )}
           </div>
           <div style={{ textAlign: 'right', minWidth: 120 }}>
-            <div style={{ fontWeight: 700, fontSize: 13, color: '#4A7A2E' }}>ใบเสร็จรับเงิน</div>
+            <div style={{ fontWeight: 700, fontSize: 13, color: '#2f9b58' }}>ใบเสร็จรับเงิน</div>
             <div style={{ fontSize: 11.5, color: '#5A4A38', marginBottom: 4 }}>เลขที่ {saleSession?.billNo}</div>
             <div style={{ fontSize: 11.5, color: '#3A2A18', lineHeight: 1.6 }}>
               <div>{saleSession ? dateStr(saleSession.date) : ''}</div>
@@ -2943,7 +2943,7 @@ function SalePrintView({ saleSession, onGoBack, onFinish, onEditPrice, onStartEd
                   <div className="sale-entry-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(6, max-content)', gap: 3 }}>
                     {grp.ents.map((e, i) => (
                       <div key={e.id || i} className="sale-entry-chip" style={{ border: '1px solid #C8DFB0', borderRadius: 5, padding: '3px 7px', background: '#F5FAF0', textAlign: 'center', lineHeight: 1.15 }}>
-                        <span className="sale-entry-kg" style={{ fontWeight: 700, fontSize: 13, color: '#2E5C1A' }}>{fmtKg(e.kg)}</span>
+                        <span className="sale-entry-kg" style={{ fontWeight: 700, fontSize: 13, color: '#237947' }}>{fmtKg(e.kg)}</span>
                       </div>
                     ))}
                   </div>
@@ -2983,7 +2983,7 @@ function SalePrintView({ saleSession, onGoBack, onFinish, onEditPrice, onStartEd
             })}
           </tbody>
           <tfoot>
-            <tr style={{ background: '#2A2118', color: '#fff' }}>
+            <tr style={{ background: '#241009', color: '#fff' }}>
               <td style={{ padding: '6px 7px', fontWeight: 700 }}>
                 <div>รวม</div>
                 <div style={{ fontSize: 10, opacity: .75, fontWeight: 400, marginTop: 1 }}>{entries.length} เข่ง</div>
@@ -2998,7 +2998,7 @@ function SalePrintView({ saleSession, onGoBack, onFinish, onEditPrice, onStartEd
         <div className="bill-doc-bank sale-bill-bank" style={{ marginTop: 9, background: '#F5FAF0', border: '1px solid #C8DFB0', borderRadius: 8, padding: '8px 10px', display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{ flex: 1 }}>
             <div className="bank-label" style={{ fontSize: 10.5, color: '#6A9A4E', fontWeight: 600, marginBottom: 2 }}>โอนเงินมาที่</div>
-            <div className="bank-acct sale-bank-acct" style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 13, color: '#2A2118', letterSpacing: '.04em' }}>{QUDSUN_BANK.account}</div>
+            <div className="bank-acct sale-bank-acct" style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 13, color: '#241009', letterSpacing: '.04em' }}>{QUDSUN_BANK.account}</div>
             <div style={{ fontSize: 11.5, color: '#5A4A38' }}>{QUDSUN_BANK.bank} · {QUDSUN_BANK.name}</div>
           </div>
         </div>
@@ -3006,17 +3006,17 @@ function SalePrintView({ saleSession, onGoBack, onFinish, onEditPrice, onStartEd
         <div className="bill-doc-sign sale-bill-sign" style={{ display: 'flex', justifyContent: 'space-between', marginTop: 22, gap: 20 }}>
           <div style={{ flex: 1, textAlign: 'center' }}>
             <div className="bill-doc-sign-line sale-bill-sign-line" style={{ height: 36 }} />
-            <div style={{ borderTop: '1px dotted #2A2118', paddingTop: 6, fontSize: 11.5 }}>ลายเซ็นผู้ขาย</div>
+            <div style={{ borderTop: '1px dotted #241009', paddingTop: 6, fontSize: 11.5 }}>ลายเซ็นผู้ขาย</div>
           </div>
           <div style={{ flex: 1, textAlign: 'center' }}>
             <div className="bill-doc-sign-line sale-bill-sign-line" style={{ height: 36 }} />
-            <div style={{ borderTop: '1px dotted #2A2118', paddingTop: 6, fontSize: 11.5 }}>ลายเซ็นผู้ซื้อ</div>
+            <div style={{ borderTop: '1px dotted #241009', paddingTop: 6, fontSize: 11.5 }}>ลายเซ็นผู้ซื้อ</div>
           </div>
         </div>
         <div className="bill-doc-footer sale-bill-footer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 10 }}>
           <div>
-            <div className="footer-text" style={{ fontSize: 11, color: '#8A7A66' }}>ขอบคุณที่ไว้วางใจ · ทุเรียนคัดสรร Qudsun</div>
-            <div className="footer-text" style={{ fontSize: 11, color: '#8A7A66', marginTop: 2 }}>โทร. 094-149-1914 (วิน) · 082-691-4414 (เบนซ์)</div>
+            <div className="footer-text" style={{ fontSize: 11, color: '#8a7767' }}>ขอบคุณที่ไว้วางใจ · ทุเรียนคัดสรร Qudsun</div>
+            <div className="footer-text" style={{ fontSize: 11, color: '#8a7767', marginTop: 2 }}>โทร. 094-149-1914 (วิน) · 082-691-4414 (เบนซ์)</div>
           </div>
           <img src="/qr-bill.png" alt="QR" className="bill-doc-qr sale-bill-qr" style={{ width: 72, height: 72, objectFit: 'contain' }} onError={e => { e.target.style.display = 'none'; }} />
         </div>
@@ -3146,77 +3146,77 @@ function HistoryPageView({ onGoHome, onOpenBill, onOpenSaleBill, isEmployee, onD
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#F5EFE4', paddingBottom: 24 }}>
-      <div style={{ background: '#fff', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid #E4D7BC', position: 'sticky', top: 0, zIndex: 10 }}>
-        <button onClick={onGoHome} style={{ width: 32, height: 32, borderRadius: '50%', background: '#F5EFE4', border: 'none', fontSize: 18, cursor: 'pointer', color: '#5B3A29' }}>‹</button>
-        <span style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 17, color: '#2A2118', flex: 1 }}>ประวัติบิล</span>
+    <div style={{ minHeight: '100vh', background: '#f6f0e7', paddingBottom: 24 }}>
+      <div style={{ background: '#fff', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid #e4d9c8', position: 'sticky', top: 0, zIndex: 10 }}>
+        <button onClick={onGoHome} style={{ width: 32, height: 32, borderRadius: '50%', background: '#f6f0e7', border: 'none', fontSize: 18, cursor: 'pointer', color: '#3a2718' }}>‹</button>
+        <span style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 17, color: '#241009', flex: 1 }}>ประวัติบิล</span>
         {!isEmployee && (
-          <button onClick={() => { setSelectionMode(s => !s); setSelected(new Set()); }} style={{ fontSize: 12, color: selectionMode ? '#C0392B' : '#7A5A22', fontWeight: 600, border: '1px solid', borderColor: selectionMode ? '#C0392B' : '#D0C8C0', borderRadius: 8, padding: '3px 10px', background: selectionMode ? '#FDF0EE' : 'none', cursor: 'pointer', marginRight: 6 }}>
+          <button onClick={() => { setSelectionMode(s => !s); setSelected(new Set()); }} style={{ fontSize: 12, color: selectionMode ? '#C0392B' : '#c4491c', fontWeight: 600, border: '1px solid', borderColor: selectionMode ? '#C0392B' : '#D0C8C0', borderRadius: 8, padding: '3px 10px', background: selectionMode ? '#FDF0EE' : 'none', cursor: 'pointer', marginRight: 6 }}>
             {selectionMode ? '✕ ยกเลิก' : '☑ เลือก'}
           </button>
         )}
         <button onClick={load} style={{ fontSize: 12, color: '#4CAF50', fontWeight: 600, border: 'none', background: 'none', cursor: 'pointer' }}>⟳</button>
       </div>
 
-      <div style={{ display: 'flex', gap: 8, padding: '10px 16px', background: '#fff', borderBottom: '1px solid #E4D7BC' }}>
+      <div style={{ display: 'flex', gap: 8, padding: '10px 16px', background: '#fff', borderBottom: '1px solid #e4d9c8' }}>
         {[['all','ทั้งหมด'],['buy','ซื้อ (QD)'],['sale','ขาย (QS)']].map(([val, label]) => (
-          <button key={val} onClick={() => setFilter(val)} style={{ padding: '5px 14px', borderRadius: 20, border: '1px solid', fontSize: 12, fontWeight: 600, cursor: 'pointer', background: filter === val ? '#5B3A29' : '#F5EFE4', color: filter === val ? '#fff' : '#8A7A66', borderColor: filter === val ? '#5B3A29' : '#D0C8C0' }}>{label}</button>
+          <button key={val} onClick={() => setFilter(val)} style={{ padding: '5px 14px', borderRadius: 20, border: '1px solid', fontSize: 12, fontWeight: 600, cursor: 'pointer', background: filter === val ? '#3a2718' : '#f6f0e7', color: filter === val ? '#fff' : '#8a7767', borderColor: filter === val ? '#3a2718' : '#D0C8C0' }}>{label}</button>
         ))}
       </div>
 
-      <div style={{ padding: '8px 16px', background: '#FAF6F0', borderBottom: '1px solid #E4D7BC' }}>
+      <div style={{ padding: '8px 16px', background: '#FAF6F0', borderBottom: '1px solid #e4d9c8' }}>
         <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap', marginBottom: 8 }}>
           {[['today','วันนี้'],['7d','7 วัน'],['30d','30 วัน'],['all','ทั้งหมด']].map(([val, label]) => (
-            <button key={val} onClick={() => { setDateFilter(val); setRangeFromDate(''); setRangeFromTime(''); setRangeToDate(''); setRangeToTime(''); }} style={{ padding: '3px 11px', borderRadius: 20, border: '1px solid', fontSize: 11, fontWeight: 600, cursor: 'pointer', background: !hasRange && dateFilter === val ? '#DC743C' : 'transparent', color: !hasRange && dateFilter === val ? '#fff' : '#9A8662', borderColor: !hasRange && dateFilter === val ? '#DC743C' : '#D0C8C0' }}>{label}</button>
+            <button key={val} onClick={() => { setDateFilter(val); setRangeFromDate(''); setRangeFromTime(''); setRangeToDate(''); setRangeToTime(''); }} style={{ padding: '3px 11px', borderRadius: 20, border: '1px solid', fontSize: 11, fontWeight: 600, cursor: 'pointer', background: !hasRange && dateFilter === val ? '#e8692e' : 'transparent', color: !hasRange && dateFilter === val ? '#fff' : '#8a7767', borderColor: !hasRange && dateFilter === val ? '#e8692e' : '#D0C8C0' }}>{label}</button>
           ))}
         </div>
         <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexWrap: 'wrap' }}>
-          <span style={{ fontSize: 11, color: '#9A8662', fontWeight: 600, flexShrink: 0 }}>จาก</span>
+          <span style={{ fontSize: 11, color: '#8a7767', fontWeight: 600, flexShrink: 0 }}>จาก</span>
           <input type="date" value={rangeFromDate} onChange={e => setRangeFromDate(e.target.value)}
-            style={{ flex: 2, minWidth: 0, padding: '4px 6px', borderRadius: 8, border: `1px solid ${rangeFromDate ? '#DC743C' : '#D0C8C0'}`, fontSize: 11, color: rangeFromDate ? '#DC743C' : '#9A8662', background: '#fff', outline: 'none' }} />
+            style={{ flex: 2, minWidth: 0, padding: '4px 6px', borderRadius: 8, border: `1px solid ${rangeFromDate ? '#e8692e' : '#D0C8C0'}`, fontSize: 11, color: rangeFromDate ? '#e8692e' : '#8a7767', background: '#fff', outline: 'none' }} />
           <input type="text" value={rangeFromTime} placeholder="00:00" maxLength={5}
             onChange={e => { let v = e.target.value.replace(/[^0-9]/g,''); if (v.length >= 3) v = v.slice(0,2)+':'+v.slice(2,4); setRangeFromTime(v); }}
-            style={{ flex: 1, minWidth: 0, padding: '4px 6px', borderRadius: 8, border: `1px solid ${rangeFromTime ? '#DC743C' : '#D0C8C0'}`, fontSize: 11, color: rangeFromTime ? '#DC743C' : '#9A8662', background: '#fff', outline: 'none', textAlign: 'center' }} />
-          <span style={{ fontSize: 11, color: '#9A8662', fontWeight: 600, flexShrink: 0 }}>ถึง</span>
+            style={{ flex: 1, minWidth: 0, padding: '4px 6px', borderRadius: 8, border: `1px solid ${rangeFromTime ? '#e8692e' : '#D0C8C0'}`, fontSize: 11, color: rangeFromTime ? '#e8692e' : '#8a7767', background: '#fff', outline: 'none', textAlign: 'center' }} />
+          <span style={{ fontSize: 11, color: '#8a7767', fontWeight: 600, flexShrink: 0 }}>ถึง</span>
           <input type="date" value={rangeToDate} onChange={e => setRangeToDate(e.target.value)}
-            style={{ flex: 2, minWidth: 0, padding: '4px 6px', borderRadius: 8, border: `1px solid ${rangeToDate ? '#DC743C' : '#D0C8C0'}`, fontSize: 11, color: rangeToDate ? '#DC743C' : '#9A8662', background: '#fff', outline: 'none' }} />
+            style={{ flex: 2, minWidth: 0, padding: '4px 6px', borderRadius: 8, border: `1px solid ${rangeToDate ? '#e8692e' : '#D0C8C0'}`, fontSize: 11, color: rangeToDate ? '#e8692e' : '#8a7767', background: '#fff', outline: 'none' }} />
           <input type="text" value={rangeToTime} placeholder="23:59" maxLength={5}
             onChange={e => { let v = e.target.value.replace(/[^0-9]/g,''); if (v.length >= 3) v = v.slice(0,2)+':'+v.slice(2,4); setRangeToTime(v); }}
-            style={{ flex: 1, minWidth: 0, padding: '4px 6px', borderRadius: 8, border: `1px solid ${rangeToTime ? '#DC743C' : '#D0C8C0'}`, fontSize: 11, color: rangeToTime ? '#DC743C' : '#9A8662', background: '#fff', outline: 'none', textAlign: 'center' }} />
+            style={{ flex: 1, minWidth: 0, padding: '4px 6px', borderRadius: 8, border: `1px solid ${rangeToTime ? '#e8692e' : '#D0C8C0'}`, fontSize: 11, color: rangeToTime ? '#e8692e' : '#8a7767', background: '#fff', outline: 'none', textAlign: 'center' }} />
           {hasRange && (
-            <button onClick={() => { setRangeFromDate(''); setRangeFromTime(''); setRangeToDate(''); setRangeToTime(''); }} style={{ flexShrink: 0, padding: '4px 10px', borderRadius: 8, border: '1px solid #D0C8C0', background: '#fff', fontSize: 11, color: '#9A8662', cursor: 'pointer' }}>ล้าง</button>
+            <button onClick={() => { setRangeFromDate(''); setRangeFromTime(''); setRangeToDate(''); setRangeToTime(''); }} style={{ flexShrink: 0, padding: '4px 10px', borderRadius: 8, border: '1px solid #D0C8C0', background: '#fff', fontSize: 11, color: '#8a7767', cursor: 'pointer' }}>ล้าง</button>
           )}
         </div>
       </div>
 
       {!loading && (
-        <div style={{ margin: '12px 12px 4px', background: '#fff', borderRadius: 14, border: '1px solid #E4D7BC', overflow: 'hidden' }}>
+        <div style={{ margin: '12px 12px 4px', background: '#fff', borderRadius: 14, border: '1px solid #e4d9c8', overflow: 'hidden' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', textAlign: 'center' }}>
-            <div style={{ padding: '12px 8px', borderRight: '1px solid #F0E8DC' }}>
-              <div style={{ fontSize: 10, color: '#9A8662', fontWeight: 600, marginBottom: 4 }}>📥 รับซื้อ</div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: '#E65100' }}>฿{buyBaht.toLocaleString()}</div>
-              <div style={{ fontSize: 11, color: '#9A8662' }}>{buyKg % 1 === 0 ? buyKg : buyKg.toFixed(1)} กก.</div>
+            <div style={{ padding: '12px 8px', borderRight: '1px solid #f3ece0' }}>
+              <div style={{ fontSize: 10, color: '#8a7767', fontWeight: 600, marginBottom: 4 }}>📥 รับซื้อ</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: '#c4491c' }}>฿{buyBaht.toLocaleString()}</div>
+              <div style={{ fontSize: 11, color: '#8a7767' }}>{buyKg % 1 === 0 ? buyKg : buyKg.toFixed(1)} กก.</div>
               <div style={{ fontSize: 10, color: '#C0A88A', marginTop: 2 }}>{buyItems.length} บิล</div>
             </div>
-            <div style={{ padding: '12px 8px', borderRight: '1px solid #F0E8DC' }}>
-              <div style={{ fontSize: 10, color: '#9A8662', fontWeight: 600, marginBottom: 4 }}>📤 ขาย</div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: '#2E7D32' }}>฿{saleBaht.toLocaleString()}</div>
-              <div style={{ fontSize: 11, color: '#9A8662' }}>{saleKg % 1 === 0 ? saleKg : saleKg.toFixed(1)} กก.</div>
+            <div style={{ padding: '12px 8px', borderRight: '1px solid #f3ece0' }}>
+              <div style={{ fontSize: 10, color: '#8a7767', fontWeight: 600, marginBottom: 4 }}>📤 ขาย</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: '#2f9b58' }}>฿{saleBaht.toLocaleString()}</div>
+              <div style={{ fontSize: 11, color: '#8a7767' }}>{saleKg % 1 === 0 ? saleKg : saleKg.toFixed(1)} กก.</div>
               <div style={{ fontSize: 10, color: '#C0A88A', marginTop: 2 }}>{saleItems.length} บิล</div>
             </div>
             <div style={{ padding: '12px 8px' }}>
-              <div style={{ fontSize: 10, color: '#9A8662', fontWeight: 600, marginBottom: 4 }}>กำไร</div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: profit >= 0 ? '#2E7D32' : '#C0392B' }}>{profit >= 0 ? '+' : ''}฿{Math.abs(profit).toLocaleString()}</div>
-              <div style={{ fontSize: 11, color: '#9A8662' }}>{buyBaht > 0 ? `${((profit/buyBaht)*100).toFixed(1)}%` : '—'}</div>
+              <div style={{ fontSize: 10, color: '#8a7767', fontWeight: 600, marginBottom: 4 }}>กำไร</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: profit >= 0 ? '#2f9b58' : '#C0392B' }}>{profit >= 0 ? '+' : ''}฿{Math.abs(profit).toLocaleString()}</div>
+              <div style={{ fontSize: 11, color: '#8a7767' }}>{buyBaht > 0 ? `${((profit/buyBaht)*100).toFixed(1)}%` : '—'}</div>
               <div style={{ fontSize: 10, color: '#C0A88A', marginTop: 2 }}> </div>
             </div>
           </div>
           {(() => {
             const remainKg = buyKg - saleKg;
-            const remainColor = remainKg >= 0 ? '#5B3A29' : '#C0392B';
+            const remainColor = remainKg >= 0 ? '#3a2718' : '#C0392B';
             return (
-              <div style={{ borderTop: '1px solid #F0E8DC', padding: '8px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: 11, color: '#9A8662', fontWeight: 600 }}>📦 คงเหลือ (ซื้อ − ขาย)</span>
+              <div style={{ borderTop: '1px solid #f3ece0', padding: '8px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: 11, color: '#8a7767', fontWeight: 600 }}>📦 คงเหลือ (ซื้อ − ขาย)</span>
                 <span style={{ fontSize: 14, fontWeight: 700, color: remainColor }}>
                   {remainKg >= 0 ? '' : '−'}{Math.abs(remainKg % 1 === 0 ? remainKg : parseFloat(remainKg.toFixed(1))).toLocaleString()} กก.
                 </span>
@@ -3226,7 +3226,7 @@ function HistoryPageView({ onGoHome, onOpenBill, onOpenSaleBill, isEmployee, onD
         </div>
       )}
 
-      {loading && <div style={{ textAlign: 'center', padding: 32, color: '#9A8662' }}>กำลังโหลด...</div>}
+      {loading && <div style={{ textAlign: 'center', padding: 32, color: '#8a7767' }}>กำลังโหลด...</div>}
 
       {selectionMode && selected.size > 0 && (
         <div style={{ position: 'sticky', top: 60, zIndex: 9, margin: '8px 12px 0', background: '#C0392B', borderRadius: 12, padding: '10px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -3238,7 +3238,7 @@ function HistoryPageView({ onGoHome, onOpenBill, onOpenSaleBill, isEmployee, onD
       )}
 
       {!loading && grouped.map((item, i) => {
-        if (item._header) return <div key={'h-'+i} style={{ padding: '10px 16px 4px', fontSize: 11, fontWeight: 700, color: '#9A8662', letterSpacing: '0.5px' }}>{item._header}</div>;
+        if (item._header) return <div key={'h-'+i} style={{ padding: '10px 16px 4px', fontSize: 11, fontWeight: 700, color: '#8a7767', letterSpacing: '0.5px' }}>{item._header}</div>;
         const isBuy = item.type === 'buy';
         const isSelected = selected.has(item.billNo);
         const toggleSelect = () => setSelected(prev => {
@@ -3247,7 +3247,7 @@ function HistoryPageView({ onGoHome, onOpenBill, onOpenSaleBill, isEmployee, onD
           return next;
         });
         return (
-          <div key={item.billNo} style={{ margin: '0 12px 8px', background: isSelected ? '#FFF0EE' : isBuy ? '#FFFAF5' : '#F5FBF6', borderRadius: 14, border: `1px solid ${isSelected ? '#E8A49A' : isBuy ? '#F0DECA' : '#C8E6C9'}`, borderLeft: `4px solid ${isSelected ? '#C0392B' : isBuy ? '#DC743C' : '#4CAF50'}`, overflow: 'hidden' }}>
+          <div key={item.billNo} style={{ margin: '0 12px 8px', background: isSelected ? '#FFF0EE' : isBuy ? '#FFFAF5' : '#F5FBF6', borderRadius: 14, border: `1px solid ${isSelected ? '#E8A49A' : isBuy ? '#F0DECA' : '#C8E6C9'}`, borderLeft: `4px solid ${isSelected ? '#C0392B' : isBuy ? '#e8692e' : '#4CAF50'}`, overflow: 'hidden' }}>
             <button onClick={() => selectionMode ? toggleSelect() : (isBuy ? onOpenBill?.(item.billNo) : onOpenSaleBill?.(item.billNo))} style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', padding: '12px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10 }}>
               {selectionMode && (
                 <div style={{ width: 22, height: 22, borderRadius: 6, border: `2px solid ${isSelected ? '#C0392B' : '#D0C8C0'}`, background: isSelected ? '#C0392B' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -3257,14 +3257,14 @@ function HistoryPageView({ onGoHome, onOpenBill, onOpenSaleBill, isEmployee, onD
               <div style={{ width: 36, height: 36, borderRadius: 10, background: isBuy ? '#FDE8D4' : '#D4EDDA', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>{isBuy ? '📥' : '📤'}</div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ fontWeight: 700, fontSize: 13, color: '#2A2118' }}>{item.billNo}</span>
+                  <span style={{ fontWeight: 700, fontSize: 13, color: '#241009' }}>{item.billNo}</span>
                   <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 7px', borderRadius: 20, background: isBuy ? '#FDE8D4' : '#D4EDDA', color: isBuy ? '#C0450A' : '#1B6B2E' }}>{isBuy ? 'ซื้อ' : 'ขาย'}</span>
                 </div>
-                <div style={{ fontSize: 11.5, color: '#9A8662', marginTop: 2 }}>{fmtDate(item.date)} · {fmtTime(item.date)}{item.name ? ` · ${item.name}` : ''}</div>
+                <div style={{ fontSize: 11.5, color: '#8a7767', marginTop: 2 }}>{fmtDate(item.date)} · {fmtTime(item.date)}{item.name ? ` · ${item.name}` : ''}</div>
               </div>
               <div style={{ textAlign: 'right', flexShrink: 0 }}>
                 <div style={{ fontWeight: 700, fontSize: 15, color: isBuy ? '#C0450A' : '#1B6B2E' }}>฿{fmtBaht(parseNum(item.baht))}</div>
-                <div style={{ fontSize: 11, color: '#9A8662' }}>{fmtKg(parseNum(item.kg))} กก.</div>
+                <div style={{ fontSize: 11, color: '#8a7767' }}>{fmtKg(parseNum(item.kg))} กก.</div>
               </div>
             </button>
             {!isEmployee && !selectionMode && (
@@ -3276,15 +3276,15 @@ function HistoryPageView({ onGoHome, onOpenBill, onOpenSaleBill, isEmployee, onD
         );
       })}
 
-      {!loading && filtered.length === 0 && <div style={{ textAlign: 'center', padding: 40, color: '#9A8662' }}>ไม่มีข้อมูล</div>}
+      {!loading && filtered.length === 0 && <div style={{ textAlign: 'center', padding: 40, color: '#8a7767' }}>ไม่มีข้อมูล</div>}
 
       {deleteTarget && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
           <div style={{ background: '#fff', borderRadius: 18, padding: 24, maxWidth: 320, width: '100%' }}>
             <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 8 }}>ลบบิลนี้?</div>
-            <div style={{ fontSize: 13, color: '#9A8662', marginBottom: 20 }}>{deleteTarget.billNo} · {deleteTarget.name || '—'}</div>
+            <div style={{ fontSize: 13, color: '#8a7767', marginBottom: 20 }}>{deleteTarget.billNo} · {deleteTarget.name || '—'}</div>
             <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={() => setDeleteTarget(null)} style={{ flex: 1, padding: '10px 0', borderRadius: 10, border: '1px solid #D0C8C0', background: '#F5EFE4', fontWeight: 600, cursor: 'pointer' }}>ยกเลิก</button>
+              <button onClick={() => setDeleteTarget(null)} style={{ flex: 1, padding: '10px 0', borderRadius: 10, border: '1px solid #D0C8C0', background: '#f6f0e7', fontWeight: 600, cursor: 'pointer' }}>ยกเลิก</button>
               <button onClick={() => handleDelete(deleteTarget)} style={{ flex: 1, padding: '10px 0', borderRadius: 10, border: 'none', background: '#C0392B', color: '#fff', fontWeight: 600, cursor: 'pointer' }}>ลบ</button>
             </div>
           </div>
@@ -3303,20 +3303,20 @@ function CustomersView({ history, verified, onGoHome, onOpenCustomer, onDeleteCu
   return (
     <div style={{ flex: 1, maxWidth: 720, width: '100%', margin: '0 auto', padding: '14px 14px 40px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-        <button onClick={onGoHome} style={{ border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 10, padding: '8px 12px', fontSize: 13, color: '#7A6450', cursor: 'pointer' }}>‹ หน้าหลัก</button>
-        <h2 style={{ fontFamily: 'Prompt', fontWeight: 400, fontSize: 20, color: '#4A3526', margin: 0 }}>ทะเบียนลูกค้า</h2>
+        <button onClick={onGoHome} style={{ border: '1px solid #e4d9c8', background: '#ffffff', borderRadius: 10, padding: '8px 12px', fontSize: 13, color: '#6b4a38', cursor: 'pointer' }}>‹ หน้าหลัก</button>
+        <h2 style={{ fontFamily: 'Prompt', fontWeight: 400, fontSize: 20, color: '#3a2718', margin: 0 }}>ทะเบียนลูกค้า</h2>
       </div>
 
       <div style={{ display: 'flex', gap: 6, marginBottom: 14, flexWrap: 'wrap', alignItems: 'center' }}>
         {TIERS.map(t => (
-          <span key={t.key} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, color: '#8A7A66' }}>
+          <span key={t.key} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, color: '#8a7767' }}>
             <TierBadge tier={t} />
             {t.min > 0 ? `≥${t.min.toLocaleString()}` : 'เริ่มต้น'}
           </span>
         ))}
       </div>
 
-      {list.length === 0 && <div style={{ textAlign: 'center', color: '#B7A684', fontSize: 14, marginTop: 40 }}>ยังไม่มีลูกค้า</div>}
+      {list.length === 0 && <div style={{ textAlign: 'center', color: '#b9a88f', fontSize: 14, marginTop: 40 }}>ยังไม่มีลูกค้า</div>}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {list.map(c => {
           const stat = customerStat(c.phone, history, verified);
@@ -3324,18 +3324,18 @@ function CustomersView({ history, verified, onGoHome, onOpenCustomer, onDeleteCu
           const rawTier = stat.tier;
           const pct = stat.next ? Math.min(100, (stat.total / stat.next.min) * 100) : 100;
           return (
-            <div key={c.phone} style={{ border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 14, overflow: 'hidden' }}>
+            <div key={c.phone} style={{ border: '1px solid #e4d9c8', background: '#ffffff', borderRadius: 14, overflow: 'hidden' }}>
               <button onClick={() => onOpenCustomer(c.phone)} style={{ textAlign: 'left', background: 'none', border: 'none', width: '100%', padding: '14px 16px', cursor: 'pointer' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
                   <div style={{ width: 40, height: 40, borderRadius: 10, background: '#F0E4C8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>👤</div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 600, fontSize: 15, color: '#4A3526' }}>{c.name || '—'}</div>
-                    <div style={{ fontSize: 12, color: '#9A8662' }}>{c.phone}</div>
+                    <div style={{ fontWeight: 600, fontSize: 15, color: '#3a2718' }}>{c.name || '—'}</div>
+                    <div style={{ fontSize: 12, color: '#8a7767' }}>{c.phone}</div>
                   </div>
                   <TierBadge tier={tier} />
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#9A8662', marginBottom: 6 }}>
-                  <span><b style={{ color: '#4A3526', fontFamily: 'Prompt' }}>{fmtKg(c.totalKg)}</b> กก. · {c.billCount} บิล</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#8a7767', marginBottom: 6 }}>
+                  <span><b style={{ color: '#3a2718', fontFamily: 'Prompt' }}>{fmtKg(c.totalKg)}</b> กก. · {c.billCount} บิล</span>
                   {stat.next && <span>→ {stat.next.label}: {fmtKg(stat.next.min - c.totalKg)} กก.</span>}
                 </div>
                 <div style={{ height: 5, background: '#EFE4CD', borderRadius: 3, overflow: 'hidden' }}>
@@ -3393,37 +3393,37 @@ function SupervisorsView({ supervisors, supervisorNames, history, onGoHome, onOp
   return (
     <div style={{ flex: 1, maxWidth: 720, width: '100%', margin: '0 auto', padding: '14px 14px 40px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-        <button onClick={onGoHome} style={{ border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 10, padding: '8px 12px', fontSize: 13, color: '#7A6450', cursor: 'pointer' }}>‹ หน้าหลัก</button>
-        <h2 style={{ fontFamily: 'Prompt', fontWeight: 400, fontSize: 20, color: '#4A3526', margin: 0, flex: 1 }}>รายชื่อผู้ดูแล</h2>
-        {!isEmployee && <button onClick={() => setShowAddModal(true)} style={{ border: 'none', background: '#DC743C', color: '#fff', borderRadius: 10, padding: '8px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>+ เพิ่ม</button>}
+        <button onClick={onGoHome} style={{ border: '1px solid #e4d9c8', background: '#ffffff', borderRadius: 10, padding: '8px 12px', fontSize: 13, color: '#6b4a38', cursor: 'pointer' }}>‹ หน้าหลัก</button>
+        <h2 style={{ fontFamily: 'Prompt', fontWeight: 400, fontSize: 20, color: '#3a2718', margin: 0, flex: 1 }}>รายชื่อผู้ดูแล</h2>
+        {!isEmployee && <button onClick={() => setShowAddModal(true)} style={{ border: 'none', background: '#e8692e', color: '#fff', borderRadius: 10, padding: '8px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>+ เพิ่ม</button>}
       </div>
 
       {showAddModal && (
         <div onClick={() => setShowAddModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
           <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 480, padding: '20px 16px 32px' }}>
-            <div style={{ fontWeight: 700, fontSize: 16, color: '#2A2118', marginBottom: 14 }}>เพิ่มผู้ดูแลใหม่</div>
+            <div style={{ fontWeight: 700, fontSize: 16, color: '#241009', marginBottom: 14 }}>เพิ่มผู้ดูแลใหม่</div>
             <input autoFocus value={newName} onChange={e => setNewName(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') handleAdd(); }}
               placeholder="ชื่อผู้ดูแล เช่น นุ่น, โจ้..."
-              style={{ width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 10, padding: '10px 12px', fontSize: 15, color: '#2A2118', outline: 'none', boxSizing: 'border-box', marginBottom: 12 }} />
-            <button onClick={handleAdd} style={{ width: '100%', background: '#DC743C', color: '#fff', border: 'none', borderRadius: 10, padding: '12px 0', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>บันทึก</button>
+              style={{ width: '100%', border: '1.5px solid #e4d9c8', borderRadius: 10, padding: '10px 12px', fontSize: 15, color: '#241009', outline: 'none', boxSizing: 'border-box', marginBottom: 12 }} />
+            <button onClick={handleAdd} style={{ width: '100%', background: '#e8692e', color: '#fff', border: 'none', borderRadius: 10, padding: '12px 0', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>บันทึก</button>
           </div>
         </div>
       )}
 
-      {list.length === 0 && <div style={{ textAlign: 'center', color: '#B7A684', fontSize: 14, marginTop: 40 }}>ยังไม่มีผู้ดูแล</div>}
+      {list.length === 0 && <div style={{ textAlign: 'center', color: '#b9a88f', fontSize: 14, marginTop: 40 }}>ยังไม่มีผู้ดูแล</div>}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {list.map(([name, phones]) => {
           const stat = billStats[name] || {};
           return (
-            <div key={name} style={{ border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 14, overflow: 'hidden' }}>
+            <div key={name} style={{ border: '1px solid #e4d9c8', background: '#ffffff', borderRadius: 14, overflow: 'hidden' }}>
               <button onClick={() => onOpenSupervisor(name)} style={{ textAlign: 'left', background: 'none', border: 'none', width: '100%', padding: '14px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 44, height: 44, borderRadius: 12, background: 'linear-gradient(135deg,#5C4326,#3F2D1E)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>🧑‍💼</div>
+                <div style={{ width: 44, height: 44, borderRadius: 12, background: 'linear-gradient(135deg,#5C4326,#26190f)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>🧑‍💼</div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 600, fontSize: 15, color: '#4A3526' }}>{name}</div>
-                  <div style={{ fontSize: 12, color: '#9A8662', marginTop: 2 }}>{phones.length} ลูกค้า · รวม {fmtKg(stat.kg || 0)} กก. · {stat.count || 0} บิล</div>
+                  <div style={{ fontWeight: 600, fontSize: 15, color: '#3a2718' }}>{name}</div>
+                  <div style={{ fontSize: 12, color: '#8a7767', marginTop: 2 }}>{phones.length} ลูกค้า · รวม {fmtKg(stat.kg || 0)} กก. · {stat.count || 0} บิล</div>
                 </div>
-                <span style={{ color: '#C9A24B', fontSize: 18 }}>›</span>
+                <span style={{ color: '#e8692e', fontSize: 18 }}>›</span>
               </button>
               {!isEmployee && onDeleteSupervisor && (
                 <div style={{ padding: '0 14px 10px', display: 'flex', justifyContent: 'flex-end' }}>
@@ -3451,28 +3451,28 @@ function SupervisorsView({ supervisors, supervisorNames, history, onGoHome, onOp
 // ─── SupervisorDetailView ─────────────────────────────────────────────────────
 function SlipShell({ title, supervisorName, dateLabel, onBack, children }) {
   return (
-    <div style={{ minHeight: '100vh', background: '#F5EFE4', padding: 16 }}>
+    <div style={{ minHeight: '100vh', background: '#f6f0e7', padding: 16 }}>
       <div style={{ maxWidth: 420, margin: '0 auto' }}>
         <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
-          <button onClick={onBack} style={{ border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 10, padding: '8px 14px', fontSize: 13, color: '#7A6450', cursor: 'pointer' }}>‹ กลับ</button>
-          <button onClick={() => window.print()} style={{ flex: 1, background: '#5B3A29', color: '#fff', border: 'none', borderRadius: 10, padding: '8px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>🖨️ พิมพ์</button>
+          <button onClick={onBack} style={{ border: '1px solid #e4d9c8', background: '#ffffff', borderRadius: 10, padding: '8px 14px', fontSize: 13, color: '#6b4a38', cursor: 'pointer' }}>‹ กลับ</button>
+          <button onClick={() => window.print()} style={{ flex: 1, background: '#3a2718', color: '#fff', border: 'none', borderRadius: 10, padding: '8px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>🖨️ พิมพ์</button>
         </div>
-        <div style={{ background: '#fff', borderRadius: 16, padding: '24px 20px', border: '1px solid #E4D7BC' }}>
+        <div style={{ background: '#fff', borderRadius: 16, padding: '24px 20px', border: '1px solid #e4d9c8' }}>
           <div style={{ textAlign: 'center', marginBottom: 16 }}>
-            <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 20, color: '#5B3A29' }}>QUDSUN</div>
-            <div style={{ fontSize: 11, color: '#9A8662', marginTop: 2 }}>ทุเรียนคัดสรร</div>
-            <div style={{ fontWeight: 700, fontSize: 15, color: '#2A2118', marginTop: 10 }}>{title}</div>
+            <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 20, color: '#3a2718' }}>QUDSUN</div>
+            <div style={{ fontSize: 11, color: '#8a7767', marginTop: 2 }}>ทุเรียนคัดสรร</div>
+            <div style={{ fontWeight: 700, fontSize: 15, color: '#241009', marginTop: 10 }}>{title}</div>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#5B3A29', marginBottom: 4 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#3a2718', marginBottom: 4 }}>
             <span>ผู้ดูแล</span><span style={{ fontWeight: 700 }}>{supervisorName}</span>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#9A8662', marginBottom: 16 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#8a7767', marginBottom: 16 }}>
             <span>วันที่</span><span>{dateLabel}</span>
           </div>
           {children}
           <div style={{ marginTop: 32, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-            <div style={{ borderTop: '1px solid #9A8662', paddingTop: 6, textAlign: 'center', fontSize: 11, color: '#9A8662' }}>ผู้รับเงิน</div>
-            <div style={{ borderTop: '1px solid #9A8662', paddingTop: 6, textAlign: 'center', fontSize: 11, color: '#9A8662' }}>ผู้จ่าย</div>
+            <div style={{ borderTop: '1px solid #8a7767', paddingTop: 6, textAlign: 'center', fontSize: 11, color: '#8a7767' }}>ผู้รับเงิน</div>
+            <div style={{ borderTop: '1px solid #8a7767', paddingTop: 6, textAlign: 'center', fontSize: 11, color: '#8a7767' }}>ผู้จ่าย</div>
           </div>
         </div>
       </div>
@@ -3496,28 +3496,28 @@ function SalarySlipPrintView({ supervisorName, dateLabel, bills, base, commissio
     <SlipShell title="บิลค่าแรง" supervisorName={supervisorName} dateLabel={dateLabel} onBack={onBack}>
       {rows.length > 0 && (
         <div style={{ marginBottom: 16 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: '#9A8662', marginBottom: 6, borderBottom: '1px solid #F0E8DC', paddingBottom: 4 }}>รายการลูกค้า</div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: '#8a7767', marginBottom: 6, borderBottom: '1px solid #f3ece0', paddingBottom: 4 }}>รายการลูกค้า</div>
           {rows.map((r, i) => (
-            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#4A3526', padding: '3px 0' }}>
+            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#3a2718', padding: '3px 0' }}>
               <span>{r.name}</span><span style={{ fontWeight: 600 }}>{r.kg % 1 === 0 ? r.kg : r.kg.toFixed(1)} กก.</span>
             </div>
           ))}
         </div>
       )}
-      <div style={{ borderTop: '1px solid #E4D7BC', paddingTop: 12 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#4A3526', marginBottom: 4 }}>
+      <div style={{ borderTop: '1px solid #e4d9c8', paddingTop: 12 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#3a2718', marginBottom: 4 }}>
           <span>เบสรายวัน</span><span>฿{base.toLocaleString()}</span>
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#4A3526', marginBottom: 4 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#3a2718', marginBottom: 4 }}>
           <span>ค่าคอม ({bills.reduce((s,h)=>s+(parseFloat(String(h.kg??'').replace(/,/g,''))||0),0).toFixed(0)} กก. × ฿1)</span>
           <span>฿{commission.toLocaleString()}</span>
         </div>
         {bonus > 0 && (
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#4A3526', marginBottom: 4 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#3a2718', marginBottom: 4 }}>
             <span>โบนัส</span><span>฿{bonus.toLocaleString()}</span>
           </div>
         )}
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 16, fontWeight: 700, color: '#5B3A29', borderTop: '1px solid #E4D7BC', paddingTop: 10, marginTop: 6 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 16, fontWeight: 700, color: '#3a2718', borderTop: '1px solid #e4d9c8', paddingTop: 10, marginTop: 6 }}>
           <span>รวมจ่าย</span><span>฿{total.toLocaleString()}</span>
         </div>
       </div>
@@ -3537,9 +3537,9 @@ function WageSlipPrintView({ supervisorName, earnings, baseRate, onBack }) {
   return (
     <SlipShell title="บิลค่าแรง + โบนัส" supervisorName={supervisorName} dateLabel={dateLabel} onBack={onBack}>
       <div style={{ marginBottom: 12 }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: '#9A8662', marginBottom: 6, borderBottom: '1px solid #F0E8DC', paddingBottom: 4 }}>รายการรายวัน</div>
+        <div style={{ fontSize: 11, fontWeight: 700, color: '#8a7767', marginBottom: 6, borderBottom: '1px solid #f3ece0', paddingBottom: 4 }}>รายการรายวัน</div>
         {earnings.map((e, i) => (
-          <div key={e.id || i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#4A3526', padding: '4px 0', borderBottom: '1px solid #FAF4EC' }}>
+          <div key={e.id || i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#3a2718', padding: '4px 0', borderBottom: '1px solid #FAF4EC' }}>
             <span>{fmtThDate(e.date)}</span>
             <div style={{ textAlign: 'right' }}>
               <span style={{ fontWeight: 600 }}>฿{(e.base || 0).toLocaleString()}</span>
@@ -3548,8 +3548,8 @@ function WageSlipPrintView({ supervisorName, earnings, baseRate, onBack }) {
           </div>
         ))}
       </div>
-      <div style={{ borderTop: '1px solid #E4D7BC', paddingTop: 12 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#4A3526', marginBottom: 4 }}>
+      <div style={{ borderTop: '1px solid #e4d9c8', paddingTop: 12 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#3a2718', marginBottom: 4 }}>
           <span>รวมรายวัน ({earnings.length} วัน)</span><span>฿{totalBase.toLocaleString()}</span>
         </div>
         {totalBonus > 0 && (
@@ -3557,7 +3557,7 @@ function WageSlipPrintView({ supervisorName, earnings, baseRate, onBack }) {
             <span>โบนัสรวม</span><span>฿{totalBonus.toLocaleString()}</span>
           </div>
         )}
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 16, fontWeight: 700, color: '#5B3A29', borderTop: '1px solid #E4D7BC', paddingTop: 10, marginTop: 6 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 16, fontWeight: 700, color: '#3a2718', borderTop: '1px solid #e4d9c8', paddingTop: 10, marginTop: 6 }}>
           <span>รวมจ่าย</span><span>฿{total.toLocaleString()}</span>
         </div>
       </div>
@@ -3583,29 +3583,29 @@ function CommissionSlipPrintView({ supervisorName, bills, commissionRate, onBack
   return (
     <SlipShell title="บิลค่าคอมมิชชั่น" supervisorName={supervisorName} dateLabel={dateLabel} onBack={onBack}>
       <div style={{ marginBottom: 12 }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: '#9A8662', marginBottom: 6, borderBottom: '1px solid #F0E8DC', paddingBottom: 4 }}>รายการบิล ({bills.length} บิล)</div>
+        <div style={{ fontSize: 11, fontWeight: 700, color: '#8a7767', marginBottom: 6, borderBottom: '1px solid #f3ece0', paddingBottom: 4 }}>รายการบิล ({bills.length} บิล)</div>
         {bills.map((b, i) => {
           const kg = parseNum(b.kg);
           const comm = Math.round(kg * commissionRate);
           return (
-            <div key={b.billNo || i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#4A3526', padding: '4px 0', borderBottom: '1px solid #FAF4EC' }}>
+            <div key={b.billNo || i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#3a2718', padding: '4px 0', borderBottom: '1px solid #FAF4EC' }}>
               <div>
                 <div style={{ fontWeight: 600 }}>{b.seller || '—'}</div>
                 <div style={{ fontSize: 10, color: '#B0966A' }}>{fmtBillDate(b.date)} · #{b.billNo}</div>
               </div>
               <div style={{ textAlign: 'right' }}>
                 <div style={{ fontWeight: 600 }}>{kg % 1 === 0 ? kg : kg.toFixed(1)} กก.</div>
-                <div style={{ color: '#E65100', fontWeight: 700 }}>+฿{comm}</div>
+                <div style={{ color: '#c4491c', fontWeight: 700 }}>+฿{comm}</div>
               </div>
             </div>
           );
         })}
       </div>
-      <div style={{ borderTop: '1px solid #E4D7BC', paddingTop: 12 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#4A3526', marginBottom: 4 }}>
+      <div style={{ borderTop: '1px solid #e4d9c8', paddingTop: 12 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#3a2718', marginBottom: 4 }}>
           <span>รวม {totalKg % 1 === 0 ? totalKg : totalKg.toFixed(1)} กก. × ฿{commissionRate}</span><span>฿{totalComm.toLocaleString()}</span>
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 16, fontWeight: 700, color: '#E65100', borderTop: '1px solid #E4D7BC', paddingTop: 10, marginTop: 6 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 16, fontWeight: 700, color: '#c4491c', borderTop: '1px solid #e4d9c8', paddingTop: 10, marginTop: 6 }}>
           <span>รวมค่าคอม</span><span>฿{totalComm.toLocaleString()}</span>
         </div>
       </div>
@@ -3940,20 +3940,20 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
     const slipTotalComm = pendingCommBills.reduce((s, x) => s + x.comm, 0);
     const slipDate = new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' });
     return (
-      <div style={{ minHeight: '100vh', background: '#F5EFE4' }}>
+      <div style={{ minHeight: '100vh', background: '#f6f0e7' }}>
         {/* Print-only slip */}
         <div id="comm-pay-slip" style={{ maxWidth: 420, margin: '0 auto', background: '#fff', padding: '24px 20px' }}>
           <div style={{ textAlign: 'center', marginBottom: 16 }}>
-            <div style={{ fontSize: 18, fontWeight: 800, color: '#5B3A29' }}>ใบจ่ายค่าคอมมิชชัน</div>
-            <div style={{ fontSize: 13, color: '#9A8662' }}>{supervisorName} · {slipDate}</div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: '#3a2718' }}>ใบจ่ายค่าคอมมิชชัน</div>
+            <div style={{ fontSize: 13, color: '#8a7767' }}>{supervisorName} · {slipDate}</div>
           </div>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
             <thead>
-              <tr style={{ borderBottom: '2px solid #E4D7BC' }}>
-                <th style={{ textAlign: 'left', padding: '6px 4px', color: '#9A8662', fontWeight: 600 }}>วันที่</th>
-                <th style={{ textAlign: 'left', padding: '6px 4px', color: '#9A8662', fontWeight: 600 }}>ผู้ขาย</th>
-                <th style={{ textAlign: 'right', padding: '6px 4px', color: '#9A8662', fontWeight: 600 }}>กก.</th>
-                <th style={{ textAlign: 'right', padding: '6px 4px', color: '#9A8662', fontWeight: 600 }}>คอม</th>
+              <tr style={{ borderBottom: '2px solid #e4d9c8' }}>
+                <th style={{ textAlign: 'left', padding: '6px 4px', color: '#8a7767', fontWeight: 600 }}>วันที่</th>
+                <th style={{ textAlign: 'left', padding: '6px 4px', color: '#8a7767', fontWeight: 600 }}>ผู้ขาย</th>
+                <th style={{ textAlign: 'right', padding: '6px 4px', color: '#8a7767', fontWeight: 600 }}>กก.</th>
+                <th style={{ textAlign: 'right', padding: '6px 4px', color: '#8a7767', fontWeight: 600 }}>คอม</th>
               </tr>
             </thead>
             <tbody>
@@ -3961,38 +3961,38 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
                 const ms = typeof b.date === 'number' ? (b.date > 1e12 ? b.date : b.date * 1000) : new Date(b.date).getTime();
                 const dl = new Date(ms).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
                 return (
-                  <tr key={b.billNo || i} style={{ borderBottom: '1px solid #F0E8DC' }}>
-                    <td style={{ padding: '7px 4px', color: '#5B3A29' }}>{dl}</td>
-                    <td style={{ padding: '7px 4px', color: '#3F2D1E', maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.seller || '—'}</td>
-                    <td style={{ padding: '7px 4px', textAlign: 'right', color: '#5B3A29' }}>{kg % 1 === 0 ? kg : kg.toFixed(1)}</td>
-                    <td style={{ padding: '7px 4px', textAlign: 'right', fontWeight: 700, color: '#E65100' }}>฿{comm}</td>
+                  <tr key={b.billNo || i} style={{ borderBottom: '1px solid #f3ece0' }}>
+                    <td style={{ padding: '7px 4px', color: '#3a2718' }}>{dl}</td>
+                    <td style={{ padding: '7px 4px', color: '#26190f', maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.seller || '—'}</td>
+                    <td style={{ padding: '7px 4px', textAlign: 'right', color: '#3a2718' }}>{kg % 1 === 0 ? kg : kg.toFixed(1)}</td>
+                    <td style={{ padding: '7px 4px', textAlign: 'right', fontWeight: 700, color: '#c4491c' }}>฿{comm}</td>
                   </tr>
                 );
               })}
             </tbody>
             <tfoot>
-              <tr style={{ borderTop: '2px solid #5B3A29' }}>
-                <td colSpan={2} style={{ padding: '10px 4px', fontWeight: 700, color: '#5B3A29' }}>รวม {pendingCommBills.length} บิล · {slipTotalKg % 1 === 0 ? slipTotalKg : slipTotalKg.toFixed(1)} กก.</td>
+              <tr style={{ borderTop: '2px solid #3a2718' }}>
+                <td colSpan={2} style={{ padding: '10px 4px', fontWeight: 700, color: '#3a2718' }}>รวม {pendingCommBills.length} บิล · {slipTotalKg % 1 === 0 ? slipTotalKg : slipTotalKg.toFixed(1)} กก.</td>
                 <td></td>
-                <td style={{ padding: '10px 4px', textAlign: 'right', fontSize: 16, fontWeight: 800, color: '#E65100' }}>฿{slipTotalComm.toLocaleString()}</td>
+                <td style={{ padding: '10px 4px', textAlign: 'right', fontSize: 16, fontWeight: 800, color: '#c4491c' }}>฿{slipTotalComm.toLocaleString()}</td>
               </tr>
             </tfoot>
           </table>
-          <div style={{ marginTop: 32, display: 'flex', justifyContent: 'space-between', paddingTop: 16, borderTop: '1px dashed #C9A24B' }}>
+          <div style={{ marginTop: 32, display: 'flex', justifyContent: 'space-between', paddingTop: 16, borderTop: '1px dashed #e8692e' }}>
             <div style={{ textAlign: 'center', flex: 1 }}>
-              <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 24 }}>ผู้จ่าย</div>
-              <div style={{ borderTop: '1px solid #5B3A29', paddingTop: 4, fontSize: 11, color: '#9A8662' }}>ลายเซ็น</div>
+              <div style={{ fontSize: 11, color: '#8a7767', marginBottom: 24 }}>ผู้จ่าย</div>
+              <div style={{ borderTop: '1px solid #3a2718', paddingTop: 4, fontSize: 11, color: '#8a7767' }}>ลายเซ็น</div>
             </div>
             <div style={{ textAlign: 'center', flex: 1 }}>
-              <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 24 }}>ผู้รับ ({supervisorName})</div>
-              <div style={{ borderTop: '1px solid #5B3A29', paddingTop: 4, fontSize: 11, color: '#9A8662' }}>ลายเซ็น</div>
+              <div style={{ fontSize: 11, color: '#8a7767', marginBottom: 24 }}>ผู้รับ ({supervisorName})</div>
+              <div style={{ borderTop: '1px solid #3a2718', paddingTop: 4, fontSize: 11, color: '#8a7767' }}>ลายเซ็น</div>
             </div>
           </div>
         </div>
 
         {/* Action buttons (hidden in print) */}
         <div className="no-print" style={{ maxWidth: 420, margin: '0 auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <button onClick={() => window.print()} style={{ background: '#5B3A29', color: '#fff', border: 'none', borderRadius: 12, padding: '13px', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
+          <button onClick={() => window.print()} style={{ background: '#3a2718', color: '#fff', border: 'none', borderRadius: 12, padding: '13px', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
             🖨️ พิมพ์บิล
           </button>
           <button onClick={async () => {
@@ -4013,10 +4013,10 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
               setPendingCommBills([]);
             } catch { alert('บันทึกไม่สำเร็จ'); }
             setSaving(false);
-          }} disabled={saving} style={{ background: '#2E7D32', color: '#fff', border: 'none', borderRadius: 12, padding: '13px', fontSize: 15, fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer' }}>
+          }} disabled={saving} style={{ background: '#2f9b58', color: '#fff', border: 'none', borderRadius: 12, padding: '13px', fontSize: 15, fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer' }}>
             {saving ? '...' : '✅ บันทึกจ่ายค่าคอมแล้ว ฿' + slipTotalComm.toLocaleString()}
           </button>
-          <button onClick={() => setShowCommPaySlip(false)} style={{ background: '#E0D5C8', color: '#5B3A29', border: 'none', borderRadius: 12, padding: '13px', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+          <button onClick={() => setShowCommPaySlip(false)} style={{ background: '#E0D5C8', color: '#3a2718', border: 'none', borderRadius: 12, padding: '13px', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
             ← ย้อนกลับ (ยังไม่จ่าย)
           </button>
         </div>
@@ -4031,53 +4031,53 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
     const slipTotal = slipBase + slipBonus;
     const sortedWage = [...pendingWageRecords].sort((a, b) => a.date.localeCompare(b.date));
     return (
-      <div style={{ minHeight: '100vh', background: '#F5EFE4' }}>
+      <div style={{ minHeight: '100vh', background: '#f6f0e7' }}>
         <div id="wage-pay-slip" style={{ maxWidth: 420, margin: '0 auto', background: '#fff', padding: '24px 20px' }}>
           <div style={{ textAlign: 'center', marginBottom: 16 }}>
-            <div style={{ fontSize: 18, fontWeight: 800, color: '#5B3A29' }}>ใบจ่ายค่าแรง</div>
-            <div style={{ fontSize: 13, color: '#9A8662' }}>{supervisorName} · {slipDate}</div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: '#3a2718' }}>ใบจ่ายค่าแรง</div>
+            <div style={{ fontSize: 13, color: '#8a7767' }}>{supervisorName} · {slipDate}</div>
           </div>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
             <thead>
-              <tr style={{ borderBottom: '2px solid #E4D7BC' }}>
-                <th style={{ textAlign: 'left', padding: '6px 4px', color: '#9A8662', fontWeight: 600 }}>วันที่</th>
-                <th style={{ textAlign: 'right', padding: '6px 4px', color: '#9A8662', fontWeight: 600 }}>ค่าแรง</th>
-                <th style={{ textAlign: 'right', padding: '6px 4px', color: '#9A8662', fontWeight: 600 }}>โบนัส</th>
-                <th style={{ textAlign: 'right', padding: '6px 4px', color: '#9A8662', fontWeight: 600 }}>รวม</th>
+              <tr style={{ borderBottom: '2px solid #e4d9c8' }}>
+                <th style={{ textAlign: 'left', padding: '6px 4px', color: '#8a7767', fontWeight: 600 }}>วันที่</th>
+                <th style={{ textAlign: 'right', padding: '6px 4px', color: '#8a7767', fontWeight: 600 }}>ค่าแรง</th>
+                <th style={{ textAlign: 'right', padding: '6px 4px', color: '#8a7767', fontWeight: 600 }}>โบนัส</th>
+                <th style={{ textAlign: 'right', padding: '6px 4px', color: '#8a7767', fontWeight: 600 }}>รวม</th>
               </tr>
             </thead>
             <tbody>
               {sortedWage.map((e, i) => (
-                <tr key={e.id || i} style={{ borderBottom: '1px solid #F0E8DC' }}>
-                  <td style={{ padding: '7px 4px', color: '#5B3A29' }}>{fmtThDate(e.date)}</td>
-                  <td style={{ padding: '7px 4px', textAlign: 'right', color: '#5B3A29' }}>{(e.base || 0) > 0 ? `฿${e.base}` : '—'}</td>
+                <tr key={e.id || i} style={{ borderBottom: '1px solid #f3ece0' }}>
+                  <td style={{ padding: '7px 4px', color: '#3a2718' }}>{fmtThDate(e.date)}</td>
+                  <td style={{ padding: '7px 4px', textAlign: 'right', color: '#3a2718' }}>{(e.base || 0) > 0 ? `฿${e.base}` : '—'}</td>
                   <td style={{ padding: '7px 4px', textAlign: 'right', color: '#7B3FA0' }}>{(e.bonus || 0) > 0 ? `฿${e.bonus}` : '—'}</td>
-                  <td style={{ padding: '7px 4px', textAlign: 'right', fontWeight: 700, color: '#5B3A29' }}>฿{((e.base || 0) + (e.bonus || 0)).toLocaleString()}</td>
+                  <td style={{ padding: '7px 4px', textAlign: 'right', fontWeight: 700, color: '#3a2718' }}>฿{((e.base || 0) + (e.bonus || 0)).toLocaleString()}</td>
                 </tr>
               ))}
             </tbody>
             <tfoot>
-              <tr style={{ borderTop: '2px solid #5B3A29' }}>
-                <td style={{ padding: '10px 4px', fontWeight: 700, color: '#5B3A29' }}>รวม {pendingWageRecords.length} วัน</td>
+              <tr style={{ borderTop: '2px solid #3a2718' }}>
+                <td style={{ padding: '10px 4px', fontWeight: 700, color: '#3a2718' }}>รวม {pendingWageRecords.length} วัน</td>
                 <td style={{ padding: '10px 4px', textAlign: 'right', fontWeight: 700 }}>฿{slipBase.toLocaleString()}</td>
                 <td style={{ padding: '10px 4px', textAlign: 'right', fontWeight: 700, color: '#7B3FA0' }}>{slipBonus > 0 ? `฿${slipBonus.toLocaleString()}` : '—'}</td>
-                <td style={{ padding: '10px 4px', textAlign: 'right', fontSize: 16, fontWeight: 800, color: '#5B3A29' }}>฿{slipTotal.toLocaleString()}</td>
+                <td style={{ padding: '10px 4px', textAlign: 'right', fontSize: 16, fontWeight: 800, color: '#3a2718' }}>฿{slipTotal.toLocaleString()}</td>
               </tr>
             </tfoot>
           </table>
-          <div style={{ marginTop: 32, display: 'flex', justifyContent: 'space-between', paddingTop: 16, borderTop: '1px dashed #C9A24B' }}>
+          <div style={{ marginTop: 32, display: 'flex', justifyContent: 'space-between', paddingTop: 16, borderTop: '1px dashed #e8692e' }}>
             <div style={{ textAlign: 'center', flex: 1 }}>
-              <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 24 }}>ผู้จ่าย</div>
-              <div style={{ borderTop: '1px solid #5B3A29', paddingTop: 4, fontSize: 11, color: '#9A8662' }}>ลายเซ็น</div>
+              <div style={{ fontSize: 11, color: '#8a7767', marginBottom: 24 }}>ผู้จ่าย</div>
+              <div style={{ borderTop: '1px solid #3a2718', paddingTop: 4, fontSize: 11, color: '#8a7767' }}>ลายเซ็น</div>
             </div>
             <div style={{ textAlign: 'center', flex: 1 }}>
-              <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 24 }}>ผู้รับ ({supervisorName})</div>
-              <div style={{ borderTop: '1px solid #5B3A29', paddingTop: 4, fontSize: 11, color: '#9A8662' }}>ลายเซ็น</div>
+              <div style={{ fontSize: 11, color: '#8a7767', marginBottom: 24 }}>ผู้รับ ({supervisorName})</div>
+              <div style={{ borderTop: '1px solid #3a2718', paddingTop: 4, fontSize: 11, color: '#8a7767' }}>ลายเซ็น</div>
             </div>
           </div>
         </div>
         <div className="no-print" style={{ maxWidth: 420, margin: '0 auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <button onClick={() => window.print()} style={{ background: '#5B3A29', color: '#fff', border: 'none', borderRadius: 12, padding: '13px', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
+          <button onClick={() => window.print()} style={{ background: '#3a2718', color: '#fff', border: 'none', borderRadius: 12, padding: '13px', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
             🖨️ พิมพ์บิล
           </button>
           <button onClick={async () => {
@@ -4098,10 +4098,10 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
               setPendingWageRecords([]);
             } catch { alert('บันทึกไม่สำเร็จ'); }
             setSaving(false);
-          }} disabled={saving} style={{ background: '#2E7D32', color: '#fff', border: 'none', borderRadius: 12, padding: '13px', fontSize: 15, fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer' }}>
+          }} disabled={saving} style={{ background: '#2f9b58', color: '#fff', border: 'none', borderRadius: 12, padding: '13px', fontSize: 15, fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer' }}>
             {saving ? '...' : '✅ บันทึกจ่ายค่าแรงแล้ว ฿' + slipTotal.toLocaleString()}
           </button>
-          <button onClick={() => setShowWagePaySlip(false)} style={{ background: '#E0D5C8', color: '#5B3A29', border: 'none', borderRadius: 12, padding: '13px', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+          <button onClick={() => setShowWagePaySlip(false)} style={{ background: '#E0D5C8', color: '#3a2718', border: 'none', borderRadius: 12, padding: '13px', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
             ← ย้อนกลับ (ยังไม่จ่าย)
           </button>
         </div>
@@ -4136,13 +4136,13 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
       setAdvanceSaving(false);
     };
     return (
-      <div className="advance-slip-wrapper" style={{ minHeight: '100vh', background: '#F5EFE4' }}>
+      <div className="advance-slip-wrapper" style={{ minHeight: '100vh', background: '#f6f0e7' }}>
         {/* Sticky action bar — hidden when printing */}
-        <div className="no-print" style={{ position: 'sticky', top: 0, zIndex: 20, background: '#fff', borderBottom: '1px solid #E4D7BC', padding: '10px 16px', display: 'flex', gap: 8 }}>
-          <button onClick={() => { setShowAdvanceSlip(false); setPendingAdvanceRecord(null); setShowAdvanceForm(true); }} style={{ background: '#F5EFE4', color: '#5B3A29', border: '1px solid #E4D7BC', borderRadius: 10, padding: '8px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+        <div className="no-print" style={{ position: 'sticky', top: 0, zIndex: 20, background: '#fff', borderBottom: '1px solid #e4d9c8', padding: '10px 16px', display: 'flex', gap: 8 }}>
+          <button onClick={() => { setShowAdvanceSlip(false); setPendingAdvanceRecord(null); setShowAdvanceForm(true); }} style={{ background: '#f6f0e7', color: '#3a2718', border: '1px solid #e4d9c8', borderRadius: 10, padding: '8px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
             ← ย้อนกลับ
           </button>
-          <button onClick={() => window.print()} style={{ flex: 1, background: '#5B3A29', color: '#fff', border: 'none', borderRadius: 10, padding: '8px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+          <button onClick={() => window.print()} style={{ flex: 1, background: '#3a2718', color: '#fff', border: 'none', borderRadius: 10, padding: '8px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
             🖨️ พิมพ์บิล
           </button>
           <button disabled={advanceSaving} onClick={doSave} style={{ flex: 1, background: '#B85C00', color: '#fff', border: 'none', borderRadius: 10, padding: '8px 14px', fontSize: 13, fontWeight: 700, cursor: advanceSaving ? 'not-allowed' : 'pointer' }}>
@@ -4153,48 +4153,48 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
         <div id="advance-slip" style={{ maxWidth: 420, margin: '0 auto', background: '#fff', minHeight: '100vh', display: 'flex', flexDirection: 'column', padding: '36px 28px' }}>
           {/* Header */}
           <div style={{ textAlign: 'center', marginBottom: 28, paddingBottom: 20, borderBottom: '2px solid #F5CBA7' }}>
-            <div style={{ fontFamily: 'Prompt', fontWeight: 800, fontSize: 26, color: '#5B3A29', letterSpacing: 2 }}>QUDSUN</div>
-            <div style={{ fontSize: 12, color: '#9A8662', marginTop: 2, letterSpacing: 1 }}>ทุเรียนคัดสรร</div>
-            <div style={{ marginTop: 14, fontSize: 16, fontWeight: 700, color: '#B85C00', background: '#FFF3E0', display: 'inline-block', padding: '4px 20px', borderRadius: 20, border: '1px solid #F5CBA7' }}>ใบเบิกล่วงหน้า</div>
+            <div style={{ fontFamily: 'Prompt', fontWeight: 800, fontSize: 26, color: '#3a2718', letterSpacing: 2 }}>QUDSUN</div>
+            <div style={{ fontSize: 12, color: '#8a7767', marginTop: 2, letterSpacing: 1 }}>ทุเรียนคัดสรร</div>
+            <div style={{ marginTop: 14, fontSize: 16, fontWeight: 700, color: '#B85C00', background: '#fce0d0', display: 'inline-block', padding: '4px 20px', borderRadius: 20, border: '1px solid #F5CBA7' }}>ใบเบิกล่วงหน้า</div>
           </div>
 
           {/* Info rows */}
           <div style={{ flex: 1 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', borderBottom: '1px solid #F0E8DC' }}>
-              <span style={{ fontSize: 13, color: '#9A8662' }}>ชื่อผู้ดูแล</span>
-              <span style={{ fontSize: 14, fontWeight: 700, color: '#5B3A29' }}>{supervisorName}</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', borderBottom: '1px solid #f3ece0' }}>
+              <span style={{ fontSize: 13, color: '#8a7767' }}>ชื่อผู้ดูแล</span>
+              <span style={{ fontSize: 14, fontWeight: 700, color: '#3a2718' }}>{supervisorName}</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', borderBottom: '1px solid #F0E8DC' }}>
-              <span style={{ fontSize: 13, color: '#9A8662' }}>วันที่เบิก</span>
-              <span style={{ fontSize: 13, color: '#5B3A29' }}>{slipDate}</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', borderBottom: '1px solid #f3ece0' }}>
+              <span style={{ fontSize: 13, color: '#8a7767' }}>วันที่เบิก</span>
+              <span style={{ fontSize: 13, color: '#3a2718' }}>{slipDate}</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 0', borderBottom: '2px solid #DC743C', marginTop: 4 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 0', borderBottom: '2px solid #e8692e', marginTop: 4 }}>
               <span style={{ fontSize: 16, fontWeight: 700, color: '#B85C00' }}>ยอดเบิกล่วงหน้า</span>
               <span style={{ fontSize: 28, fontWeight: 800, color: '#B85C00' }}>฿{amt.toLocaleString()}</span>
             </div>
 
             {/* Note area — editable on screen, prints as-is */}
             <div style={{ marginTop: 28 }}>
-              <div style={{ fontSize: 12, color: '#9A8662', marginBottom: 8 }}>หมายเหตุ</div>
+              <div style={{ fontSize: 12, color: '#8a7767', marginBottom: 8 }}>หมายเหตุ</div>
               <textarea
                 value={pendingAdvanceRecord.note || ''}
                 onChange={e => setPendingAdvanceRecord(r => ({ ...r, note: e.target.value }))}
                 placeholder="ระบุหมายเหตุ (ถ้ามี)..."
                 rows={3}
-                style={{ width: '100%', border: '1px solid #E4D7BC', borderRadius: 8, padding: '10px', fontSize: 13, color: '#5B3A29', resize: 'none', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit', background: '#FDFAF5' }}
+                style={{ width: '100%', border: '1px solid #e4d9c8', borderRadius: 8, padding: '10px', fontSize: 13, color: '#3a2718', resize: 'none', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit', background: '#FDFAF5' }}
               />
             </div>
           </div>
 
           {/* Signature */}
-          <div style={{ marginTop: 48, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32, paddingTop: 24, borderTop: '1px dashed #C9A24B' }}>
+          <div style={{ marginTop: 48, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32, paddingTop: 24, borderTop: '1px dashed #e8692e' }}>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 12, color: '#9A8662', marginBottom: 40 }}>ผู้จ่าย</div>
-              <div style={{ borderTop: '1px solid #5B3A29', paddingTop: 6, fontSize: 11, color: '#9A8662' }}>ลายเซ็น / วันที่</div>
+              <div style={{ fontSize: 12, color: '#8a7767', marginBottom: 40 }}>ผู้จ่าย</div>
+              <div style={{ borderTop: '1px solid #3a2718', paddingTop: 6, fontSize: 11, color: '#8a7767' }}>ลายเซ็น / วันที่</div>
             </div>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 12, color: '#9A8662', marginBottom: 40 }}>ผู้รับ ({supervisorName})</div>
-              <div style={{ borderTop: '1px solid #5B3A29', paddingTop: 6, fontSize: 11, color: '#9A8662' }}>ลายเซ็น / วันที่</div>
+              <div style={{ fontSize: 12, color: '#8a7767', marginBottom: 40 }}>ผู้รับ ({supervisorName})</div>
+              <div style={{ borderTop: '1px solid #3a2718', paddingTop: 6, fontSize: 11, color: '#8a7767' }}>ลายเซ็น / วันที่</div>
             </div>
           </div>
         </div>
@@ -4203,51 +4203,51 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
   }
 
   if (showPaySlip) return (
-    <div className="pay-slip-wrapper" style={{ minHeight: '100vh', background: '#F5EFE4', padding: 16 }}>
+    <div className="pay-slip-wrapper" style={{ minHeight: '100vh', background: '#f6f0e7', padding: 16 }}>
       <div className="no-print" style={{ maxWidth: 420, margin: '0 auto 12px' }}>
         <div style={{ display: 'flex', gap: 10 }}>
-          <button onClick={() => setShowPaySlip(false)} style={{ border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 10, padding: '8px 14px', fontSize: 13, color: '#7A6450', cursor: 'pointer' }}>‹ กลับ</button>
-          <button onClick={() => window.print()} style={{ flex: 1, background: '#5B3A29', color: '#fff', border: 'none', borderRadius: 10, padding: '8px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>🖨️ พิมพ์</button>
+          <button onClick={() => setShowPaySlip(false)} style={{ border: '1px solid #e4d9c8', background: '#ffffff', borderRadius: 10, padding: '8px 14px', fontSize: 13, color: '#6b4a38', cursor: 'pointer' }}>‹ กลับ</button>
+          <button onClick={() => window.print()} style={{ flex: 1, background: '#3a2718', color: '#fff', border: 'none', borderRadius: 10, padding: '8px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>🖨️ พิมพ์</button>
         </div>
       </div>
       <div style={{ maxWidth: 420, margin: '0 auto' }}>
-        <div id="pay-slip-print" style={{ background: '#fff', borderRadius: 16, padding: '24px 20px', border: '1px solid #E4D7BC' }}>
+        <div id="pay-slip-print" style={{ background: '#fff', borderRadius: 16, padding: '24px 20px', border: '1px solid #e4d9c8' }}>
           <div style={{ textAlign: 'center', marginBottom: 16 }}>
-            <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 20, color: '#5B3A29' }}>QUDSUN</div>
-            <div style={{ fontSize: 11, color: '#9A8662', marginTop: 2 }}>ทุเรียนคัดสรร</div>
-            <div style={{ fontWeight: 700, fontSize: 15, color: '#2A2118', marginTop: 10 }}>บิลสรุปการจ่ายเงิน</div>
+            <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 20, color: '#3a2718' }}>QUDSUN</div>
+            <div style={{ fontSize: 11, color: '#8a7767', marginTop: 2 }}>ทุเรียนคัดสรร</div>
+            <div style={{ fontWeight: 700, fontSize: 15, color: '#241009', marginTop: 10 }}>บิลสรุปการจ่ายเงิน</div>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#5B3A29', marginBottom: 4 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#3a2718', marginBottom: 4 }}>
             <span>ผู้ดูแล</span><span style={{ fontWeight: 700 }}>{supervisorName}</span>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#9A8662', marginBottom: 16 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#8a7767', marginBottom: 16 }}>
             <span>วันที่พิมพ์</span><span>{new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
           </div>
-          <div style={{ borderTop: '1px solid #E4D7BC', paddingTop: 12, marginBottom: 12 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: '#9A8662', marginBottom: 6, borderBottom: '1px solid #F0E8DC', paddingBottom: 4 }}>รายการจ่าย</div>
+          <div style={{ borderTop: '1px solid #e4d9c8', paddingTop: 12, marginBottom: 12 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#8a7767', marginBottom: 6, borderBottom: '1px solid #f3ece0', paddingBottom: 4 }}>รายการจ่าย</div>
             {payments.length === 0 ? (
-              <div style={{ fontSize: 12, color: '#B7A684', textAlign: 'center', padding: '8px 0' }}>ยังไม่มีรายการ</div>
+              <div style={{ fontSize: 12, color: '#b9a88f', textAlign: 'center', padding: '8px 0' }}>ยังไม่มีรายการ</div>
             ) : payments.map((p, i) => (
-              <div key={p.id || i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#4A3526', padding: '4px 0', borderBottom: '1px solid #F5EFE4' }}>
+              <div key={p.id || i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#3a2718', padding: '4px 0', borderBottom: '1px solid #f6f0e7' }}>
                 <span>{fmtThDate(p.paid_date)}{p.note ? ` · ${fmtPayNote(p.note)}` : ''}</span>
                 <span style={{ fontWeight: 600 }}>฿{(p.amount||0).toLocaleString()}</span>
               </div>
             ))}
           </div>
-          <div style={{ borderTop: '1px solid #E4D7BC', paddingTop: 12 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#4A3526', marginBottom: 4 }}>
+          <div style={{ borderTop: '1px solid #e4d9c8', paddingTop: 12 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#3a2718', marginBottom: 4 }}>
               <span>ยอดสะสมทั้งหมด</span><span>฿{totalEarned.toLocaleString()}</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#2E7D32', marginBottom: 4 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#2f9b58', marginBottom: 4 }}>
               <span>จ่ายแล้ว</span><span>฿{totalPaid.toLocaleString()}</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 16, fontWeight: 700, color: balance > 0 ? '#C0392B' : '#2E7D32', borderTop: '1px solid #E4D7BC', paddingTop: 10, marginTop: 6 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 16, fontWeight: 700, color: balance > 0 ? '#C0392B' : '#2f9b58', borderTop: '1px solid #e4d9c8', paddingTop: 10, marginTop: 6 }}>
               <span>ยอดค้าง</span><span>฿{balance.toLocaleString()}</span>
             </div>
           </div>
           <div style={{ marginTop: 32, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-            <div style={{ borderTop: '1px solid #9A8662', paddingTop: 6, textAlign: 'center', fontSize: 11, color: '#9A8662' }}>ผู้รับเงิน</div>
-            <div style={{ borderTop: '1px solid #9A8662', paddingTop: 6, textAlign: 'center', fontSize: 11, color: '#9A8662' }}>ผู้จ่าย</div>
+            <div style={{ borderTop: '1px solid #8a7767', paddingTop: 6, textAlign: 'center', fontSize: 11, color: '#8a7767' }}>ผู้รับเงิน</div>
+            <div style={{ borderTop: '1px solid #8a7767', paddingTop: 6, textAlign: 'center', fontSize: 11, color: '#8a7767' }}>ผู้จ่าย</div>
           </div>
         </div>
       </div>
@@ -4257,70 +4257,70 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
   const TABS = [['calendar','ปฏิทิน'],['bills','บิลคอม'],['earnings','ค่าแรง'],['paid','การจ่าย'],['customers','ลูกค้า']];
 
   return (
-    <div style={{ minHeight: '100vh', background: '#F5EFE4', paddingBottom: 40 }}>
+    <div style={{ minHeight: '100vh', background: '#f6f0e7', paddingBottom: 40 }}>
       {/* Header */}
-      <div style={{ background: '#fff', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid #E4D7BC', position: 'sticky', top: 0, zIndex: 10 }}>
-        <button onClick={onGoBack} style={{ width: 32, height: 32, borderRadius: '50%', background: '#F5EFE4', border: 'none', fontSize: 18, cursor: 'pointer', color: '#5B3A29' }}>‹</button>
+      <div style={{ background: '#fff', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid #e4d9c8', position: 'sticky', top: 0, zIndex: 10 }}>
+        <button onClick={onGoBack} style={{ width: 32, height: 32, borderRadius: '50%', background: '#f6f0e7', border: 'none', fontSize: 18, cursor: 'pointer', color: '#3a2718' }}>‹</button>
         <div style={{ flex: 1 }}>
-          <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 16, color: '#2A2118' }}>🧑‍💼 {supervisorName}</div>
+          <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 16, color: '#241009' }}>🧑‍💼 {supervisorName}</div>
         </div>
-        <button onClick={handleTodayOff} style={{ fontSize: 11, fontWeight: 700, padding: '5px 10px', borderRadius: 8, border: `1.5px solid ${todayIsOff ? '#A8D5A2' : '#E4D7BC'}`, background: todayIsOff ? '#F0FFF4' : '#FFF8EE', color: todayIsOff ? '#2E7D32' : '#9A8662', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}>
+        <button onClick={handleTodayOff} style={{ fontSize: 11, fontWeight: 700, padding: '5px 10px', borderRadius: 8, border: `1.5px solid ${todayIsOff ? '#A8D5A2' : '#e4d9c8'}`, background: todayIsOff ? '#F0FFF4' : '#FFF8EE', color: todayIsOff ? '#2f9b58' : '#8a7767', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}>
           {todayIsOff ? '✅ หยุดวันนี้' : '💤 หยุดวันนี้'}
         </button>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ fontSize: 11, color: '#9A8662' }}>เบส/วัน:</span>
+          <span style={{ fontSize: 11, color: '#8a7767' }}>เบส/วัน:</span>
           {editingBase ? (
             <>
-              <input type="number" value={baseDraft} onChange={e => setBaseDraft(Number(e.target.value)||0)} style={{ width: 60, border: '1.5px solid #DC743C', borderRadius: 6, padding: '3px 6px', fontSize: 13, fontWeight: 700, color: '#3F2D1E', outline: 'none' }} />
-              <button onClick={() => saveBaseRate(baseDraft)} style={{ fontSize: 11, background: '#DC743C', color: '#fff', border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer' }}>✓</button>
-              <button onClick={() => setEditingBase(false)} style={{ fontSize: 11, background: 'none', border: 'none', color: '#9A8662', cursor: 'pointer' }}>✕</button>
+              <input type="number" value={baseDraft} onChange={e => setBaseDraft(Number(e.target.value)||0)} style={{ width: 60, border: '1.5px solid #e8692e', borderRadius: 6, padding: '3px 6px', fontSize: 13, fontWeight: 700, color: '#26190f', outline: 'none' }} />
+              <button onClick={() => saveBaseRate(baseDraft)} style={{ fontSize: 11, background: '#e8692e', color: '#fff', border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer' }}>✓</button>
+              <button onClick={() => setEditingBase(false)} style={{ fontSize: 11, background: 'none', border: 'none', color: '#8a7767', cursor: 'pointer' }}>✕</button>
             </>
           ) : (
-            <button onClick={() => { setBaseDraft(baseRate); setEditingBase(true); }} style={{ fontSize: 13, fontWeight: 700, color: '#DC743C', background: 'none', border: 'none', cursor: 'pointer' }}>฿{baseRate}</button>
+            <button onClick={() => { setBaseDraft(baseRate); setEditingBase(true); }} style={{ fontSize: 13, fontWeight: 700, color: '#e8692e', background: 'none', border: 'none', cursor: 'pointer' }}>฿{baseRate}</button>
           )}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ fontSize: 11, color: '#9A8662' }}>คอม/กก.:</span>
+          <span style={{ fontSize: 11, color: '#8a7767' }}>คอม/กก.:</span>
           {editingCommission ? (
             <>
-              <input type="number" step="0.5" value={commissionDraft} onChange={e => setCommissionDraft(Number(e.target.value)||0)} style={{ width: 50, border: '1.5px solid #2E7D32', borderRadius: 6, padding: '3px 6px', fontSize: 13, fontWeight: 700, color: '#3F2D1E', outline: 'none' }} />
-              <button onClick={() => saveCommissionRate(commissionDraft)} style={{ fontSize: 11, background: '#2E7D32', color: '#fff', border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer' }}>✓</button>
-              <button onClick={() => setEditingCommission(false)} style={{ fontSize: 11, background: 'none', border: 'none', color: '#9A8662', cursor: 'pointer' }}>✕</button>
+              <input type="number" step="0.5" value={commissionDraft} onChange={e => setCommissionDraft(Number(e.target.value)||0)} style={{ width: 50, border: '1.5px solid #2f9b58', borderRadius: 6, padding: '3px 6px', fontSize: 13, fontWeight: 700, color: '#26190f', outline: 'none' }} />
+              <button onClick={() => saveCommissionRate(commissionDraft)} style={{ fontSize: 11, background: '#2f9b58', color: '#fff', border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer' }}>✓</button>
+              <button onClick={() => setEditingCommission(false)} style={{ fontSize: 11, background: 'none', border: 'none', color: '#8a7767', cursor: 'pointer' }}>✕</button>
             </>
           ) : (
-            <button onClick={() => { setCommissionDraft(commissionRate); setEditingCommission(true); }} style={{ fontSize: 13, fontWeight: 700, color: '#2E7D32', background: 'none', border: 'none', cursor: 'pointer' }}>฿{commissionRate}</button>
+            <button onClick={() => { setCommissionDraft(commissionRate); setEditingCommission(true); }} style={{ fontSize: 13, fontWeight: 700, color: '#2f9b58', background: 'none', border: 'none', cursor: 'pointer' }}>฿{commissionRate}</button>
           )}
         </div>
       </div>
 
       {/* Balance card */}
-      <div style={{ margin: '10px 12px 0', background: '#fff', borderRadius: 14, border: '1px solid #E4D7BC', overflow: 'hidden' }}>
-        {loadingLedger ? <div style={{ textAlign: 'center', padding: 14, color: '#9A8662', fontSize: 12 }}>กำลังโหลด...</div> : (<>
+      <div style={{ margin: '10px 12px 0', background: '#fff', borderRadius: 14, border: '1px solid #e4d9c8', overflow: 'hidden' }}>
+        {loadingLedger ? <div style={{ textAlign: 'center', padding: 14, color: '#8a7767', fontSize: 12 }}>กำลังโหลด...</div> : (<>
           {/* Pay type breakdown */}
-          <div style={{ padding: '12px 14px 8px', borderBottom: '1px solid #F0E8DC' }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: '#B7A684', marginBottom: 8, letterSpacing: '.08em' }}>รายละเอียดค่าแรง</div>
+          <div style={{ padding: '12px 14px 8px', borderBottom: '1px solid #f3ece0' }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: '#b9a88f', marginBottom: 8, letterSpacing: '.08em' }}>รายละเอียดค่าแรง</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                   <span style={{ fontSize: 14 }}>📅</span>
-                  <span style={{ fontSize: 12, color: '#4A3526' }}>รายวัน</span>
-                  <span style={{ fontSize: 10, color: '#B7A684' }}>{breakdownWorkDays} วัน × ฿{baseRate}</span>
-                  {breakdownPendingDays > 0 && <span style={{ fontSize: 10, color: '#DC743C', background: '#FFF3E0', borderRadius: 4, padding: '1px 5px' }}>+{breakdownPendingDays} วัน รอตัด 12:00</span>}
+                  <span style={{ fontSize: 12, color: '#3a2718' }}>รายวัน</span>
+                  <span style={{ fontSize: 10, color: '#b9a88f' }}>{breakdownWorkDays} วัน × ฿{baseRate}</span>
+                  {breakdownPendingDays > 0 && <span style={{ fontSize: 10, color: '#e8692e', background: '#fce0d0', borderRadius: 4, padding: '1px 5px' }}>+{breakdownPendingDays} วัน รอตัด 12:00</span>}
                 </div>
-                <span style={{ fontSize: 13, fontWeight: 700, color: '#4A3526' }}>฿{breakdownBase.toLocaleString()}</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: '#3a2718' }}>฿{breakdownBase.toLocaleString()}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   <span style={{ fontSize: 14 }}>📦</span>
-                  <span style={{ fontSize: 12, color: '#4A3526' }}>ค่าคอม</span>
-                  <span style={{ fontSize: 10, color: '#B7A684' }}>{breakdownTotalKg % 1 === 0 ? breakdownTotalKg : breakdownTotalKg.toFixed(1)} กก. × ฿{commissionRate}</span>
+                  <span style={{ fontSize: 12, color: '#3a2718' }}>ค่าคอม</span>
+                  <span style={{ fontSize: 10, color: '#b9a88f' }}>{breakdownTotalKg % 1 === 0 ? breakdownTotalKg : breakdownTotalKg.toFixed(1)} กก. × ฿{commissionRate}</span>
                 </div>
-                <span style={{ fontSize: 13, fontWeight: 700, color: '#E65100' }}>฿{breakdownComm.toLocaleString()}</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: '#c4491c' }}>฿{breakdownComm.toLocaleString()}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   <span style={{ fontSize: 14 }}>🎁</span>
-                  <span style={{ fontSize: 12, color: '#4A3526' }}>โบนัส</span>
+                  <span style={{ fontSize: 12, color: '#3a2718' }}>โบนัส</span>
                 </div>
                 <span style={{ fontSize: 13, fontWeight: 700, color: '#7B3FA0' }}>฿{breakdownBonus.toLocaleString()}</span>
               </div>
@@ -4329,23 +4329,23 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
           {/* Totals row */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', textAlign: 'center', padding: '10px 8px' }}>
             <div>
-              <div style={{ fontSize: 10, color: '#9A8662' }}>💼 รวมสะสม</div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: '#4A3526' }}>฿{totalEarned.toLocaleString()}</div>
+              <div style={{ fontSize: 10, color: '#8a7767' }}>💼 รวมสะสม</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: '#3a2718' }}>฿{totalEarned.toLocaleString()}</div>
             </div>
-            <div style={{ borderLeft: '1px solid #F0E8DC', borderRight: '1px solid #F0E8DC' }}>
-              <div style={{ fontSize: 10, color: '#9A8662' }}>✅ จ่ายแล้ว</div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: '#2E7D32' }}>฿{totalPaid.toLocaleString()}</div>
+            <div style={{ borderLeft: '1px solid #f3ece0', borderRight: '1px solid #f3ece0' }}>
+              <div style={{ fontSize: 10, color: '#8a7767' }}>✅ จ่ายแล้ว</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: '#2f9b58' }}>฿{totalPaid.toLocaleString()}</div>
             </div>
             <div>
-              <div style={{ fontSize: 10, color: '#9A8662' }}>🔴 ยอดค้าง</div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: balance > 0 ? '#C0392B' : '#9A8662' }}>฿{balance.toLocaleString()}</div>
+              <div style={{ fontSize: 10, color: '#8a7767' }}>🔴 ยอดค้าง</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: balance > 0 ? '#C0392B' : '#8a7767' }}>฿{balance.toLocaleString()}</div>
             </div>
           </div>
           {/* Pay button */}
           {balance > 0 && !showPayForm && (
             <div style={{ padding: '0 12px 12px' }}>
               <button onClick={() => { setShowPayForm(true); setPayAmount(String(balance)); }}
-                style={{ width: '100%', background: 'linear-gradient(135deg,#2E7D32,#1B5E20)', color: '#fff', border: 'none', borderRadius: 10, padding: '11px 0', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+                style={{ width: '100%', background: 'linear-gradient(135deg,#2f9b58,#1B5E20)', color: '#fff', border: 'none', borderRadius: 10, padding: '11px 0', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
                 💸 บันทึกการจ่ายเงิน ฿{balance.toLocaleString()}
               </button>
             </div>
@@ -4353,12 +4353,12 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
           {showPayForm && (
             <div style={{ padding: '0 12px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
               <div style={{ display: 'flex', gap: 8 }}>
-                <input type="number" value={payAmount} onChange={e => setPayAmount(e.target.value)} placeholder="จำนวนเงิน" style={{ flex: 1, border: '1.5px solid #E4D7BC', borderRadius: 9, padding: '9px 12px', fontSize: 14, outline: 'none' }} />
-                <input value={payNote} onChange={e => setPayNote(e.target.value)} placeholder="หมายเหตุ" style={{ flex: 1, border: '1.5px solid #E4D7BC', borderRadius: 9, padding: '9px 12px', fontSize: 14, outline: 'none' }} />
+                <input type="number" value={payAmount} onChange={e => setPayAmount(e.target.value)} placeholder="จำนวนเงิน" style={{ flex: 1, border: '1.5px solid #e4d9c8', borderRadius: 9, padding: '9px 12px', fontSize: 14, outline: 'none' }} />
+                <input value={payNote} onChange={e => setPayNote(e.target.value)} placeholder="หมายเหตุ" style={{ flex: 1, border: '1.5px solid #e4d9c8', borderRadius: 9, padding: '9px 12px', fontSize: 14, outline: 'none' }} />
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
-                <button onClick={() => setShowPayForm(false)} style={{ flex: 1, background: '#F5EFE4', color: '#7A6450', border: '1px solid #E4D7BC', borderRadius: 9, padding: '10px 0', fontSize: 13, cursor: 'pointer' }}>ยกเลิก</button>
-                <button onClick={handleSavePayment} disabled={saving} style={{ flex: 2, background: '#2E7D32', color: '#fff', border: 'none', borderRadius: 9, padding: '10px 0', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>{saving ? '...' : '✓ ยืนยันจ่าย'}</button>
+                <button onClick={() => setShowPayForm(false)} style={{ flex: 1, background: '#f6f0e7', color: '#6b4a38', border: '1px solid #e4d9c8', borderRadius: 9, padding: '10px 0', fontSize: 13, cursor: 'pointer' }}>ยกเลิก</button>
+                <button onClick={handleSavePayment} disabled={saving} style={{ flex: 2, background: '#2f9b58', color: '#fff', border: 'none', borderRadius: 9, padding: '10px 0', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>{saving ? '...' : '✓ ยืนยันจ่าย'}</button>
               </div>
             </div>
           )}
@@ -4368,7 +4368,7 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
       {/* Tabs */}
       <div style={{ display: 'flex', gap: 4, padding: '8px 12px 0', overflowX: 'auto' }}>
         {TABS.map(([val, label]) => (
-          <button key={val} onClick={() => setTab(val)} style={{ padding: '5px 14px', borderRadius: 20, border: '1px solid', fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', background: tab === val ? '#5B3A29' : '#fff', color: tab === val ? '#fff' : '#8A7A66', borderColor: tab === val ? '#5B3A29' : '#D0C8C0' }}>{label}</button>
+          <button key={val} onClick={() => setTab(val)} style={{ padding: '5px 14px', borderRadius: 20, border: '1px solid', fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', background: tab === val ? '#3a2718' : '#fff', color: tab === val ? '#fff' : '#8a7767', borderColor: tab === val ? '#3a2718' : '#D0C8C0' }}>{label}</button>
         ))}
       </div>
 
@@ -4376,16 +4376,16 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
       {tab === 'calendar' && (
         <div style={{ padding: '10px 12px' }}>
           {/* Month nav */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, background: '#fff', borderRadius: 12, padding: '8px 14px', border: '1px solid #E4D7BC' }}>
-            <button onClick={prevMonth} style={{ border: 'none', background: 'none', fontSize: 18, cursor: 'pointer', color: '#5B3A29', padding: '0 4px' }}>‹</button>
-            <span style={{ fontWeight: 700, fontSize: 14, color: '#2A2118' }}>{MONTH_TH[calMonth]} {calYear + 543}</span>
-            <button onClick={nextMonth} style={{ border: 'none', background: 'none', fontSize: 18, cursor: 'pointer', color: '#5B3A29', padding: '0 4px' }}>›</button>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, background: '#fff', borderRadius: 12, padding: '8px 14px', border: '1px solid #e4d9c8' }}>
+            <button onClick={prevMonth} style={{ border: 'none', background: 'none', fontSize: 18, cursor: 'pointer', color: '#3a2718', padding: '0 4px' }}>‹</button>
+            <span style={{ fontWeight: 700, fontSize: 14, color: '#241009' }}>{MONTH_TH[calMonth]} {calYear + 543}</span>
+            <button onClick={nextMonth} style={{ border: 'none', background: 'none', fontSize: 18, cursor: 'pointer', color: '#3a2718', padding: '0 4px' }}>›</button>
           </div>
 
           {/* Calendar grid */}
-          <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4D7BC', padding: '8px 6px', marginBottom: 10 }}>
+          <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e4d9c8', padding: '8px 6px', marginBottom: 10 }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 1, marginBottom: 4 }}>
-              {DOW_TH.map(d => <div key={d} style={{ textAlign: 'center', fontSize: 10, color: '#9A8662', padding: '2px 0' }}>{d}</div>)}
+              {DOW_TH.map(d => <div key={d} style={{ textAlign: 'center', fontSize: 10, color: '#8a7767', padding: '2px 0' }}>{d}</div>)}
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 3 }}>
               {calCells.map((day, i) => {
@@ -4398,29 +4398,29 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
                 const isToday = day === nowRef.getDate() && calMonth === nowRef.getMonth() && calYear === nowRef.getFullYear();
                 const hasData = earning || kg > 0;
                 return (
-                  <button key={day} onClick={() => setSelectedDay(d => d === day ? null : day)} style={{ borderRadius: 8, border: isSelected ? '2px solid #5B3A29' : earning ? '2px solid #DC743C' : kg > 0 ? '1.5px solid #A8D5A2' : '1px solid #E4D7BC', background: isSelected ? '#5B3A29' : earning ? '#FFF3E0' : kg > 0 ? '#F0FFF4' : '#FAFAFA', padding: '3px 2px', cursor: 'pointer', minHeight: 48, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
-                    <div style={{ fontSize: 12, fontWeight: hasData || isToday ? 700 : 400, color: isSelected ? '#fff' : earning ? '#E65100' : isToday ? '#5B3A29' : '#4A3526' }}>{day}</div>
-                    {!isSelected && earning && <div style={{ fontSize: 9, color: '#E65100', fontWeight: 700, lineHeight: 1 }}>฿{(earning.total||0).toLocaleString()}</div>}
-                    {!isSelected && !earning && kg > 0 && <div style={{ fontSize: 9, color: '#2E7D32', fontWeight: 700, lineHeight: 1 }}>฿{calcTotal.toLocaleString()}</div>}
+                  <button key={day} onClick={() => setSelectedDay(d => d === day ? null : day)} style={{ borderRadius: 8, border: isSelected ? '2px solid #3a2718' : earning ? '2px solid #e8692e' : kg > 0 ? '1.5px solid #A8D5A2' : '1px solid #e4d9c8', background: isSelected ? '#3a2718' : earning ? '#fce0d0' : kg > 0 ? '#F0FFF4' : '#FAFAFA', padding: '3px 2px', cursor: 'pointer', minHeight: 48, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+                    <div style={{ fontSize: 12, fontWeight: hasData || isToday ? 700 : 400, color: isSelected ? '#fff' : earning ? '#c4491c' : isToday ? '#3a2718' : '#3a2718' }}>{day}</div>
+                    {!isSelected && earning && <div style={{ fontSize: 9, color: '#c4491c', fontWeight: 700, lineHeight: 1 }}>฿{(earning.total||0).toLocaleString()}</div>}
+                    {!isSelected && !earning && kg > 0 && <div style={{ fontSize: 9, color: '#2f9b58', fontWeight: 700, lineHeight: 1 }}>฿{calcTotal.toLocaleString()}</div>}
                   </button>
                 );
               })}
             </div>
             <div style={{ display: 'flex', gap: 12, marginTop: 8, paddingLeft: 4 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><div style={{ width: 10, height: 10, borderRadius: 2, background: '#FFF3E0', border: '2px solid #DC743C' }} /><span style={{ fontSize: 10, color: '#9A8662' }}>บันทึกแล้ว</span></div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><div style={{ width: 10, height: 10, borderRadius: 2, background: '#F0FFF4', border: '1.5px solid #A8D5A2' }} /><span style={{ fontSize: 10, color: '#9A8662' }}>คำนวณ (ยังไม่บันทึก)</span></div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><div style={{ width: 10, height: 10, borderRadius: 2, background: '#fce0d0', border: '2px solid #e8692e' }} /><span style={{ fontSize: 10, color: '#8a7767' }}>บันทึกแล้ว</span></div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><div style={{ width: 10, height: 10, borderRadius: 2, background: '#F0FFF4', border: '1.5px solid #A8D5A2' }} /><span style={{ fontSize: 10, color: '#8a7767' }}>คำนวณ (ยังไม่บันทึก)</span></div>
             </div>
           </div>
 
           {/* Month bill overview */}
           {monthBills.length > 0 && (
-            <div style={{ background: '#fff', borderRadius: 14, border: '1px solid #E4D7BC', overflow: 'hidden' }}>
-              <div style={{ padding: '10px 14px 8px', borderBottom: '1px solid #F0E8DC', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontWeight: 700, fontSize: 13, color: '#2A2118' }}>📋 บิลทั้งหมดเดือนนี้</span>
-                <span style={{ fontSize: 11, color: '#9A8662' }}>{monthBills.length} บิล · {monthBills.reduce((s,b) => s + parseNum(b.kg), 0).toLocaleString()} กก.</span>
+            <div style={{ background: '#fff', borderRadius: 14, border: '1px solid #e4d9c8', overflow: 'hidden' }}>
+              <div style={{ padding: '10px 14px 8px', borderBottom: '1px solid #f3ece0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontWeight: 700, fontSize: 13, color: '#241009' }}>📋 บิลทั้งหมดเดือนนี้</span>
+                <span style={{ fontSize: 11, color: '#8a7767' }}>{monthBills.length} บิล · {monthBills.reduce((s,b) => s + parseNum(b.kg), 0).toLocaleString()} กก.</span>
               </div>
               {loadingBills ? (
-                <div style={{ textAlign: 'center', padding: 16, color: '#9A8662', fontSize: 12 }}>กำลังโหลด...</div>
+                <div style={{ textAlign: 'center', padding: 16, color: '#8a7767', fontSize: 12 }}>กำลังโหลด...</div>
               ) : monthBills.map((b, idx) => {
                 const fullCard = history.find(h => h.billNo === b.billNo);
                 const clickable = !!fullCard && !!onOpenHistory;
@@ -4428,19 +4428,19 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
                 const bDay = new Date(bDate).getDate();
                 return (
                   <button key={b.billNo || idx} onClick={() => clickable && onOpenHistory(fullCard)}
-                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: idx % 2 === 0 ? '#FAFAF8' : '#fff', borderBottom: idx < monthBills.length - 1 ? '1px solid #F0E8DC' : 'none', width: '100%', border: 'none', cursor: clickable ? 'pointer' : 'default', textAlign: 'left' }}>
-                    <div style={{ width: 32, height: 32, borderRadius: 8, background: '#F5EFE4', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: '#5B3A29' }}>{bDay}</span>
+                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: idx % 2 === 0 ? '#FAFAF8' : '#fff', borderBottom: idx < monthBills.length - 1 ? '1px solid #f3ece0' : 'none', width: '100%', border: 'none', cursor: clickable ? 'pointer' : 'default', textAlign: 'left' }}>
+                    <div style={{ width: 32, height: 32, borderRadius: 8, background: '#f6f0e7', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: '#3a2718' }}>{bDay}</span>
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: '#3F2D1E', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.seller || '—'}</div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: '#26190f', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.seller || '—'}</div>
                       <div style={{ fontSize: 10, color: '#B0966A' }}>#{b.billNo}</div>
                     </div>
                     <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: '#E65100' }}>{parseNum(b.kg) % 1 === 0 ? parseNum(b.kg) : parseNum(b.kg).toFixed(1)} กก.</div>
-                      <div style={{ fontSize: 10, color: '#9A8662' }}>฿{Number(b.baht?.toString().replace(/,/g,'')||0).toLocaleString()}</div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: '#c4491c' }}>{parseNum(b.kg) % 1 === 0 ? parseNum(b.kg) : parseNum(b.kg).toFixed(1)} กก.</div>
+                      <div style={{ fontSize: 10, color: '#8a7767' }}>฿{Number(b.baht?.toString().replace(/,/g,'')||0).toLocaleString()}</div>
                     </div>
-                    {clickable && <span style={{ color: '#C9A24B', fontSize: 16, flexShrink: 0 }}>›</span>}
+                    {clickable && <span style={{ color: '#e8692e', fontSize: 16, flexShrink: 0 }}>›</span>}
                   </button>
                 );
               })}
@@ -4457,44 +4457,44 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
             {/* Modal header */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
               <div>
-                <div style={{ fontWeight: 700, fontSize: 15, color: '#2A2118' }}>📅 {selectedDay} {MONTH_TH[calMonth]} {calYear + 543}</div>
-                {selEarning && <div style={{ fontSize: 11, color: '#DC743C', fontWeight: 600, marginTop: 2 }}>✅ บันทึกแล้ว</div>}
+                <div style={{ fontWeight: 700, fontSize: 15, color: '#241009' }}>📅 {selectedDay} {MONTH_TH[calMonth]} {calYear + 543}</div>
+                {selEarning && <div style={{ fontSize: 11, color: '#e8692e', fontWeight: 600, marginTop: 2 }}>✅ บันทึกแล้ว</div>}
               </div>
-              <button onClick={() => setSelectedDay(null)} style={{ width: 30, height: 30, borderRadius: '50%', border: 'none', background: '#F0EAE0', fontSize: 16, cursor: 'pointer', color: '#5B3A29', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+              <button onClick={() => setSelectedDay(null)} style={{ width: 30, height: 30, borderRadius: '50%', border: 'none', background: '#F0EAE0', fontSize: 16, cursor: 'pointer', color: '#3a2718', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
             </div>
 
-            {loadingBills ? <div style={{ textAlign: 'center', padding: 24, color: '#9A8662', fontSize: 13 }}>กำลังโหลด...</div> : (<>
+            {loadingBills ? <div style={{ textAlign: 'center', padding: 24, color: '#8a7767', fontSize: 13 }}>กำลังโหลด...</div> : (<>
               {/* Summary row */}
               <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
                 <div style={{ flex: 1, background: '#FFF8EE', borderRadius: 10, padding: '8px 10px' }}>
-                  <div style={{ fontSize: 10, color: '#9A8662' }}>ยอดกิโล ({selBills.length} บิล)</div>
-                  <div style={{ fontSize: 18, fontWeight: 700, color: '#E65100' }}>{selKg % 1 === 0 ? selKg : selKg.toFixed(1)} กก.</div>
+                  <div style={{ fontSize: 10, color: '#8a7767' }}>ยอดกิโล ({selBills.length} บิล)</div>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: '#c4491c' }}>{selKg % 1 === 0 ? selKg : selKg.toFixed(1)} กก.</div>
                 </div>
                 <div style={{ flex: 1, background: '#F0FFF4', borderRadius: 10, padding: '8px 10px' }}>
-                  <div style={{ fontSize: 10, color: '#9A8662' }}>ค่าคอม ({dayRate}฿/กก.)</div>
-                  <div style={{ fontSize: 18, fontWeight: 700, color: '#2E7D32' }}>฿{selCommission.toLocaleString()}</div>
+                  <div style={{ fontSize: 10, color: '#8a7767' }}>ค่าคอม ({dayRate}฿/กก.)</div>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: '#2f9b58' }}>฿{selCommission.toLocaleString()}</div>
                 </div>
               </div>
 
               {/* Bill list */}
               {selBills.length > 0 && (
-                <div style={{ marginBottom: 12, borderRadius: 10, border: '1px solid #E4D7BC', overflow: 'hidden' }}>
+                <div style={{ marginBottom: 12, borderRadius: 10, border: '1px solid #e4d9c8', overflow: 'hidden' }}>
                   {selBills.map((b, idx) => {
                     const fullCard = history.find(h => h.billNo === b.billNo);
                     const clickable = !!fullCard && !!onOpenHistory;
                     return (
                       <button key={b.billNo || idx} onClick={() => clickable && onOpenHistory(fullCard)}
-                        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: idx % 2 === 0 ? '#FAFAF8' : '#fff', borderBottom: idx < selBills.length - 1 ? '1px solid #F0E8DC' : 'none', width: '100%', border: 'none', cursor: clickable ? 'pointer' : 'default', textAlign: 'left' }}>
+                        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: idx % 2 === 0 ? '#FAFAF8' : '#fff', borderBottom: idx < selBills.length - 1 ? '1px solid #f3ece0' : 'none', width: '100%', border: 'none', cursor: clickable ? 'pointer' : 'default', textAlign: 'left' }}>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 13, fontWeight: 600, color: '#3F2D1E', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.seller || '—'}</div>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: '#26190f', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.seller || '—'}</div>
                           <div style={{ fontSize: 10, color: '#B0966A' }}>#{b.billNo}</div>
                         </div>
                         <div style={{ textAlign: 'right', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
                           <div>
-                            <div style={{ fontSize: 12, fontWeight: 700, color: '#E65100' }}>{parseNum(b.kg) % 1 === 0 ? parseNum(b.kg) : parseNum(b.kg).toFixed(1)} กก.</div>
-                            <div style={{ fontSize: 10, color: '#2E7D32' }}>+฿{Math.round(parseNum(b.kg) * dayRate)}</div>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: '#c4491c' }}>{parseNum(b.kg) % 1 === 0 ? parseNum(b.kg) : parseNum(b.kg).toFixed(1)} กก.</div>
+                            <div style={{ fontSize: 10, color: '#2f9b58' }}>+฿{Math.round(parseNum(b.kg) * dayRate)}</div>
                           </div>
-                          {clickable && <span style={{ color: '#C9A24B', fontSize: 16 }}>›</span>}
+                          {clickable && <span style={{ color: '#e8692e', fontSize: 16 }}>›</span>}
                         </div>
                       </button>
                     );
@@ -4504,27 +4504,27 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
 
               {/* Daily wage toggle */}
               <button onClick={() => setDayIncludeBase(v => !v)} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: dayIncludeBase ? '#F0FFF4' : '#FFF0F0', border: `1.5px solid ${dayIncludeBase ? '#A8D5A2' : '#F0A0A0'}`, borderRadius: 10, padding: '9px 14px', marginBottom: 10, cursor: 'pointer' }}>
-                <span style={{ fontSize: 13, color: dayIncludeBase ? '#2E7D32' : '#C0392B', fontWeight: 600 }}>
+                <span style={{ fontSize: 13, color: dayIncludeBase ? '#2f9b58' : '#C0392B', fontWeight: 600 }}>
                   📅 ค่าแรงรายวัน ฿{baseRate}
                 </span>
-                <span style={{ fontSize: 12, fontWeight: 700, color: dayIncludeBase ? '#2E7D32' : '#C0392B', background: dayIncludeBase ? '#D4EDDA' : '#FADBD8', borderRadius: 6, padding: '2px 10px' }}>
+                <span style={{ fontSize: 12, fontWeight: 700, color: dayIncludeBase ? '#2f9b58' : '#C0392B', background: dayIncludeBase ? '#D4EDDA' : '#FADBD8', borderRadius: 6, padding: '2px 10px' }}>
                   {dayIncludeBase ? 'นับ ✓' : 'ไม่นับ ✕'}
                 </span>
               </button>
 
               {/* Total */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#F5EFE4', borderRadius: 12, padding: '10px 14px', marginBottom: 10 }}>
-                <span style={{ fontSize: 12, color: '#9A8662' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f6f0e7', borderRadius: 12, padding: '10px 14px', marginBottom: 10 }}>
+                <span style={{ fontSize: 12, color: '#8a7767' }}>
                   {dayIncludeBase ? `฿${baseRate}` : '฿0 (ไม่นับ)'} + ฿{selCommission}{dayBonus > 0 ? ` + ฿${dayBonus}` : ''}
                 </span>
-                <span style={{ fontSize: 20, fontWeight: 700, color: '#5B3A29' }}>฿{selTotal.toLocaleString()}</span>
+                <span style={{ fontSize: 20, fontWeight: 700, color: '#3a2718' }}>฿{selTotal.toLocaleString()}</span>
               </div>
 
               {/* Bonus inline edit */}
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 12 }}>
-                <span style={{ fontSize: 12, color: '#9A8662', flexShrink: 0 }}>🎁 โบนัส</span>
-                <input type="number" value={dayBonus} onChange={e => setDayBonus(Number(e.target.value)||0)} placeholder="0" style={{ flex: 1, border: '1.5px solid #E4D7BC', borderRadius: 8, padding: '7px 10px', fontSize: 14, color: '#3F2D1E', outline: 'none' }} />
-                <button onClick={async () => { await handleSaveDayEarning(); }} disabled={saving} style={{ background: '#DC743C', color: '#fff', border: 'none', borderRadius: 8, padding: '7px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>{saving ? '...' : '💾'}</button>
+                <span style={{ fontSize: 12, color: '#8a7767', flexShrink: 0 }}>🎁 โบนัส</span>
+                <input type="number" value={dayBonus} onChange={e => setDayBonus(Number(e.target.value)||0)} placeholder="0" style={{ flex: 1, border: '1.5px solid #e4d9c8', borderRadius: 8, padding: '7px 10px', fontSize: 14, color: '#26190f', outline: 'none' }} />
+                <button onClick={async () => { await handleSaveDayEarning(); }} disabled={saving} style={{ background: '#e8692e', color: '#fff', border: 'none', borderRadius: 8, padding: '7px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>{saving ? '...' : '💾'}</button>
               </div>
             </>)}
           </div>
@@ -4564,25 +4564,25 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
         return (
           <div style={{ padding: '10px 12px', paddingBottom: commSelectMode ? 90 : 10 }}>
             {/* Summary bar */}
-            <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4D7BC', padding: '12px 14px', marginBottom: 10 }}>
+            <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e4d9c8', padding: '12px 14px', marginBottom: 10 }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', textAlign: 'center' }}>
                 <div>
-                  <div style={{ fontSize: 10, color: '#9A8662' }}>📦 ค่าคอมรวม</div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: '#E65100' }}>฿{breakdownComm.toLocaleString()}</div>
+                  <div style={{ fontSize: 10, color: '#8a7767' }}>📦 ค่าคอมรวม</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: '#c4491c' }}>฿{breakdownComm.toLocaleString()}</div>
                 </div>
-                <div style={{ borderLeft: '1px solid #F0E8DC', borderRight: '1px solid #F0E8DC' }}>
-                  <div style={{ fontSize: 10, color: '#9A8662' }}>✅ จ่ายแล้ว</div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: '#2E7D32' }}>฿{commPaidAmt.toLocaleString()}</div>
+                <div style={{ borderLeft: '1px solid #f3ece0', borderRight: '1px solid #f3ece0' }}>
+                  <div style={{ fontSize: 10, color: '#8a7767' }}>✅ จ่ายแล้ว</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: '#2f9b58' }}>฿{commPaidAmt.toLocaleString()}</div>
                 </div>
                 <div>
-                  <div style={{ fontSize: 10, color: '#9A8662' }}>🔴 ค้าง</div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: commRemain > 0 ? '#C0392B' : '#9A8662' }}>฿{commRemain.toLocaleString()}</div>
+                  <div style={{ fontSize: 10, color: '#8a7767' }}>🔴 ค้าง</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: commRemain > 0 ? '#C0392B' : '#8a7767' }}>฿{commRemain.toLocaleString()}</div>
                 </div>
               </div>
               <div style={{ marginTop: 10, display: 'flex', gap: 8, justifyContent: 'center' }}>
                 {!commSelectMode ? (
                   <button onClick={() => { setCommSelectMode(true); setSelectedCommBills(new Set()); }}
-                    style={{ background: '#DC743C', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 16px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                    style={{ background: '#e8692e', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 16px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
                     📄 ออกบิลค่าคอม
                   </button>
                 ) : (
@@ -4590,11 +4590,11 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
                     <button onClick={() => {
                       const allUnpaid = new Set(unpaidBills.map(x => x.b.billNo));
                       setSelectedCommBills(selectedCommBills.size === unpaidBills.length ? new Set() : allUnpaid);
-                    }} style={{ background: '#5B3A29', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                    }} style={{ background: '#3a2718', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
                       {selectedCommBills.size === unpaidBills.length ? 'ยกเลิกทั้งหมด' : 'เลือกทั้งหมด'}
                     </button>
                     <button onClick={() => { setCommSelectMode(false); setSelectedCommBills(new Set()); }}
-                      style={{ background: '#E0D5C8', color: '#5B3A29', border: 'none', borderRadius: 8, padding: '6px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                      style={{ background: '#E0D5C8', color: '#3a2718', border: 'none', borderRadius: 8, padding: '6px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
                       ยกเลิก
                     </button>
                   </>
@@ -4602,7 +4602,7 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
               </div>
             </div>
 
-            {allTimeBills.length === 0 && <div style={{ textAlign: 'center', color: '#B7A684', padding: 32 }}>ยังไม่มีบิล</div>}
+            {allTimeBills.length === 0 && <div style={{ textAlign: 'center', color: '#b9a88f', padding: 32 }}>ยังไม่มีบิล</div>}
             {displayBills.map(({ b, kg, comm, paid }, idx) => {
               const ms = typeof b.date === 'number' ? (b.date > 1e12 ? b.date : b.date * 1000) : new Date(b.date).getTime();
               const bDate = new Date(ms);
@@ -4626,39 +4626,39 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
                 <button key={b.billNo || idx} onClick={handleClick}
                   style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%',
                     background: paid ? '#F9FFF9' : (isSelected ? '#FFF3E6' : '#fff'),
-                    border: `1px solid ${paid ? '#C8E6C9' : (isSelected ? '#DC743C' : '#E4D7BC')}`,
-                    borderLeft: `4px solid ${paid ? '#2E7D32' : (isSelected ? '#DC743C' : '#E4D7BC')}`,
+                    border: `1px solid ${paid ? '#C8E6C9' : (isSelected ? '#e8692e' : '#e4d9c8')}`,
+                    borderLeft: `4px solid ${paid ? '#2f9b58' : (isSelected ? '#e8692e' : '#e4d9c8')}`,
                     borderRadius: 12, padding: '10px 14px', marginBottom: 6,
                     cursor: canSelect || (!commSelectMode && !!fullCard && !!onOpenHistory) ? 'pointer' : 'default',
                     textAlign: 'left', opacity: commSelectMode && paid ? 0.5 : 1 }}>
                   {commSelectMode && (
-                    <div style={{ width: 22, height: 22, borderRadius: 6, border: `2px solid ${paid ? '#B0BEC5' : (isSelected ? '#DC743C' : '#C9A24B')}`, background: isSelected ? '#DC743C' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: '#fff', fontSize: 14, fontWeight: 700 }}>
+                    <div style={{ width: 22, height: 22, borderRadius: 6, border: `2px solid ${paid ? '#B0BEC5' : (isSelected ? '#e8692e' : '#e8692e')}`, background: isSelected ? '#e8692e' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: '#fff', fontSize: 14, fontWeight: 700 }}>
                       {isSelected ? '✓' : ''}
                     </div>
                   )}
-                  <div style={{ width: 36, height: 36, borderRadius: 9, background: paid ? '#E8F5E9' : '#FFF3E0', border: `1px solid ${paid ? '#81C784' : '#FFB74D'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 10, fontWeight: 700, color: paid ? '#2E7D32' : '#BF360C' }}>{dateLabel}</div>
+                  <div style={{ width: 36, height: 36, borderRadius: 9, background: paid ? '#e6f3ea' : '#fce0d0', border: `1px solid ${paid ? '#81C784' : '#FFB74D'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 10, fontWeight: 700, color: paid ? '#2f9b58' : '#BF360C' }}>{dateLabel}</div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: '#3F2D1E', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.seller || '—'}</div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: '#26190f', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.seller || '—'}</div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
                       <span style={{ fontSize: 10, color: '#B0966A' }}>#{b.billNo}</span>
                       {paid
-                        ? <span style={{ fontSize: 10, fontWeight: 700, color: '#2E7D32', background: '#E8F5E9', borderRadius: 4, padding: '1px 5px' }}>✓ จ่ายแล้ว</span>
+                        ? <span style={{ fontSize: 10, fontWeight: 700, color: '#2f9b58', background: '#e6f3ea', borderRadius: 4, padding: '1px 5px' }}>✓ จ่ายแล้ว</span>
                         : <span style={{ fontSize: 10, fontWeight: 700, color: '#C0392B', background: '#FDECEA', borderRadius: 4, padding: '1px 5px' }}>ค้าง</span>
                       }
                     </div>
                   </div>
                   <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                    <div style={{ fontSize: 12, color: '#9A8662' }}>{kg % 1 === 0 ? kg : kg.toFixed(1)} กก.</div>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: paid ? '#2E7D32' : (isSelected ? '#DC743C' : '#E65100') }}>+฿{comm}</div>
+                    <div style={{ fontSize: 12, color: '#8a7767' }}>{kg % 1 === 0 ? kg : kg.toFixed(1)} กก.</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: paid ? '#2f9b58' : (isSelected ? '#e8692e' : '#c4491c') }}>+฿{comm}</div>
                   </div>
-                  {!commSelectMode && !!fullCard && !!onOpenHistory && <span style={{ color: '#C9A24B', fontSize: 16, flexShrink: 0 }}>›</span>}
+                  {!commSelectMode && !!fullCard && !!onOpenHistory && <span style={{ color: '#e8692e', fontSize: 16, flexShrink: 0 }}>›</span>}
                 </button>
               );
             })}
 
             {/* Sticky bottom bar when selecting */}
             {commSelectMode && selectedCommBills.size > 0 && (
-              <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: '#5B3A29', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', zIndex: 200 }}>
+              <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: '#3a2718', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', zIndex: 200 }}>
                 <div style={{ color: '#FFF6ED' }}>
                   <div style={{ fontSize: 12 }}>{selectedCommBills.size} บิล · {selKg % 1 === 0 ? selKg : selKg.toFixed(1)} กก.</div>
                   <div style={{ fontSize: 16, fontWeight: 700 }}>฿{selComm.toLocaleString()}</div>
@@ -4667,7 +4667,7 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
                   const selectedList = displayBills.filter(x => selectedCommBills.has(x.b.billNo));
                   setPendingCommBills(selectedList);
                   setShowCommPaySlip(true);
-                }} style={{ background: '#DC743C', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 20px', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+                }} style={{ background: '#e8692e', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 20px', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
                   📄 ออกบิล
                 </button>
               </div>
@@ -4700,19 +4700,19 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
         return (
           <div style={{ padding: '10px 12px', paddingBottom: wageSelectMode ? 90 : 10 }}>
             {/* Summary + select mode controls */}
-            <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4D7BC', padding: '12px 14px', marginBottom: 10 }}>
+            <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e4d9c8', padding: '12px 14px', marginBottom: 10 }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', textAlign: 'center' }}>
                 <div>
-                  <div style={{ fontSize: 10, color: '#9A8662' }}>📅 ค่าแรง+โบนัส</div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: '#5B3A29' }}>฿{(breakdownBase + breakdownBonus).toLocaleString()}</div>
+                  <div style={{ fontSize: 10, color: '#8a7767' }}>📅 ค่าแรง+โบนัส</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: '#3a2718' }}>฿{(breakdownBase + breakdownBonus).toLocaleString()}</div>
                 </div>
-                <div style={{ borderLeft: '1px solid #F0E8DC', borderRight: '1px solid #F0E8DC' }}>
-                  <div style={{ fontSize: 10, color: '#9A8662' }}>✅ จ่ายแล้ว</div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: '#2E7D32' }}>฿{wagePaidAmt.toLocaleString()}</div>
+                <div style={{ borderLeft: '1px solid #f3ece0', borderRight: '1px solid #f3ece0' }}>
+                  <div style={{ fontSize: 10, color: '#8a7767' }}>✅ จ่ายแล้ว</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: '#2f9b58' }}>฿{wagePaidAmt.toLocaleString()}</div>
                 </div>
                 <div>
-                  <div style={{ fontSize: 10, color: '#9A8662' }}>🔴 ค้าง</div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: (breakdownBase + breakdownBonus - wagePaidAmt) > 0 ? '#C0392B' : '#9A8662' }}>
+                  <div style={{ fontSize: 10, color: '#8a7767' }}>🔴 ค้าง</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: (breakdownBase + breakdownBonus - wagePaidAmt) > 0 ? '#C0392B' : '#8a7767' }}>
                     ฿{Math.max(0, breakdownBase + breakdownBonus - wagePaidAmt).toLocaleString()}
                   </div>
                 </div>
@@ -4720,7 +4720,7 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
               <div style={{ marginTop: 10, display: 'flex', gap: 8, justifyContent: 'center' }}>
                 {!wageSelectMode ? (
                   <button onClick={() => { setWageSelectMode(true); setSelectedWageDates(new Set()); }}
-                    style={{ background: '#5B3A29', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 16px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                    style={{ background: '#3a2718', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 16px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
                     📄 ออกบิลค่าแรง
                   </button>
                 ) : (
@@ -4728,11 +4728,11 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
                     <button onClick={() => {
                       const allUnpaidDates = new Set(unpaidEarnings.map(e => e.date));
                       setSelectedWageDates(selectedWageDates.size === unpaidEarnings.length ? new Set() : allUnpaidDates);
-                    }} style={{ background: '#5B3A29', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                    }} style={{ background: '#3a2718', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
                       {selectedWageDates.size === unpaidEarnings.length ? 'ยกเลิกทั้งหมด' : 'เลือกทั้งหมด'}
                     </button>
                     <button onClick={() => { setWageSelectMode(false); setSelectedWageDates(new Set()); }}
-                      style={{ background: '#E0D5C8', color: '#5B3A29', border: 'none', borderRadius: 8, padding: '6px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                      style={{ background: '#E0D5C8', color: '#3a2718', border: 'none', borderRadius: 8, padding: '6px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
                       ยกเลิก
                     </button>
                   </>
@@ -4741,7 +4741,7 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
             </div>
 
             {earnings.length === 0 && !loadingLedger && (
-              <div style={{ textAlign: 'center', color: '#B7A684', padding: 32 }}>ยังไม่มีรายการ<br/><span style={{ fontSize: 12 }}>กดวันในปฏิทินแล้วกด 💾 เพื่อบันทึก</span></div>
+              <div style={{ textAlign: 'center', color: '#b9a88f', padding: 32 }}>ยังไม่มีรายการ<br/><span style={{ fontSize: 12 }}>กดวันในปฏิทินแล้วกด 💾 เพื่อบันทึก</span></div>
             )}
 
             {earnings.map(e => {
@@ -4759,33 +4759,33 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
                 setSelectedWageDates(next);
               };
 
-              const borderColor = isOff ? '#C0392B' : isPaid ? '#2E7D32' : isSelected ? '#DC743C' : '#DC743C';
+              const borderColor = isOff ? '#C0392B' : isPaid ? '#2f9b58' : isSelected ? '#e8692e' : '#e8692e';
               const bgColor = isOff ? '#fff' : isPaid ? '#F9FFF9' : isSelected ? '#FFF3E6' : '#fff';
-              const borderLeftColor = isOff ? '#C0392B' : isPaid ? '#2E7D32' : isSelected ? '#DC743C' : '#DC743C';
+              const borderLeftColor = isOff ? '#C0392B' : isPaid ? '#2f9b58' : isSelected ? '#e8692e' : '#e8692e';
 
               return (
                 <div key={e.id} onClick={handleClick}
-                  style={{ background: bgColor, borderRadius: 12, border: `1px solid ${isSelected ? '#DC743C' : isPaid ? '#C8E6C9' : isOff ? '#F0A0A0' : '#E4D7BC'}`, borderLeft: `4px solid ${borderLeftColor}`, padding: '12px 14px', marginBottom: 8, cursor: canSelect ? 'pointer' : 'default', opacity: wageSelectMode && isPaid ? 0.5 : 1 }}>
+                  style={{ background: bgColor, borderRadius: 12, border: `1px solid ${isSelected ? '#e8692e' : isPaid ? '#C8E6C9' : isOff ? '#F0A0A0' : '#e4d9c8'}`, borderLeft: `4px solid ${borderLeftColor}`, padding: '12px 14px', marginBottom: 8, cursor: canSelect ? 'pointer' : 'default', opacity: wageSelectMode && isPaid ? 0.5 : 1 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       {wageSelectMode && !isOff && (
-                        <div style={{ width: 22, height: 22, borderRadius: 6, border: `2px solid ${isPaid ? '#B0BEC5' : isSelected ? '#DC743C' : '#C9A24B'}`, background: isSelected ? '#DC743C' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: '#fff', fontSize: 14, fontWeight: 700 }}>
+                        <div style={{ width: 22, height: 22, borderRadius: 6, border: `2px solid ${isPaid ? '#B0BEC5' : isSelected ? '#e8692e' : '#e8692e'}`, background: isSelected ? '#e8692e' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: '#fff', fontSize: 14, fontWeight: 700 }}>
                           {isSelected ? '✓' : ''}
                         </div>
                       )}
-                      <div style={{ fontWeight: 700, fontSize: 14, color: '#2A2118' }}>{fmtThDate(e.date)}</div>
+                      <div style={{ fontWeight: 700, fontSize: 14, color: '#241009' }}>{fmtThDate(e.date)}</div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      {isPaid && <span style={{ fontSize: 10, fontWeight: 700, color: '#2E7D32', background: '#E8F5E9', borderRadius: 4, padding: '2px 6px' }}>✓ จ่ายแล้ว</span>}
-                      {!isOff && <div style={{ fontWeight: 700, fontSize: 15, color: isPaid ? '#2E7D32' : isSelected ? '#DC743C' : '#5B3A29' }}>฿{dayTotal.toLocaleString()}</div>}
+                      {isPaid && <span style={{ fontSize: 10, fontWeight: 700, color: '#2f9b58', background: '#e6f3ea', borderRadius: 4, padding: '2px 6px' }}>✓ จ่ายแล้ว</span>}
+                      {!isOff && <div style={{ fontWeight: 700, fontSize: 15, color: isPaid ? '#2f9b58' : isSelected ? '#e8692e' : '#3a2718' }}>฿{dayTotal.toLocaleString()}</div>}
                       {!wageSelectMode && (
-                        <button onClick={e2 => { e2.stopPropagation(); handleDeleteEarning(e.id); }} style={{ background: 'none', border: '1px solid #E4D7BC', borderRadius: 7, padding: '3px 8px', fontSize: 12, color: '#9A8662', cursor: 'pointer' }}>🗑</button>
+                        <button onClick={e2 => { e2.stopPropagation(); handleDeleteEarning(e.id); }} style={{ background: 'none', border: '1px solid #e4d9c8', borderRadius: 7, padding: '3px 8px', fontSize: 12, color: '#8a7767', cursor: 'pointer' }}>🗑</button>
                       )}
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                     {(e.base || 0) > 0
-                      ? <span style={{ background: '#F5EFE4', borderRadius: 6, padding: '2px 8px', fontSize: 11, color: '#5B3A29' }}>📅 ฿{e.base}</span>
+                      ? <span style={{ background: '#f6f0e7', borderRadius: 6, padding: '2px 8px', fontSize: 11, color: '#3a2718' }}>📅 ฿{e.base}</span>
                       : <span style={{ background: '#FFF0F0', borderRadius: 6, padding: '2px 8px', fontSize: 11, color: '#C0392B' }}>📅 ไม่นับค่าแรง</span>
                     }
                     {e.bonus > 0 && <span style={{ background: '#F3E8FF', borderRadius: 6, padding: '2px 8px', fontSize: 11, color: '#7B3FA0' }}>🎁 ฿{e.bonus}</span>}
@@ -4796,7 +4796,7 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
 
             {/* Sticky bottom bar when selecting */}
             {wageSelectMode && selectedWageDates.size > 0 && (
-              <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: '#5B3A29', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', zIndex: 200 }}>
+              <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: '#3a2718', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', zIndex: 200 }}>
                 <div style={{ color: '#FFF6ED' }}>
                   <div style={{ fontSize: 12 }}>{selectedWageDates.size} วัน</div>
                   <div style={{ fontSize: 16, fontWeight: 700 }}>฿{selWageTotal.toLocaleString()}</div>
@@ -4805,7 +4805,7 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
                   const selected = earnings.filter(e => selectedWageDates.has(e.date));
                   setPendingWageRecords(selected);
                   setShowWagePaySlip(true);
-                }} style={{ background: '#DC743C', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 20px', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+                }} style={{ background: '#e8692e', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 20px', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
                   📄 ออกบิล
                 </button>
               </div>
@@ -4818,14 +4818,14 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
       {tab === 'paid' && (
         <div style={{ padding: '10px 12px' }}>
           <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
-            {balance > 0 && <button onClick={() => { setShowPayForm(true); setPayAmount(String(balance)); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={{ flex: 1, background: '#2E7D32', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>💸 จ่ายทั้งหมด</button>}
-            <button onClick={() => { setShowPeriodPay(v => !v); setPeriodFrom(''); setPeriodTo(''); }} style={{ flex: 1, background: showPeriodPay ? '#5B3A29' : '#fff', color: showPeriodPay ? '#fff' : '#5B3A29', border: '1px solid #5B3A29', borderRadius: 10, padding: '10px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>📆 จ่ายช่วงเวลา</button>
-            <button onClick={() => setShowPaySlip(true)} style={{ background: '#fff', color: '#9A8662', border: '1px solid #E4D7BC', borderRadius: 10, padding: '10px 12px', fontSize: 13, cursor: 'pointer' }}>📋</button>
+            {balance > 0 && <button onClick={() => { setShowPayForm(true); setPayAmount(String(balance)); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={{ flex: 1, background: '#2f9b58', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>💸 จ่ายทั้งหมด</button>}
+            <button onClick={() => { setShowPeriodPay(v => !v); setPeriodFrom(''); setPeriodTo(''); }} style={{ flex: 1, background: showPeriodPay ? '#3a2718' : '#fff', color: showPeriodPay ? '#fff' : '#3a2718', border: '1px solid #3a2718', borderRadius: 10, padding: '10px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>📆 จ่ายช่วงเวลา</button>
+            <button onClick={() => setShowPaySlip(true)} style={{ background: '#fff', color: '#8a7767', border: '1px solid #e4d9c8', borderRadius: 10, padding: '10px 12px', fontSize: 13, cursor: 'pointer' }}>📋</button>
           </div>
 
           {/* Advance pay button row */}
           <div style={{ marginBottom: 10 }}>
-            <button onClick={() => { setShowAdvanceForm(v => !v); setAdvanceAmount(''); }} style={{ width: '100%', background: showAdvanceForm ? '#5B3A29' : '#FFF8F0', color: showAdvanceForm ? '#fff' : '#B85C00', border: '1px solid #F5CBA7', borderRadius: 10, padding: '10px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+            <button onClick={() => { setShowAdvanceForm(v => !v); setAdvanceAmount(''); }} style={{ width: '100%', background: showAdvanceForm ? '#3a2718' : '#FFF8F0', color: showAdvanceForm ? '#fff' : '#B85C00', border: '1px solid #F5CBA7', borderRadius: 10, padding: '10px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
               🏧 เบิกล่วงหน้า
             </button>
           </div>
@@ -4842,7 +4842,7 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
               {/* Slip upload */}
               <input ref={advanceSlipRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => setAdvanceSlip(e.target.files[0] || null)} />
               <button onClick={() => advanceSlipRef.current?.click()}
-                style={{ width: '100%', background: advanceSlip ? '#E8F5E9' : '#FFF', border: `1.5px solid ${advanceSlip ? '#4CAF50' : '#F5CBA7'}`, borderRadius: 9, padding: '9px 12px', fontSize: 13, color: advanceSlip ? '#2E7D32' : '#9A8662', cursor: 'pointer', marginBottom: 10, textAlign: 'left' }}>
+                style={{ width: '100%', background: advanceSlip ? '#e6f3ea' : '#FFF', border: `1.5px solid ${advanceSlip ? '#4CAF50' : '#F5CBA7'}`, borderRadius: 9, padding: '9px 12px', fontSize: 13, color: advanceSlip ? '#2f9b58' : '#8a7767', cursor: 'pointer', marginBottom: 10, textAlign: 'left' }}>
                 {advanceSlip ? `📎 ${advanceSlip.name}` : '📎 แนบสลิป (ไม่บังคับ)'}
               </button>
               <button
@@ -4861,36 +4861,36 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
 
           {/* Period pay form */}
           {showPeriodPay && (
-            <div style={{ background: '#fff', borderRadius: 14, border: '1px solid #E4D7BC', padding: '14px', marginBottom: 12 }}>
-              <div style={{ fontWeight: 700, fontSize: 13, color: '#2A2118', marginBottom: 10 }}>📆 เลือกช่วงเวลาที่จ่าย</div>
+            <div style={{ background: '#fff', borderRadius: 14, border: '1px solid #e4d9c8', padding: '14px', marginBottom: 12 }}>
+              <div style={{ fontWeight: 700, fontSize: 13, color: '#241009', marginBottom: 10 }}>📆 เลือกช่วงเวลาที่จ่าย</div>
               <div style={{ display: 'flex', gap: 8, marginBottom: 12, alignItems: 'center' }}>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 10, color: '#9A8662', marginBottom: 3 }}>จาก</div>
+                  <div style={{ fontSize: 10, color: '#8a7767', marginBottom: 3 }}>จาก</div>
                   <input type="date" value={periodFrom} onChange={e => setPeriodFrom(e.target.value)}
-                    style={{ width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 9, padding: '8px 10px', fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
+                    style={{ width: '100%', border: '1.5px solid #e4d9c8', borderRadius: 9, padding: '8px 10px', fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
                 </div>
-                <span style={{ color: '#9A8662', marginTop: 14 }}>–</span>
+                <span style={{ color: '#8a7767', marginTop: 14 }}>–</span>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 10, color: '#9A8662', marginBottom: 3 }}>ถึง</div>
+                  <div style={{ fontSize: 10, color: '#8a7767', marginBottom: 3 }}>ถึง</div>
                   <input type="date" value={periodTo} onChange={e => setPeriodTo(e.target.value)}
-                    style={{ width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 9, padding: '8px 10px', fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
+                    style={{ width: '100%', border: '1.5px solid #e4d9c8', borderRadius: 9, padding: '8px 10px', fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
                 </div>
               </div>
 
               {periodSummary && periodFrom && periodTo && (
                 <>
                   {/* Period summary card */}
-                  <div style={{ background: '#F9F5EC', borderRadius: 12, border: '1px solid #E4D7BC', padding: '12px 14px', marginBottom: 12 }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: '#B7A684', marginBottom: 8 }}>
+                  <div style={{ background: '#F9F5EC', borderRadius: 12, border: '1px solid #e4d9c8', padding: '12px 14px', marginBottom: 12 }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: '#b9a88f', marginBottom: 8 }}>
                       สรุป {new Date(periodFrom+'T12:00').toLocaleDateString('th-TH', { day:'numeric', month:'short' })} – {new Date(periodTo+'T12:00').toLocaleDateString('th-TH', { day:'numeric', month:'short', year:'2-digit' })}
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
-                        <span style={{ color: '#5B3A29' }}>📅 รายวัน ({periodSummary.days} วัน)</span>
+                        <span style={{ color: '#3a2718' }}>📅 รายวัน ({periodSummary.days} วัน)</span>
                         <span style={{ fontWeight: 600 }}>฿{periodSummary.base.toLocaleString()}</span>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
-                        <span style={{ color: '#E65100' }}>📦 ค่าคอม ({periodSummary.kg % 1 === 0 ? periodSummary.kg : periodSummary.kg.toFixed(1)} กก.)</span>
+                        <span style={{ color: '#c4491c' }}>📦 ค่าคอม ({periodSummary.kg % 1 === 0 ? periodSummary.kg : periodSummary.kg.toFixed(1)} กก.)</span>
                         <span style={{ fontWeight: 600 }}>฿{periodSummary.comm.toLocaleString()}</span>
                       </div>
                       {periodSummary.bonus > 0 && (
@@ -4899,7 +4899,7 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
                           <span style={{ fontWeight: 600 }}>฿{periodSummary.bonus.toLocaleString()}</span>
                         </div>
                       )}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 15, fontWeight: 700, borderTop: '1px solid #E4D7BC', paddingTop: 8, marginTop: 4, color: '#2A2118' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 15, fontWeight: 700, borderTop: '1px solid #e4d9c8', paddingTop: 8, marginTop: 4, color: '#241009' }}>
                         <span>รวม</span><span>฿{periodSummary.total.toLocaleString()}</span>
                       </div>
                     </div>
@@ -4909,7 +4909,7 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
                   <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
                     <input value={payNote} onChange={e => setPayNote(e.target.value)}
                       placeholder={`ค่าแรง ${new Date(periodFrom+'T12:00').toLocaleDateString('th-TH', { day:'numeric', month:'short' })} – ${new Date(periodTo+'T12:00').toLocaleDateString('th-TH', { day:'numeric', month:'short' })}`}
-                      style={{ flex: 1, border: '1.5px solid #E4D7BC', borderRadius: 9, padding: '9px 12px', fontSize: 13, outline: 'none' }} />
+                      style={{ flex: 1, border: '1.5px solid #e4d9c8', borderRadius: 9, padding: '9px 12px', fontSize: 13, outline: 'none' }} />
                   </div>
                   <button
                     onClick={async () => {
@@ -4925,38 +4925,38 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
                       setSaving(false);
                     }}
                     disabled={saving || periodSummary.total === 0}
-                    style={{ width: '100%', background: periodSummary.total > 0 ? '#2E7D32' : '#ccc', color: '#fff', border: 'none', borderRadius: 10, padding: '12px 0', fontSize: 14, fontWeight: 700, cursor: periodSummary.total > 0 ? 'pointer' : 'default' }}>
+                    style={{ width: '100%', background: periodSummary.total > 0 ? '#2f9b58' : '#ccc', color: '#fff', border: 'none', borderRadius: 10, padding: '12px 0', fontSize: 14, fontWeight: 700, cursor: periodSummary.total > 0 ? 'pointer' : 'default' }}>
                     {saving ? '...' : `✓ จ่าย ฿${periodSummary.total.toLocaleString()}`}
                   </button>
                 </>
               )}
               {periodFrom && periodTo && periodSummary && periodSummary.total === 0 && (
-                <div style={{ textAlign: 'center', color: '#B7A684', fontSize: 13, padding: '12px 0' }}>ไม่มีข้อมูลค่าแรงในช่วงนี้</div>
+                <div style={{ textAlign: 'center', color: '#b9a88f', fontSize: 13, padding: '12px 0' }}>ไม่มีข้อมูลค่าแรงในช่วงนี้</div>
               )}
             </div>
           )}
 
           <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
-            <button onClick={() => setShowWageSlip(true)} style={{ flex: 1, background: '#F5EFE4', color: '#5B3A29', border: '1px solid #D0C8BC', borderRadius: 10, padding: '9px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>🖨️ บิลค่าแรง+โบนัส</button>
-            <button onClick={() => setShowCommSlip(true)} style={{ flex: 1, background: '#FFF3E0', color: '#BF360C', border: '1px solid #FFCC80', borderRadius: 10, padding: '9px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>🖨️ บิลค่าคอม</button>
+            <button onClick={() => setShowWageSlip(true)} style={{ flex: 1, background: '#f6f0e7', color: '#3a2718', border: '1px solid #D0C8BC', borderRadius: 10, padding: '9px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>🖨️ บิลค่าแรง+โบนัส</button>
+            <button onClick={() => setShowCommSlip(true)} style={{ flex: 1, background: '#fce0d0', color: '#BF360C', border: '1px solid #FFCC80', borderRadius: 10, padding: '9px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>🖨️ บิลค่าคอม</button>
           </div>
-          {payments.length === 0 && !loadingLedger && <div style={{ textAlign: 'center', color: '#B7A684', padding: 32 }}>ยังไม่มีรายการจ่าย</div>}
+          {payments.length === 0 && !loadingLedger && <div style={{ textAlign: 'center', color: '#b9a88f', padding: 32 }}>ยังไม่มีรายการจ่าย</div>}
           {payments.map(p => {
             const isEditing = editingPayment?.id === p.id;
             const isCommBill = p.note && p.note.startsWith('COMM_BILLS:');
             const isAdvance = p.note === 'เบิกล่วงหน้า';
-            const leftColor = isCommBill ? '#E65100' : isAdvance ? '#F57C00' : '#2E7D32';
+            const leftColor = isCommBill ? '#c4491c' : isAdvance ? '#F57C00' : '#2f9b58';
             return (
-              <div key={p.id} style={{ background: isAdvance ? '#FFF8F0' : '#fff', borderRadius: 12, border: `1px solid ${isEditing ? '#DC743C' : isAdvance ? '#F5CBA7' : '#E4D7BC'}`, borderLeft: `4px solid ${leftColor}`, padding: '12px 14px', marginBottom: 8 }}>
+              <div key={p.id} style={{ background: isAdvance ? '#FFF8F0' : '#fff', borderRadius: 12, border: `1px solid ${isEditing ? '#e8692e' : isAdvance ? '#F5CBA7' : '#e4d9c8'}`, borderLeft: `4px solid ${leftColor}`, padding: '12px 14px', marginBottom: 8 }}>
                 {isEditing ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 2 }}>{fmtThDate(p.paid_date)}</div>
+                    <div style={{ fontSize: 11, color: '#8a7767', marginBottom: 2 }}>{fmtThDate(p.paid_date)}</div>
                     <div style={{ display: 'flex', gap: 8 }}>
                       <input type="number" value={editPayAmount} onChange={e => setEditPayAmount(e.target.value)}
-                        placeholder="จำนวนเงิน" style={{ flex: 1, border: '1.5px solid #E4D7BC', borderRadius: 8, padding: '8px 10px', fontSize: 14, outline: 'none' }} />
+                        placeholder="จำนวนเงิน" style={{ flex: 1, border: '1.5px solid #e4d9c8', borderRadius: 8, padding: '8px 10px', fontSize: 14, outline: 'none' }} />
                       {!isCommBill && (
                         <input value={editPayNote} onChange={e => setEditPayNote(e.target.value)}
-                          placeholder="หมายเหตุ" style={{ flex: 1, border: '1.5px solid #E4D7BC', borderRadius: 8, padding: '8px 10px', fontSize: 13, outline: 'none' }} />
+                          placeholder="หมายเหตุ" style={{ flex: 1, border: '1.5px solid #e4d9c8', borderRadius: 8, padding: '8px 10px', fontSize: 13, outline: 'none' }} />
                       )}
                     </div>
                     <div style={{ display: 'flex', gap: 8 }}>
@@ -4969,10 +4969,10 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
                           setEditingPayment(null);
                         } catch { alert('แก้ไขไม่สำเร็จ'); }
                         setSaving(false);
-                      }} disabled={saving} style={{ flex: 2, background: '#2E7D32', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 0', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                      }} disabled={saving} style={{ flex: 2, background: '#2f9b58', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 0', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
                         {saving ? '...' : '✓ บันทึก'}
                       </button>
-                      <button onClick={() => setEditingPayment(null)} style={{ flex: 1, background: '#F5EFE4', color: '#5B3A29', border: '1px solid #E4D7BC', borderRadius: 8, padding: '8px 0', fontSize: 13, cursor: 'pointer' }}>ยกเลิก</button>
+                      <button onClick={() => setEditingPayment(null)} style={{ flex: 1, background: '#f6f0e7', color: '#3a2718', border: '1px solid #e4d9c8', borderRadius: 8, padding: '8px 0', fontSize: 13, cursor: 'pointer' }}>ยกเลิก</button>
                       <button onClick={async () => {
                         if (!confirm('ลบรายการนี้?')) return;
                         setSaving(true);
@@ -4984,13 +4984,13 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
                 ) : (
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
-                      <div style={{ fontWeight: 700, fontSize: 14, color: '#2A2118' }}>{fmtThDate(p.paid_date)}</div>
-                      {p.note && <div style={{ fontSize: 11, color: '#9A8662', marginTop: 2 }}>{fmtPayNote(p.note)}</div>}
+                      <div style={{ fontWeight: 700, fontSize: 14, color: '#241009' }}>{fmtThDate(p.paid_date)}</div>
+                      {p.note && <div style={{ fontSize: 11, color: '#8a7767', marginTop: 2 }}>{fmtPayNote(p.note)}</div>}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <div style={{ fontWeight: 700, fontSize: 16, color: leftColor }}>฿{(p.amount||0).toLocaleString()}</div>
                       <button onClick={() => { setEditingPayment(p); setEditPayAmount(String(p.amount || '')); setEditPayNote(p.note && !isCommBill ? p.note : ''); }}
-                        style={{ background: '#F5EFE4', border: '1px solid #E4D7BC', borderRadius: 7, padding: '4px 10px', fontSize: 12, color: '#7A6450', cursor: 'pointer' }}>แก้</button>
+                        style={{ background: '#f6f0e7', border: '1px solid #e4d9c8', borderRadius: 7, padding: '4px 10px', fontSize: 12, color: '#6b4a38', cursor: 'pointer' }}>แก้</button>
                     </div>
                   </div>
                 )}
@@ -5003,20 +5003,20 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
       {/* Tab: ลูกค้า */}
       {tab === 'customers' && (
         <div style={{ padding: '10px 12px' }}>
-          {phones.length === 0 && <div style={{ textAlign: 'center', color: '#B7A684', padding: 32 }}>ไม่มีลูกค้า</div>}
+          {phones.length === 0 && <div style={{ textAlign: 'center', color: '#b9a88f', padding: 32 }}>ไม่มีลูกค้า</div>}
           {phones.map(phone => {
             const c = customers[phone];
             const stat = customerStat(phone, history, verified);
             const tier = stat ? stat.effectiveTier : null;
             return (
-              <button key={phone} onClick={() => onOpenCustomer(phone)} style={{ width: '100%', textAlign: 'left', border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 14, padding: '14px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+              <button key={phone} onClick={() => onOpenCustomer(phone)} style={{ width: '100%', textAlign: 'left', border: '1px solid #e4d9c8', background: '#ffffff', borderRadius: 14, padding: '14px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
                 <div style={{ width: 40, height: 40, borderRadius: 10, background: '#F0E4C8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>👤</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 600, fontSize: 15, color: '#4A3526' }}>{c?.name || '—'}</div>
-                  <div style={{ fontSize: 12, color: '#9A8662' }}>{phone}</div>
+                  <div style={{ fontWeight: 600, fontSize: 15, color: '#3a2718' }}>{c?.name || '—'}</div>
+                  <div style={{ fontSize: 12, color: '#8a7767' }}>{phone}</div>
                   {tier && tier.key !== 'silver' && <TierBadge tier={tier} />}
                 </div>
-                <span style={{ color: '#C9A24B', fontSize: 18 }}>›</span>
+                <span style={{ color: '#e8692e', fontSize: 18 }}>›</span>
               </button>
             );
           })}
@@ -5050,10 +5050,10 @@ function CustomerDetailView({ phone, history, verified, supervisors, vehiclePlat
   return (
     <div style={{ flex: 1, maxWidth: 720, width: '100%', margin: '0 auto', padding: '14px 14px 40px' }}>
       <div style={{ marginBottom: 14 }}>
-        <button onClick={onGoBack} style={{ border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 10, padding: '8px 12px', fontSize: 13, color: '#7A6450', cursor: 'pointer' }}>‹ ทะเบียน</button>
+        <button onClick={onGoBack} style={{ border: '1px solid #e4d9c8', background: '#ffffff', borderRadius: 10, padding: '8px 12px', fontSize: 13, color: '#6b4a38', cursor: 'pointer' }}>‹ ทะเบียน</button>
       </div>
 
-      <div style={{ background: 'linear-gradient(135deg,#5C4326,#3F2D1E)', borderRadius: 20, padding: '24px 20px', color: '#F6EEDD', marginBottom: 14 }}>
+      <div style={{ background: 'linear-gradient(135deg,#5C4326,#26190f)', borderRadius: 20, padding: '24px 20px', color: '#fffbf4', marginBottom: 14 }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, marginBottom: 16 }}>
           <div style={{ width: 56, height: 56, borderRadius: 14, background: 'rgba(255,255,255,.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, flexShrink: 0 }}>👤</div>
           <div>
@@ -5073,7 +5073,7 @@ function CustomerDetailView({ phone, history, verified, supervisors, vehiclePlat
               <span>{tier.label}</span><span>{stat.next.label}</span>
             </div>
             <div style={{ height: 7, background: 'rgba(255,255,255,.2)', borderRadius: 4, overflow: 'hidden' }}>
-              <div style={{ width: `${pct}%`, height: '100%', background: '#C9A24B', borderRadius: 4 }} />
+              <div style={{ width: `${pct}%`, height: '100%', background: '#e8692e', borderRadius: 4 }} />
             </div>
           </div>
         )}
@@ -5083,7 +5083,7 @@ function CustomerDetailView({ phone, history, verified, supervisors, vehiclePlat
         <div style={{ background: '#FBF3DF', border: '1px solid #E6CF94', borderRadius: 14, padding: '15px 16px', marginBottom: 12 }}>
           <div style={{ fontWeight: 600, fontSize: 14, color: '#A07410' }}>⚑ ถึงเกณฑ์ {rawTier.label} แล้ว — รอยืนยันชื่อ</div>
           <p style={{ margin: '6px 0 12px', fontSize: 12.5, color: '#9A7A3C', lineHeight: 1.6 }}>ระดับ Gold ขึ้นไปต้องยืนยันชื่อ-นามสกุลให้ตรงกับบัตรประชาชนก่อน</p>
-          <button onClick={() => onOpenVerify(phone)} style={{ border: 'none', borderRadius: 11, padding: '12px 18px', background: 'linear-gradient(135deg,#C9A24B,#A8763E)', color: '#fff', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>ยืนยันชื่อตอนนี้</button>
+          <button onClick={() => onOpenVerify(phone)} style={{ border: 'none', borderRadius: 11, padding: '12px 18px', background: 'linear-gradient(135deg,#e8692e,#A8763E)', color: '#fff', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>ยืนยันชื่อตอนนี้</button>
         </div>
       )}
       {verifiedName && (
@@ -5093,91 +5093,91 @@ function CustomerDetailView({ phone, history, verified, supervisors, vehiclePlat
         </div>
       )}
 
-      <div style={{ background: '#FBF6EC', border: '1px solid #E4D7BC', borderRadius: 14, padding: '14px 16px', marginBottom: 12 }}>
+      <div style={{ background: '#fbf7f1', border: '1px solid #e4d9c8', borderRadius: 14, padding: '14px 16px', marginBottom: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: editSupervisor ? 10 : 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ fontSize: 16 }}>👤</span>
-            <span style={{ fontSize: 13, color: '#4A3526' }}>
-              ผู้ดูแล: <b>{currentSupervisor || <span style={{ color: '#B7A684', fontWeight: 400 }}>ยังไม่มี</span>}</b>
+            <span style={{ fontSize: 13, color: '#3a2718' }}>
+              ผู้ดูแล: <b>{currentSupervisor || <span style={{ color: '#b9a88f', fontWeight: 400 }}>ยังไม่มี</span>}</b>
             </span>
           </div>
-          <button onClick={() => { setEditSupervisor(v => !v); setSupDraft(currentSupervisor); }} style={{ border: '1px solid #D8C8A8', background: '#F3E9D2', borderRadius: 9, padding: '5px 10px', fontSize: 12, color: '#7A5A22', cursor: 'pointer' }}>
+          <button onClick={() => { setEditSupervisor(v => !v); setSupDraft(currentSupervisor); }} style={{ border: '1px solid #d5c8b4', background: '#f3ece0', borderRadius: 9, padding: '5px 10px', fontSize: 12, color: '#c4491c', cursor: 'pointer' }}>
             {editSupervisor ? 'ยกเลิก' : 'แก้ไข'}
           </button>
         </div>
         {editSupervisor && (
           <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
-            <input value={supDraft} onChange={e => setSupDraft(e.target.value)} placeholder="ชื่อผู้ดูแล" style={{ flex: 1, border: '1.5px solid #E4D7BC', borderRadius: 10, padding: '10px 12px', fontSize: 14, color: '#3F2D1E', outline: 'none' }} />
-            <button onClick={() => { onSaveSupervisor(phone, supDraft.trim()); setEditSupervisor(false); }} style={{ border: 'none', background: '#3F2D1E', color: '#F6EEDD', borderRadius: 10, padding: '10px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>บันทึก</button>
+            <input value={supDraft} onChange={e => setSupDraft(e.target.value)} placeholder="ชื่อผู้ดูแล" style={{ flex: 1, border: '1.5px solid #e4d9c8', borderRadius: 10, padding: '10px 12px', fontSize: 14, color: '#26190f', outline: 'none' }} />
+            <button onClick={() => { onSaveSupervisor(phone, supDraft.trim()); setEditSupervisor(false); }} style={{ border: 'none', background: '#26190f', color: '#fffbf4', borderRadius: 10, padding: '10px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>บันทึก</button>
           </div>
         )}
       </div>
 
       {/* ทะเบียนรถ */}
-      <div style={{ background: '#FBF6EC', border: '1px solid #E4D7BC', borderRadius: 14, padding: '14px 16px', marginBottom: 12 }}>
-        <div style={{ fontSize: 13, color: '#4A3526', fontWeight: 600, marginBottom: allPlates.length ? 8 : 0 }}>🚗 ทะเบียนรถ</div>
+      <div style={{ background: '#fbf7f1', border: '1px solid #e4d9c8', borderRadius: 14, padding: '14px 16px', marginBottom: 12 }}>
+        <div style={{ fontSize: 13, color: '#3a2718', fontWeight: 600, marginBottom: allPlates.length ? 8 : 0 }}>🚗 ทะเบียนรถ</div>
         {allPlates.length > 0
           ? <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-              {allPlates.map((p, i) => <span key={i} style={{ background: '#FFF3E0', border: '1px solid #FFB74D', borderRadius: 8, padding: '3px 10px', fontSize: 13, fontWeight: 600, color: '#BF360C' }}>{p}</span>)}
+              {allPlates.map((p, i) => <span key={i} style={{ background: '#fce0d0', border: '1px solid #FFB74D', borderRadius: 8, padding: '3px 10px', fontSize: 13, fontWeight: 600, color: '#BF360C' }}>{p}</span>)}
             </div>
-          : <div style={{ fontSize: 12, color: '#B7A684' }}>ยังไม่มีทะเบียน</div>}
+          : <div style={{ fontSize: 12, color: '#b9a88f' }}>ยังไม่มีทะเบียน</div>}
       </div>
 
       {/* บัญชีธนาคาร */}
-      <div style={{ background: '#FBF6EC', border: '1px solid #E4D7BC', borderRadius: 14, padding: '14px 16px', marginBottom: 12 }}>
+      <div style={{ background: '#fbf7f1', border: '1px solid #e4d9c8', borderRadius: 14, padding: '14px 16px', marginBottom: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: editInfo ? 10 : 0 }}>
-          <div style={{ fontSize: 13, color: '#4A3526', fontWeight: 600 }}>🏦 บัญชีธนาคาร</div>
-          <button onClick={() => { setEditInfo(v => !v); setInfoDraft({ bankName: info.bankName || '', bankAccount: info.bankAccount || '', fullName: info.fullName || '', note: info.note || '' }); }} style={{ border: '1px solid #D8C8A8', background: '#F3E9D2', borderRadius: 9, padding: '5px 10px', fontSize: 12, color: '#7A5A22', cursor: 'pointer' }}>
+          <div style={{ fontSize: 13, color: '#3a2718', fontWeight: 600 }}>🏦 บัญชีธนาคาร</div>
+          <button onClick={() => { setEditInfo(v => !v); setInfoDraft({ bankName: info.bankName || '', bankAccount: info.bankAccount || '', fullName: info.fullName || '', note: info.note || '' }); }} style={{ border: '1px solid #d5c8b4', background: '#f3ece0', borderRadius: 9, padding: '5px 10px', fontSize: 12, color: '#c4491c', cursor: 'pointer' }}>
             {editInfo ? 'ยกเลิก' : 'แก้ไข'}
           </button>
         </div>
         {!editInfo && (
           info.bankAccount
-            ? <div style={{ fontSize: 13, color: '#3F2D1E', marginTop: 6 }}>
+            ? <div style={{ fontSize: 13, color: '#26190f', marginTop: 6 }}>
                 {info.fullName && <div style={{ fontWeight: 600, marginBottom: 2 }}>{info.fullName}</div>}
-                {info.bankName && <span style={{ color: '#7A5A22', marginRight: 6 }}>{info.bankName}</span>}
+                {info.bankName && <span style={{ color: '#c4491c', marginRight: 6 }}>{info.bankName}</span>}
                 <span style={{ fontFamily: 'Prompt', fontWeight: 600, letterSpacing: '.06em' }}>{info.bankAccount}</span>
-                {info.note && <div style={{ fontSize: 11, color: '#9A8662', marginTop: 3 }}>{info.note}</div>}
+                {info.note && <div style={{ fontSize: 11, color: '#8a7767', marginTop: 3 }}>{info.note}</div>}
               </div>
-            : <div style={{ fontSize: 12, color: '#B7A684', marginTop: 4 }}>ยังไม่มีข้อมูล</div>
+            : <div style={{ fontSize: 12, color: '#b9a88f', marginTop: 4 }}>ยังไม่มีข้อมูล</div>
         )}
         {editInfo && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <input value={infoDraft.fullName} onChange={e => setInfoDraft(d => ({ ...d, fullName: e.target.value }))} placeholder="ชื่อ-นามสกุลเจ้าของบัญชี" style={{ border: '1.5px solid #E4D7BC', borderRadius: 10, padding: '10px 12px', fontSize: 14, color: '#3F2D1E', outline: 'none' }} />
-            <select value={infoDraft.bankName} onChange={e => setInfoDraft(d => ({ ...d, bankName: e.target.value }))} style={{ border: '1.5px solid #E4D7BC', borderRadius: 10, padding: '10px 12px', fontSize: 14, color: infoDraft.bankName ? '#3F2D1E' : '#9A8662', outline: 'none', appearance: 'none', WebkitAppearance: 'none', background: '#FBF6EC url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'10\' height=\'6\'%3E%3Cpath fill=\'%239A8662\' d=\'M5 6L0 0h10z\'/%3E%3C/svg%3E") no-repeat right 12px center', paddingRight: 32 }}>
+            <input value={infoDraft.fullName} onChange={e => setInfoDraft(d => ({ ...d, fullName: e.target.value }))} placeholder="ชื่อ-นามสกุลเจ้าของบัญชี" style={{ border: '1.5px solid #e4d9c8', borderRadius: 10, padding: '10px 12px', fontSize: 14, color: '#26190f', outline: 'none' }} />
+            <select value={infoDraft.bankName} onChange={e => setInfoDraft(d => ({ ...d, bankName: e.target.value }))} style={{ border: '1.5px solid #e4d9c8', borderRadius: 10, padding: '10px 12px', fontSize: 14, color: infoDraft.bankName ? '#26190f' : '#8a7767', outline: 'none', appearance: 'none', WebkitAppearance: 'none', background: '#fbf7f1 url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'10\' height=\'6\'%3E%3Cpath fill=\'%239A8662\' d=\'M5 6L0 0h10z\'/%3E%3C/svg%3E") no-repeat right 12px center', paddingRight: 32 }}>
               <option value="">เลือกธนาคาร</option>
               {THAI_BANKS.map(b => <option key={b} value={b}>{b}</option>)}
             </select>
-            <input value={infoDraft.bankAccount} onChange={e => setInfoDraft(d => ({ ...d, bankAccount: e.target.value }))} placeholder="เลขบัญชี / เบอร์พร้อมเพย์" style={{ border: '1.5px solid #E4D7BC', borderRadius: 10, padding: '10px 12px', fontSize: 14, fontFamily: 'Prompt', letterSpacing: '.06em', color: '#3F2D1E', outline: 'none' }} />
-            <input value={infoDraft.note} onChange={e => setInfoDraft(d => ({ ...d, note: e.target.value }))} placeholder="หมายเหตุ (ไม่บังคับ)" style={{ border: '1.5px solid #E4D7BC', borderRadius: 10, padding: '10px 12px', fontSize: 13, color: '#3F2D1E', outline: 'none' }} />
-            <button onClick={() => { onSaveCustomerInfo(phone, infoDraft); setEditInfo(false); }} style={{ border: 'none', background: '#3F2D1E', color: '#F6EEDD', borderRadius: 10, padding: '12px 0', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>บันทึก</button>
+            <input value={infoDraft.bankAccount} onChange={e => setInfoDraft(d => ({ ...d, bankAccount: e.target.value }))} placeholder="เลขบัญชี / เบอร์พร้อมเพย์" style={{ border: '1.5px solid #e4d9c8', borderRadius: 10, padding: '10px 12px', fontSize: 14, fontFamily: 'Prompt', letterSpacing: '.06em', color: '#26190f', outline: 'none' }} />
+            <input value={infoDraft.note} onChange={e => setInfoDraft(d => ({ ...d, note: e.target.value }))} placeholder="หมายเหตุ (ไม่บังคับ)" style={{ border: '1.5px solid #e4d9c8', borderRadius: 10, padding: '10px 12px', fontSize: 13, color: '#26190f', outline: 'none' }} />
+            <button onClick={() => { onSaveCustomerInfo(phone, infoDraft); setEditInfo(false); }} style={{ border: 'none', background: '#26190f', color: '#fffbf4', borderRadius: 10, padding: '12px 0', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>บันทึก</button>
           </div>
         )}
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '22px 0 12px' }}>
-        <span style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 13, letterSpacing: '.14em', color: '#A6925E' }}>บิลของลูกค้ารายนี้</span>
-        <div style={{ flex: 1, height: 1, background: '#E4D7BC' }} />
+        <span style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 13, letterSpacing: '.14em', color: '#a99a88' }}>บิลของลูกค้ารายนี้</span>
+        <div style={{ flex: 1, height: 1, background: '#e4d9c8' }} />
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {bills.map((h, i) => {
           const pay = payments?.[h.billNo];
           const status = pay?.status || 'unpaid';
-          const borderColor = status === 'transferred' ? '#5A9A6A' : status === 'cash' ? '#5A7FA8' : '#E4D7BC';
+          const borderColor = status === 'transferred' ? '#5A9A6A' : status === 'cash' ? '#5A7FA8' : '#e4d9c8';
           const statusLabel = status === 'transferred' ? '✓ โอนแล้ว' : status === 'cash' ? '✓ เงินสด' : null;
-          const statusColor = status === 'transferred' ? '#2E7D32' : status === 'cash' ? '#1A4D80' : null;
+          const statusColor = status === 'transferred' ? '#2f9b58' : status === 'cash' ? '#1A4D80' : null;
           return (
-            <div key={i} style={{ border: `1.5px solid ${borderColor}`, background: '#FFFDF8', borderRadius: 13, overflow: 'hidden' }}>
+            <div key={i} style={{ border: `1.5px solid ${borderColor}`, background: '#ffffff', borderRadius: 13, overflow: 'hidden' }}>
               <button onClick={() => onOpenHistory(h)} style={{ textAlign: 'left', background: 'none', border: 'none', width: '100%', padding: '12px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{ width: 38, height: 38, borderRadius: 9, background: '#F0E4C8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, flexShrink: 0 }}>🧾</div>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ fontWeight: 600, fontSize: 14, color: '#4A3526' }}>{h.billNo}</span>
+                    <span style={{ fontWeight: 600, fontSize: 14, color: '#3a2718' }}>{h.billNo}</span>
                     {statusLabel && <span style={{ fontSize: 10, fontWeight: 700, color: statusColor }}>{statusLabel}</span>}
                   </div>
-                  <div style={{ fontSize: 12, color: '#9A8662' }}>{h.dateText} · {h.kg} กก.</div>
+                  <div style={{ fontSize: 12, color: '#8a7767' }}>{h.dateText} · {h.kg} กก.</div>
                 </div>
-                <span style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 15, color: '#3F2D1E' }}>฿{h.baht}</span>
+                <span style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 15, color: '#26190f' }}>฿{h.baht}</span>
               </button>
               {status === 'unpaid' && onPayment && (
                 <div style={{ display: 'flex', gap: 8, padding: '0 12px 10px' }}>
@@ -5194,7 +5194,7 @@ function CustomerDetailView({ phone, history, verified, supervisors, vehiclePlat
             </div>
           );
         })}
-        {bills.length === 0 && <div style={{ color: '#B7A684', fontSize: 14, textAlign: 'center', padding: '20px 0' }}>ยังไม่มีบิล</div>}
+        {bills.length === 0 && <div style={{ color: '#b9a88f', fontSize: 14, textAlign: 'center', padding: '20px 0' }}>ยังไม่มีบิล</div>}
       </div>
     </div>
   );
@@ -5207,36 +5207,36 @@ function SellerModal({ name, phone, supervisor, nameLocked, supervisorLocked, on
   const locked = nameLocked || supervisorLocked;
   return (
     <div className="no-print" style={{ position: 'fixed', inset: 0, zIndex: 55, background: 'rgba(42,33,24,.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 18, animation: 'fadeIn .2s' }}>
-      <div style={{ background: '#FFFDF8', borderRadius: 20, padding: 22, width: '100%', maxWidth: 360, animation: 'popIn .25s' }}>
-        <h3 style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 18, margin: '0 0 14px', color: '#4A3526' }}>ข้อมูลผู้ขาย</h3>
+      <div style={{ background: '#ffffff', borderRadius: 20, padding: 22, width: '100%', maxWidth: 360, animation: 'popIn .25s' }}>
+        <h3 style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 18, margin: '0 0 14px', color: '#3a2718' }}>ข้อมูลผู้ขาย</h3>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
-          <label style={{ fontSize: 12, color: '#A6925E' }}>ชื่อผู้ขาย / สวน {nameLocked && <span style={{ color: '#C9A24B' }}>🔒 จากประวัติ</span>}</label>
-          {locked && <button onClick={onUnlock} style={{ border: '1px solid #D8C8A8', background: '#F3E9D2', borderRadius: 8, padding: '3px 9px', fontSize: 11, color: '#7A5A22', cursor: 'pointer' }}>🔑 แก้ไข (Admin)</button>}
+          <label style={{ fontSize: 12, color: '#a99a88' }}>ชื่อผู้ขาย / สวน {nameLocked && <span style={{ color: '#e8692e' }}>🔒 จากประวัติ</span>}</label>
+          {locked && <button onClick={onUnlock} style={{ border: '1px solid #d5c8b4', background: '#f3ece0', borderRadius: 8, padding: '3px 9px', fontSize: 11, color: '#c4491c', cursor: 'pointer' }}>🔑 แก้ไข (Admin)</button>}
         </div>
-        <input value={name} onChange={e => !nameLocked && onNameChange(e.target.value)} readOnly={nameLocked} placeholder="เช่น สวนลุงสมชาย" style={{ width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 12, padding: 14, fontSize: 16, color: nameLocked ? '#9A8662' : '#3F2D1E', outline: 'none', marginBottom: 12, background: nameLocked ? '#F5F0E8' : '#fff' }} />
-        <label style={{ display: 'block', fontSize: 12, color: '#A6925E', marginBottom: 5 }}>เบอร์โทรผู้ขาย</label>
-        <input value={phone} onChange={e => onPhoneChange(e.target.value)} inputMode="tel" placeholder="เช่น 081-234-5678" style={{ width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 12, padding: 14, fontSize: 16, color: '#3F2D1E', outline: 'none', marginBottom: 12 }} />
-        <label style={{ display: 'block', fontSize: 12, color: '#A6925E', marginBottom: 5 }}>ผู้ดูแล {supervisorLocked && <span style={{ color: '#C9A24B' }}>🔒 จากประวัติ</span>}</label>
+        <input value={name} onChange={e => !nameLocked && onNameChange(e.target.value)} readOnly={nameLocked} placeholder="เช่น สวนลุงสมชาย" style={{ width: '100%', border: '1.5px solid #e4d9c8', borderRadius: 12, padding: 14, fontSize: 16, color: nameLocked ? '#8a7767' : '#26190f', outline: 'none', marginBottom: 12, background: nameLocked ? '#F5F0E8' : '#fff' }} />
+        <label style={{ display: 'block', fontSize: 12, color: '#a99a88', marginBottom: 5 }}>เบอร์โทรผู้ขาย</label>
+        <input value={phone} onChange={e => onPhoneChange(e.target.value)} inputMode="tel" placeholder="เช่น 081-234-5678" style={{ width: '100%', border: '1.5px solid #e4d9c8', borderRadius: 12, padding: 14, fontSize: 16, color: '#26190f', outline: 'none', marginBottom: 12 }} />
+        <label style={{ display: 'block', fontSize: 12, color: '#a99a88', marginBottom: 5 }}>ผู้ดูแล {supervisorLocked && <span style={{ color: '#e8692e' }}>🔒 จากประวัติ</span>}</label>
         {supervisorOptions && supervisorOptions.length > 0 && !supervisorLocked && (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
             {supervisorOptions.map(opt => (
-              <button key={opt} onClick={() => onSupervisorChange(opt)} style={{ padding: '7px 16px', borderRadius: 20, border: supervisor === opt ? 'none' : '1.5px solid #E4D7BC', background: supervisor === opt ? '#5B3A29' : '#fff', color: supervisor === opt ? '#fff' : '#5B3A29', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>{opt}</button>
+              <button key={opt} onClick={() => onSupervisorChange(opt)} style={{ padding: '7px 16px', borderRadius: 20, border: supervisor === opt ? 'none' : '1.5px solid #e4d9c8', background: supervisor === opt ? '#3a2718' : '#fff', color: supervisor === opt ? '#fff' : '#3a2718', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>{opt}</button>
             ))}
           </div>
         )}
-        <input value={supervisor} onChange={e => !supervisorLocked && onSupervisorChange(e.target.value)} readOnly={supervisorLocked} placeholder="หรือพิมพ์ชื่อ..." style={{ width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 12, padding: 14, fontSize: 16, color: supervisorLocked ? '#9A8662' : '#3F2D1E', outline: 'none', background: supervisorLocked ? '#F5F0E8' : '#fff' }} />
+        <input value={supervisor} onChange={e => !supervisorLocked && onSupervisorChange(e.target.value)} readOnly={supervisorLocked} placeholder="หรือพิมพ์ชื่อ..." style={{ width: '100%', border: '1.5px solid #e4d9c8', borderRadius: 12, padding: 14, fontSize: 16, color: supervisorLocked ? '#8a7767' : '#26190f', outline: 'none', background: supervisorLocked ? '#F5F0E8' : '#fff' }} />
         {tier && tier.key !== 'silver' && stat && (
-          <div style={{ marginTop: 14, background: '#FBF6EC', border: '1px solid #E4D7BC', borderRadius: 14, padding: '13px 14px' }}>
+          <div style={{ marginTop: 14, background: '#fbf7f1', border: '1px solid #e4d9c8', borderRadius: 14, padding: '13px 14px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
               <TierBadge tier={tier} />
-              <span style={{ fontSize: 12, color: '#9A8662', textAlign: 'right' }}>ขายสะสม <b style={{ color: '#4A3526' }}>{fmtKg(stat.total)}</b> กก. · {stat.billCount} บิล</span>
+              <span style={{ fontSize: 12, color: '#8a7767', textAlign: 'right' }}>ขายสะสม <b style={{ color: '#3a2718' }}>{fmtKg(stat.total)}</b> กก. · {stat.billCount} บิล</span>
             </div>
-            {stat.next && <div style={{ fontSize: 12, color: '#A6925E', marginTop: 8 }}>อีก {fmtKg(stat.next.min - stat.total)} กก. ถึง {stat.next.label}</div>}
+            {stat.next && <div style={{ fontSize: 12, color: '#a99a88', marginTop: 8 }}>อีก {fmtKg(stat.next.min - stat.total)} กก. ถึง {stat.next.label}</div>}
           </div>
         )}
         <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
-          <button onClick={onCancel} style={{ flex: 1, border: '1px solid #E4D7BC', background: '#fff', borderRadius: 12, padding: 13, color: '#7A6450', cursor: 'pointer' }}>ยกเลิก</button>
-          <button onClick={onSave} style={{ flex: 1, border: 'none', background: '#3F2D1E', color: '#F6EEDD', borderRadius: 12, padding: 13, fontWeight: 600, cursor: 'pointer' }}>บันทึก</button>
+          <button onClick={onCancel} style={{ flex: 1, border: '1px solid #e4d9c8', background: '#fff', borderRadius: 12, padding: 13, color: '#6b4a38', cursor: 'pointer' }}>ยกเลิก</button>
+          <button onClick={onSave} style={{ flex: 1, border: 'none', background: '#26190f', color: '#fffbf4', borderRadius: 12, padding: 13, fontWeight: 600, cursor: 'pointer' }}>บันทึก</button>
         </div>
       </div>
     </div>
@@ -5247,18 +5247,18 @@ function SellerModal({ name, phone, supervisor, nameLocked, supervisorLocked, on
 function VerifyModal({ tier, phone, draft, total, canSkip, isManage, onDraftChange, onConfirm, onSkip, onCancel }) {
   return (
     <div className="no-print" style={{ position: 'fixed', inset: 0, zIndex: 65, background: 'rgba(42,33,24,.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 18, animation: 'fadeIn .2s' }}>
-      <div style={{ background: '#FFFDF8', borderRadius: 20, padding: 24, width: '100%', maxWidth: 360, animation: 'popIn .25s' }}>
+      <div style={{ background: '#ffffff', borderRadius: 20, padding: 24, width: '100%', maxWidth: 360, animation: 'popIn .25s' }}>
         <div style={{ textAlign: 'center', marginBottom: 10 }}><TierBadge tier={tier} size="lg" /></div>
-        <h3 style={{ textAlign: 'center', fontFamily: 'Prompt', fontWeight: 500, fontSize: 19, margin: '0 0 4px', color: '#4A3526' }}>เลื่อนระดับเป็น {tier.label}</h3>
-        <p style={{ textAlign: 'center', fontSize: 13, color: '#9A8662', margin: '0 0 16px', lineHeight: 1.6 }}>
-          ลูกค้ารายนี้ขายสะสมถึง <b style={{ color: '#4A3526' }}>{fmtKg(total)}</b> กก. แล้ว<br />
+        <h3 style={{ textAlign: 'center', fontFamily: 'Prompt', fontWeight: 500, fontSize: 19, margin: '0 0 4px', color: '#3a2718' }}>เลื่อนระดับเป็น {tier.label}</h3>
+        <p style={{ textAlign: 'center', fontSize: 13, color: '#8a7767', margin: '0 0 16px', lineHeight: 1.6 }}>
+          ลูกค้ารายนี้ขายสะสมถึง <b style={{ color: '#3a2718' }}>{fmtKg(total)}</b> กก. แล้ว<br />
           ยืนยันชื่อ-นามสกุลให้ตรงกับบัตรประชาชนเพื่อรับสิทธิ์
         </p>
-        <label style={{ display: 'block', fontSize: 12, color: '#A6925E', marginBottom: 5 }}>ชื่อ-นามสกุล (ตามบัตร) · โทร {phone}</label>
-        <input value={draft} onChange={e => onDraftChange(e.target.value)} placeholder="เช่น สมชาย ใจดี" style={{ width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 12, padding: 14, fontSize: 16, color: '#3F2D1E', outline: 'none' }} />
-        <button onClick={onConfirm} style={{ width: '100%', marginTop: 14, border: 'none', borderRadius: 13, padding: 16, background: 'linear-gradient(135deg,#C9A24B,#A8763E)', color: '#fff', fontWeight: 700, fontSize: 16, cursor: 'pointer', boxShadow: '0 8px 18px rgba(168,118,62,.3)' }}>✓ ยืนยันชื่อ & เลื่อนระดับ</button>
-        {canSkip && <button onClick={onSkip} style={{ width: '100%', marginTop: 8, border: '1px solid #E4D7BC', background: '#fff', borderRadius: 13, padding: 13, color: '#7A6450', fontSize: 14, cursor: 'pointer' }}>ข้ามไปก่อน — บันทึกบิล</button>}
-        {isManage && <button onClick={onCancel} style={{ width: '100%', marginTop: 8, border: '1px solid #E4D7BC', background: '#fff', borderRadius: 13, padding: 13, color: '#7A6450', fontSize: 14, cursor: 'pointer' }}>ยกเลิก</button>}
+        <label style={{ display: 'block', fontSize: 12, color: '#a99a88', marginBottom: 5 }}>ชื่อ-นามสกุล (ตามบัตร) · โทร {phone}</label>
+        <input value={draft} onChange={e => onDraftChange(e.target.value)} placeholder="เช่น สมชาย ใจดี" style={{ width: '100%', border: '1.5px solid #e4d9c8', borderRadius: 12, padding: 14, fontSize: 16, color: '#26190f', outline: 'none' }} />
+        <button onClick={onConfirm} style={{ width: '100%', marginTop: 14, border: 'none', borderRadius: 13, padding: 16, background: 'linear-gradient(135deg,#e8692e,#A8763E)', color: '#fff', fontWeight: 700, fontSize: 16, cursor: 'pointer', boxShadow: '0 8px 18px rgba(168,118,62,.3)' }}>✓ ยืนยันชื่อ & เลื่อนระดับ</button>
+        {canSkip && <button onClick={onSkip} style={{ width: '100%', marginTop: 8, border: '1px solid #e4d9c8', background: '#fff', borderRadius: 13, padding: 13, color: '#6b4a38', fontSize: 14, cursor: 'pointer' }}>ข้ามไปก่อน — บันทึกบิล</button>}
+        {isManage && <button onClick={onCancel} style={{ width: '100%', marginTop: 8, border: '1px solid #e4d9c8', background: '#fff', borderRadius: 13, padding: 13, color: '#6b4a38', fontSize: 14, cursor: 'pointer' }}>ยกเลิก</button>}
       </div>
     </div>
   );
@@ -5269,13 +5269,13 @@ function VerifyModal({ tier, phone, draft, total, canSkip, isManage, onDraftChan
 function SheetModal({ onSyncNow, syncStatus, syncing, onCancel }) {
   return (
     <div className="no-print" style={{ position: 'fixed', inset: 0, zIndex: 62, background: 'rgba(42,33,24,.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 18, animation: 'fadeIn .2s' }}>
-      <div style={{ background: '#FFFDF8', borderRadius: 20, padding: 24, width: '100%', maxWidth: 430, animation: 'popIn .25s' }}>
-        <div style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 18, color: '#4A3526', marginBottom: 10 }}>📊 Google Sheet</div>
-        <p style={{ fontSize: 13.5, color: '#7A6450', lineHeight: 1.8, margin: '0 0 6px' }}>ข้อมูลจะซิงก์จาก Google Sheet โดยอัตโนมัติ</p>
-        {syncStatus && <p style={{ fontSize: 13, color: syncStatus.startsWith('⚠') ? '#C0392B' : '#2E7D32', margin: '0 0 14px', background: syncStatus.startsWith('⚠') ? '#FFF0F0' : '#F0FFF4', padding: '6px 10px', borderRadius: 8 }}>{syncStatus}</p>}
+      <div style={{ background: '#ffffff', borderRadius: 20, padding: 24, width: '100%', maxWidth: 430, animation: 'popIn .25s' }}>
+        <div style={{ fontFamily: 'Prompt', fontWeight: 500, fontSize: 18, color: '#3a2718', marginBottom: 10 }}>📊 Google Sheet</div>
+        <p style={{ fontSize: 13.5, color: '#6b4a38', lineHeight: 1.8, margin: '0 0 6px' }}>ข้อมูลจะซิงก์จาก Google Sheet โดยอัตโนมัติ</p>
+        {syncStatus && <p style={{ fontSize: 13, color: syncStatus.startsWith('⚠') ? '#C0392B' : '#2f9b58', margin: '0 0 14px', background: syncStatus.startsWith('⚠') ? '#FFF0F0' : '#F0FFF4', padding: '6px 10px', borderRadius: 8 }}>{syncStatus}</p>}
         <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
-          <button onClick={onCancel} style={{ flex: 1, border: '1px solid #E4D7BC', background: '#fff', borderRadius: 12, padding: 13, color: '#7A6450', fontSize: 14, cursor: 'pointer' }}>ปิด</button>
-          <button onClick={() => { onSyncNow(); }} disabled={syncing} style={{ flex: 1.4, border: 'none', borderRadius: 12, padding: 13, background: 'linear-gradient(135deg,#C9A24B,#A8763E)', color: '#fff', fontWeight: 600, fontSize: 14, cursor: 'pointer', opacity: syncing ? 0.6 : 1 }}>{syncing ? '…กำลังซิงก์' : '↺ ซิงก์ตอนนี้'}</button>
+          <button onClick={onCancel} style={{ flex: 1, border: '1px solid #e4d9c8', background: '#fff', borderRadius: 12, padding: 13, color: '#6b4a38', fontSize: 14, cursor: 'pointer' }}>ปิด</button>
+          <button onClick={() => { onSyncNow(); }} disabled={syncing} style={{ flex: 1.4, border: 'none', borderRadius: 12, padding: 13, background: 'linear-gradient(135deg,#e8692e,#A8763E)', color: '#fff', fontWeight: 600, fontSize: 14, cursor: 'pointer', opacity: syncing ? 0.6 : 1 }}>{syncing ? '…กำลังซิงก์' : '↺ ซิงก์ตอนนี้'}</button>
         </div>
       </div>
     </div>
@@ -5316,10 +5316,10 @@ const TX_LABELS = { bill_pay: 'จ่ายค่าทุเรียน', sale
 function WalletActionModal({ title, onClose, children }) {
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 90, background: 'rgba(30,20,10,.6)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-      <div style={{ background: '#FFFDF8', borderRadius: '20px 20px 0 0', padding: '20px 18px 32px', width: '100%', maxWidth: 480, maxHeight: '90dvh', overflowY: 'auto', animation: 'popIn .2s' }}>
+      <div style={{ background: '#ffffff', borderRadius: '20px 20px 0 0', padding: '20px 18px 32px', width: '100%', maxWidth: 480, maxHeight: '90dvh', overflowY: 'auto', animation: 'popIn .2s' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
           <h3 style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 17, margin: 0, color: '#2E3A28' }}>{title}</h3>
-          <button onClick={onClose} style={{ fontSize: 22, background: 'none', border: 'none', cursor: 'pointer', color: '#9A8662' }}>×</button>
+          <button onClick={onClose} style={{ fontSize: 22, background: 'none', border: 'none', cursor: 'pointer', color: '#8a7767' }}>×</button>
         </div>
         {children}
       </div>
@@ -5347,7 +5347,7 @@ function WalletSlipUpload({ file, onUpload, uploading }) {
         </div>
       ) : (
         <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={() => camRef.current?.click()} disabled={uploading} style={{ flex: 1, border: '1.5px dashed #C9A24B', background: '#FBF6EC', borderRadius: 10, padding: '12px 0', cursor: 'pointer', fontSize: 13, color: '#7A5A22', opacity: uploading ? 0.6 : 1 }}>
+          <button onClick={() => camRef.current?.click()} disabled={uploading} style={{ flex: 1, border: '1.5px dashed #e8692e', background: '#fbf7f1', borderRadius: 10, padding: '12px 0', cursor: 'pointer', fontSize: 13, color: '#c4491c', opacity: uploading ? 0.6 : 1 }}>
             {uploading ? '⏳' : '📷 ถ่ายรูป'}
           </button>
           <button onClick={() => galRef.current?.click()} disabled={uploading} style={{ flex: 1, border: '1.5px dashed #A8C5A0', background: '#F4FAF4', borderRadius: 10, padding: '12px 0', cursor: 'pointer', fontSize: 13, color: '#4A7A44', opacity: uploading ? 0.6 : 1 }}>
@@ -5476,15 +5476,15 @@ function WalletView({ onGoHome, recorderName, onSaleRecvConfirmed }) {
   const pending = txs.filter(t => t.status === 'pending');
   const confirmed = txs.filter(t => t.status === 'confirmed');
   const fmtB = n => '฿' + Math.round(n).toLocaleString();
-  const walletColor = { A_transfer: '#1565C0', A_cash: '#2E7D32', B: '#E65100', C: '#6A1B9A' };
-  const walletBg = { A_transfer: '#E3F2FD', A_cash: '#E8F5E9', B: '#FFF3E0', C: '#F3E5F5' };
+  const walletColor = { A_transfer: '#2c69b0', A_cash: '#2f9b58', B: '#c4491c', C: '#6A1B9A' };
+  const walletBg = { A_transfer: '#E3F2FD', A_cash: '#e6f3ea', B: '#fce0d0', C: '#F3E5F5' };
 
   const inp = (val, set, placeholder, type = 'text') => (
     <input value={val} onChange={e => set(e.target.value)} placeholder={placeholder} type={type}
-      style={{ width: '100%', border: '1.5px solid #D8C8A8', borderRadius: 10, padding: '11px 13px', fontSize: 15, fontFamily: 'Prompt', boxSizing: 'border-box', marginBottom: 10, outline: 'none', background: '#FFFDF8' }} />
+      style={{ width: '100%', border: '1.5px solid #d5c8b4', borderRadius: 10, padding: '11px 13px', fontSize: 15, fontFamily: 'Prompt', boxSizing: 'border-box', marginBottom: 10, outline: 'none', background: '#ffffff' }} />
   );
 
-  const btn = (label, onClick, color = '#2E7D32', disabled = false) => (
+  const btn = (label, onClick, color = '#2f9b58', disabled = false) => (
     <button onClick={onClick} disabled={disabled || busy}
       style={{ width: '100%', background: color, color: '#fff', border: 'none', borderRadius: 12, padding: '14px', fontSize: 15, fontWeight: 600, cursor: 'pointer', fontFamily: 'Prompt', opacity: (disabled || busy) ? 0.6 : 1 }}>
       {busy ? '…' : label}
@@ -5492,17 +5492,17 @@ function WalletView({ onGoHome, recorderName, onSaleRecvConfirmed }) {
   );
 
   return (
-    <div style={{ minHeight: '100dvh', background: '#EFE6D4', paddingBottom: 32 }}>
+    <div style={{ minHeight: '100dvh', background: '#ede6db', paddingBottom: 32 }}>
       {/* Header */}
-      <div style={{ background: '#FFFDF8', borderBottom: '1px solid #E4D7BC', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, position: 'sticky', top: 0, zIndex: 10 }}>
-        <button onClick={onGoHome} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: '#7A5A22', padding: 4 }}>‹</button>
-        <span style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 17, color: '#3F2D1E' }}>💰 กระเป๋าเงิน</span>
-        <button onClick={load} style={{ marginLeft: 'auto', background: 'none', border: '1px solid #D8C8A8', borderRadius: 8, padding: '5px 10px', fontSize: 13, color: '#7A5A22', cursor: 'pointer' }}>↺</button>
+      <div style={{ background: '#ffffff', borderBottom: '1px solid #e4d9c8', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, position: 'sticky', top: 0, zIndex: 10 }}>
+        <button onClick={onGoHome} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: '#c4491c', padding: 4 }}>‹</button>
+        <span style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 17, color: '#26190f' }}>💰 กระเป๋าเงิน</span>
+        <button onClick={load} style={{ marginLeft: 'auto', background: 'none', border: '1px solid #d5c8b4', borderRadius: 8, padding: '5px 10px', fontSize: 13, color: '#c4491c', cursor: 'pointer' }}>↺</button>
       </div>
 
       <div style={{ padding: '16px 14px', maxWidth: 480, margin: '0 auto' }}>
         {loading ? (
-          <div style={{ textAlign: 'center', padding: 40, color: '#9A8662' }}>กำลังโหลด…</div>
+          <div style={{ textAlign: 'center', padding: 40, color: '#8a7767' }}>กำลังโหลด…</div>
         ) : (
           <>
             {/* Balance Cards */}
@@ -5513,12 +5513,12 @@ function WalletView({ onGoHome, recorderName, onSaleRecvConfirmed }) {
                 <div style={{ fontSize: 26, fontWeight: 700, color: '#1B5E20', fontFamily: 'Prompt', marginBottom: 8 }}>{fmtB(balances.A_transfer + balances.A_cash)}</div>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <div style={{ flex: 1, background: '#E3F2FD', borderRadius: 10, padding: '8px 10px' }}>
-                    <div style={{ fontSize: 10, color: '#1565C0', fontWeight: 600 }}>โอน</div>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: '#1565C0' }}>{fmtB(balances.A_transfer)}</div>
+                    <div style={{ fontSize: 10, color: '#2c69b0', fontWeight: 600 }}>โอน</div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: '#2c69b0' }}>{fmtB(balances.A_transfer)}</div>
                   </div>
-                  <div style={{ flex: 1, background: '#E8F5E9', borderRadius: 10, padding: '8px 10px' }}>
-                    <div style={{ fontSize: 10, color: '#2E7D32', fontWeight: 600 }}>เงินสด</div>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: '#2E7D32' }}>{fmtB(balances.A_cash)}</div>
+                  <div style={{ flex: 1, background: '#e6f3ea', borderRadius: 10, padding: '8px 10px' }}>
+                    <div style={{ fontSize: 10, color: '#2f9b58', fontWeight: 600 }}>เงินสด</div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: '#2f9b58' }}>{fmtB(balances.A_cash)}</div>
                   </div>
                 </div>
               </div>
@@ -5535,9 +5535,9 @@ function WalletView({ onGoHome, recorderName, onSaleRecvConfirmed }) {
             {/* Action Buttons */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 16 }}>
               {[
-                { label: 'โอน B→A', color: '#1565C0', onClick: () => { setTrTo('A_transfer'); setModal('transfer'); } },
+                { label: 'โอน B→A', color: '#2c69b0', onClick: () => { setTrTo('A_transfer'); setModal('transfer'); } },
                 { label: 'โอน B→C', color: '#6A1B9A', onClick: () => { setTrTo('C'); setModal('transfer'); } },
-                { label: 'รายจ่าย C', color: '#E65100', onClick: () => setModal('expense') },
+                { label: 'รายจ่าย C', color: '#c4491c', onClick: () => setModal('expense') },
                 { label: 'เติมเงิน', color: '#5D4037', onClick: () => setModal('topup') },
               ].map(a => (
                 <button key={a.label} onClick={a.onClick} style={{ background: a.color, color: '#fff', border: 'none', borderRadius: 12, padding: '13px', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'Prompt' }}>{a.label}</button>
@@ -5547,16 +5547,16 @@ function WalletView({ onGoHome, recorderName, onSaleRecvConfirmed }) {
             {/* Pending */}
             {pending.length > 0 && (
               <div style={{ marginBottom: 16 }}>
-                <div style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 13, color: '#E65100', marginBottom: 8 }}>⏳ รอยืนยัน ({pending.length})</div>
+                <div style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 13, color: '#c4491c', marginBottom: 8 }}>⏳ รอยืนยัน ({pending.length})</div>
                 {pending.map(tx => {
                   const isWageOrComm = tx.tx_type === 'commission' || (tx.tx_type === 'expense' && tx.category === 'เงินเดือน') || tx.tx_type === 'sale_recv' || tx.tx_type === 'advance';
                   return (
                     <div key={tx.id} style={{ background: '#FFF8E1', border: '1px solid #FFE082', borderRadius: 12, padding: '12px 14px', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 10 }}>
                       <div style={{ flex: 1 }}>
                         <div style={{ fontSize: 13, fontWeight: 600, color: '#5D4037' }}>{TX_LABELS[tx.tx_type] || tx.tx_type}{tx.category ? ` · ${tx.category}` : ''}</div>
-                        <div style={{ fontSize: 11, color: '#9A8662' }}>{WALLET_LABELS[tx.wallet]} · {tx.note || tx.ref_id || ''}</div>
+                        <div style={{ fontSize: 11, color: '#8a7767' }}>{WALLET_LABELS[tx.wallet]} · {tx.note || tx.ref_id || ''}</div>
                       </div>
-                      <div style={{ fontSize: 15, fontWeight: 700, color: tx.direction === 'in' ? '#2E7D32' : '#C0392B' }}>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: tx.direction === 'in' ? '#2f9b58' : '#C0392B' }}>
                         {tx.direction === 'in' ? '+' : '-'}{fmtB(tx.amount)}
                       </div>
                       {isWageOrComm ? (
@@ -5565,7 +5565,7 @@ function WalletView({ onGoHome, recorderName, onSaleRecvConfirmed }) {
                           📎 สลิป
                         </button>
                       ) : (
-                        <button onClick={() => handleConfirmTx(tx)} disabled={busy} style={{ background: '#2E7D32', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 10px', fontSize: 12, cursor: 'pointer' }}>ยืนยัน</button>
+                        <button onClick={() => handleConfirmTx(tx)} disabled={busy} style={{ background: '#2f9b58', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 10px', fontSize: 12, cursor: 'pointer' }}>ยืนยัน</button>
                       )}
                     </div>
                   );
@@ -5575,7 +5575,7 @@ function WalletView({ onGoHome, recorderName, onSaleRecvConfirmed }) {
 
             {/* History */}
             <div>
-              <div style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 13, color: '#7A5A22', marginBottom: 8 }}>ประวัติรายการ</div>
+              <div style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 13, color: '#c4491c', marginBottom: 8 }}>ประวัติรายการ</div>
               {confirmed.length === 0 && <div style={{ textAlign: 'center', color: '#B0A090', padding: 20, fontSize: 13 }}>ยังไม่มีรายการ</div>}
               {confirmed.slice(0, 50).map(tx => (
                 <button key={tx.id} onClick={() => { setSelTx(tx); setModal('detail'); }}
@@ -5584,12 +5584,12 @@ function WalletView({ onGoHome, recorderName, onSaleRecvConfirmed }) {
                     {tx.tx_type === 'bill_pay' ? '🧾' : tx.tx_type === 'sale_recv' ? '💵' : tx.tx_type === 'transfer' ? '↔️' : tx.tx_type === 'commission' ? '👤' : tx.tx_type === 'advance' ? '🏧' : tx.tx_type === 'expense' ? '📋' : '➕'}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: '#3F2D1E', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: '#26190f', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {TX_LABELS[tx.tx_type] || tx.tx_type}{tx.category ? ` · ${tx.category}` : ''}
                     </div>
-                    <div style={{ fontSize: 11, color: '#9A8662' }}>{WALLET_LABELS[tx.wallet]} · {new Date(tx.created_at).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })}</div>
+                    <div style={{ fontSize: 11, color: '#8a7767' }}>{WALLET_LABELS[tx.wallet]} · {new Date(tx.created_at).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })}</div>
                   </div>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: tx.direction === 'in' ? '#2E7D32' : '#C0392B', flexShrink: 0 }}>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: tx.direction === 'in' ? '#2f9b58' : '#C0392B', flexShrink: 0 }}>
                     {tx.direction === 'in' ? '+' : '-'}{fmtB(tx.amount)}
                   </div>
                 </button>
@@ -5605,7 +5605,7 @@ function WalletView({ onGoHome, recorderName, onSaleRecvConfirmed }) {
           {trTo !== 'C' && (
             <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
               {['A_transfer', 'A_cash'].map(w => (
-                <button key={w} onClick={() => setTrTo(w)} style={{ flex: 1, padding: '10px', borderRadius: 10, border: `2px solid ${trTo === w ? '#1565C0' : '#E4D7BC'}`, background: trTo === w ? '#E3F2FD' : '#FFFDF8', color: trTo === w ? '#1565C0' : '#7A5A22', fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>
+                <button key={w} onClick={() => setTrTo(w)} style={{ flex: 1, padding: '10px', borderRadius: 10, border: `2px solid ${trTo === w ? '#2c69b0' : '#e4d9c8'}`, background: trTo === w ? '#E3F2FD' : '#ffffff', color: trTo === w ? '#2c69b0' : '#c4491c', fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>
                   {w === 'A_transfer' ? 'โอน' : 'เงินสด'}
                 </button>
               ))}
@@ -5614,7 +5614,7 @@ function WalletView({ onGoHome, recorderName, onSaleRecvConfirmed }) {
           {inp(trAmt, setTrAmt, 'จำนวนเงิน (บาท)', 'number')}
           {inp(trNote, setTrNote, 'หมายเหตุ (ถ้ามี)')}
           <WalletSlipUpload file={trSlip} uploading={trSlipUpload} onUpload={f => setTrSlip(f)} />
-          {btn(`โอน ${fmtB(parseFloat(trAmt) || 0)}`, handleTransfer, '#1565C0', !trAmt)}
+          {btn(`โอน ${fmtB(parseFloat(trAmt) || 0)}`, handleTransfer, '#2c69b0', !trAmt)}
         </WalletActionModal>
       )}
 
@@ -5623,7 +5623,7 @@ function WalletView({ onGoHome, recorderName, onSaleRecvConfirmed }) {
         <WalletActionModal title="บันทึกค่าใช้จ่าย (C)" onClose={() => { setModal(null); setExAmt(''); setExSlip(null); }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
             {EXPENSE_CATS.map(c => (
-              <button key={c} onClick={() => setExCat(c)} style={{ padding: '7px 12px', borderRadius: 20, border: `1.5px solid ${exCat === c ? '#6A1B9A' : '#E4D7BC'}`, background: exCat === c ? '#F3E5F5' : '#FFFDF8', color: exCat === c ? '#6A1B9A' : '#7A5A22', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>{c}</button>
+              <button key={c} onClick={() => setExCat(c)} style={{ padding: '7px 12px', borderRadius: 20, border: `1.5px solid ${exCat === c ? '#6A1B9A' : '#e4d9c8'}`, background: exCat === c ? '#F3E5F5' : '#ffffff', color: exCat === c ? '#6A1B9A' : '#c4491c', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>{c}</button>
             ))}
           </div>
           {inp(exAmt, setExAmt, 'จำนวนเงิน (บาท)', 'number')}
@@ -5638,7 +5638,7 @@ function WalletView({ onGoHome, recorderName, onSaleRecvConfirmed }) {
         <WalletActionModal title="เติมเงินเข้ากระเป๋า" onClose={() => { setModal(null); setTpAmt(''); }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
             {['A_transfer', 'A_cash', 'C'].map(w => (
-              <button key={w} onClick={() => setTpWallet(w)} style={{ padding: '7px 12px', borderRadius: 20, border: `1.5px solid ${tpWallet === w ? walletColor[w] : '#E4D7BC'}`, background: tpWallet === w ? walletBg[w] : '#FFFDF8', color: tpWallet === w ? walletColor[w] : '#7A5A22', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>{WALLET_LABELS[w]}</button>
+              <button key={w} onClick={() => setTpWallet(w)} style={{ padding: '7px 12px', borderRadius: 20, border: `1.5px solid ${tpWallet === w ? walletColor[w] : '#e4d9c8'}`, background: tpWallet === w ? walletBg[w] : '#ffffff', color: tpWallet === w ? walletColor[w] : '#c4491c', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>{WALLET_LABELS[w]}</button>
             ))}
           </div>
           {inp(tpAmt, setTpAmt, 'จำนวนเงิน (บาท)', 'number')}
@@ -5652,11 +5652,11 @@ function WalletView({ onGoHome, recorderName, onSaleRecvConfirmed }) {
         <WalletActionModal title={pendingSlipTx.tx_type === 'commission' ? 'อัปโหลดสลิปค่าคอม' : pendingSlipTx.tx_type === 'sale_recv' ? 'อัปโหลดสลิปรับเงินขาย' : pendingSlipTx.tx_type === 'advance' ? 'อัปโหลดสลิปเบิกล่วงหน้า' : 'อัปโหลดสลิปค่าแรง'}
           onClose={() => { setModal(null); setPendingSlipTx(null); setPgSlip(null); }}>
           <div style={{ background: '#F9F5EC', borderRadius: 10, padding: '10px 12px', marginBottom: 12 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: '#3F2D1E' }}>{pendingSlipTx.note || (TX_LABELS[pendingSlipTx.tx_type] || pendingSlipTx.tx_type)}</div>
-            <div style={{ fontSize: 13, color: pendingSlipTx.direction === 'in' ? '#2E7D32' : '#C0392B', fontWeight: 700, marginTop: 4 }}>{pendingSlipTx.direction === 'in' ? '+' : '-'}{fmtB(pendingSlipTx.amount)}</div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: '#26190f' }}>{pendingSlipTx.note || (TX_LABELS[pendingSlipTx.tx_type] || pendingSlipTx.tx_type)}</div>
+            <div style={{ fontSize: 13, color: pendingSlipTx.direction === 'in' ? '#2f9b58' : '#C0392B', fontWeight: 700, marginTop: 4 }}>{pendingSlipTx.direction === 'in' ? '+' : '-'}{fmtB(pendingSlipTx.amount)}</div>
           </div>
           <WalletSlipUpload file={pgSlip} uploading={pgSlipUpload} onUpload={f => setPgSlip(f)} />
-          <div style={{ fontSize: 12, color: '#9A8662', marginBottom: 10, textAlign: 'center' }}>แนบสลิปโอนเงินแล้วกดยืนยัน (ถ้าไม่มีสลิปกดยืนยันได้เลย)</div>
+          <div style={{ fontSize: 12, color: '#8a7767', marginBottom: 10, textAlign: 'center' }}>แนบสลิปโอนเงินแล้วกดยืนยัน (ถ้าไม่มีสลิปกดยืนยันได้เลย)</div>
           {btn('✅ ยืนยันจ่ายแล้ว', handleUploadWageSlip, '#6A1B9A')}
         </WalletActionModal>
       )}
@@ -5677,14 +5677,14 @@ function WalletView({ onGoHome, recorderName, onSaleRecvConfirmed }) {
               selTx.created_by && ['บันทึกโดย', selTx.created_by],
             ].filter(Boolean).map(([k, v]) => (
               <div key={k} style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #F0E8D8', paddingBottom: 6 }}>
-                <span style={{ fontSize: 13, color: '#9A8662' }}>{k}</span>
-                <span style={{ fontSize: 13, fontWeight: 600, color: '#3F2D1E', textAlign: 'right', maxWidth: '60%' }}>{v}</span>
+                <span style={{ fontSize: 13, color: '#8a7767' }}>{k}</span>
+                <span style={{ fontSize: 13, fontWeight: 600, color: '#26190f', textAlign: 'right', maxWidth: '60%' }}>{v}</span>
               </div>
             ))}
             {selTx.slip_url && (
               <div>
-                <div style={{ fontSize: 12, color: '#9A8662', marginBottom: 6 }}>หลักฐาน</div>
-                <img src={selTx.slip_url} alt="slip" style={{ width: '100%', borderRadius: 10, border: '1px solid #E4D7BC', maxHeight: 300, objectFit: 'contain' }} />
+                <div style={{ fontSize: 12, color: '#8a7767', marginBottom: 6 }}>หลักฐาน</div>
+                <img src={selTx.slip_url} alt="slip" style={{ width: '100%', borderRadius: 10, border: '1px solid #e4d9c8', maxHeight: 300, objectFit: 'contain' }} />
               </div>
             )}
           </div>
@@ -6754,11 +6754,11 @@ export default function App() {
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#FFF6ED' }}>
         <div style={{ fontSize: 52, marginBottom: 12 }}>🌿</div>
-        <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 24, color: '#5B3A29', marginBottom: 4 }}>Qudsun</div>
-        <div style={{ fontFamily: 'Prompt', fontSize: 13, color: '#9A8662', marginBottom: 36 }}>ทุเรียนคัดสรร</div>
+        <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 24, color: '#3a2718', marginBottom: 4 }}>Qudsun</div>
+        <div style={{ fontFamily: 'Prompt', fontSize: 13, color: '#8a7767', marginBottom: 36 }}>ทุเรียนคัดสรร</div>
         <div style={{ display: 'flex', gap: 10 }}>
           {[0, 1, 2].map(i => (
-            <div key={i} style={{ width: 11, height: 11, borderRadius: '50%', background: '#DC743C', animation: `qsBounce 1.2s ease-in-out ${i * 0.2}s infinite` }} />
+            <div key={i} style={{ width: 11, height: 11, borderRadius: '50%', background: '#e8692e', animation: `qsBounce 1.2s ease-in-out ${i * 0.2}s infinite` }} />
           ))}
         </div>
         <style>{`@keyframes qsBounce{0%,80%,100%{transform:translateY(0);opacity:.35}40%{transform:translateY(-12px);opacity:1}}`}</style>
@@ -6771,7 +6771,7 @@ export default function App() {
   }
 
   return (
-    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: '#EFE6D4' }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: '#ede6db' }}>
       <Header />
 
       <Routes>
