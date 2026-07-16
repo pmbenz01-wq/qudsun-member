@@ -7045,7 +7045,7 @@ export default function App() {
           />
         } />
         <Route path="/wallet" element={
-          <WalletView onGoHome={() => navigate('/')} recorderName={recorderName} onSaleRecvConfirmed={handleSaleRecvConfirmed} />
+          <WalletView key={location.key} onGoHome={() => navigate('/')} recorderName={recorderName} onSaleRecvConfirmed={handleSaleRecvConfirmed} />
         } />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
