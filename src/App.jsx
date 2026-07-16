@@ -3369,7 +3369,7 @@ function CustomersView({ history, verified, onGoHome, onOpenCustomer, onDeleteCu
 function SupervisorsView({ supervisors, supervisorNames, history, onGoHome, onOpenSupervisor, onDeleteSupervisor, onAddSupervisor, pin, isEmployee }) {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [billStats, setBillStats] = React.useState({});
-  const [supBalances, setSupBalances] = React.useState({});
+  const [supLedger, setSupLedger] = React.useState({});
   const [showAddModal, setShowAddModal] = React.useState(false);
   const [newName, setNewName] = React.useState('');
   const supMap = {};
@@ -3383,7 +3383,7 @@ function SupervisorsView({ supervisors, supervisorNames, history, onGoHome, onOp
 
   React.useEffect(() => {
     db.fetchSupervisorBillStats(new Date('2026-07-09').getTime()).then(setBillStats).catch(() => {});
-    db.fetchSupWalletBalances().then(setSupBalances).catch(() => {});
+    db.fetchAllSupLedgerTotals().then(setSupLedger).catch(() => {});
   }, []);
 
   const handleAdd = () => {
@@ -3417,7 +3417,8 @@ function SupervisorsView({ supervisors, supervisorNames, history, onGoHome, onOp
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {list.map(([name, phones]) => {
           const stat = billStats[name] || {};
-          const walletBal = supBalances[`sup_${name}`] ?? null;
+          const ledger = supLedger[name];
+          const balance = ledger ? Math.round(ledger.earned - ledger.paid) : null;
           return (
             <div key={name} style={{ border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 14, overflow: 'hidden' }}>
               <button onClick={() => onOpenSupervisor(name)} style={{ textAlign: 'left', background: 'none', border: 'none', width: '100%', padding: '14px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -3425,9 +3426,9 @@ function SupervisorsView({ supervisors, supervisorNames, history, onGoHome, onOp
                 <div style={{ flex: 1 }}>
                   <div style={{ fontWeight: 600, fontSize: 15, color: '#4A3526' }}>{name}</div>
                   <div style={{ fontSize: 12, color: '#9A8662', marginTop: 2 }}>{phones.length} ลูกค้า · รวม {fmtKg(stat.kg || 0)} กก. · {stat.count || 0} บิล</div>
-                  {walletBal !== null && (
-                    <div style={{ marginTop: 4, display: 'inline-block', background: walletBal > 0 ? '#FFF3E0' : '#E8F5E9', borderRadius: 6, padding: '2px 8px', fontSize: 11, fontWeight: 700, color: walletBal > 0 ? '#E65100' : '#2E7D32' }}>
-                      {walletBal > 0 ? `💰 ค้างจ่าย ฿${Math.round(walletBal).toLocaleString()}` : '✓ ชำระครบ'}
+                  {balance !== null && (
+                    <div style={{ marginTop: 4, display: 'inline-block', background: balance > 0 ? '#FFF3E0' : '#E8F5E9', borderRadius: 6, padding: '2px 8px', fontSize: 11, fontWeight: 700, color: balance > 0 ? '#E65100' : '#2E7D32' }}>
+                      {balance > 0 ? `💰 ค้างจ่าย ฿${balance.toLocaleString()}` : '✓ ชำระครบ'}
                     </div>
                   )}
                 </div>

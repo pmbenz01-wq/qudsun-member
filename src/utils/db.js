@@ -517,6 +517,23 @@ export const db = {
     return bal;
   },
 
+  async fetchAllSupLedgerTotals() {
+    const [{ data: earnRows }, { data: payRows }] = await Promise.all([
+      supabase.from('qm_sup_earnings').select('supervisor_name,total'),
+      supabase.from('qm_sup_payments').select('supervisor_name,amount'),
+    ]);
+    const result = {};
+    for (const r of (earnRows || [])) {
+      if (!result[r.supervisor_name]) result[r.supervisor_name] = { earned: 0, paid: 0 };
+      result[r.supervisor_name].earned += Number(r.total || 0);
+    }
+    for (const r of (payRows || [])) {
+      if (!result[r.supervisor_name]) result[r.supervisor_name] = { earned: 0, paid: 0 };
+      result[r.supervisor_name].paid += Number(r.amount || 0);
+    }
+    return result; // { 'เต้ล': { earned: 1373, paid: 1500 }, ... }
+  },
+
   async fetchSupWalletBalances() {
     const { data, error } = await supabase
       .from('qm_wallet_tx')
