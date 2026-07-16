@@ -555,6 +555,11 @@ export const db = {
     return !!data;
   },
 
+  async deleteWalletTx(id) {
+    const { error } = await supabase.from('qm_wallet_tx').delete().eq('id', id);
+    if (error) throw error;
+  },
+
   async upsertWalletTxIfNew(tx) {
     const { error } = await supabase.from('qm_wallet_tx').upsert({
       wallet: tx.wallet,

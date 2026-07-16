@@ -5701,6 +5701,12 @@ function WalletView({ onGoHome, recorderName, onSaleRecvConfirmed }) {
                       ) : (
                         <button onClick={() => handleConfirmTx(tx)} disabled={busy} style={{ background: '#2E7D32', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 10px', fontSize: 12, cursor: 'pointer' }}>ยืนยัน</button>
                       )}
+                      <button onClick={async () => {
+                        if (!window.confirm('ลบรายการนี้?')) return;
+                        setBusy(true);
+                        try { await db.deleteWalletTx(tx.id); await load(); } catch { alert('ลบไม่สำเร็จ'); }
+                        setBusy(false);
+                      }} disabled={busy} style={{ background: '#FFEBEE', color: '#C62828', border: '1px solid #FFCDD2', borderRadius: 8, padding: '6px 8px', fontSize: 13, cursor: 'pointer' }}>🗑️</button>
                     </div>
                   );
                 })}
