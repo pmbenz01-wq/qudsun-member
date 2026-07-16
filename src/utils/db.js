@@ -584,6 +584,12 @@ export const db = {
     if (error) throw error;
   },
 
+  async updateWalletTxAmountByRef(refId, txType, amount) {
+    const { error } = await supabase.from('qm_wallet_tx').update({ amount })
+      .eq('ref_id', refId).eq('tx_type', txType);
+    if (error) throw error;
+  },
+
   async fetchWalletTxByRef(refId, txType) {
     const { data } = await supabase.from('qm_wallet_tx').select('*')
       .eq('ref_id', refId).eq('tx_type', txType).maybeSingle();

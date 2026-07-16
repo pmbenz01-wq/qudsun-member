@@ -6680,12 +6680,13 @@ export default function App() {
     const nextSales = [saleRecord, ...sales];
     storage.saveSales(nextSales); setSales(nextSales);
 
-    // Wallet integration: credit B as pending when sale is finalized
+    // Wallet integration: credit B as pending when sale is finalized; update amount if tx already exists
     db.upsertWalletTxIfNew({
       wallet: 'B', direction: 'in', amount: totalBaht, txType: 'sale_recv',
       status: 'pending', refId: saleSession.billNo,
       note: `รับเงินขาย ${saleSession.billNo}`,
     }).catch(() => {});
+    db.updateWalletTxAmountByRef(saleSession.billNo, 'sale_recv', totalBaht).catch(() => {});
 
     storage.saveSaleSession(null); setSaleSession(null);
     toast('บันทึกบิลขายเรียบร้อย'); navigate('/');
@@ -6799,6 +6800,7 @@ export default function App() {
       const existing = await db.fetchWalletTxByRef(billNo, 'sale_recv');
       if (existing?.status === 'confirmed') { toast('รับเงินแล้ว ✓'); setViewSalePaymentStatus('confirmed'); return; }
       if (existing?.status === 'pending') {
+        if (existing.amount !== totalBaht) await db.updateWalletTxAmountByRef(billNo, 'sale_recv', totalBaht);
         await db.confirmWalletTxByRef(billNo, 'sale_recv', null);
       } else {
         await db.upsertWalletTxIfNew({ wallet: 'B', direction: 'in', amount: totalBaht, txType: 'sale_recv', status: 'confirmed', refId: billNo, note: `รับเงินขาย ${billNo}` });
