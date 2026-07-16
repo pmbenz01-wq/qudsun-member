@@ -3656,6 +3656,11 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
   const nowRef = new Date();
 
   const [tab, setTab] = React.useState('calendar');
+  const [supWalletTxs, setSupWalletTxs] = React.useState([]);
+  const [showWithdrawForm, setShowWithdrawForm] = React.useState(false);
+  const [withdrawAmt, setWithdrawAmt] = React.useState('');
+  const [withdrawNote, setWithdrawNote] = React.useState('');
+  const [withdrawSaving, setWithdrawSaving] = React.useState(false);
   const [calYear, setCalYear] = React.useState(nowRef.getFullYear());
   const [calMonth, setCalMonth] = React.useState(nowRef.getMonth());
   const [selectedDay, setSelectedDay] = React.useState(null);
@@ -3742,6 +3747,11 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
   }, [supervisorName]);
 
   React.useEffect(() => { loadLedger(); }, [loadLedger]);
+
+  const loadSupWallet = React.useCallback(async () => {
+    db.fetchWalletTxs(`sup_${supervisorName}`).then(setSupWalletTxs).catch(() => {});
+  }, [supervisorName]);
+  React.useEffect(() => { loadSupWallet(); }, [loadSupWallet]);
 
   React.useEffect(() => {
     db.fetchBillsBySupervisor(supervisorName, '2026-07-09').then(b => setAllTimeBills(b)).catch(() => {});
@@ -4277,7 +4287,7 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
     </div>
   );
 
-  const TABS = [['calendar','ปฏิทิน'],['bills','บิลคอม'],['earnings','ค่าแรง'],['paid','การจ่าย'],['customers','ลูกค้า']];
+  const TABS = [['calendar','ปฏิทิน'],['bills','บิลคอม'],['earnings','ค่าแรง'],['paid','การจ่าย'],['wallet','💼 กระเป๋า'],['customers','ลูกค้า']];
 
   return (
     <div style={{ minHeight: '100vh', background: '#F5EFE4', paddingBottom: 40 }}>
@@ -5023,6 +5033,91 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
           })}
         </div>
       )}
+
+      {/* Tab: กระเป๋า */}
+      {tab === 'wallet' && (() => {
+        const walBal = Math.round(supWalletTxs.reduce((s, t) => s + (t.direction === 'in' ? Number(t.amount) : -Number(t.amount)), 0));
+        const txLabels = { commission: 'ค่าคอม', wage: 'ค่าแรง', advance: 'เบิกล่วงหน้า', expense: 'จ่ายค่าแรง', withdraw: 'ถอนเงิน' };
+        const isOwed = walBal > 0, isOver = walBal < 0;
+        const balGrad = isOwed ? 'linear-gradient(135deg,#E65100,#BF360C)' : isOver ? 'linear-gradient(135deg,#7B1FA2,#4A148C)' : 'linear-gradient(135deg,#2E7D32,#1B5E20)';
+        return (
+          <div style={{ padding: '12px 12px' }}>
+            {/* Balance card */}
+            <div style={{ background: balGrad, borderRadius: 18, padding: '20px 20px 16px', marginBottom: 14, color: '#fff', boxShadow: '0 6px 20px rgba(0,0,0,.15)' }}>
+              <div style={{ fontSize: 12, opacity: 0.75, marginBottom: 4 }}>💼 กระเป๋า {supervisorName}</div>
+              <div style={{ fontSize: 34, fontWeight: 800, fontFamily: 'Prompt', letterSpacing: '-1px' }}>
+                {isOver ? `-฿${Math.abs(walBal).toLocaleString()}` : `฿${walBal.toLocaleString()}`}
+              </div>
+              <div style={{ fontSize: 12, opacity: 0.8, marginTop: 4 }}>
+                {isOwed ? 'บริษัทค้างจ่าย' : isOver ? '⚠️ เบิกเกินยอดสะสม' : '✅ ไม่มียอดค้าง'}
+              </div>
+            </div>
+            {/* Withdraw button */}
+            {isOwed && !showWithdrawForm && (
+              <button onClick={() => { setWithdrawAmt(String(walBal)); setShowWithdrawForm(true); }}
+                style={{ width: '100%', background: 'linear-gradient(135deg,#2E7D32,#1B5E20)', color: '#fff', border: 'none', borderRadius: 12, padding: '13px 0', fontSize: 15, fontWeight: 700, cursor: 'pointer', marginBottom: 14, boxShadow: '0 4px 12px rgba(46,125,50,.3)' }}>
+                💸 ถอนเงิน ฿{walBal.toLocaleString()}
+              </button>
+            )}
+            {/* Withdraw form */}
+            {showWithdrawForm && (
+              <div style={{ background: '#fff', border: '1.5px solid #A5D6A7', borderRadius: 14, padding: '16px', marginBottom: 14 }}>
+                <div style={{ fontWeight: 700, fontSize: 14, color: '#1B5E20', marginBottom: 12 }}>💸 ออกบิลถอนเงิน</div>
+                <input type="number" value={withdrawAmt} onChange={e => setWithdrawAmt(e.target.value)} placeholder="จำนวนเงิน"
+                  style={{ width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 9, padding: '10px 12px', fontSize: 15, outline: 'none', marginBottom: 8, boxSizing: 'border-box' }} />
+                <input value={withdrawNote} onChange={e => setWithdrawNote(e.target.value)} placeholder="หมายเหตุ (ถ้ามี)"
+                  style={{ width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 9, padding: '9px 12px', fontSize: 14, outline: 'none', marginBottom: 12, boxSizing: 'border-box' }} />
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button onClick={() => { setShowWithdrawForm(false); setWithdrawAmt(''); setWithdrawNote(''); }}
+                    style={{ flex: 1, background: '#F5EFE4', color: '#5B3A29', border: '1px solid #E4D7BC', borderRadius: 9, padding: '10px 0', fontSize: 13, cursor: 'pointer' }}>ยกเลิก</button>
+                  <button disabled={!withdrawAmt || Number(withdrawAmt) <= 0 || withdrawSaving}
+                    onClick={async () => {
+                      const amt = Number(withdrawAmt);
+                      if (!amt || amt <= 0) return;
+                      setWithdrawSaving(true);
+                      try {
+                        const payId = await db.savePayment({ supervisor_name: supervisorName, paid_date: toDateStr(new Date()), amount: amt, note: withdrawNote || 'ถอนจากกระเป๋า' });
+                        await db.upsertWalletTxIfNew({ wallet: `sup_${supervisorName}`, direction: 'out', amount: amt, txType: 'withdraw', category: 'ถอนเงิน', status: 'confirmed', refId: String(payId), note: `ถอนเงิน ${supervisorName}` });
+                        db.upsertWalletTxIfNew({ wallet: 'C', direction: 'out', amount: amt, txType: 'expense', category: 'ค่าแรง', status: 'pending', refId: String(payId), note: `จ่ายเงิน ${supervisorName}` }).catch(() => {});
+                        await Promise.all([loadLedger(), loadSupWallet()]);
+                        setShowWithdrawForm(false); setWithdrawAmt(''); setWithdrawNote('');
+                      } catch { alert('บันทึกไม่สำเร็จ'); }
+                      setWithdrawSaving(false);
+                    }}
+                    style={{ flex: 2, background: withdrawSaving || !withdrawAmt || Number(withdrawAmt) <= 0 ? '#ccc' : '#2E7D32', color: '#fff', border: 'none', borderRadius: 9, padding: '10px 0', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+                    {withdrawSaving ? '...' : `✅ ยืนยัน ฿${Number(withdrawAmt || 0).toLocaleString()}`}
+                  </button>
+                </div>
+              </div>
+            )}
+            {/* TX history */}
+            <div style={{ fontWeight: 600, fontSize: 13, color: '#5B3A29', marginBottom: 8 }}>ประวัติกระเป๋า</div>
+            {supWalletTxs.length === 0 && (
+              <div style={{ textAlign: 'center', color: '#B7A684', padding: '28px 0', fontSize: 13 }}>ยังไม่มีรายการ<br/>ออกบิลค่าแรง/คอมแล้วจะขึ้นที่นี่</div>
+            )}
+            {supWalletTxs.map(tx => {
+              const isIn = tx.direction === 'in';
+              const label = txLabels[tx.tx_type] || tx.tx_type;
+              const txDate = tx.created_at ? new Date(tx.created_at).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' }) : '';
+              return (
+                <div key={tx.id} style={{ background: '#fff', border: '1px solid #E4D7BC', borderRadius: 12, padding: '10px 14px', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 10, background: isIn ? '#E8F5E9' : '#FFF3E0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>
+                    {isIn ? '📥' : '📤'}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: '#2A2118' }}>{label}</div>
+                    {tx.note && <div style={{ fontSize: 11, color: '#9A8662', marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{tx.note}</div>}
+                    <div style={{ fontSize: 11, color: '#B7A684', marginTop: 1 }}>{txDate}</div>
+                  </div>
+                  <div style={{ fontWeight: 700, fontSize: 15, color: isIn ? '#2E7D32' : '#E65100', fontFamily: 'Prompt', flexShrink: 0 }}>
+                    {isIn ? '+' : '-'}฿{Math.round(Number(tx.amount)).toLocaleString()}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        );
+      })()}
 
       {/* Tab: ลูกค้า */}
       {tab === 'customers' && (
