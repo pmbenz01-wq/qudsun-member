@@ -3661,6 +3661,7 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
   const [withdrawAmt, setWithdrawAmt] = React.useState('');
   const [withdrawNote, setWithdrawNote] = React.useState('');
   const [withdrawSaving, setWithdrawSaving] = React.useState(false);
+  const [withdrawSlip, setWithdrawSlip] = React.useState(null);
   const [calYear, setCalYear] = React.useState(nowRef.getFullYear());
   const [calMonth, setCalMonth] = React.useState(nowRef.getMonth());
   const [selectedDay, setSelectedDay] = React.useState(null);
@@ -5066,9 +5067,15 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
                 <input type="number" value={withdrawAmt} onChange={e => setWithdrawAmt(e.target.value)} placeholder="จำนวนเงิน"
                   style={{ width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 9, padding: '10px 12px', fontSize: 15, outline: 'none', marginBottom: 8, boxSizing: 'border-box' }} />
                 <input value={withdrawNote} onChange={e => setWithdrawNote(e.target.value)} placeholder="หมายเหตุ (ถ้ามี)"
-                  style={{ width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 9, padding: '9px 12px', fontSize: 14, outline: 'none', marginBottom: 12, boxSizing: 'border-box' }} />
+                  style={{ width: '100%', border: '1.5px solid #E4D7BC', borderRadius: 9, padding: '9px 12px', fontSize: 14, outline: 'none', marginBottom: 8, boxSizing: 'border-box' }} />
+                {/* Slip upload */}
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, background: withdrawSlip ? '#E8F5E9' : '#F9F5EC', border: `1.5px dashed ${withdrawSlip ? '#A5D6A7' : '#D0C8C0'}`, borderRadius: 9, padding: '9px 12px', cursor: 'pointer', marginBottom: 12 }}>
+                  <span style={{ fontSize: 18 }}>{withdrawSlip ? '✅' : '📎'}</span>
+                  <span style={{ fontSize: 13, color: withdrawSlip ? '#2E7D32' : '#9A8662' }}>{withdrawSlip ? withdrawSlip.name : 'แนบสลิปการโอน (ถ้ามี)'}</span>
+                  <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => setWithdrawSlip(e.target.files[0] || null)} />
+                </label>
                 <div style={{ display: 'flex', gap: 8 }}>
-                  <button onClick={() => { setShowWithdrawForm(false); setWithdrawAmt(''); setWithdrawNote(''); }}
+                  <button onClick={() => { setShowWithdrawForm(false); setWithdrawAmt(''); setWithdrawNote(''); setWithdrawSlip(null); }}
                     style={{ flex: 1, background: '#F5EFE4', color: '#5B3A29', border: '1px solid #E4D7BC', borderRadius: 9, padding: '10px 0', fontSize: 13, cursor: 'pointer' }}>ยกเลิก</button>
                   <button disabled={!withdrawAmt || Number(withdrawAmt) <= 0 || withdrawSaving}
                     onClick={async () => {
@@ -5076,11 +5083,19 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
                       if (!amt || amt <= 0) return;
                       setWithdrawSaving(true);
                       try {
+                        let slipUrl = null;
+                        if (withdrawSlip) {
+                          const base64 = await resizeImage(withdrawSlip, 1200);
+                          const path = `QudsunTransfers/${Date.now()}_withdraw.jpg`;
+                          const res = await fetch('/api/upload', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ base64, path }) });
+                          const d = await res.json();
+                          if (d.ok) slipUrl = d.url;
+                        }
                         const payId = await db.savePayment({ supervisor_name: supervisorName, paid_date: toDateStr(new Date()), amount: amt, note: withdrawNote || 'ถอนจากกระเป๋า' });
                         await db.upsertWalletTxIfNew({ wallet: `sup_${supervisorName}`, direction: 'out', amount: amt, txType: 'withdraw', category: 'ถอนเงิน', status: 'confirmed', refId: String(payId), note: `ถอนเงิน ${supervisorName}` });
-                        db.upsertWalletTxIfNew({ wallet: 'C', direction: 'out', amount: amt, txType: 'expense', category: 'ค่าแรง', status: 'pending', refId: String(payId), note: `จ่ายเงิน ${supervisorName}` }).catch(() => {});
+                        db.upsertWalletTxIfNew({ wallet: 'C', direction: 'out', amount: amt, txType: 'expense', category: 'ค่าแรง', status: slipUrl ? 'confirmed' : 'pending', refId: String(payId), note: `จ่ายเงิน ${supervisorName}`, slipUrl: slipUrl || undefined }).catch(() => {});
                         await Promise.all([loadLedger(), loadSupWallet()]);
-                        setShowWithdrawForm(false); setWithdrawAmt(''); setWithdrawNote('');
+                        setShowWithdrawForm(false); setWithdrawAmt(''); setWithdrawNote(''); setWithdrawSlip(null);
                       } catch { alert('บันทึกไม่สำเร็จ'); }
                       setWithdrawSaving(false);
                     }}
@@ -5668,7 +5683,7 @@ function WalletView({ onGoHome, recorderName, onSaleRecvConfirmed }) {
               <div style={{ marginBottom: 16 }}>
                 <div style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 13, color: '#E65100', marginBottom: 8 }}>⏳ รอยืนยัน ({pending.length})</div>
                 {pending.map(tx => {
-                  const isWageOrComm = tx.tx_type === 'commission' || (tx.tx_type === 'expense' && tx.category === 'เงินเดือน') || tx.tx_type === 'sale_recv' || tx.tx_type === 'advance';
+                  const isWageOrComm = tx.tx_type === 'commission' || tx.tx_type === 'expense' || tx.tx_type === 'sale_recv' || tx.tx_type === 'advance';
                   return (
                     <div key={tx.id} style={{ background: '#FFF8E1', border: '1px solid #FFE082', borderRadius: 12, padding: '12px 14px', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 10 }}>
                       <div style={{ flex: 1 }}>
