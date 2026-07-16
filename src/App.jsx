@@ -3423,16 +3423,21 @@ function SupervisorsView({ supervisors, supervisorNames, history, onGoHome, onOp
             <div key={name} style={{ border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 14, overflow: 'hidden' }}>
               <button onClick={() => onOpenSupervisor(name)} style={{ textAlign: 'left', background: 'none', border: 'none', width: '100%', padding: '14px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{ width: 44, height: 44, borderRadius: 12, background: 'linear-gradient(135deg,#5C4326,#3F2D1E)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>🧑‍💼</div>
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: 600, fontSize: 15, color: '#4A3526' }}>{name}</div>
                   <div style={{ fontSize: 12, color: '#9A8662', marginTop: 2 }}>{phones.length} ลูกค้า · รวม {fmtKg(stat.kg || 0)} กก. · {stat.count || 0} บิล</div>
-                  {balance !== null && (
-                    <div style={{ marginTop: 4, display: 'inline-block', background: balance > 0 ? '#FFF3E0' : '#E8F5E9', borderRadius: 6, padding: '2px 8px', fontSize: 11, fontWeight: 700, color: balance > 0 ? '#E65100' : '#2E7D32' }}>
-                      {balance > 0 ? `💰 ค้างจ่าย ฿${balance.toLocaleString()}` : '✓ ชำระครบ'}
-                    </div>
-                  )}
                 </div>
-                <span style={{ color: '#C9A24B', fontSize: 18 }}>›</span>
+                {balance !== null && (
+                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                    <div style={{ fontSize: 15, fontWeight: 800, fontFamily: 'Prompt', color: balance > 0 ? '#E65100' : '#2E7D32' }}>
+                      {balance > 0 ? `฿${balance.toLocaleString()}` : '✓'}
+                    </div>
+                    <div style={{ fontSize: 10, color: balance > 0 ? '#E65100' : '#2E7D32', marginTop: 1 }}>
+                      {balance > 0 ? 'ค้างจ่าย' : 'ชำระครบ'}
+                    </div>
+                  </div>
+                )}
+                <span style={{ color: '#C9A24B', fontSize: 18, flexShrink: 0 }}>›</span>
               </button>
               {!isEmployee && onDeleteSupervisor && (
                 <div style={{ padding: '0 14px 10px', display: 'flex', justifyContent: 'flex-end' }}>
