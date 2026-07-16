@@ -4005,7 +4005,7 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
                 amount: slipTotalComm,
                 note: `COMM_BILLS:${JSON.stringify(billNos)}`,
               });
-              db.upsertWalletTxIfNew({ wallet: 'A_transfer', direction: 'out', amount: slipTotalComm, txType: 'commission', status: 'pending', refId: String(payId), note: `ค่าคอม ${supervisorName}` }).catch(() => {});
+              db.upsertWalletTxIfNew({ wallet: `sup_${supervisorName}`, direction: 'in', amount: slipTotalComm, txType: 'commission', category: 'ค่าคอม', status: 'confirmed', refId: String(payId), note: `ค่าคอม ${supervisorName}` }).catch(() => {});
               await loadLedger();
               setShowCommPaySlip(false);
               setCommSelectMode(false);
@@ -4090,7 +4090,7 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
                 amount: slipTotal,
                 note: `WAGE_DATES:${JSON.stringify(dates)}`,
               });
-              db.upsertWalletTxIfNew({ wallet: 'C', direction: 'out', amount: slipTotal, txType: 'expense', category: 'เงินเดือน', status: 'pending', refId: String(payId), note: `ค่าแรง ${supervisorName}` }).catch(() => {});
+              db.upsertWalletTxIfNew({ wallet: `sup_${supervisorName}`, direction: 'in', amount: slipTotal, txType: 'wage', category: 'ค่าแรง', status: 'confirmed', refId: String(payId), note: `ค่าแรง ${supervisorName}` }).catch(() => {});
               await loadLedger();
               setShowWagePaySlip(false);
               setWageSelectMode(false);
@@ -4127,6 +4127,7 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
           } catch {}
         }
         db.upsertWalletTxIfNew({ wallet: 'C', direction: 'out', amount: amt, txType: 'advance', category: 'เบิกล่วงหน้า', status: slipUrl ? 'confirmed' : 'pending', refId: String(payId), note: `เบิกล่วงหน้า ${supervisorName}`, slipUrl: slipUrl || undefined }).catch(() => {});
+        db.upsertWalletTxIfNew({ wallet: `sup_${supervisorName}`, direction: 'out', amount: amt, txType: 'advance', category: 'เบิกล่วงหน้า', status: 'confirmed', refId: String(payId), note: `เบิกล่วงหน้า ${supervisorName}` }).catch(() => {});
         await loadLedger();
         setShowAdvanceSlip(false);
         setPendingAdvanceRecord(null);
@@ -4918,6 +4919,7 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
                       try {
                         const payId = await db.savePayment({ supervisor_name: supervisorName, paid_date: toDateStr(new Date()), amount: periodSummary.total, note });
                         db.upsertWalletTxIfNew({ wallet: 'C', direction: 'out', amount: periodSummary.total, txType: 'expense', category: 'เงินเดือน', status: 'pending', refId: String(payId), note: `ค่าแรง ${supervisorName}` }).catch(() => {});
+                        db.upsertWalletTxIfNew({ wallet: `sup_${supervisorName}`, direction: 'out', amount: periodSummary.total, txType: 'expense', category: 'เงินเดือน', status: 'confirmed', refId: String(payId), note: `จ่ายค่าแรง ${supervisorName}` }).catch(() => {});
                         setPayNote(''); setPeriodFrom(''); setPeriodTo(''); setShowPeriodPay(false);
                         await loadLedger();
                         setShowPaySlip(true);
@@ -5473,8 +5475,8 @@ function WalletView({ onGoHome, recorderName, onSaleRecvConfirmed }) {
     setBusy(false);
   };
 
-  const pending = txs.filter(t => t.status === 'pending');
-  const confirmed = txs.filter(t => t.status === 'confirmed');
+  const pending = txs.filter(t => t.status === 'pending' && !t.wallet?.startsWith('sup_'));
+  const confirmed = txs.filter(t => t.status === 'confirmed' && !t.wallet?.startsWith('sup_'));
   const fmtB = n => '฿' + Math.round(n).toLocaleString();
   const walletColor = { A_transfer: '#1565C0', A_cash: '#2E7D32', B: '#E65100', C: '#6A1B9A' };
   const walletBg = { A_transfer: '#E3F2FD', A_cash: '#E8F5E9', B: '#FFF3E0', C: '#F3E5F5' };
