@@ -517,6 +517,21 @@ export const db = {
     return bal;
   },
 
+  async fetchSupWalletBalances() {
+    const { data, error } = await supabase
+      .from('qm_wallet_tx')
+      .select('wallet,direction,amount')
+      .eq('status', 'confirmed')
+      .like('wallet', 'sup_%');
+    if (error) throw error;
+    const bal = {};
+    for (const r of (data || [])) {
+      if (!bal[r.wallet]) bal[r.wallet] = 0;
+      bal[r.wallet] += r.direction === 'in' ? Number(r.amount) : -Number(r.amount);
+    }
+    return bal;
+  },
+
   async walletTxExists(refId, txType) {
     const { data } = await supabase
       .from('qm_wallet_tx').select('id').eq('ref_id', refId).eq('tx_type', txType).maybeSingle();
