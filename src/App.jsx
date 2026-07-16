@@ -3596,42 +3596,86 @@ function CommissionSlipPrintView({ supervisorName, bills, commissionRate, onBack
   };
   const totalKg = bills.reduce((s, b) => s + parseNum(b.kg), 0);
   const totalComm = Math.round(totalKg * commissionRate);
-  const dateLabel = bills.length > 0
-    ? (() => {
-        const sorted = [...bills].sort((a, b) => (a.date > b.date ? 1 : -1));
-        return `${fmtBillDate(sorted[0].date)} – ${fmtBillDate(sorted[sorted.length-1].date)}`;
-      })()
-    : new Date().toLocaleDateString('th-TH');
+  const printDate = new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' });
   return (
-    <SlipShell title="บิลค่าคอมมิชชั่น" supervisorName={supervisorName} dateLabel={dateLabel} onBack={onBack}>
-      <div style={{ marginBottom: 12 }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: '#9A8662', marginBottom: 6, borderBottom: '1px solid #F0E8DC', paddingBottom: 4 }}>รายการบิล ({bills.length} บิล)</div>
-        {bills.map((b, i) => {
-          const kg = parseNum(b.kg);
-          const comm = Math.round(kg * commissionRate);
-          return (
-            <div key={b.billNo || i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#4A3526', padding: '4px 0', borderBottom: '1px solid #FAF4EC' }}>
-              <div>
-                <div style={{ fontWeight: 600 }}>{b.seller || '—'}</div>
-                <div style={{ fontSize: 10, color: '#B0966A' }}>{fmtBillDate(b.date)} · #{b.billNo}</div>
-              </div>
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ fontWeight: 600 }}>{kg % 1 === 0 ? kg : kg.toFixed(1)} กก.</div>
-                <div style={{ color: '#E65100', fontWeight: 700 }}>+฿{comm}</div>
-              </div>
-            </div>
-          );
-        })}
+    <div style={{ minHeight: '100vh', background: '#fff' }}>
+      {/* Action bar — hidden in print */}
+      <div className="no-print" style={{ display: 'flex', gap: 10, padding: '12px 16px', background: '#F5EFE4', borderBottom: '1px solid #E4D7BC' }}>
+        <button onClick={onBack} style={{ border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 10, padding: '8px 14px', fontSize: 13, color: '#7A6450', cursor: 'pointer' }}>‹ กลับ</button>
+        <button onClick={() => window.print()} style={{ flex: 1, background: '#5B3A29', color: '#fff', border: 'none', borderRadius: 10, padding: '8px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>🖨️ พิมพ์</button>
       </div>
-      <div style={{ borderTop: '1px solid #E4D7BC', paddingTop: 12 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#4A3526', marginBottom: 4 }}>
-          <span>รวม {totalKg % 1 === 0 ? totalKg : totalKg.toFixed(1)} กก. × ฿{commissionRate}</span><span>฿{totalComm.toLocaleString()}</span>
+
+      {/* Print area */}
+      <div id="comm-slip-print" style={{ maxWidth: 520, margin: '0 auto', padding: '32px 28px', fontFamily: 'Sarabun, sans-serif' }}>
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24, borderBottom: '2px solid #2A2118', paddingBottom: 16 }}>
+          <div>
+            <div style={{ fontWeight: 800, fontSize: 20, color: '#2A2118', letterSpacing: 1 }}>QUDSUN</div>
+            <div style={{ fontSize: 11, color: '#9A8662' }}>ทุเรียนคัดสรร</div>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontWeight: 700, fontSize: 16, color: '#2A2118' }}>ใบค่าคอมมิชชัน</div>
+            <div style={{ fontSize: 12, color: '#9A8662', marginTop: 2 }}>{printDate}</div>
+          </div>
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 16, fontWeight: 700, color: '#E65100', borderTop: '1px solid #E4D7BC', paddingTop: 10, marginTop: 6 }}>
-          <span>รวมค่าคอม</span><span>฿{totalComm.toLocaleString()}</span>
+
+        {/* Supervisor info */}
+        <div style={{ display: 'flex', gap: 32, marginBottom: 20, fontSize: 13 }}>
+          <div><span style={{ color: '#9A8662' }}>ผู้ดูแล: </span><span style={{ fontWeight: 700, color: '#2A2118' }}>{supervisorName}</span></div>
+          <div><span style={{ color: '#9A8662' }}>จำนวน: </span><span style={{ fontWeight: 700, color: '#2A2118' }}>{bills.length} บิล</span></div>
+          <div><span style={{ color: '#9A8662' }}>อัตรา: </span><span style={{ fontWeight: 700, color: '#2A2118' }}>฿{commissionRate}/กก.</span></div>
+        </div>
+
+        {/* Bills table */}
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, marginBottom: 16 }}>
+          <thead>
+            <tr style={{ borderBottom: '2px solid #2A2118' }}>
+              <th style={{ textAlign: 'left', padding: '6px 4px', color: '#9A8662', fontWeight: 600, fontSize: 11 }}>#</th>
+              <th style={{ textAlign: 'left', padding: '6px 4px', color: '#9A8662', fontWeight: 600, fontSize: 11 }}>วันที่</th>
+              <th style={{ textAlign: 'left', padding: '6px 4px', color: '#9A8662', fontWeight: 600, fontSize: 11 }}>ลูกค้า (ผู้ขาย)</th>
+              <th style={{ textAlign: 'left', padding: '6px 4px', color: '#9A8662', fontWeight: 600, fontSize: 11 }}>เลขบิล</th>
+              <th style={{ textAlign: 'right', padding: '6px 4px', color: '#9A8662', fontWeight: 600, fontSize: 11 }}>กก.</th>
+              <th style={{ textAlign: 'right', padding: '6px 4px', color: '#9A8662', fontWeight: 600, fontSize: 11 }}>ค่าคอม</th>
+            </tr>
+          </thead>
+          <tbody>
+            {bills.map((b, i) => {
+              const kg = parseNum(b.kg);
+              const comm = Math.round(kg * commissionRate);
+              return (
+                <tr key={b.billNo || i} style={{ borderBottom: '1px solid #F0E8DC' }}>
+                  <td style={{ padding: '7px 4px', color: '#9A8662', fontSize: 11 }}>{i + 1}</td>
+                  <td style={{ padding: '7px 4px', color: '#5B3A29', whiteSpace: 'nowrap' }}>{fmtBillDate(b.date)}</td>
+                  <td style={{ padding: '7px 4px', color: '#2A2118', fontWeight: 600 }}>{b.seller || '—'}</td>
+                  <td style={{ padding: '7px 4px', color: '#9A8662', fontSize: 11 }}>{b.billNo || '—'}</td>
+                  <td style={{ padding: '7px 4px', textAlign: 'right', color: '#2A2118' }}>{kg % 1 === 0 ? kg : kg.toFixed(1)}</td>
+                  <td style={{ padding: '7px 4px', textAlign: 'right', fontWeight: 700, color: '#E65100' }}>฿{comm.toLocaleString()}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+          <tfoot>
+            <tr style={{ borderTop: '2px solid #2A2118' }}>
+              <td colSpan={4} style={{ padding: '10px 4px', fontWeight: 700, color: '#2A2118' }}>รวม {bills.length} บิล</td>
+              <td style={{ padding: '10px 4px', textAlign: 'right', fontWeight: 700, color: '#2A2118' }}>{totalKg % 1 === 0 ? totalKg : totalKg.toFixed(1)}</td>
+              <td style={{ padding: '10px 4px', textAlign: 'right', fontWeight: 800, fontSize: 16, color: '#E65100' }}>฿{totalComm.toLocaleString()}</td>
+            </tr>
+          </tfoot>
+        </table>
+
+        {/* Signatures */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 48, paddingTop: 16, borderTop: '1px dashed #C9A24B' }}>
+          <div style={{ textAlign: 'center', flex: 1 }}>
+            <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 28 }}>ผู้จ่าย</div>
+            <div style={{ borderTop: '1px solid #2A2118', paddingTop: 4, fontSize: 11, color: '#9A8662' }}>ลายเซ็น</div>
+          </div>
+          <div style={{ textAlign: 'center', flex: 1 }}>
+            <div style={{ fontSize: 11, color: '#9A8662', marginBottom: 28 }}>ผู้รับ ({supervisorName})</div>
+            <div style={{ borderTop: '1px solid #2A2118', paddingTop: 4, fontSize: 11, color: '#9A8662' }}>ลายเซ็น</div>
+          </div>
         </div>
       </div>
-    </SlipShell>
+    </div>
   );
 }
 
