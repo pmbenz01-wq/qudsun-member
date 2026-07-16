@@ -3419,26 +3419,34 @@ function SupervisorsView({ supervisors, supervisorNames, history, onGoHome, onOp
           const stat = billStats[name] || {};
           const ledger = supLedger[name];
           const balance = ledger ? Math.round(ledger.earned - ledger.paid) : null;
+          const isOverpaid = balance !== null && balance < 0;
+          const isPaid = balance !== null && balance === 0;
+          const isOwed = balance !== null && balance > 0;
+          const stripBg = isOwed ? 'linear-gradient(90deg,#FFF3E0,#FFF8F2)' : isOverpaid ? 'linear-gradient(90deg,#F3E5F5,#FCF4FF)' : 'linear-gradient(90deg,#E8F5E9,#F2FFF5)';
+          const stripColor = isOwed ? '#E65100' : isOverpaid ? '#7B1FA2' : '#2E7D32';
           return (
-            <div key={name} style={{ border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 14, overflow: 'hidden' }}>
+            <div key={name} style={{ border: `1.5px solid ${isOwed ? '#FFCC80' : isOverpaid ? '#CE93D8' : '#A5D6A7'}`, background: '#FFFDF8', borderRadius: 14, overflow: 'hidden' }}>
               <button onClick={() => onOpenSupervisor(name)} style={{ textAlign: 'left', background: 'none', border: 'none', width: '100%', padding: '14px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{ width: 44, height: 44, borderRadius: 12, background: 'linear-gradient(135deg,#5C4326,#3F2D1E)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>🧑‍💼</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: 600, fontSize: 15, color: '#4A3526' }}>{name}</div>
                   <div style={{ fontSize: 12, color: '#9A8662', marginTop: 2 }}>{phones.length} ลูกค้า · รวม {fmtKg(stat.kg || 0)} กก. · {stat.count || 0} บิล</div>
                 </div>
-                {balance !== null && (
-                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                    <div style={{ fontSize: 15, fontWeight: 800, fontFamily: 'Prompt', color: balance > 0 ? '#E65100' : '#2E7D32' }}>
-                      {balance > 0 ? `฿${balance.toLocaleString()}` : '✓'}
-                    </div>
-                    <div style={{ fontSize: 10, color: balance > 0 ? '#E65100' : '#2E7D32', marginTop: 1 }}>
-                      {balance > 0 ? 'ค้างจ่าย' : 'ชำระครบ'}
-                    </div>
-                  </div>
-                )}
                 <span style={{ color: '#C9A24B', fontSize: 18, flexShrink: 0 }}>›</span>
               </button>
+              {balance !== null && (
+                <div onClick={() => onOpenSupervisor(name)} style={{ cursor: 'pointer', background: stripBg, borderTop: `1px solid ${isOwed ? '#FFE0B2' : isOverpaid ? '#E1BEE7' : '#C8E6C9'}`, padding: '8px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ fontSize: 13 }}>{isOwed ? '💰' : isOverpaid ? '⚠️' : '✅'}</span>
+                    <span style={{ fontSize: 12, color: stripColor, fontWeight: 600 }}>
+                      {isOwed ? 'ค้างจ่าย' : isOverpaid ? 'เบิกเกิน' : 'ชำระครบ'}
+                    </span>
+                  </div>
+                  <span style={{ fontSize: 17, fontWeight: 800, fontFamily: 'Prompt', color: stripColor, letterSpacing: '-0.3px' }}>
+                    {balance === 0 ? '฿0' : `${balance < 0 ? '-' : ''}฿${Math.abs(balance).toLocaleString()}`}
+                  </span>
+                </div>
+              )}
               {!isEmployee && onDeleteSupervisor && (
                 <div style={{ padding: '0 14px 10px', display: 'flex', justifyContent: 'flex-end' }}>
                   <button onClick={() => setDeleteTarget({ name, phones: phones.length })}
