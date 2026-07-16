@@ -4153,7 +4153,7 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
         if (pendingAdvanceRecord.slip) {
           try {
             const base64 = await resizeImage(pendingAdvanceRecord.slip, 1200);
-            const path = `QudsunTransfers/${Date.now()}_advance.jpg`;
+            const path = `QudsunTransfers/advance/${Date.now()}.jpg`;
             const res = await fetch('/api/upload', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ base64, path }) });
             const d = await res.json();
             if (d.ok) slipUrl = d.url;
@@ -5086,7 +5086,7 @@ function SupervisorDetailView({ supervisorName, supervisors, history, verified, 
                         let slipUrl = null;
                         if (withdrawSlip) {
                           const base64 = await resizeImage(withdrawSlip, 1200);
-                          const path = `QudsunTransfers/${Date.now()}_withdraw.jpg`;
+                          const path = `QudsunTransfers/withdraw/${Date.now()}.jpg`;
                           const res = await fetch('/api/upload', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ base64, path }) });
                           const d = await res.json();
                           if (d.ok) slipUrl = d.url;
