@@ -1919,6 +1919,15 @@ function TypeReportView({ onGoHome, onOpenSaleHistory }) {
   const [selectedType, setSelectedType] = useState(null);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [checkedTypes, setCheckedTypes] = useState(new Set());
+
+  const toggleChecked = (label) => {
+    setCheckedTypes(prev => {
+      const next = new Set(prev);
+      if (next.has(label)) next.delete(label); else next.add(label);
+      return next;
+    });
+  };
 
   const load = useCallback(() => {
     setLoading(true);
@@ -1966,7 +1975,10 @@ function TypeReportView({ onGoHome, onOpenSaleHistory }) {
         map[label].rows.push({ key: (e.id || '') + s.billNo, billNo: s.billNo, date: s.date, buyer: s.customerName || '—', kg, price });
       });
     });
-    Object.values(map).forEach(t => t.rows.sort((a, b) => (b.date || 0) - (a.date || 0)));
+    Object.values(map).forEach(t => {
+      t.rows.sort((a, b) => (b.date || 0) - (a.date || 0));
+      t.avgPrice = t.prices.length ? t.prices.reduce((s, p) => s + p, 0) / t.prices.length : null;
+    });
     return map;
   }, [filteredSessions]);
 
@@ -1976,6 +1988,11 @@ function TypeReportView({ onGoHome, onOpenSaleHistory }) {
   const dateLabel = ts => new Date(ts).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' });
 
   const selected = selectedType ? byType[selectedType] : null;
+
+  const checkedList = [...checkedTypes].filter(label => byType[label]?.avgPrice != null);
+  const checkedAvg = checkedList.length
+    ? checkedList.reduce((s, label) => s + byType[label].avgPrice, 0) / checkedList.length
+    : null;
 
   return (
     <div style={{ flex: 1, padding: '14px 14px 60px', maxWidth: 620, margin: '0 auto', width: '100%' }}>
@@ -2005,20 +2022,39 @@ function TypeReportView({ onGoHome, onOpenSaleHistory }) {
           {typeList.length === 0 && (
             <div style={{ textAlign: 'center', color: '#B7A684', fontSize: 13, padding: '20px 0' }}>ยังไม่มีข้อมูล</div>
           )}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 20 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
             {typeList.map(([label, t]) => {
               const min = t.prices.length ? Math.min(...t.prices) : null;
               const max = t.prices.length ? Math.max(...t.prices) : null;
               const priceStr = min === null ? 'ไม่มีราคา' : min === max ? `฿${min}/กก.` : `฿${min} - ${max}/กก.`;
+              const isChecked = checkedTypes.has(label);
               return (
-                <button key={label} onClick={() => setSelectedType(label)} style={{ textAlign: 'left', border: '1px solid #E4D7BC', background: '#FFF3E0', borderRadius: 14, padding: '14px 14px', cursor: 'pointer' }}>
-                  <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 15, color: '#5B3A29', marginBottom: 6 }}>{label}</div>
+                <div key={label} onClick={() => setSelectedType(label)} style={{ position: 'relative', textAlign: 'left', border: `1.5px solid ${isChecked ? '#DC743C' : '#E4D7BC'}`, background: '#FFF3E0', borderRadius: 14, padding: '14px 14px', cursor: 'pointer' }}>
+                  <label onClick={e => e.stopPropagation()} style={{ position: 'absolute', top: 10, right: 10, cursor: 'pointer' }}>
+                    <input type="checkbox" checked={isChecked} onChange={() => toggleChecked(label)} disabled={t.avgPrice == null} style={{ width: 18, height: 18, cursor: 'pointer' }} />
+                  </label>
+                  <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 15, color: '#5B3A29', marginBottom: 6, paddingRight: 22 }}>{label}</div>
                   <div style={{ fontSize: 13, color: '#4A3526', fontWeight: 600 }}>{priceStr}</div>
                   <div style={{ fontSize: 11, color: '#9A8662', marginTop: 4 }}>{fmtKg(t.kg)} กก. · {t.rows.length} เข่ง</div>
-                </button>
+                </div>
               );
             })}
           </div>
+
+          {checkedList.length > 0 && (
+            <div style={{ background: '#FFF3E6', border: '1.5px solid #DC743C', borderRadius: 14, padding: '14px 16px', marginBottom: 20 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                <span style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 14, color: '#DC743C' }}>เลือก {checkedList.length} เกรด</span>
+                <button onClick={() => setCheckedTypes(new Set())} style={{ border: 'none', background: 'none', fontSize: 12, color: '#9A8662', cursor: 'pointer' }}>ล้าง</button>
+              </div>
+              <div style={{ fontSize: 12.5, color: '#4A3526', marginBottom: 8 }}>
+                {checkedList.map(label => `${label} ฿${byType[label].avgPrice.toFixed(1)}`).join(' + ')}
+              </div>
+              <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 20, color: '#5B3A29' }}>
+                เฉลี่ย ฿{checkedAvg.toFixed(1)}/กก.
+              </div>
+            </div>
+          )}
 
           {recentSales.length > 0 && (
             <div style={{ background: '#FFFDF8', border: '1px solid #E4D7BC', borderRadius: 14, padding: '14px 16px' }}>
