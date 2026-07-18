@@ -1912,9 +1912,9 @@ function ResetDataModal({ pin, onConfirm, onClose }) {
   );
 }
 
-function TypeReportView({ onGoHome, onOpenHistory }) {
+function TypeReportView({ onGoHome, onOpenSaleHistory }) {
   const [loading, setLoading] = useState(true);
-  const [bills, setBills] = useState([]);
+  const [saleSessions, setSaleSessions] = useState([]);
   const [sales, setSales] = useState([]);
   const [selectedType, setSelectedType] = useState(null);
   const [startDate, setStartDate] = useState('');
@@ -1922,8 +1922,8 @@ function TypeReportView({ onGoHome, onOpenHistory }) {
 
   const load = useCallback(() => {
     setLoading(true);
-    Promise.all([db.getBills(), db.getSales()])
-      .then(([b, s]) => { setBills(b); setSales(s); setLoading(false); })
+    Promise.all([db.getSaleSessions(), db.getSales()])
+      .then(([ss, s]) => { setSaleSessions(ss); setSales(s); setLoading(false); })
       .catch(() => setLoading(false));
   }, []);
   useEffect(() => { load(); }, [load]);
@@ -1932,13 +1932,13 @@ function TypeReportView({ onGoHome, onOpenHistory }) {
   const fmtBaht = n => n.toLocaleString('th-TH', { maximumFractionDigits: 0 });
   const toDateStr = ts => { const d = new Date(ts); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
 
-  const filteredBills = useMemo(() => bills.filter(b => {
-    if (!b.date) return false;
-    const ds = toDateStr(b.date);
+  const filteredSessions = useMemo(() => saleSessions.filter(s => {
+    if (!s.date) return false;
+    const ds = toDateStr(s.date);
     if (startDate && ds < startDate) return false;
     if (endDate && ds > endDate) return false;
     return true;
-  }), [bills, startDate, endDate]);
+  }), [saleSessions, startDate, endDate]);
 
   const filteredSales = useMemo(() => sales.filter(s => {
     if (!s.date) return false;
@@ -1950,25 +1950,25 @@ function TypeReportView({ onGoHome, onOpenHistory }) {
 
   const byType = useMemo(() => {
     const map = {};
-    filteredBills.forEach(b => {
-      if (!b.date) return;
-      const entries = b.data?.entries || [];
-      const prices = b.data?.prices || {};
+    filteredSessions.forEach(s => {
+      if (!s.date) return;
+      const entries = s.entries || [];
+      const prices = s.prices || {};
       entries.forEach(e => {
         const isCustom = e.cat === 'custom';
-        const label = isCustom ? (e.customLabel || b.data?.customLabel || 'อื่นๆ') : (catLabel(e.cat) || e.cat);
+        const label = isCustom ? (e.customLabel || s.customLabel || 'อื่นๆ') : (catLabel(e.cat) || e.cat);
         const priceKey = e.customLabel ? `custom:${e.customLabel}` : e.cat;
         const price = prices[priceKey] ?? prices[e.cat] ?? 0;
         if (!map[label]) map[label] = { kg: 0, prices: [], rows: [] };
         const kg = parseFloat(e.kg) || 0;
         map[label].kg += kg;
         if (price > 0) map[label].prices.push(price);
-        map[label].rows.push({ key: (e.id || '') + b.billNo, billNo: b.billNo, date: b.date, seller: b.seller || '—', kg, price, bill: b });
+        map[label].rows.push({ key: (e.id || '') + s.billNo, billNo: s.billNo, date: s.date, buyer: s.customerName || '—', kg, price });
       });
     });
     Object.values(map).forEach(t => t.rows.sort((a, b) => (b.date || 0) - (a.date || 0)));
     return map;
-  }, [filteredBills]);
+  }, [filteredSessions]);
 
   const typeList = Object.entries(byType).sort((a, b) => b[1].kg - a[1].kg);
 
@@ -2039,9 +2039,9 @@ function TypeReportView({ onGoHome, onOpenHistory }) {
       {!loading && selected && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {selected.rows.map(r => (
-            <button key={r.key} onClick={() => onOpenHistory(r.bill)} style={{ textAlign: 'left', border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 12, padding: '12px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10 }}>
+            <button key={r.key} onClick={() => onOpenSaleHistory(r.billNo)} style={{ textAlign: 'left', border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 12, padding: '12px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10 }}>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 13, fontWeight: 600, color: '#4A3526' }}>{dateLabel(r.date)} · {r.seller}</div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: '#4A3526' }}>{dateLabel(r.date)} · {r.buyer}</div>
                 <div style={{ fontSize: 11, color: '#9A8662', marginTop: 2 }}>เลขบิล {r.billNo}</div>
               </div>
               <div style={{ textAlign: 'right' }}>
@@ -7183,7 +7183,7 @@ export default function App() {
           <DashboardView payments={payments} pin={pin} onPayment={handlePayment} onBatchPayment={handleBatchPayment} onDeleteBill={handleDeleteBill} onGoHome={() => { navigate('/'); syncNow(true); }} onOpenHistory={openHistory} isEmployee={authRole === 'employee'} />
         } />
         <Route path="/report" element={
-          <TypeReportView onGoHome={() => navigate('/')} onOpenHistory={openHistory} />
+          <TypeReportView onGoHome={() => navigate('/')} onOpenSaleHistory={openSaleHistoryDetail} />
         } />
         <Route path="/sales" element={
           <SalesView accounts={accounts} pin={pin} onGoHome={() => navigate('/')} onAddSale={handleAddSale} onDeleteSale={handleDeleteSale} onUpdateSale={handleUpdateSale} onSaveAccount={handleSaveAccount} onOpenHistory={openHistory}
