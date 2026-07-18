@@ -1956,8 +1956,9 @@ function TypeReportView({ onGoHome, onOpenHistory }) {
       const prices = b.data?.prices || {};
       entries.forEach(e => {
         const isCustom = e.cat === 'custom';
-        const label = isCustom ? (b.data?.customLabel || 'อื่นๆ') : (catLabel(e.cat) || e.cat);
-        const price = prices[e.cat] || 0;
+        const label = isCustom ? (e.customLabel || b.data?.customLabel || 'อื่นๆ') : (catLabel(e.cat) || e.cat);
+        const priceKey = e.customLabel ? `custom:${e.customLabel}` : e.cat;
+        const price = prices[priceKey] ?? prices[e.cat] ?? 0;
         if (!map[label]) map[label] = { kg: 0, prices: [], rows: [] };
         const kg = parseFloat(e.kg) || 0;
         map[label].kg += kg;
