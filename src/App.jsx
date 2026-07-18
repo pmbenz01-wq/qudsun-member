@@ -300,7 +300,7 @@ function EmployeeManager({ employees, onSave, onCancel }) {
 }
 
 // ─── HomeView ─────────────────────────────────────────────────────────────────
-function HomeView({ session, history, saleHistory, payments, pendingPurchaseCount, syncing, syncStatus, onSyncNow, onOpenSheet, onNew, onResume, onGoCustomers, onGoDashboard, onGoSupervisors, onGoSales, onNewSale, saleSession, onResumeSale, onChangePin, onSetEmployeePin, onOpenHistory, onOpenSaleHistory, onPayment, onDeleteBill, onDeleteSaleBill, pin, verified, supervisors, isEmployee, onLogout, onExport, onImport, onGoHistory, onResetData, onGoWallet }) {
+function HomeView({ session, history, saleHistory, payments, pendingPurchaseCount, syncing, syncStatus, onSyncNow, onOpenSheet, onNew, onResume, onGoCustomers, onGoDashboard, onGoSupervisors, onGoSales, onGoReport, onNewSale, saleSession, onResumeSale, onChangePin, onSetEmployeePin, onOpenHistory, onOpenSaleHistory, onPayment, onDeleteBill, onDeleteSaleBill, pin, verified, supervisors, isEmployee, onLogout, onExport, onImport, onGoHistory, onResetData, onGoWallet }) {
   const customerCount = Object.keys(loadCustomers(history)).length;
   const supervisorCount = Object.values(supervisors || {}).filter(Boolean).reduce((set, n) => (set.add(n), set), new Set()).size;
   const nUnpaidPurchase = pendingPurchaseCount !== null && pendingPurchaseCount !== undefined
@@ -421,6 +421,17 @@ function HomeView({ session, history, saleHistory, payments, pendingPurchaseCoun
         </div>
         <span style={{ marginLeft: 'auto', color: '#C9A24B', fontSize: 18 }}>›</span>
       </button>
+
+      {!isEmployee && (
+        <button onClick={onGoReport} style={{ width: '100%', border: '1.5px solid #5B7E8C', background: 'linear-gradient(135deg,#F0F7F9,#E4EFF3)', borderRadius: 14, padding: '14px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+          <span style={{ fontSize: 22 }}>📊</span>
+          <div style={{ textAlign: 'left' }}>
+            <div style={{ fontWeight: 700, fontSize: 15, color: '#2C4A54' }}>รายงานประเภท</div>
+            <div style={{ fontSize: 12, color: '#5B7E8C' }}>รวม / สุดท้าย / หนอน / โบ้ · ราคาต่อวัน · ขายให้ใคร</div>
+          </div>
+          <span style={{ marginLeft: 'auto', color: '#5B7E8C', fontSize: 18 }}>›</span>
+        </button>
+      )}
 
       {!isEmployee && (
         <>
@@ -1897,6 +1908,118 @@ function ResetDataModal({ pin, onConfirm, onClose }) {
         )}
         <button onClick={onClose} disabled={busy} style={{ width: '100%', border: 'none', background: 'none', color: '#9A8662', fontSize: 13, cursor: 'pointer', padding: 6, opacity: busy ? 0.4 : 1 }}>ยกเลิก</button>
       </div>
+    </div>
+  );
+}
+
+function TypeReportView({ onGoHome, onOpenHistory }) {
+  const [loading, setLoading] = useState(true);
+  const [bills, setBills] = useState([]);
+  const [sales, setSales] = useState([]);
+  const [selectedType, setSelectedType] = useState(null);
+
+  const load = useCallback(() => {
+    setLoading(true);
+    Promise.all([db.getBills(), db.getSales()])
+      .then(([b, s]) => { setBills(b); setSales(s); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, []);
+  useEffect(() => { load(); }, [load]);
+
+  const fmtKg   = n => n.toLocaleString('th-TH', { maximumFractionDigits: 1 });
+  const fmtBaht = n => n.toLocaleString('th-TH', { maximumFractionDigits: 0 });
+
+  const byType = useMemo(() => {
+    const map = {};
+    bills.forEach(b => {
+      if (!b.date) return;
+      const entries = b.data?.entries || [];
+      const prices = b.data?.prices || {};
+      entries.forEach(e => {
+        const isCustom = e.cat === 'custom';
+        const label = isCustom ? (b.data?.customLabel || 'อื่นๆ') : (catLabel(e.cat) || e.cat);
+        const price = prices[e.cat] || 0;
+        if (!map[label]) map[label] = { kg: 0, prices: [], rows: [] };
+        const kg = parseFloat(e.kg) || 0;
+        map[label].kg += kg;
+        if (price > 0) map[label].prices.push(price);
+        map[label].rows.push({ key: (e.id || '') + b.billNo, billNo: b.billNo, date: b.date, seller: b.seller || '—', kg, price, bill: b });
+      });
+    });
+    Object.values(map).forEach(t => t.rows.sort((a, b) => (b.date || 0) - (a.date || 0)));
+    return map;
+  }, [bills]);
+
+  const typeList = Object.entries(byType).sort((a, b) => b[1].kg - a[1].kg);
+
+  const recentSales = useMemo(() => sales.slice(0, 15), [sales]);
+  const dateLabel = ts => new Date(ts).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' });
+
+  const selected = selectedType ? byType[selectedType] : null;
+
+  return (
+    <div style={{ flex: 1, padding: '14px 14px 60px', maxWidth: 620, margin: '0 auto', width: '100%' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+        <button onClick={selected ? () => setSelectedType(null) : onGoHome} style={{ border: 'none', background: 'none', fontSize: 22, cursor: 'pointer', color: '#7A6450' }}>‹</button>
+        <span style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 18, color: '#3F2D1E' }}>{selected ? selectedType : 'รายงานประเภท'}</span>
+        {!selected && <button onClick={load} disabled={loading} style={{ marginLeft: 'auto', border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 8, padding: '5px 10px', fontSize: 12, color: '#7A6450', cursor: 'pointer', opacity: loading ? 0.5 : 1 }}>⟳ รีเฟรช</button>}
+      </div>
+
+      {loading && <div style={{ textAlign: 'center', color: '#B7A684', fontSize: 13, padding: '20px 0' }}>กำลังโหลด…</div>}
+
+      {!loading && !selected && (
+        <>
+          {typeList.length === 0 && (
+            <div style={{ textAlign: 'center', color: '#B7A684', fontSize: 13, padding: '20px 0' }}>ยังไม่มีข้อมูล</div>
+          )}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 20 }}>
+            {typeList.map(([label, t]) => {
+              const min = t.prices.length ? Math.min(...t.prices) : null;
+              const max = t.prices.length ? Math.max(...t.prices) : null;
+              const priceStr = min === null ? 'ไม่มีราคา' : min === max ? `฿${min}/กก.` : `฿${min} - ${max}/กก.`;
+              return (
+                <button key={label} onClick={() => setSelectedType(label)} style={{ textAlign: 'left', border: '1px solid #E4D7BC', background: '#FFF3E0', borderRadius: 14, padding: '14px 14px', cursor: 'pointer' }}>
+                  <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 15, color: '#5B3A29', marginBottom: 6 }}>{label}</div>
+                  <div style={{ fontSize: 13, color: '#4A3526', fontWeight: 600 }}>{priceStr}</div>
+                  <div style={{ fontSize: 11, color: '#9A8662', marginTop: 4 }}>{fmtKg(t.kg)} กก. · {t.rows.length} เข่ง</div>
+                </button>
+              );
+            })}
+          </div>
+
+          {recentSales.length > 0 && (
+            <div style={{ background: '#FFFDF8', border: '1px solid #E4D7BC', borderRadius: 14, padding: '14px 16px' }}>
+              <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 14, color: '#2E5C1A', marginBottom: 8 }}>ขายให้ล่าสุด</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {recentSales.map(s => (
+                  <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, color: '#4A3526' }}>
+                    <span>{dateLabel(s.date)} · {s.buyer || '—'}</span>
+                    <span style={{ color: '#7A6450' }}>{fmtKg(parseFloat(s.kg) || 0)} กก. · ฿{fmtBaht(parseFloat(s.baht) || 0)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {!loading && selected && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {selected.rows.map(r => (
+            <button key={r.key} onClick={() => onOpenHistory(r.bill)} style={{ textAlign: 'left', border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 12, padding: '12px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: '#4A3526' }}>{dateLabel(r.date)} · {r.seller}</div>
+                <div style={{ fontSize: 11, color: '#9A8662', marginTop: 2 }}>เลขบิล {r.billNo}</div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 14, color: '#4A3526' }}>{fmtKg(r.kg)} กก.</div>
+                {r.price > 0 && <div style={{ fontSize: 12, color: '#B7862A' }}>฿{r.price}/กก.</div>}
+              </div>
+              <span style={{ color: '#C9A24B', fontSize: 18 }}>›</span>
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -6967,6 +7090,7 @@ export default function App() {
             onGoCustomers={() => { navigate('/customers'); syncNow(true); }}
             onGoDashboard={() => { navigate('/purchases'); syncNow(true); }}
             onGoSales={() => { navigate('/sales'); syncNow(true); }}
+            onGoReport={() => { navigate('/report'); syncNow(true); }}
             onNewSale={createSaleSession}
             saleSession={saleSession}
             onResumeSale={() => navigate('/sale/record')}
@@ -7024,6 +7148,9 @@ export default function App() {
         ) : <Navigate to="/" replace />} />
         <Route path="/purchases" element={
           <DashboardView payments={payments} pin={pin} onPayment={handlePayment} onBatchPayment={handleBatchPayment} onDeleteBill={handleDeleteBill} onGoHome={() => { navigate('/'); syncNow(true); }} onOpenHistory={openHistory} isEmployee={authRole === 'employee'} />
+        } />
+        <Route path="/report" element={
+          <TypeReportView onGoHome={() => navigate('/')} onOpenHistory={openHistory} />
         } />
         <Route path="/sales" element={
           <SalesView accounts={accounts} pin={pin} onGoHome={() => navigate('/')} onAddSale={handleAddSale} onDeleteSale={handleDeleteSale} onUpdateSale={handleUpdateSale} onSaveAccount={handleSaveAccount} onOpenHistory={openHistory}
