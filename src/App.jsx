@@ -1920,14 +1920,7 @@ function TypeReportView({ onGoHome, onOpenSaleHistory }) {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [checkedTypes, setCheckedTypes] = useState(new Set());
-
-  const toggleChecked = (label) => {
-    setCheckedTypes(prev => {
-      const next = new Set(prev);
-      if (next.has(label)) next.delete(label); else next.add(label);
-      return next;
-    });
-  };
+  const [weights, setWeights] = useState({});
 
   const load = useCallback(() => {
     setLoading(true);
@@ -1983,15 +1976,32 @@ function TypeReportView({ onGoHome, onOpenSaleHistory }) {
   }, [filteredSessions]);
 
   const typeList = Object.entries(byType).sort((a, b) => b[1].kg - a[1].kg);
+  const totalKgAll = typeList.reduce((s, [, t]) => s + t.kg, 0);
 
   const recentSales = useMemo(() => filteredSales.slice(0, 15), [filteredSales]);
   const dateLabel = ts => new Date(ts).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' });
 
   const selected = selectedType ? byType[selectedType] : null;
 
+  const toggleChecked = (label) => {
+    setCheckedTypes(prev => {
+      const next = new Set(prev);
+      if (next.has(label)) {
+        next.delete(label);
+      } else {
+        next.add(label);
+        setWeights(w => (w[label] != null ? w : { ...w, [label]: Math.round(totalKgAll ? (byType[label]?.kg || 0) / totalKgAll * 100 : 50) }));
+      }
+      return next;
+    });
+  };
+
+  const updateWeight = (label, value) => setWeights(w => ({ ...w, [label]: value }));
+
   const checkedList = [...checkedTypes].filter(label => byType[label]?.avgPrice != null);
-  const checkedAvg = checkedList.length
-    ? checkedList.reduce((s, label) => s + byType[label].avgPrice, 0) / checkedList.length
+  const weightSum = checkedList.reduce((s, label) => s + (weights[label] ?? 0), 0);
+  const checkedAvg = weightSum > 0
+    ? checkedList.reduce((s, label) => s + byType[label].avgPrice * (weights[label] ?? 0), 0) / weightSum
     : null;
 
   return (
@@ -2043,15 +2053,28 @@ function TypeReportView({ onGoHome, onOpenSaleHistory }) {
 
           {checkedList.length > 0 && (
             <div style={{ background: '#FFF3E6', border: '1.5px solid #DC743C', borderRadius: 14, padding: '14px 16px', marginBottom: 20 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                <span style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 14, color: '#DC743C' }}>เลือก {checkedList.length} เกรด</span>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                <span style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 14, color: '#DC743C' }}>เลือก {checkedList.length} เกรด — ลากบาร์ตั้งสัดส่วน</span>
                 <button onClick={() => setCheckedTypes(new Set())} style={{ border: 'none', background: 'none', fontSize: 12, color: '#9A8662', cursor: 'pointer' }}>ล้าง</button>
               </div>
-              <div style={{ fontSize: 12.5, color: '#4A3526', marginBottom: 8 }}>
-                {checkedList.map(label => `${label} ฿${byType[label].avgPrice.toFixed(1)}`).join(' + ')}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 12 }}>
+                {checkedList.map(label => {
+                  const w = weights[label] ?? 0;
+                  const pct = weightSum > 0 ? (w / weightSum * 100).toFixed(0) : 0;
+                  return (
+                    <div key={label}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#4A3526', marginBottom: 2 }}>
+                        <span>{label} · ฿{byType[label].avgPrice.toFixed(1)}</span>
+                        <span style={{ color: '#DC743C', fontWeight: 600 }}>{pct}%</span>
+                      </div>
+                      <input type="range" min="0" max="100" value={w} onChange={e => updateWeight(label, Number(e.target.value))}
+                        style={{ width: '100%', accentColor: '#DC743C' }} />
+                    </div>
+                  );
+                })}
               </div>
               <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 20, color: '#5B3A29' }}>
-                เฉลี่ย ฿{checkedAvg.toFixed(1)}/กก.
+                {checkedAvg != null ? `เฉลี่ยถ่วงน้ำหนัก ฿${checkedAvg.toFixed(1)}/กก.` : 'ตั้งสัดส่วนอย่างน้อย 1 เกรด'}
               </div>
             </div>
           )}
