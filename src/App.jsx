@@ -1917,6 +1917,8 @@ function TypeReportView({ onGoHome, onOpenHistory }) {
   const [bills, setBills] = useState([]);
   const [sales, setSales] = useState([]);
   const [selectedType, setSelectedType] = useState(null);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
 
   const load = useCallback(() => {
     setLoading(true);
@@ -1928,10 +1930,27 @@ function TypeReportView({ onGoHome, onOpenHistory }) {
 
   const fmtKg   = n => n.toLocaleString('th-TH', { maximumFractionDigits: 1 });
   const fmtBaht = n => n.toLocaleString('th-TH', { maximumFractionDigits: 0 });
+  const toDateStr = ts => { const d = new Date(ts); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+
+  const filteredBills = useMemo(() => bills.filter(b => {
+    if (!b.date) return false;
+    const ds = toDateStr(b.date);
+    if (startDate && ds < startDate) return false;
+    if (endDate && ds > endDate) return false;
+    return true;
+  }), [bills, startDate, endDate]);
+
+  const filteredSales = useMemo(() => sales.filter(s => {
+    if (!s.date) return false;
+    const ds = toDateStr(s.date);
+    if (startDate && ds < startDate) return false;
+    if (endDate && ds > endDate) return false;
+    return true;
+  }), [sales, startDate, endDate]);
 
   const byType = useMemo(() => {
     const map = {};
-    bills.forEach(b => {
+    filteredBills.forEach(b => {
       if (!b.date) return;
       const entries = b.data?.entries || [];
       const prices = b.data?.prices || {};
@@ -1948,11 +1967,11 @@ function TypeReportView({ onGoHome, onOpenHistory }) {
     });
     Object.values(map).forEach(t => t.rows.sort((a, b) => (b.date || 0) - (a.date || 0)));
     return map;
-  }, [bills]);
+  }, [filteredBills]);
 
   const typeList = Object.entries(byType).sort((a, b) => b[1].kg - a[1].kg);
 
-  const recentSales = useMemo(() => sales.slice(0, 15), [sales]);
+  const recentSales = useMemo(() => filteredSales.slice(0, 15), [filteredSales]);
   const dateLabel = ts => new Date(ts).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' });
 
   const selected = selectedType ? byType[selectedType] : null;
@@ -1964,6 +1983,19 @@ function TypeReportView({ onGoHome, onOpenHistory }) {
         <span style={{ fontFamily: 'Prompt', fontWeight: 600, fontSize: 18, color: '#3F2D1E' }}>{selected ? selectedType : 'รายงานประเภท'}</span>
         {!selected && <button onClick={load} disabled={loading} style={{ marginLeft: 'auto', border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 8, padding: '5px 10px', fontSize: 12, color: '#7A6450', cursor: 'pointer', opacity: loading ? 0.5 : 1 }}>⟳ รีเฟรช</button>}
       </div>
+
+      {!selected && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 16 }}>
+          <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)}
+            style={{ flex: 1, border: '1px solid #E4D7BC', borderRadius: 8, padding: '6px 8px', fontSize: 12, fontFamily: 'Prompt', color: '#4A3526', background: '#FFFDF8' }} />
+          <span style={{ color: '#9A8662', fontSize: 13 }}>→</span>
+          <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)}
+            style={{ flex: 1, border: '1px solid #E4D7BC', borderRadius: 8, padding: '6px 8px', fontSize: 12, fontFamily: 'Prompt', color: '#4A3526', background: '#FFFDF8' }} />
+          {(startDate || endDate) && (
+            <button onClick={() => { setStartDate(''); setEndDate(''); }} style={{ border: '1px solid #E4D7BC', background: '#FFFDF8', borderRadius: 8, padding: '6px 10px', fontSize: 12, color: '#7A6450', cursor: 'pointer', whiteSpace: 'nowrap' }}>ล้าง</button>
+          )}
+        </div>
+      )}
 
       {loading && <div style={{ textAlign: 'center', color: '#B7A684', fontSize: 13, padding: '20px 0' }}>กำลังโหลด…</div>}
 
