@@ -2076,6 +2076,11 @@ function TypeReportView({ onGoHome, onOpenSaleHistory }) {
               <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 20, color: '#5B3A29' }}>
                 {checkedAvg != null ? `เฉลี่ยถ่วงน้ำหนัก ฿${checkedAvg.toFixed(1)}/กก.` : 'ตั้งสัดส่วนอย่างน้อย 1 เกรด'}
               </div>
+              {checkedAvg != null && (
+                <div style={{ fontFamily: 'Prompt', fontWeight: 700, fontSize: 16, color: '#2E5C1A', marginTop: 4 }}>
+                  ราคาแนะนำซื้อ (เฉลี่ย -5) ฿{(checkedAvg - 5).toFixed(1)}/กก.
+                </div>
+              )}
             </div>
           )}
 
