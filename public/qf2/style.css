@@ -901,3 +901,12 @@ button:active{transform:scale(.96)}
 .tab-on{background:#E8692E;color:#fff}
 .qcard,.paybtn,.mtile,.wcard,.tab,.bell,.due,.seemore{transition:transform .12s ease,box-shadow .12s ease,background .12s ease}
 .tab:not(.tab-on):active{transform:scale(.9)}
+
+/* ==== global base cards (ทุกหน้า) ==== */
+.card{background:#fff;border:1px solid #ECE3D6;border-radius:16px;padding:14px;box-shadow:0 2px 8px rgba(38,25,15,.04)}
+.bigbtn{display:flex;align-items:center;justify-content:center;gap:8px;border:none;border-radius:16px;padding:15px;font:700 15px 'Prompt',sans-serif;cursor:pointer}
+.bb-pri{background:linear-gradient(140deg,#3A2718,#241009);color:#FBF7F1;box-shadow:0 6px 16px rgba(36,16,9,.3)}
+.bb-acc{background:linear-gradient(140deg,#E8692E,#C4491C);color:#fff;box-shadow:0 4px 12px rgba(232,105,46,.3)}
+.bb-grn{background:linear-gradient(140deg,#2F9B58,#237947);color:#fff;box-shadow:0 4px 12px rgba(47,155,88,.3)}
+.bb-dis{background:#E5DCCE;color:#A8988A;pointer-events:none}
+.backb{border:1px solid #ECE3D6;background:#fff;border-radius:12px;padding:8px 13px;font:700 13px 'Prompt',sans-serif;cursor:pointer;color:#6B4A38}
