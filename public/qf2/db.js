@@ -142,3 +142,22 @@ const DB = {
     return { sum, days, due: { n: due.length, satang: due.reduce((s, b) => s + +b.total_satang, 0) }, wallets };
   },
 };
+
+// ---- ชุด 2 เพิ่มเติม ----
+DB.updateTenant = async function (patch) {
+  return this.un(await sb.from('tenants').update(patch).eq('id', this.profile.tenant_id));
+};
+DB.gradeReport = async function (days) {
+  const d0 = new Date(); d0.setHours(0, 0, 0, 0);
+  const from = new Date(d0.getTime() - (days - 1) * 86400000);
+  return this.un(await sb.from('bill_items')
+    .select('grade_name, kg, amount_satang, bills!inner(type,status,created_at)')
+    .gte('bills.created_at', from.toISOString())
+    .neq('bills.status', 'canceled'));
+};
+DB.rangeBills = async function (days) {
+  const d0 = new Date(); d0.setHours(0, 0, 0, 0);
+  const from = new Date(d0.getTime() - (days - 1) * 86400000);
+  return this.un(await sb.from('bills').select('type,total_satang,total_kg,created_at,status')
+    .gte('created_at', from.toISOString()).neq('status', 'canceled'));
+};

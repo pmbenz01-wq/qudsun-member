@@ -200,13 +200,13 @@ async function renderHome() {
     </div>
   </div>`;
   icons();
-  const soon = (n) => toast(n + ' — กำลังสร้างในเฟสถัดไป');
-  root.querySelectorAll('[data-soon]').forEach(el => el.onclick = () => soon(el.dataset.soon));
+  const MAP = { 'ลูกค้า': 'customers', 'พนักงาน': 'staff', 'ประวัติบิล': 'history', 'ตั้งค่า': 'settings', 'อื่น ๆ': 'more' };
+  root.querySelectorAll('[data-soon]').forEach(el => el.onclick = () => go[MAP[el.dataset.soon] || 'more']());
   ['h-buy', 't-buy'].forEach(id => $('#' + id).onclick = () => go.buy());
   ['h-sell', 't-sell'].forEach(id => $('#' + id).onclick = () => go.sell());
   ['h-wallet', 't-wallet'].forEach(id => { const el = $('#' + id); if (el) el.onclick = () => go.wallet(); });
   const pay = $('#h-pay'); if (pay) pay.onclick = () => go.bills();
-  $('#h-bell').onclick = () => soon('แจ้งเตือน');
+  $('#h-bell').onclick = () => go.notif();
   $('#h-out').onclick = async () => { sessionStorage.removeItem('qf2_unlocked'); await DB.signOut(); route(); };
 }
 
@@ -217,6 +217,13 @@ window.go = {
   sell: () => QF2T.renderSell(),
   bills: () => QF2M.renderBills(),
   wallet: () => QF2M.renderWallet(),
+  more: () => QF2X.renderMore(),
+  customers: () => QF2X.renderCustomers(),
+  staff: () => QF2X.renderStaff(),
+  history: () => QF2X.renderHistory(),
+  reports: () => QF2X.renderReports(),
+  notif: () => QF2X.renderNotif(),
+  settings: () => QF2X.renderSettings(),
 };
 
 // ขอ PIN ก่อนการกระทำสำคัญ (ตาม settings ของร้าน)
