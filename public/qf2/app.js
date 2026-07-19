@@ -202,13 +202,55 @@ async function renderHome() {
   icons();
   const soon = (n) => toast(n + ' — กำลังสร้างในเฟสถัดไป');
   root.querySelectorAll('[data-soon]').forEach(el => el.onclick = () => soon(el.dataset.soon));
-  ['h-buy', 't-buy'].forEach(id => $('#' + id).onclick = () => soon('หน้ารับซื้อ'));
-  ['h-sell', 't-sell'].forEach(id => $('#' + id).onclick = () => soon('หน้าขาย'));
-  ['h-wallet', 't-wallet'].forEach(id => { const el = $('#' + id); if (el) el.onclick = () => soon('หน้ากระเป๋าเงิน'); });
-  const pay = $('#h-pay'); if (pay) pay.onclick = () => soon('หน้าบิลค้างจ่าย');
+  ['h-buy', 't-buy'].forEach(id => $('#' + id).onclick = () => go.buy());
+  ['h-sell', 't-sell'].forEach(id => $('#' + id).onclick = () => go.sell());
+  ['h-wallet', 't-wallet'].forEach(id => { const el = $('#' + id); if (el) el.onclick = () => go.wallet(); });
+  const pay = $('#h-pay'); if (pay) pay.onclick = () => go.bills();
   $('#h-bell').onclick = () => soon('แจ้งเตือน');
   $('#h-out').onclick = async () => { sessionStorage.removeItem('qf2_unlocked'); await DB.signOut(); route(); };
 }
+
+// ============ NAV + PIN GATE ============
+window.go = {
+  home: () => renderHome(),
+  buy: () => QF2T.renderBuy(),
+  sell: () => QF2T.renderSell(),
+  bills: () => QF2M.renderBills(),
+  wallet: () => QF2M.renderWallet(),
+};
+
+// ขอ PIN ก่อนการกระทำสำคัญ (ตาม settings ของร้าน)
+window.pinGate = (flag) => new Promise((resolve) => {
+  if (!DB.settings?.pin_hash || DB.settings?.[flag] === false) { resolve(true); return; }
+  const ov = document.createElement('div');
+  ov.className = 'scr-login';
+  ov.innerHTML = `
+  <div style="position:fixed;inset:0;background:rgba(36,16,9,.6);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px">
+    <div style="background:#FBF7F1;border-radius:22px;padding:22px 20px;width:300px;text-align:center">
+      <div style="font:800 16px 'Prompt',sans-serif;margin-bottom:4px">ใส่ PIN ยืนยัน</div>
+      <div class="dots" id="pg-dots" style="justify-content:center"></div>
+      <div class="errmsg" id="pg-err"></div>
+      <div class="pad" style="margin-top:8px">${['1','2','3','4','5','6','7','8','9','ยกเลิก','0','⌫'].map(k => `<button class="key" data-k="${k}">${k}</button>`).join('')}</div>
+    </div></div>`;
+  document.body.appendChild(ov);
+  let buf = '';
+  const draw = () => { ov.querySelector('#pg-dots').innerHTML = [0,1,2,3].map(i => `<div class="dot ${i < buf.length ? 'on' : ''}"></div>`).join(''); };
+  draw();
+  ov.querySelectorAll('[data-k]').forEach(b => b.onclick = async () => {
+    const k = b.dataset.k;
+    if (k === 'ยกเลิก') { ov.remove(); resolve(false); return; }
+    if (k === '⌫') buf = buf.slice(0, -1);
+    else if (buf.length < 4) buf += k;
+    draw();
+    if (buf.length === 4) {
+      try {
+        const ok = await DB.checkPin(buf);
+        if (ok) { ov.remove(); resolve(true); }
+        else { buf = ''; draw(); ov.querySelector('#pg-err').textContent = 'PIN ไม่ถูกต้อง'; }
+      } catch (e) { buf = ''; draw(); ov.querySelector('#pg-err').textContent = e.message; }
+    }
+  });
+});
 
 // ============ ROUTER ============
 async function route() {
