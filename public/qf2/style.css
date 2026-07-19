@@ -894,3 +894,10 @@ button:active{transform:scale(.96)}
 .scr-notif .fchip, .scr-notif .ncard, .scr-notif .tab, .scr-notif .backb, .scr-notif .readall{transition:transform .12s ease}
 .scr-notif .fchip:active, .scr-notif .backb:active{transform:scale(.95)}
 .scr-notif .tab:not(.tab-on):active{transform:scale(.9)}
+/* ==== tabbar (global ทุกหน้า) ==== */
+.tabbar{position:fixed;bottom:16px;width:354px;display:flex;background:rgba(36,16,9,.92);backdrop-filter:blur(10px);border-radius:22px;padding:8px;justify-content:space-between;box-shadow:0 10px 30px rgba(36,16,9,.4);z-index:5}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 0 7px;border-radius:15px;color:rgba(251,247,241,.55);font:600 10px 'Anuphan',sans-serif;cursor:pointer}
+.tab i{width:20px;height:20px}
+.tab-on{background:#E8692E;color:#fff}
+.qcard,.paybtn,.mtile,.wcard,.tab,.bell,.due,.seemore{transition:transform .12s ease,box-shadow .12s ease,background .12s ease}
+.tab:not(.tab-on):active{transform:scale(.9)}
